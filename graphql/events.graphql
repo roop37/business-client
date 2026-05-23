@@ -1,0 +1,106 @@
+query eventOnboardingChecklist {
+  eventOnboardingChecklist {
+    logo
+    adminverification
+    payout
+    event
+    Scanner
+    nextSteps {
+      key
+      title
+      description
+      actionHref
+      blocksEventCreation
+      blocksPaidEvent
+    }
+  }
+}
+
+mutation createEvent($input: CreateEventInput!) {
+  createEvent(input: $input) {
+    _id
+    title
+    status
+    eventType
+    slug
+  }
+}
+
+mutation updateEventStep($id: String!, $step: Int!, $stepInput: EventInput!) {
+  updateEventStep(id: $id, step: $step, stepInput: $stepInput) {
+    _id
+    title
+    status
+    eventType
+    city
+    isVisible
+  }
+}
+
+query eventPricingOptions($input: EventPricingCalculatorInput!) {
+  eventPricingOptions(input: $input) {
+    optionId
+    plan
+    label
+    commissionRate
+    customerPlatformFeeRate
+    upfrontFee
+    expectedPaidTickets
+    expectedGrossSales
+    hostPayout
+    hoizrNetContribution
+    payoutCycleDaysMin
+    payoutCycleDaysMax
+    badge
+  }
+}
+
+mutation selectEventPricingOption($input: SelectEventPricingInput!) {
+  selectEventPricingOption(input: $input) {
+    _id
+    selectedPricingPlan
+    feeSettlementMode
+  }
+}
+
+# Lightweight events list for selectors that only need title/flyer/date.
+# Used by the campaign setup wizard to attach a campaign to an existing
+# event without re-keying details (and to populate the Event Promotion
+# template's flyer placeholder).
+query getMyEventsForSelector {
+  getMyEvents {
+    _id
+    title
+    eventFlyer
+    eventType
+    startDate
+    endDate
+    city
+    slug
+    status
+  }
+}
+
+query hostListEventScans($eventId: String!, $page: Int, $pageSize: Int) {
+  hostListEventScans(eventId: $eventId, page: $page, pageSize: $pageSize) {
+    total
+    items {
+      orderId
+      customerName
+      customerPhone
+      ticketCount
+      ticketNames
+      checkedInAt
+      scannerId
+      scannerName
+    }
+  }
+}
+
+mutation hostReverseCheckIn($orderId: String!, $reason: String!) {
+  hostReverseCheckIn(orderId: $orderId, reason: $reason)
+}
+
+mutation hostRevokeAllScannersForEvent($eventId: String!) {
+  hostRevokeAllScannersForEvent(eventId: $eventId)
+}

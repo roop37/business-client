@@ -1,0 +1,510 @@
+/* =============================================================
+   Owner Design System — Hoizr Admin
+   Source: design_handoff_hoizr_admin/styles/tokens.css
+   Loaded globally via styles/globals.css. Treat the Owner tokens
+   as the source of truth for all NEW UI; legacy warm-cream
+   tokens further down in globals.css are kept until the page-by-
+   page port is done.
+   ============================================================= */
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+:root {
+  /* Brand / primary */
+  --owner-blue-500: #1F62E8;
+  --owner-blue-600: #1853CC;
+  --owner-blue-400: #3F7CF2;
+  --owner-blue-200: #B7CFFB;
+  --owner-blue-100: #DCE7FD;
+  --owner-blue-050: #EFF4FE;
+
+  --owner-cyan-500: #3FC0CC;
+  --owner-cyan-300: #8BD9E0;
+
+  --owner-money: #1F62E8;
+
+  /* Semantic */
+  --owner-success-text: #0E8345;
+  --owner-success-bg: #DCFCE7;
+  --owner-success-border: #BBF7D0;
+
+  --owner-warning-text: #B45309;
+  --owner-warning-bg: #FEF3C7;
+
+  --owner-danger-text: #C0382B;
+  --owner-danger-bg: #FDE2DE;
+
+  --owner-info-text: #1F62E8;
+  --owner-info-bg: #EFF4FE;
+
+  --owner-neutral-pill-bg: #F1F1EF;
+  --owner-neutral-pill-text: #6B6B6B;
+
+  /* Neutrals (warm-tinted) */
+  --owner-bg: #FFFFFF;
+  --owner-bg-sidebar: #FAFAF7;
+  --owner-bg-subtle: #F7F7F4;
+  --owner-bg-input: #FFFFFF;
+
+  --owner-border: #E7E7E3;
+  --owner-border-strong: #D7D7D2;
+  --owner-border-soft: #EFEFEB;
+
+  --owner-fg-1: #0A0A0A;
+  --owner-fg-2: #2A2A28;
+  --owner-fg-3: #5A5A57;
+  --owner-fg-4: #8A8A86;
+  --owner-fg-5: #B8B8B3;
+
+  /* Radii */
+  --owner-radius-sm: 8px;
+  --owner-radius-md: 12px;
+  --owner-radius-lg: 16px;
+  --owner-radius-xl: 22px;
+  --owner-radius-full: 999px;
+
+  /* Shadows — extremely restrained */
+  --owner-shadow-sm: 0 1px 2px rgba(15, 15, 15, 0.04);
+  --owner-shadow-md: 0 2px 8px rgba(15, 15, 15, 0.05),
+                     0 1px 2px rgba(15, 15, 15, 0.04);
+  --owner-shadow-pill: 0 1px 2px rgba(15, 15, 15, 0.06),
+                       0 0 0 1px rgba(15, 15, 15, 0.04);
+  --owner-shadow-dropdown: 0 8px 24px rgba(15, 15, 15, 0.08);
+
+  /* Spacing (4px base) */
+  --owner-space-1: 4px;
+  --owner-space-2: 8px;
+  --owner-space-3: 12px;
+  --owner-space-4: 16px;
+  --owner-space-5: 20px;
+  --owner-space-6: 24px;
+  --owner-space-8: 32px;
+  --owner-space-10: 40px;
+  --owner-space-12: 48px;
+  --owner-space-16: 64px;
+
+  /* Type — family */
+  --owner-font-sans: 'Inter', -apple-system, BlinkMacSystemFont,
+                     'Segoe UI', Roboto, sans-serif;
+  --owner-font-mono: ui-monospace, 'SF Mono', Menlo, monospace;
+}
+
+/* ─────────────────────────────────────────────────────────────
+   Owner type scale — apply via class
+   ───────────────────────────────────────────────────────────── */
+
+.owner-page-title {
+  font-size: 34px;
+  font-weight: 600;
+  line-height: 1.15;
+  letter-spacing: -0.02em;
+  color: var(--owner-fg-1);
+}
+
+.owner-h1 {
+  font-size: 28px;
+  font-weight: 600;
+  line-height: 1.15;
+  letter-spacing: -0.015em;
+  color: var(--owner-fg-1);
+}
+
+.owner-h2 {
+  font-size: 22px;
+  font-weight: 600;
+  line-height: 1.3;
+  letter-spacing: -0.01em;
+  color: var(--owner-fg-1);
+}
+
+.owner-h3 {
+  font-size: 18px;
+  font-weight: 600;
+  line-height: 1.3;
+  color: var(--owner-fg-1);
+}
+
+.owner-stat {
+  font-size: 44px;
+  font-weight: 600;
+  line-height: 1;
+  letter-spacing: -0.025em;
+  font-variant-numeric: tabular-nums;
+  color: var(--owner-fg-1);
+}
+
+.owner-body {
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--owner-fg-3);
+}
+
+.owner-body-strong {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--owner-fg-1);
+}
+
+.owner-caption {
+  font-size: 12px;
+  color: var(--owner-fg-4);
+  line-height: 1.3;
+}
+
+.owner-label {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--owner-fg-2);
+}
+
+.owner-mono,
+.tabular {
+  font-variant-numeric: tabular-nums;
+}
+
+.owner-mono {
+  font-family: var(--owner-font-mono);
+  font-size: 13px;
+}
+
+/* ─────────────────────────────────────────────────────────────
+   Owner shell + canvas primitives
+   ───────────────────────────────────────────────────────────── */
+
+.owner-shell {
+  display: flex;
+  min-height: 100vh;
+  background: var(--owner-bg-sidebar);
+  font-family: var(--owner-font-sans);
+}
+
+.owner-canvas {
+  flex: 1;
+  min-width: 0;
+  background: var(--owner-bg);
+  border-top-left-radius: 24px;
+  border-bottom-left-radius: 24px;
+  box-shadow: -1px 0 0 var(--owner-border);
+  padding: 36px 40px 80px;
+  overflow-y: auto;
+}
+
+.owner-canvas-inner {
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+@media (max-width: 1023px) {
+  .owner-canvas {
+    border-radius: 0;
+    box-shadow: none;
+    padding: 20px 16px 64px;
+  }
+}
+
+/* ─────────────────────────────────────────────────────────────
+   Owner card
+   ───────────────────────────────────────────────────────────── */
+
+.owner-card {
+  background: var(--owner-bg);
+  border: 1px solid var(--owner-border);
+  border-radius: var(--owner-radius-lg);
+  padding: 24px;
+}
+
+/* ─────────────────────────────────────────────────────────────
+   Owner button (use via .owner-btn .owner-btn--{primary|secondary|ghost|danger})
+   ───────────────────────────────────────────────────────────── */
+
+.owner-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  height: 40px;
+  padding: 0 18px;
+  border-radius: var(--owner-radius-md);
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1;
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition: background-color 120ms ease, color 120ms ease,
+              border-color 120ms ease, transform 120ms ease;
+  white-space: nowrap;
+}
+
+.owner-btn:active {
+  transform: scale(0.98);
+}
+
+.owner-btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.owner-btn--primary {
+  background: var(--owner-blue-500);
+  color: #fff;
+}
+
+.owner-btn--primary:hover:not(:disabled) {
+  background: var(--owner-blue-400);
+}
+
+.owner-btn--secondary {
+  background: var(--owner-bg);
+  color: var(--owner-fg-1);
+  border-color: var(--owner-border);
+  box-shadow: var(--owner-shadow-sm);
+}
+
+.owner-btn--secondary:hover:not(:disabled) {
+  background: var(--owner-bg-subtle);
+}
+
+.owner-btn--ghost {
+  background: transparent;
+  color: var(--owner-fg-2);
+}
+
+.owner-btn--ghost:hover:not(:disabled) {
+  background: var(--owner-bg-subtle);
+}
+
+.owner-btn--danger {
+  background: transparent;
+  color: var(--owner-danger-text);
+}
+
+.owner-btn--danger:hover:not(:disabled) {
+  background: var(--owner-danger-bg);
+}
+
+.owner-btn--sm {
+  height: 32px;
+  padding: 0 12px;
+  font-size: 13px;
+  border-radius: var(--owner-radius-sm);
+}
+
+/* ─────────────────────────────────────────────────────────────
+   Owner badge
+   ───────────────────────────────────────────────────────────── */
+
+.owner-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 12px;
+  border-radius: var(--owner-radius-sm);
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 1.3;
+}
+
+.owner-badge--success {
+  background: var(--owner-success-bg);
+  color: var(--owner-success-text);
+}
+
+.owner-badge--warning {
+  background: var(--owner-warning-bg);
+  color: var(--owner-warning-text);
+}
+
+.owner-badge--danger {
+  background: var(--owner-danger-bg);
+  color: var(--owner-danger-text);
+}
+
+.owner-badge--info {
+  background: var(--owner-info-bg);
+  color: var(--owner-info-text);
+}
+
+.owner-badge--neutral {
+  background: var(--owner-neutral-pill-bg);
+  color: var(--owner-neutral-pill-text);
+}
+
+/* ─────────────────────────────────────────────────────────────
+   Owner table
+   ───────────────────────────────────────────────────────────── */
+
+.owner-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-variant-numeric: tabular-nums;
+}
+
+.owner-table th {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--owner-fg-3);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  padding: 14px 16px;
+  border-bottom: 1px dashed var(--owner-border);
+  text-align: left;
+  background: var(--owner-bg);
+}
+
+.owner-table td {
+  padding: 18px 16px;
+  border-bottom: 1px dashed var(--owner-border-soft);
+  font-size: 14px;
+  color: var(--owner-fg-1);
+  vertical-align: middle;
+}
+
+.owner-table tr:last-child td {
+  border-bottom: none;
+}
+
+.owner-table .num,
+.owner-table th.num,
+.owner-table td.num {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ─────────────────────────────────────────────────────────────
+   Owner pill tabs (segmented)
+   ───────────────────────────────────────────────────────────── */
+
+.owner-pill-tabs {
+  display: inline-flex;
+  gap: 4px;
+  padding: 6px;
+  background: var(--owner-bg);
+  border: 1px solid var(--owner-border);
+  border-radius: var(--owner-radius-lg);
+}
+
+.owner-pill-tabs button {
+  padding: 8px 16px;
+  font-size: 14px;
+  font-weight: 500;
+  border-radius: 10px;
+  background: transparent;
+  color: var(--owner-fg-3);
+  border: 0;
+  cursor: pointer;
+  transition: background-color 120ms ease, color 120ms ease;
+}
+
+.owner-pill-tabs button:hover {
+  color: var(--owner-fg-1);
+}
+
+.owner-pill-tabs button[data-active="true"] {
+  background: var(--owner-blue-050);
+  color: var(--owner-blue-500);
+  font-weight: 600;
+}
+
+/* ─────────────────────────────────────────────────────────────
+   Owner search bar
+   ───────────────────────────────────────────────────────────── */
+
+.owner-search {
+  position: relative;
+  width: 100%;
+}
+
+.owner-search > input {
+  width: 100%;
+  height: 46px;
+  padding: 0 16px 0 44px;
+  border-radius: var(--owner-radius-lg);
+  border: 1px solid var(--owner-border);
+  background: var(--owner-bg);
+  font-size: 14px;
+  color: var(--owner-fg-1);
+}
+
+.owner-search > input::placeholder {
+  color: var(--owner-fg-4);
+}
+
+.owner-search > input:focus {
+  outline: none;
+  border-color: var(--owner-blue-200);
+  box-shadow: 0 0 0 3px var(--owner-blue-050);
+}
+
+.owner-search > svg {
+  position: absolute;
+  left: 16px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--owner-fg-4);
+  pointer-events: none;
+}
+
+/* ─────────────────────────────────────────────────────────────
+   Owner toggle
+   ───────────────────────────────────────────────────────────── */
+
+.owner-toggle {
+  width: 52px;
+  height: 30px;
+  border-radius: 999px;
+  background: #DCDCD7;
+  position: relative;
+  cursor: pointer;
+  border: 0;
+  transition: background-color 180ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.owner-toggle[data-on="true"] {
+  background: var(--owner-blue-500);
+}
+
+.owner-toggle::after {
+  content: "";
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 24px;
+  height: 24px;
+  background: #fff;
+  border-radius: 999px;
+  box-shadow: 0 1px 2px rgba(15, 15, 15, 0.18);
+  transition: transform 180ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.owner-toggle[data-on="true"]::after {
+  transform: translateX(22px);
+}
+
+/* ─────────────────────────────────────────────────────────────
+   Owner focus ring (apply via :focus-visible)
+   ───────────────────────────────────────────────────────────── */
+
+.owner-focus-ring:focus-visible {
+  outline: 2px solid var(--owner-blue-500);
+  outline-offset: 2px;
+}
+
+/* ─────────────────────────────────────────────────────────────
+   shadcn `<Sidebar>` HSL tokens.
+   The bundled component reads --sidebar-* via `hsl(var(...))` for its
+   border / background / accent. Without these defined the variables
+   resolve to "0 0% 0%" (pure black), which is why the host sidebar
+   was rendering a hard black hairline around the floating panel.
+   Map them to the Owner palette so the sidebar inherits the warm
+   neutral tone instead of pure black.
+   ───────────────────────────────────────────────────────────── */
+:root {
+  --sidebar-background: 60 22% 96%;        /* near-cream, owner-bg-sidebar */
+  --sidebar-foreground: 0 0% 4%;           /* owner-fg-1 */
+  --sidebar-primary: 220 84% 51%;          /* owner-blue-500 */
+  --sidebar-primary-foreground: 0 0% 100%;
+  --sidebar-accent: 220 90% 95%;           /* owner-blue-050 */
+  --sidebar-accent-foreground: 0 0% 4%;
+  --sidebar-border: 40 15% 88%;            /* soft warm divider — owner-border-soft */
+  --sidebar-ring: 220 84% 51%;
+}

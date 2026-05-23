@@ -1,0 +1,97 @@
+query hostPayoutAccounts {
+  hostPayoutAccounts {
+    _id
+    entityName
+    entityType
+    panNumber
+    taxDeductionAccountNumber
+    contactEmail
+    contactPhone
+    accountHolderName
+    accountNumber
+    last4
+    ifscCode
+    bankName
+    branchName
+    accountType
+    upiId
+    isActive
+    isPrimary
+    verificationStatus
+    rejectionReason
+    isGstRegistered
+    gstin
+    gstRegistrationType
+    registeredBusinessName
+    gstRegistrationDate
+    createdAt
+    updatedAt
+  }
+}
+
+query hostListPayoutSettlements($input: ListHostPayoutSettlementsInput) {
+  hostListPayoutSettlements(input: $input) {
+    items {
+      _id
+      eventId
+      grossAmount
+      hoizrCommissionTotal
+      hoizrCommissionGstTotal
+      ticketGstFlowThroughTotal
+      finalDeclaredOfferAmount
+      razorpayFeeTotal
+      netPayoutAmount
+      refundsTotal
+      chargebacksTotal
+      orderCount
+      status
+      scheduledFor
+      paidAt
+      paidMethod
+      razorpayPayoutId
+      invoiceId
+      invoiceUrl
+      errorMessage
+      createdAt
+      updatedAt
+    }
+    total
+  }
+}
+
+query hostGetPayoutStatementUrl($settlementId: String!) {
+  hostGetPayoutStatementUrl(settlementId: $settlementId) {
+    signedUrl
+    expiresAt
+  }
+}
+
+mutation addPayout($input: AddPayoutInput!) {
+  addPayout(input: $input) {
+    _id
+    verificationStatus
+  }
+}
+
+mutation addHostPayoutAccount($input: AddPayoutInput!) {
+  addHostPayoutAccount(input: $input) {
+    _id
+    verificationStatus
+    isPrimary
+    last4
+  }
+}
+
+mutation setPrimaryPayout($id: String!) {
+  setPrimaryPayout(id: $id) {
+    _id
+    isPrimary
+  }
+}
+
+mutation setPrimaryHostPayoutAccount($id: String!) {
+  setPrimaryHostPayoutAccount(id: $id) {
+    _id
+    isPrimary
+  }
+}

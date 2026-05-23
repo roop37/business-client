@@ -1,0 +1,25 @@
+query myMarketingReputation {
+  myMarketingReputation {
+    tier
+    effectiveTier
+    tierLabel
+    tierTagline
+    maxRecipients
+    unlimited
+    source
+    lifetimeRecipientsSent
+    verifiedCustomerCount
+    lifetimeCampaignCount
+    nextTier
+    nextTierLabel
+    recipientsToNextTier
+    progressPercentToNextTier
+    benefits
+    channels {
+      channel
+      maxRecipients
+      unlimited
+      status
+    }
+  }
+}

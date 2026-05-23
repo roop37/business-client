@@ -1,0 +1,107 @@
+import { create } from "zustand";
+
+type ToastData = {
+  message: string;
+  type: "success" | "error" | "warning";
+  title?: string;
+};
+
+type MenuState = {
+  isShowTaxSettings: boolean;
+  setIsShowTaxSettings: (isExpanded: boolean) => void;
+  selectedSideBarMenu: string;
+  isSidebarExpanded: boolean;
+  isShowSetupPanel: boolean;
+  isVerificationToHostAdd: boolean;
+  setSelectedSideBarMenu: (menu: string) => void;
+  toastData: ToastData | null;
+  setToastData: (data: ToastData | null) => void;
+  setIsSidebarExpanded: (isExpanded: boolean) => void;
+  setIsShowSetupPanel: (e: boolean) => void;
+  setisVerificationToHostAdd: (e: boolean) => void;
+  manageSubscriptionLink: string;
+  setManageSubscriptionLink: (link: string) => void;
+
+  showMultiAccount: boolean;
+  setShowMultiAccount: (value: boolean) => void;
+
+  multiAccountModal: boolean;
+  showMultiAccountModal: (value: boolean) => void;
+
+  payoutPromptModal: boolean;
+  showPayoutPromptModal: (value: boolean) => void;
+  payoutFormModal: boolean;
+  showPayoutFormModal: (value: boolean) => void;
+
+  // Soft "your payout is awaiting verification" modal — shown when a
+  // host tries to publish a paid event before admin has marked their
+  // payout profile verified. Different from payoutPromptModal which is
+  // for hosts who have no payout at all.
+  payoutPendingVerificationModal: boolean;
+  showPayoutPendingVerificationModal: (value: boolean) => void;
+
+  // Soft modal shown when an unverified host tries to activate (publish)
+  // a campaign. Same UX vibe as payoutPendingVerificationModal.
+  hostUnderReviewModal: boolean;
+  showHostUnderReviewModal: (value: boolean) => void;
+
+  // Marketing-credit top-up modal — mounted globally so any page can
+  // open it via openTopUpModal(). presetAmount lets callers prefill the
+  // amount (used by "you don't have enough credit" CTAs).
+  topUpModalOpen: boolean;
+  topUpPresetAmount: number | null;
+  openTopUpModal: (presetAmount?: number) => void;
+  closeTopUpModal: () => void;
+};
+
+const useGlobalStore = create<MenuState>((set) => ({
+  isShowTaxSettings: false,
+  setIsShowTaxSettings: (show: boolean) => set({ isShowTaxSettings: show }),
+  selectedSideBarMenu: "dashboard",
+  manageSubscriptionLink: "",
+  setManageSubscriptionLink: (link: string) =>
+    set({ manageSubscriptionLink: link }),
+  isSidebarExpanded: true,
+  isShowSetupPanel: true,
+  isVerificationToHostAdd: false,
+  setSelectedSideBarMenu: (menu: string) => set({ selectedSideBarMenu: menu }),
+  toastData: null, // Default toast data
+  setToastData: (data: ToastData | null) => set({ toastData: data }),
+  setIsSidebarExpanded: (isExpanded: boolean) =>
+    set({ isSidebarExpanded: isExpanded }),
+  setIsShowSetupPanel: (e: boolean) => set({ isShowSetupPanel: e }),
+  setisVerificationToHostAdd: (e: boolean) =>
+    set({ isVerificationToHostAdd: e }),
+
+  showMultiAccount: false,
+  setShowMultiAccount: (e: boolean) => set({ showMultiAccount: e }),
+
+  multiAccountModal: false,
+  showMultiAccountModal: (e: boolean) => set({ multiAccountModal: e }),
+
+  payoutPromptModal: false,
+  showPayoutPromptModal: (e: boolean) => set({ payoutPromptModal: e }),
+  payoutFormModal: false,
+  showPayoutFormModal: (e: boolean) => set({ payoutFormModal: e }),
+
+  payoutPendingVerificationModal: false,
+  showPayoutPendingVerificationModal: (e: boolean) =>
+    set({ payoutPendingVerificationModal: e }),
+
+  hostUnderReviewModal: false,
+  showHostUnderReviewModal: (e: boolean) => set({ hostUnderReviewModal: e }),
+
+  topUpModalOpen: false,
+  topUpPresetAmount: null,
+  openTopUpModal: (presetAmount?: number) =>
+    set({
+      topUpModalOpen: true,
+      topUpPresetAmount:
+        typeof presetAmount === "number" && Number.isFinite(presetAmount)
+          ? Math.max(0, Math.ceil(presetAmount))
+          : null,
+    }),
+  closeTopUpModal: () => set({ topUpModalOpen: false, topUpPresetAmount: null }),
+}));
+
+export default useGlobalStore;

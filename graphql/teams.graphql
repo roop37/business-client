@@ -1,0 +1,58 @@
+mutation addTeamMember($AddTeamMemberInput: AddTeamMemberInput!) {
+  addTeamMember(input: $AddTeamMemberInput)
+}
+
+mutation updateSubuserPermissions($input: UpdateSubuserPermissionsInput!) {
+  updateSubuserPermissions(input: $input)
+}
+
+mutation updateSubuserRole($input: UpdateSubuserRoleInput!) {
+  updateSubuserRole(input: $input)
+}
+
+query getTeamMembers {
+  getTeamMembers {
+    _id {
+      _id
+    }
+    firstName
+    lastName
+    email
+    phone
+    role
+    status
+  }
+}
+
+query getUser($id: String!) {
+  getUser(id: $id) {
+    _id
+    permissions {
+      status
+      type
+      id
+    }
+    role
+    teamRole
+    hosts {
+      _id
+    }
+  }
+}
+
+query deleteTeamMember($id: String!) {
+  deleteTeamMember(id: $id)
+}
+
+mutation verifyTeamEmail($token: String!) {
+  verifyTeamEmail(token: $token)
+}
+
+query getAllPermissions {
+  getAllPermissions {
+    _id
+    type
+    preselect
+    isFunction
+  }
+}

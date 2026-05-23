@@ -1,0 +1,81 @@
+# import "./fragments.graphql"
+
+query getHostsByBusiness {
+  getHostsByBusiness {
+    _id
+    name
+    email
+    phone
+    hostType
+    venueType
+    description
+    logo
+    businessRegistrationNumber
+    gstNumber
+    websiteUrl
+    averageEventSize
+    profileComplete
+    status
+    onboardingCompleted
+    isAdminVerified
+    isActive
+    address {
+      ...addressInfo
+    }
+    createdAt
+    updatedAt
+  }
+}
+
+query getHost {
+  getHost {
+    _id
+    name
+    email
+    phone
+    hostType
+    venueType
+    description
+    logo
+    businessRegistrationNumber
+    gstNumber
+    websiteUrl
+    averageEventSize
+    profileComplete
+    status
+    onboardingCompleted
+    isAdminVerified
+    isActive
+    address {
+      ...addressInfo
+    }
+    createdAt
+    updatedAt
+  }
+}
+
+query getHostDashboardSummary {
+  getHostDashboardSummary {
+    upcomingEventsCount
+    publishedEventsCount
+    draftEventsCount
+    salesToday
+    ticketsSoldToday
+    salesLast30Days
+    ticketsSoldLast30Days
+    pendingSettlementsCount
+    paidOutLifetime
+  }
+}
+
+mutation createHost($input: CreateHostInput!) {
+  createHost(input: $input)
+}
+
+mutation updateHost($input: UpdateHostInput!) {
+  updateHost(input: $input)
+}
+
+mutation uploadHostLogo($logo: String!) {
+  uploadHostLogo(logo: $logo)
+}

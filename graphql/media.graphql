@@ -1,0 +1,9 @@
+# Deletes a Cloudinary asset that the current host previously uploaded.
+# The server authorises by checking that the asset's public_id lives
+# under this host's folder for the active env root, so a host can only
+# nuke their own assets even if they fabricate a URL. Used right after
+# a successful "replace this image" upload so we don't accumulate
+# orphans on every avatar/flyer/banner swap.
+mutation deleteHostCloudinaryAsset($assetUrl: String!) {
+  deleteHostCloudinaryAsset(assetUrl: $assetUrl)
+}

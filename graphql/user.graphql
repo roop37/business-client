@@ -1,0 +1,41 @@
+query updateUserDetails($input: UpdateUserInput!) {
+  updateUserDetails(input: $input)
+}
+
+# Query to fetch user's profile
+query MeUserforProfile {
+  meUser {
+    enable2FA
+    _id
+    firstName
+    lastName
+    status
+    email
+    phone
+    accountPreferences {
+      sms
+      email
+      whatsapp
+    }
+  }
+}
+
+query enable2FA {
+  enable2FA
+}
+
+query disable2F($authCode: String!) {
+  disable2FA(authCode: $authCode)
+}
+
+query verify2FASetup($authCode: String!) {
+  verify2FASetup(authCode: $authCode)
+}
+
+query IsMultiAccountUser {
+  isMultiAccountUser
+}
+
+query SetHostIdAsCookie($hostId: String!) {
+  setHostIdAsCookie(hostId: $hostId)
+}

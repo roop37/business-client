@@ -1,0 +1,35 @@
+# Hoizr Business — Ticketing, marketing & ops for India's live nights
+
+> Hoizr Business is the host-side product in the Hoizr family. Direct ticketing with no hidden fees, an owned fan CRM, AI-quoted event-specific commissions, and built-in marketing and ops. Built by Hoizr Technologies Pvt. Ltd. for clubs, festivals, comedy, and live music organisers.
+
+## The Hoizr family
+Operated by Hoizr Technologies Pvt. Ltd.
+
+- **Hoizr** — Consumer ticketing surface. https://hoizr.com
+- **Hoizr Business** — This site. Host tools. https://business.hoizr.com
+- **Hoizr Artist** — Performing-artist profiles, fan CRM, merch. https://artist.hoizr.com
+- **Hoizr Promoters** — Coming soon. Tools for tour promoters and agencies.
+
+## Core values
+- Owned audience, not rented. Hosts keep their own customer relationships and full data ownership.
+- Transparent commercials. AI quotes a single per-event commission — no hidden percentages or convenience fees.
+- India-first. UPI, GST invoices, Section 24 compliance, regional language support, host payouts in INR.
+
+## Key surfaces
+
+- [Home](https://business.hoizr.com/): Platform overview and primary CTAs.
+- [Pricing](https://business.hoizr.com/pricing): Transparent commission tiers + AI Boost pricing.
+- [How it works](https://business.hoizr.com/how-it-works): End-to-end host journey from onboarding to settlement.
+- [Products](https://business.hoizr.com/product): Ticketing, fan CRM, scanner, marketing tools, AI offers, host payouts.
+- [Blog](https://business.hoizr.com/blog): Stories on live entertainment, ticketing, and India's nightlife economy.
+- [Legal](https://business.hoizr.com/legal): Terms, privacy, refund policy, GST policy, Section 24 disclosures.
+- [Contact](https://business.hoizr.com/contact): Sales and support inbound.
+
+## Audience
+Event hosts, club owners, festival promoters, comedy producers, and venue operators across India.
+
+## Counterpart
+Customer-facing ticket buying lives at https://hoizr.com — that's where attendees discover events, book tickets, follow artists, and check in.
+
+## Contact
+hello@hoizr.in · India

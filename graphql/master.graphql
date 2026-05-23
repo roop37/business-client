@@ -1,0 +1,55 @@
+query getActiveIndianCities {
+  getActiveIndianCities {
+    _id
+    value
+    state
+  }
+}
+
+query getActiveEventCategories {
+  getActiveEventCategories {
+    _id
+    value
+    description
+  }
+}
+
+query getActiveGenreTags {
+  getActiveGenreTags {
+    _id
+    value
+  }
+}
+
+query GetConfig($type: ConfigTypeEnum!) {
+  getConfig(type: $type) {
+    _id
+    type
+    valueType
+    textVal
+    numVal
+    boolVal
+    createdBy {
+      firstName
+      lastName
+    }
+    updatedBy {
+      firstName
+      lastName
+    }
+    createdAt
+    updatedAt
+  }
+}
+
+query GetMarketingPricing {
+  getMarketingPricing {
+    emailRate
+    smsRate
+    whatsappRate
+    pushRate
+    gstPercent
+    platformFeePercent
+    currency
+  }
+}

@@ -1,0 +1,74 @@
+# import "./fragments.graphql"
+
+query userLogout {
+  userLogout
+}
+
+query userLogoutFromEverywhere {
+  userLogoutFromEverywhere
+}
+
+query userLogin($input: String!) {
+  userLogin(input: $input)
+}
+
+query MeUser {
+  meUser {
+    _id
+    firstName
+    lastName
+    status
+    email
+    phone
+    creatorUser
+    permissions {
+      status
+      type
+    }
+    role
+  }
+}
+
+query MeContactDetails {
+  meContactDetails {
+    email
+    phone
+  }
+}
+
+query MeCheckUser {
+  meUser {
+    _id
+    firstName
+    status
+    creatorUser
+    permissions {
+      type
+      status
+    }
+  }
+}
+
+query MeUserJourney {
+  meUserJourney {
+    userStatus
+    hostStatus
+    hostOnboardingCompleted
+    isAdminVerified
+    canPublish
+    suggestedRoute
+    hostId
+  }
+}
+
+query userLoginVerification($input: UserLoginVerificationInput!) {
+  userLoginVerification(input: $input)
+}
+
+query UserSignUp($input: UserSignupInput!) {
+  userSignup(input: $input)
+}
+
+query userSignupVerification($input: UserSignupVerificationInput!) {
+  userSignupVerification(input: $input)
+}

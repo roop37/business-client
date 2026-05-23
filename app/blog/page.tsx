@@ -1,0 +1,106 @@
+import type { Metadata } from "next";
+import Script from "next/script";
+import { BlogIndex } from "@/components/marketing/blog/BlogIndex";
+import { blogs } from "@/components/marketing/blog/blog-data";
+import { MarketingShell } from "@/components/marketing/MarketingShell";
+import { BreadcrumbJsonLd } from "@/components/marketing/seo/SchemaJsonLd";
+
+export const metadata: Metadata = {
+  title: "Blog — for Indian event organizers, venues & promoters · Hoizr",
+  description:
+    "Insights and playbooks for Indian event organizers, venues, comedy promoters, and live-music hosts. Migration guides, AI pricing studies, fan-CRM tactics, and door-ops field notes.",
+  keywords: [
+    "event organizer blog India",
+    "venue marketing tips India",
+    "ticketing platform comparison India",
+    "fan CRM for live events",
+    "AI event pricing India",
+    "comedy promoter playbook",
+    "festival operations India",
+    "nightclub marketing India",
+    "live music venue blog India",
+    "event promoter resources India",
+  ],
+  alternates: {
+    canonical: "/blog",
+    languages: { "en-IN": "/blog", "x-default": "/blog" },
+  },
+  openGraph: {
+    title: "Hoizr Blog — insights for India's event organizers & venues",
+    description:
+      "Migration playbooks, AI pricing studies, fan-CRM tactics, and operator field notes — written for Indian event hosts, venues, and promoters.",
+    type: "website",
+    url: "/blog",
+    locale: "en_IN",
+    siteName: "Hoizr",
+  },
+  twitter: {
+    card: "summary_large_image",
+    site: "@hoizr",
+    creator: "@hoizr",
+    title: "Hoizr Blog — for Indian event organizers & venues",
+    description:
+      "Migration playbooks, AI pricing studies, fan-CRM tactics, and operator field notes.",
+  },
+};
+
+const SITE_URL = "https://business.hoizr.com";
+
+export default function BlogPage() {
+  // Blog + CollectionPage JSON-LD. Lists every post so AI engines
+  // can crawl the full corpus in one pass. blogPost items use the
+  // BlogPosting type with author/date/category, matching what the
+  // detail pages emit so the graph stays consistent.
+  const blogJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "Blog",
+    "@id": `${SITE_URL}/blog`,
+    name: "Hoizr Blog",
+    description:
+      "Insights and playbooks for Indian event organizers, venues, comedy promoters, and live-music hosts.",
+    url: `${SITE_URL}/blog`,
+    inLanguage: "en-IN",
+    publisher: {
+      "@type": "Organization",
+      name: "Hoizr Technologies Pvt. Ltd.",
+      url: SITE_URL,
+    },
+    audience: {
+      "@type": "BusinessAudience",
+      audienceType:
+        "Indian event organizers, venues, promoters, festival hosts, comedy promoters, nightclub operators",
+      geographicArea: { "@type": "Country", name: "India" },
+    },
+    blogPost: blogs.map((b) => ({
+      "@type": "BlogPosting",
+      headline: b.title,
+      description: b.excerpt,
+      url: `${SITE_URL}/blog/${b.id}`,
+      datePublished: b.date,
+      dateModified: b.date,
+      articleSection: b.category,
+      image: b.image,
+      author: { "@type": "Person", name: b.author.name },
+      inLanguage: "en-IN",
+    })),
+  };
+
+  return (
+    <MarketingShell>
+      <Script
+        id="hoizr-blog-collection-jsonld"
+        type="application/ld+json"
+        strategy="afterInteractive"
+      >
+        {JSON.stringify(blogJsonLd)}
+      </Script>
+      <BreadcrumbJsonLd
+        items={[
+          { name: "Hoizr", href: "/" },
+          { name: "Blog", href: "/blog" },
+        ]}
+      />
+      <BlogIndex />
+    </MarketingShell>
+  );
+}

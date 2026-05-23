@@ -1,0 +1,467 @@
+/* =============================================================
+   Hoizr Marketing — design tokens
+   -----------------------------------------------------------------
+   These tokens drive the public marketing site only (`/`, `/pricing`,
+   `/product/*`, `/blog`, `/blog/*`). They are intentionally scoped
+   under `.hoizr-marketing` so they don't collide with the host
+   dashboard design tokens.
+
+   The palette is deliberately Hoizr-original — warm cream canvas,
+   graphite-black product panels, neon chartreuse (#D6FF3F) action
+   accent, paired with the Bodoni Moda wordmark + Manrope body.
+   Premium nightlife direction, not a restaurant-tech derivative.
+   ============================================================= */
+
+.hoizr-marketing {
+  /* ---------- Canvas ---------- */
+  --m-canvas: #F4EFE3;       /* page background */
+  --m-canvas-2: #EFE9DA;     /* alt surfaces */
+  --m-surface: #FBF7EE;      /* card */
+  --m-surface-elevated: #FFFFFF;
+
+  /* ---------- Ink (text) ---------- */
+  --m-ink-1: #000000;        /* primary headlines / body — pure black to match image black */
+  --m-ink-2: #2E2B24;
+  --m-ink-3: #5A554A;        /* secondary body */
+  --m-ink-4: #9C968A;        /* muted, eyebrows */
+  --m-ink-5: #C2BCAD;        /* dividers, low-emphasis */
+
+  /* ---------- Borders ---------- */
+  --m-border: #E5DFCF;
+  --m-border-strong: #D2CBB7;
+  --m-border-on-dark: rgba(255,255,255,0.12);
+
+  /* ---------- Primary brand: graphite-black ---------- */
+  --m-forest-50:  #F0EEE9;
+  --m-forest-100: #DDD8CF;
+  --m-forest-200: #B9B1A7;
+  --m-forest-300: #817B72;
+  --m-forest-400: #4D4943;
+  --m-forest-500: #2B2925;   /* core graphite */
+  --m-forest-600: #1E1C19;
+  --m-forest-700: #151412;
+  --m-forest-800: #0C0C0B;
+  --m-forest-900: #050504;
+
+  /* ---------- Highlight accents (Gen-Z / nightlife) ----------
+     Neon chartreuse is the Hoizr accent. All blues retired per
+     brand direction — anything that used to be blue now routes
+     to a forest / warm tone so the palette stays cohesive. */
+  --m-acid: #D6FF3F;          /* neon chartreuse — the Hoizr pop */
+  --m-acid-deep: #B8E02F;
+  --m-blush: #F4B9A4;         /* warm coral — sunset accent */
+  --m-blush-deep: #E89478;
+  --m-amber: #E2B266;         /* warm amber — star rating */
+
+  /* ---------- Legacy "blue" tokens, now neutralised ----------
+     Kept by name so any older `bg-[var(--m-blue-500)]` /
+     `text-[var(--m-blue-500)]` references resolve without the
+     bright-blue bleed. Mapped to forest tones. */
+  --m-blue-700: #151412;
+  --m-blue-500: #1B5C3A;
+
+  /* ---------- Typography ----------
+     `--font-bodoni-moda` and `--font-manrope` are exposed by the
+     next/font/google loaders in pages/_app.tsx so the marketing site
+     uses the same optimised-loading pipeline as the rest of the app.
+     Generic fallbacks are listed for the brief SSR moment before
+     Next.js hydrates the className. */
+  --m-font-display: var(--font-bodoni-moda), "Didot", Georgia, serif;
+  --m-font-sans: var(--font-manrope), -apple-system, BlinkMacSystemFont, "Helvetica Neue", Arial, sans-serif;
+  --m-font-mono: ui-monospace, "JetBrains Mono", "SF Mono", Menlo, monospace;
+
+  /* ---------- Radii ---------- */
+  --m-r-xs: 8px;
+  --m-r-sm: 12px;
+  --m-r-md: 18px;
+  --m-r-lg: 26px;
+  --m-r-xl: 36px;
+  --m-r-2xl: 48px;
+  --m-r-pill: 999px;
+
+  /* ---------- Shadows ---------- */
+  --m-shadow-card: 0 1px 0 rgba(11,11,8,0.04), 0 18px 36px rgba(11,11,8,0.06);
+  --m-shadow-pop:  0 30px 60px rgba(11,11,8,0.16);
+  --m-shadow-cta:  0 1px 0 rgba(255,255,255,0.10) inset, 0 12px 28px rgba(6,21,9,0.30);
+  --m-shadow-acid: 0 12px 32px rgba(214,255,63,0.36);
+
+  /* ---------- Motion ---------- */
+  --m-ease: cubic-bezier(0.2, 0.6, 0.2, 1);
+  --m-ease-out: cubic-bezier(0, 0, 0.2, 1);
+  --m-fast: 160ms;
+  --m-base: 240ms;
+  --m-slow: 480ms;
+
+  /* ---------- Layout ---------- */
+  --m-container: 1280px;
+  --m-section-y: 96px;
+  --m-nav-h: 72px;
+
+  /* Apply font + canvas at the wrapper level */
+  font-family: var(--m-font-sans);
+  background: var(--m-canvas);
+  color: var(--m-ink-1);
+  width: 100%;
+  max-width: 100vw;
+  overflow-x: clip;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+  letter-spacing: -0.005em;
+}
+.hoizr-marketing,
+.hoizr-marketing * {
+  box-sizing: border-box;
+}
+
+/* ---------- Wordmark ---------- */
+.hoizr-marketing .hoizr-mark {
+  font-family: var(--m-font-display);
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  line-height: 1;
+  color: var(--m-ink-1);
+}
+.hoizr-marketing .hoizr-mark.on-dark {
+  color: #fff;
+}
+
+/* ---------- Cursive accent ---------- */
+/* Bodoni Moda italic. Used selectively on headlines where a touch
+   of richness / premium feel is wanted (e.g. acid-toned cards). */
+.hoizr-marketing .hm-cursive {
+  font-family: var(--m-font-display);
+  font-style: italic;
+  font-weight: 700;
+  letter-spacing: -0.015em;
+}
+
+/* ---------- Section helper ---------- */
+.hoizr-marketing .hm-section {
+  width: 100%;
+  max-width: var(--m-container);
+  margin: 0 auto;
+  padding: var(--m-section-y) 24px;
+  scroll-margin-top: calc(var(--m-nav-h) + 24px);
+}
+
+/* ---------- Headline classes ---------- */
+.hoizr-marketing .hm-display {
+  font-family: var(--m-font-display);
+  font-weight: 700;
+  font-size: clamp(48px, 8vw, 104px);
+  line-height: 1.0;
+  letter-spacing: -0.035em;
+  text-wrap: balance;
+}
+.hoizr-marketing .hm-h2 {
+  font-family: var(--m-font-display);
+  font-weight: 700;
+  font-size: clamp(36px, 4.8vw, 60px);
+  line-height: 1.06;
+  letter-spacing: -0.025em;
+  text-wrap: balance;
+}
+.hoizr-marketing .hm-h3 {
+  font-family: var(--m-font-sans);
+  font-weight: 700;
+  font-size: clamp(22px, 2.4vw, 28px);
+  line-height: 1.15;
+  letter-spacing: -0.02em;
+}
+.hoizr-marketing .hm-eyebrow {
+  font-family: var(--m-font-sans);
+  font-weight: 600;
+  font-size: 12px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--m-ink-4);
+}
+.hoizr-marketing .hm-lead {
+  font-size: 19px;
+  line-height: 1.5;
+  color: var(--m-ink-3);
+  letter-spacing: -0.005em;
+}
+
+/* Rich article body rendered from admin-authored, server-sanitized HTML. */
+.hoizr-marketing .hm-rich-text {
+  color: var(--m-ink-2);
+  font-size: 17px;
+  line-height: 1.72;
+}
+.hoizr-marketing .hm-rich-text p { margin: 0 0 20px; }
+.hoizr-marketing .hm-rich-text p:last-child { margin-bottom: 0; }
+.hoizr-marketing .hm-rich-text h2,
+.hoizr-marketing .hm-rich-text h3,
+.hoizr-marketing .hm-rich-text h4 {
+  margin: 32px 0 14px;
+  font-family: var(--m-font-display);
+  font-weight: 700;
+  line-height: 1.08;
+  letter-spacing: -0.02em;
+  color: var(--m-ink-1);
+}
+.hoizr-marketing .hm-rich-text h2 { font-size: 32px; }
+.hoizr-marketing .hm-rich-text h3 { font-size: 28px; }
+.hoizr-marketing .hm-rich-text h4 { font-size: 22px; }
+@media (min-width: 768px) {
+  .hoizr-marketing .hm-rich-text h2 { font-size: 42px; }
+  .hoizr-marketing .hm-rich-text h3 { font-size: 34px; }
+}
+.hoizr-marketing .hm-rich-text ul,
+.hoizr-marketing .hm-rich-text ol {
+  margin: 20px 0;
+  padding-left: 22px;
+}
+.hoizr-marketing .hm-rich-text ul { list-style: disc; }
+.hoizr-marketing .hm-rich-text ol { list-style: decimal; }
+.hoizr-marketing .hm-rich-text li { margin: 9px 0; }
+.hoizr-marketing .hm-rich-text blockquote {
+  margin: 28px 0;
+  border-left: 4px solid var(--m-acid);
+  padding: 10px 0 10px 20px;
+  color: var(--m-ink-1);
+  font-weight: 600;
+}
+.hoizr-marketing .hm-rich-text a {
+  color: var(--m-forest-700);
+  font-weight: 700;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+/* ---------- Buttons ---------- */
+.hoizr-marketing .hm-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 14px 22px;
+  border-radius: var(--m-r-pill);
+  font-family: inherit;
+  font-size: 15px;
+  font-weight: 600;
+  border: 0;
+  cursor: pointer;
+  white-space: nowrap;
+  letter-spacing: -0.005em;
+  transition:
+    background var(--m-base) var(--m-ease),
+    color var(--m-base) var(--m-ease),
+    transform var(--m-fast) var(--m-ease),
+    box-shadow var(--m-base) var(--m-ease);
+  text-decoration: none;
+}
+.hoizr-marketing .hm-btn:active { transform: translateY(1px); }
+.hoizr-marketing .hm-btn-primary {
+  background: var(--m-forest-800);
+  color: #fff;
+  box-shadow: var(--m-shadow-cta);
+}
+.hoizr-marketing .hm-btn-primary:hover {
+  background: var(--m-forest-900);
+}
+.hoizr-marketing .hm-btn-ghost {
+  background: transparent;
+  color: var(--m-ink-1);
+}
+.hoizr-marketing .hm-btn-ghost:hover {
+  background: rgba(11,11,8,0.05);
+}
+.hoizr-marketing .hm-btn-on-dark {
+  background: #fff;
+  color: var(--m-forest-800);
+}
+.hoizr-marketing .hm-btn-on-dark:hover { background: var(--m-canvas); }
+.hoizr-marketing .hm-btn-acid {
+  background: var(--m-acid);
+  color: var(--m-forest-900);
+  box-shadow: var(--m-shadow-acid);
+}
+.hoizr-marketing .hm-btn-acid:hover {
+  background: var(--m-acid-deep);
+  color: var(--m-forest-900);
+}
+
+/* ---------- Pill / chip ---------- */
+.hoizr-marketing .hm-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: var(--m-r-pill);
+  background: var(--m-surface);
+  border: 1px solid var(--m-border);
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--m-ink-2);
+}
+.hoizr-marketing .hm-chip-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 999px;
+  background: var(--m-acid);
+}
+
+/* ---------- Graphite banner (the hallmark Hoizr panel) ---------- */
+.hoizr-marketing .hm-forest-panel {
+  position: relative;
+  border-radius: var(--m-r-2xl);
+  overflow: hidden;
+  background: var(--m-forest-700);
+  color: #fff;
+  isolation: isolate;
+}
+.hoizr-marketing .hm-forest-panel > * {
+  position: relative;
+  z-index: 1;
+}
+/* ---------- Card base ---------- */
+.hoizr-marketing .hm-card {
+  background: var(--m-surface);
+  border-radius: var(--m-r-lg);
+  box-shadow: var(--m-shadow-card);
+  border: 1px solid var(--m-border);
+}
+
+/* ---------- Fixed nav glass ---------- */
+.hoizr-marketing .hm-nav {
+  position: fixed;
+  left: 0;
+  right: 0;
+  top: 0;
+  z-index: 70;
+  background: rgba(244, 239, 227, 0.94);
+  backdrop-filter: saturate(180%) blur(18px);
+  -webkit-backdrop-filter: saturate(180%) blur(18px);
+  border-bottom: 1px solid rgba(210, 203, 183, 0.88);
+  box-shadow: 0 10px 30px rgba(11, 11, 8, 0.05);
+}
+.hoizr-marketing .hm-main {
+  padding-top: var(--m-nav-h);
+}
+
+/* ---------- Scrolling marquee ---------- */
+.hoizr-marketing .hm-marquee {
+  width: 100%;
+  max-width: 100vw;
+  overflow: hidden;
+  contain: paint;
+}
+.hoizr-marketing .hm-marquee-track {
+  display: flex;
+  gap: 40px;
+  width: max-content;
+  animation: hm-scroll 36s linear infinite;
+}
+@keyframes hm-scroll {
+  from { transform: translateX(0); }
+  to   { transform: translateX(-50%); }
+}
+
+/* ---------- Reveal animations ---------- */
+.hoizr-marketing .hm-reveal {
+  opacity: 0;
+  transform: translateY(20px);
+  transition: opacity 0.7s var(--m-ease-out), transform 0.7s var(--m-ease-out);
+}
+.hoizr-marketing .hm-reveal.is-in {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* ---------- FAQ row ---------- */
+.hoizr-marketing .hm-faq-row {
+  border-top: 1px solid var(--m-border);
+  padding: 26px 4px;
+}
+.hoizr-marketing .hm-faq-row:last-of-type {
+  border-bottom: 1px solid var(--m-border);
+}
+.hoizr-marketing .hm-faq-q {
+  all: unset;
+  cursor: pointer;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-family: var(--m-font-sans);
+  font-size: 20px;
+  font-weight: 600;
+  color: var(--m-ink-1);
+  letter-spacing: -0.015em;
+}
+.hoizr-marketing .hm-faq-plus {
+  width: 32px;
+  height: 32px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--m-ink-3);
+  font-size: 28px;
+  font-weight: 200;
+  line-height: 1;
+  transition: transform var(--m-base) var(--m-ease);
+}
+.hoizr-marketing .hm-faq-row.is-open .hm-faq-plus {
+  transform: rotate(45deg);
+  color: var(--m-ink-1);
+}
+.hoizr-marketing .hm-faq-a {
+  font-size: 16px;
+  line-height: 1.55;
+  color: var(--m-ink-3);
+  max-width: 760px;
+  margin-top: 16px;
+}
+
+/* ---------- Tighter responsive padding ---------- */
+@media (max-width: 768px) {
+  .hoizr-marketing { --m-section-y: 64px; }
+  .hoizr-marketing .hm-section { padding: var(--m-section-y) 20px; }
+}
+
+/* ---------- Blog post body (prose styling for HTML content) ---------- */
+.hoizr-marketing .blog-body h3 {
+  font-family: var(--m-font-display);
+  font-size: 26px;
+  line-height: 1.18;
+  letter-spacing: -0.018em;
+  color: var(--m-ink-1);
+  margin: 36px 0 14px;
+  scroll-margin-top: 96px;
+}
+.hoizr-marketing .blog-body p {
+  margin: 0 0 18px;
+}
+.hoizr-marketing .blog-body strong { color: var(--m-ink-1); font-weight: 600; }
+.hoizr-marketing .blog-body ul,
+.hoizr-marketing .blog-body ol {
+  margin: 8px 0 22px 0;
+  padding-left: 1.35em;
+}
+.hoizr-marketing .blog-body ul li,
+.hoizr-marketing .blog-body ol li {
+  margin-bottom: 8px;
+}
+.hoizr-marketing .blog-body ul li::marker { color: var(--m-forest-600); }
+.hoizr-marketing .blog-body ol li::marker { color: var(--m-forest-600); font-weight: 600; }
+.hoizr-marketing .blog-body blockquote {
+  margin: 20px 0;
+  padding: 14px 20px;
+  border-left: 3px solid var(--m-forest-600);
+  background: var(--m-canvas-2);
+  color: var(--m-ink-2);
+  font-style: italic;
+  border-radius: 0 var(--m-r-sm) var(--m-r-sm) 0;
+}
+.hoizr-marketing .blog-body a {
+  color: var(--m-forest-700);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.hoizr-marketing .blog-body a:hover { color: var(--m-forest-800); }
+@media (max-width: 768px) {
+  .hoizr-marketing .blog-body h3 { font-size: 22px; margin-top: 28px; }
+}

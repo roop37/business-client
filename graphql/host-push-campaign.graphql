@@ -1,0 +1,108 @@
+query getAllHostPushCampaigns($pagination: PaginationInput) {
+  getAllHostPushCampaigns(pagination: $pagination) {
+    total
+    items {
+      _id
+      businessId
+      hostId
+      campaignName
+      pushTitle
+      pushBody
+      deepLink
+      imageUrl
+      target
+      eventId
+      csvDataUrl
+      filters
+      targetCount
+      status
+      publicationStatus
+      scheduleType
+      scheduleTime
+      sentAt
+      createdAt
+      updatedAt
+      stats {
+        notificationsSent
+        notificationsFailed
+        notificationsOpened {
+          customerId
+          date
+        }
+        notificationsClicked {
+          customerId
+          date
+        }
+      }
+      statusChangeHistory {
+        status
+        timestamp
+      }
+    }
+  }
+}
+
+query fetchHostPushCampaignById($campaignId: String!) {
+  fetchHostPushCampaignById(campaignId: $campaignId) {
+    _id
+    businessId
+    hostId
+    campaignName
+    pushTitle
+    pushBody
+    deepLink
+    imageUrl
+    target
+    eventId
+    csvDataUrl
+    filters
+    targetCount
+    status
+    publicationStatus
+    scheduleType
+    scheduleTime
+    sentAt
+    createdAt
+    updatedAt
+    stats {
+      notificationsSent
+      notificationsFailed
+      notificationsOpened {
+        customerId
+        date
+      }
+      notificationsClicked {
+        customerId
+        date
+      }
+    }
+    statusChangeHistory {
+      status
+      timestamp
+    }
+  }
+}
+
+mutation createHostPushCampaign($input: CreateHostPushCampaignInput!) {
+  createHostPushCampaign(input: $input) {
+    _id
+  }
+}
+
+mutation updateHostPushCampaign($input: UpdateHostPushCampaignInput!) {
+  updateHostPushCampaign(input: $input) {
+    _id
+  }
+}
+
+mutation deleteHostPushCampaign($campaignId: String!) {
+  deleteHostPushCampaign(campaignId: $campaignId)
+}
+
+mutation publishHostPushCampaign($campaignId: String!) {
+  publishHostPushCampaign(campaignId: $campaignId) {
+    _id
+    status
+    publicationStatus
+  }
+}

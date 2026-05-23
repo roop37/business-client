@@ -1,0 +1,64 @@
+# import "./fragments.graphql"
+
+query AllPlaces($input: String!) {
+  getPlacesList(input: $input) {
+    placeId
+    displayName
+  }
+}
+
+query PlaceDetails($placeId: String!) {
+  getPlaceDetails(placeId: $placeId) {
+    latitude
+    longitude
+    city
+    state
+    address
+    zipcode
+  }
+}
+
+mutation createHostOnboarding($input: CreateHostInput!) {
+  createHost(input: $input)
+}
+
+mutation updateHostOnboarding($input: UpdateHostInput!) {
+  updateHost(input: $input)
+}
+
+mutation completeHostOnboarding {
+  completeHostOnboarding
+}
+
+mutation startNewHostOnboarding {
+  startNewHostOnboarding
+}
+
+query hostOnboardingData {
+  getCurrentHostOnboarding {
+    _id
+    name
+    email
+    phone
+    description
+    logo
+    hostType
+    venueType
+    status
+    onboardingCompleted
+    isAdminVerified
+    businessRegistrationNumber
+    averageEventSize
+    gstNumber
+    websiteUrl
+    address {
+      ...addressInfo
+    }
+  }
+}
+
+query meUserInResOnboarding {
+  meUser {
+    status
+  }
+}

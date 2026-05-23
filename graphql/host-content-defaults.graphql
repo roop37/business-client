@@ -1,0 +1,17 @@
+query getMyHostContentDefaults {
+  getMyHostContentDefaults {
+    _id
+    hostId
+    ticketingTerms
+    refundPolicy
+  }
+}
+
+mutation saveMyHostContentDefaults($input: SaveHostContentDefaultsInput!) {
+  saveMyHostContentDefaults(input: $input) {
+    _id
+    hostId
+    ticketingTerms
+    refundPolicy
+  }
+}

@@ -1,0 +1,186 @@
+query getAllHostEmailCampaigns(
+  $pagination: PaginationInput
+  $filter: [FilterDataInput!]
+  $sort: SortDataInput
+  $search: String
+) {
+  getAllHostEmailCampaigns(
+    pagination: $pagination
+    filter: $filter
+    sort: $sort
+    search: $search
+  ) {
+    total
+    items {
+      _id
+      businessId
+      hostId
+      campaignName
+      emailSubject
+      status
+      target
+      eventId
+      targetCount
+      csvDataUrl
+      filters
+      scheduleType
+      scheduleTime
+      ctaLink
+      emailStatus
+      sentAt
+      createdAt
+      updatedAt
+      emailTemplate {
+        designJson
+        content
+        html
+      }
+      statusChangeHistory {
+        status
+        timestamp
+      }
+      stats {
+        mailsSent
+        mailsDelivered
+        mailsBounced
+        mailsOpened {
+          email
+          date
+        }
+        mailsClicked {
+          email
+          date
+        }
+      }
+    }
+  }
+}
+
+query fetchHostCampaignById($campaignId: String!) {
+  fetchHostCampaignById(campaignId: $campaignId) {
+    _id
+    businessId
+    hostId
+    campaignName
+    emailSubject
+    status
+    target
+    eventId
+    targetCount
+    csvDataUrl
+    filters
+    scheduleType
+    scheduleTime
+    ctaLink
+    emailStatus
+    createdAt
+    updatedAt
+    emailTemplate {
+      designJson
+      content
+      html
+    }
+    statusChangeHistory {
+      status
+      timestamp
+    }
+    stats {
+      mailsSent
+      mailsDelivered
+      mailsBounced
+      mailsOpened {
+        email
+        date
+      }
+      mailsClicked {
+        email
+        date
+      }
+    }
+  }
+}
+
+mutation createHostEmailCampaign($input: AddHostEmailCampaignInput!) {
+  createHostEmailCampaign(input: $input)
+}
+
+mutation updateHostEmailCampaign($input: UpdateHostEmailCampaignInput!) {
+  updateHostEmailCampaign(input: $input)
+}
+
+mutation deleteHostEmailCampaign($campaignId: String!) {
+  deleteHostEmailCampaign(campaignId: $campaignId)
+}
+
+mutation duplicateHostEmailCampaign($campaignId: String!) {
+  duplicateHostEmailCampaign(campaignId: $campaignId)
+}
+
+mutation createMarketingCreditTopUpOrder($input: MarketingCreditTopUpOrderInput!) {
+  createMarketingCreditTopUpOrder(input: $input) {
+    razorpayOrderId
+    razorpayKeyId
+    creditsAmount
+    gstAmount
+    platformFeeAmount
+    payableAmount
+    currency
+    receipt
+  }
+}
+
+mutation verifyMarketingCreditTopUp($input: MarketingCreditTopUpVerifyInput!) {
+  verifyMarketingCreditTopUp(input: $input) {
+    balance
+    entry {
+      _id
+      amount
+      balance
+      activity
+      paymentReference
+      createdAt
+    }
+  }
+}
+
+query getHostAttendeesTargetCount(
+  $target: HostEmailTargetType
+  $eventId: String
+  $filters: [HostCampaignAudienceFilter!]
+) {
+  getHostAttendeesTargetCount(
+    target: $target
+    eventId: $eventId
+    filters: $filters
+  )
+}
+
+query hostEmailCampaignCsvExport($input: CsvExportInput!) {
+  hostEmailCampaignCsvExport(input: $input)
+}
+
+query sendTestHostCampaignEmail($input: HostEmailCampaignTestInput!) {
+  sendTestHostCampaignEmail(input: $input)
+}
+
+query myMarketingCreditLedger($pagination: PaginationInput) {
+  myMarketingCreditLedger(pagination: $pagination) {
+    balance
+    total
+    items {
+      _id
+      businessId
+      hostId
+      type
+      amount
+      balance
+      activity
+      recipients
+      channel
+      campaignId
+      paymentReference
+      createdAt
+      updatedAt
+    }
+  }
+}

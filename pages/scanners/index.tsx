@@ -1,0 +1,390 @@
+import {
+  Badge,
+  inrFormat,
+  OwnerButton,
+  OwnerTable,
+  PageHeader,
+  StatTile,
+} from "@/components/common/owner";
+import MainLayout from "@/components/layouts/mainBodyLayout";
+import { PermissionTypeEnum } from "@/generated/graphql";
+import useGlobalStore from "@/store/global";
+import { sdk } from "@/utils/graphqlClient";
+import { hasAccess } from "@/utils/hasAccess";
+import { extractErrorMessage } from "@/utils/utilFUncs";
+import {
+  ChevronRight,
+  Copy,
+  ScanLine,
+  ShieldCheck,
+  Smartphone,
+} from "lucide-react";
+import { GetServerSideProps } from "next";
+import { useRouter } from "next/router";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
+
+type EventRow = {
+  _id: string;
+  title?: string | null;
+  status?: string | null;
+  startDate?: string | null;
+  city?: string | null;
+  capacity?: number | null;
+  ticketSold?: number | null;
+};
+
+const formatEventDate = (value?: string | null) => {
+  if (!value) return "—";
+  const d = new Date(value);
+  if (Number.isNaN(d.getTime())) return "—";
+  return new Intl.DateTimeFormat("en-IN", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  }).format(d);
+};
+
+type ScannerCount = {
+  active: number;
+  total: number;
+};
+
+const ScannersIndex: React.FC & {
+  getLayout?: (page: React.ReactNode) => React.ReactNode;
+} = () => {
+  const router = useRouter();
+  const { setToastData, setSelectedSideBarMenu } = useGlobalStore();
+  const [events, setEvents] = useState<EventRow[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [counts, setCounts] = useState<Record<string, ScannerCount>>({});
+
+  const load = useCallback(async () => {
+    setLoading(true);
+    try {
+      const response: any = await sdk.getMyEvents();
+      const list: EventRow[] = response?.getMyEvents ?? [];
+      setEvents(list);
+
+      // Fan out scanner counts in parallel — this is fine for a typical
+      // host (≤30 events). If a host has hundreds of events we should
+      // add a `getMyScannerSummary` aggregate query.
+      const upcoming = list
+        .filter((e) =>
+          ["LIVE", "PUBLISHED", "DRAFT"].includes(
+            (e.status ?? "").toUpperCase()
+          )
+        )
+        .slice(0, 50);
+
+      const entries = await Promise.all(
+        upcoming.map(async (event) => {
+          try {
+            const res: any = await sdk.listScannersForEvent({
+              eventId: event._id,
+            });
+            const all = res?.listScannersForEvent ?? [];
+            const active = all.filter((s: any) => s.isActive).length;
+            return [event._id, { total: all.length, active }] as const;
+          } catch {
+            return [event._id, { total: 0, active: 0 }] as const;
+          }
+        })
+      );
+      setCounts(Object.fromEntries(entries));
+    } catch (error) {
+      setToastData({ type: "error", message: extractErrorMessage(error) });
+    } finally {
+      setLoading(false);
+    }
+  }, [setToastData]);
+
+  useEffect(() => {
+    setSelectedSideBarMenu("Scanners");
+    load();
+  }, [load, setSelectedSideBarMenu]);
+
+  const summary = useMemo(() => {
+    const list = Object.values(counts);
+    const totalActive = list.reduce((s, c) => s + c.active, 0);
+    const totalScanners = list.reduce((s, c) => s + c.total, 0);
+    const eventsWithAtLeastOne = list.filter((c) => c.total > 0).length;
+    return { totalActive, totalScanners, eventsWithAtLeastOne };
+  }, [counts]);
+
+  const visibleEvents = useMemo(
+    () =>
+      events.filter((e) =>
+        ["LIVE", "PUBLISHED", "DRAFT"].includes(
+          (e.status ?? "").toUpperCase()
+        )
+      ),
+    [events]
+  );
+
+  const copyInviteLink = async () => {
+    try {
+      if (typeof navigator !== "undefined" && navigator.clipboard) {
+        const url =
+          typeof window !== "undefined"
+            ? `${window.location.origin}/scanners/invite`
+            : "";
+        await navigator.clipboard.writeText(url);
+        setToastData({ type: "success", message: "Invite link copied" });
+      }
+    } catch {
+      setToastData({
+        type: "warning",
+        message: "Could not copy. Open the event to invite scanners.",
+      });
+    }
+  };
+
+  return (
+    <div className="font-owner text-owner-fg-1">
+      <PageHeader
+        title="Scanners"
+        subtitle="Devices and operators that scan tickets at the door across all your events."
+        actions={
+          <>
+            <OwnerButton
+              variant="secondary"
+              leadingIcon={<Copy size={14} />}
+              onClick={copyInviteLink}
+            >
+              Copy invite link
+            </OwnerButton>
+            <OwnerButton
+              variant="primary"
+              leadingIcon={<ScanLine size={14} />}
+              onClick={() => router.push("/events")}
+            >
+              Open an event
+            </OwnerButton>
+          </>
+        }
+      />
+
+      <div className="mb-6 grid gap-4 sm:grid-cols-3">
+        <StatTile
+          label="Active scanners"
+          value={`${summary.totalActive}`}
+          hint={`${summary.totalScanners} total provisioned`}
+        />
+        <StatTile
+          label="Events with scanners"
+          value={`${summary.eventsWithAtLeastOne}`}
+          hint={`${visibleEvents.length} live or upcoming events`}
+        />
+        <StatTile
+          label="Avg per event"
+          value={
+            summary.eventsWithAtLeastOne
+              ? (summary.totalScanners / summary.eventsWithAtLeastOne).toFixed(
+                  1
+                )
+              : "0"
+          }
+          hint="Door + back door + VIP combined"
+        />
+      </div>
+
+      <OwnerTable
+        loading={loading}
+        rowCount={visibleEvents.length}
+        empty="No live or upcoming events. Create an event to add scanners."
+      >
+        <OwnerTable.Toolbar>
+          <span className="text-[14px] font-semibold text-owner-fg-1">
+            Events with scanner access
+          </span>
+          <span className="text-[12.5px] text-owner-fg-4">
+            Click an event to manage its scanners
+          </span>
+        </OwnerTable.Toolbar>
+        <OwnerTable.Head>
+          <OwnerTable.HeaderCell>Event</OwnerTable.HeaderCell>
+          <OwnerTable.HeaderCell>Date &amp; time</OwnerTable.HeaderCell>
+          <OwnerTable.HeaderCell>Status</OwnerTable.HeaderCell>
+          <OwnerTable.HeaderCell align="right">Capacity</OwnerTable.HeaderCell>
+          <OwnerTable.HeaderCell align="right">Scanners</OwnerTable.HeaderCell>
+          <OwnerTable.HeaderCell align="right">Manage</OwnerTable.HeaderCell>
+        </OwnerTable.Head>
+        <OwnerTable.Body>
+          {visibleEvents.map((event) => {
+            const count = counts[event._id];
+            const status = (event.status ?? "").toUpperCase();
+            return (
+              <OwnerTable.Row
+                key={event._id}
+                className="cursor-pointer"
+                onClick={() => router.push(`/events/${event._id}/scanners`)}
+              >
+                <OwnerTable.Cell>
+                  <div className="flex items-center gap-3">
+                    <div
+                      className="grid h-9 w-9 shrink-0 place-items-center rounded-owner-md text-white"
+                      style={{
+                        background:
+                          "linear-gradient(135deg, #1F62E8 0%, #7AA1F0 100%)",
+                      }}
+                    >
+                      <ScanLine size={15} />
+                    </div>
+                    <div className="min-w-0">
+                      <p className="truncate font-semibold text-owner-fg-1">
+                        {event.title || "Untitled Event"}
+                      </p>
+                      {event.city ? (
+                        <p className="text-[12px] text-owner-fg-4">
+                          {event.city}
+                        </p>
+                      ) : null}
+                    </div>
+                  </div>
+                </OwnerTable.Cell>
+                <OwnerTable.Cell>
+                  {formatEventDate(event.startDate)}
+                </OwnerTable.Cell>
+                <OwnerTable.Cell>
+                  <Badge
+                    tone={
+                      status === "PUBLISHED" || status === "LIVE"
+                        ? "success"
+                        : status === "DRAFT"
+                        ? "neutral"
+                        : "info"
+                    }
+                  >
+                    {status === "PUBLISHED"
+                      ? "Live"
+                      : status.charAt(0) + status.slice(1).toLowerCase()}
+                  </Badge>
+                </OwnerTable.Cell>
+                <OwnerTable.Cell align="right" muted>
+                  {event.ticketSold ?? 0} / {event.capacity ?? "—"}
+                </OwnerTable.Cell>
+                <OwnerTable.Cell align="right">
+                  {count ? (
+                    <span className="inline-flex items-center gap-1.5 text-[13px] font-medium text-owner-fg-1">
+                      <span
+                        className={`inline-block h-1.5 w-1.5 rounded-full ${
+                          count.active > 0
+                            ? "bg-owner-success-text"
+                            : "bg-owner-fg-4"
+                        }`}
+                      />
+                      {count.active} active{" "}
+                      <span className="text-owner-fg-4">
+                        / {count.total}
+                      </span>
+                    </span>
+                  ) : (
+                    <span className="text-owner-fg-4">—</span>
+                  )}
+                </OwnerTable.Cell>
+                <OwnerTable.Cell align="right">
+                  <span className="inline-flex items-center gap-1 text-[12.5px] font-medium text-owner-blue-500">
+                    Manage
+                    <ChevronRight size={13} />
+                  </span>
+                </OwnerTable.Cell>
+              </OwnerTable.Row>
+            );
+          })}
+        </OwnerTable.Body>
+        <OwnerTable.Footer
+          summary={`${visibleEvents.length} events showing`}
+        />
+      </OwnerTable>
+
+      {/* Bottom info banner */}
+      <div
+        className="mt-6 flex flex-col items-start justify-between gap-4 rounded-owner-lg border bg-owner-blue-050 px-6 py-5 sm:flex-row sm:items-center"
+        style={{ borderColor: "var(--owner-blue-100)" }}
+      >
+        <div className="flex items-start gap-3">
+          <div className="grid h-10 w-10 shrink-0 place-items-center rounded-owner-md bg-owner-blue-100 text-owner-blue-500">
+            <Smartphone size={18} />
+          </div>
+          <div className="min-w-0">
+            <p className="text-[14px] font-semibold text-owner-fg-1">
+              Bring your own phone. Scan in seconds.
+            </p>
+            <p className="text-[12.5px] text-owner-fg-3">
+              The Hoizr Scanner app works on any iOS / Android phone with a
+              camera. No Bluetooth scanner required.
+            </p>
+          </div>
+        </div>
+        <OwnerButton
+          variant="primary"
+          leadingIcon={<ShieldCheck size={14} />}
+        >
+          Open scanner app
+        </OwnerButton>
+      </div>
+
+      {summary.totalScanners > 0 ? (
+        <div className="mt-3 text-right text-[11.5px] text-owner-fg-4">
+          Sales fired through scanned tickets:{" "}
+          {inrFormat(
+            visibleEvents.reduce(
+              (s, e) => s + Number(e.ticketSold ?? 0) * 1500,
+              0
+            )
+          )}{" "}
+          (estimate)
+        </div>
+      ) : null}
+    </div>
+  );
+};
+
+ScannersIndex.getLayout = function getLayout(page: React.ReactNode) {
+  return <MainLayout>{page}</MainLayout>;
+};
+
+export default ScannersIndex;
+
+export const getServerSideProps: GetServerSideProps = async (context) => {
+  const cookieHeader = context.req.headers.cookie ?? "";
+  if (!cookieHeader.includes("accessToken=")) {
+    return {
+      redirect: { destination: "/login", permanent: false },
+    };
+  }
+  try {
+    const [userResponse, journeyResponse] = await Promise.all([
+      sdk.MeCheckUser({}, { cookie: cookieHeader }),
+      sdk.MeUserJourney({}, { cookie: cookieHeader }),
+    ]);
+    const journey = journeyResponse.meUserJourney;
+    if (!journey.hostOnboardingCompleted || !journey.hostId) {
+      return {
+        redirect: {
+          destination: journey.suggestedRoute || "/onboarding-host/host-type",
+          permanent: false,
+        },
+      };
+    }
+    const me = userResponse?.meUser;
+    if (!me) {
+      return { redirect: { destination: "/login", permanent: false } };
+    }
+    if (
+      !hasAccess(me.permissions, PermissionTypeEnum.Events)
+    ) {
+      return {
+        redirect: {
+          destination: `/account/access-blocked?target=${PermissionTypeEnum.Events}`,
+          permanent: false,
+        },
+      };
+    }
+    return { props: {} };
+  } catch {
+    return { redirect: { destination: "/login", permanent: false } };
+  }
+};

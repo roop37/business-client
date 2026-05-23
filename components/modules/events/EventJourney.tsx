@@ -1,0 +1,5059 @@
+import ConfirmModal from "@/components/common/confirm-modal";
+import ToggleSettingRow from "@/components/modules/events/ToggleSettingRow";
+import { Calendar } from "@/components/ui/calendar";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import useGlobalStore from "@/store/global";
+import useHostsStore from "@/store/host";
+import { uploadHostAsset } from "@/utils/cloudinaryUpload";
+import {
+  AiBoostCard,
+  AiBoostGeneration,
+  generateAiBoostsForEvent,
+  selectAiBoost,
+} from "@/utils/eventOfferOps";
+import { sdk } from "@/utils/graphqlClient";
+import { extractErrorMessage } from "@/utils/utilFUncs";
+
+const AI_OFFER_PREFIX = "ai:";
+
+const aiBoostToPricingOption = (boost: AiBoostCard): PricingOption => ({
+  optionId: `${AI_OFFER_PREFIX}${boost.offerCode}`,
+  plan: boost.offerCode,
+  label: boost.label,
+  commissionRate: boost.commissionPct,
+  customerPlatformFeeRate: 0,
+  upfrontFee: boost.extraAmount,
+  expectedPaidTickets: 0,
+  expectedGrossSales: boost.computed?.expectedGrossSales ?? 0,
+  hostPayout: boost.computed?.hostPayout ?? 0,
+  hoizrNetContribution: boost.computed?.hoizrNetContribution ?? 0,
+  payoutCycleDaysMin: 0,
+  payoutCycleDaysMax: 0,
+  badge:
+    boost.confidenceScore >= 0.85 ? "AI Recommended" : boost.label.toUpperCase(),
+});
+
+const formatIndianRupees = (n: number): string => {
+  if (!Number.isFinite(n) || n <= 0) return "₹0";
+  // Approximate Indian-format grouping (lakhs/crores) using locale.
+  return `₹${Math.round(n).toLocaleString("en-IN")}`;
+};
+import {
+  BadgeIndianRupeeIcon,
+  BoldIcon,
+  CalendarDaysIcon,
+  ChevronDownIcon,
+  CheckCircle2Icon,
+  CircleDashedIcon,
+  ClockIcon,
+  DoorOpenIcon,
+  Edit3Icon,
+  EyeIcon,
+  EyeOffIcon,
+  ImageIcon,
+  ImagePlusIcon,
+  ItalicIcon,
+  ListIcon,
+  type LucideIcon,
+  MapPinIcon,
+  Music2Icon,
+  PlusIcon,
+  SparklesIcon,
+  TicketIcon,
+  UploadCloudIcon,
+  UsersRoundIcon,
+  XIcon,
+} from "lucide-react";
+import { useRouter } from "next/router";
+import type { ReactNode } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import AsyncSelect from "react-select/async";
+
+type EventJourneyMode = "create" | "update";
+type EventTypeValue = "FREE" | "EXCLUSIVE" | "NON_EXCLUSIVE";
+type TicketCategoryValue = "GUESTLIST" | "NORMAL" | "TABLE" | "GROUP";
+type TicketTypeValue = "SINGLE" | "COUPLE";
+type CoverTypeValue =
+  | "FULL_COVER"
+  | "FOOD_COVER"
+  | "DRINK_COVER"
+  | "FOOD_AND_DRINK_COVER"
+  | "NO_COVER";
+type GstValue = "NONE" | "ZERO" | "CGST_SGST_18" | "IGST_18" | "OTHER";
+
+const DEFAULT_TICKETING_TERMS = `<p>Tickets are valid only for the event, date, and time shown on this listing. Entry is subject to venue security, age restrictions, and the organizer's right of admission.</p><ul><li>Carry a valid government ID and the QR ticket at entry.</li><li>Damaged, duplicated, or resold tickets may be rejected.</li><li>Lineup, set times, and entry rules may change for operational or safety reasons.</li></ul>`;
+
+const DEFAULT_REFUND_POLICY = `<p>Refunds are handled by the event organizer according to the policy shown at checkout.</p><ul><li>Organizer-approved refunds are returned to the original payment method.</li><li>Platform fees, payment gateway charges, and already used tickets may be non-refundable.</li><li>If an event is cancelled by the organizer, eligible ticket holders will be notified with the next steps.</li></ul>`;
+
+const richTextToPlainText = (value: string) =>
+  value
+    .replace(/<style[\s\S]*?<\/style>/gi, " ")
+    .replace(/<script[\s\S]*?<\/script>/gi, " ")
+    .replace(/<[^>]+>/g, " ")
+    .replace(/&nbsp;/gi, " ")
+    .replace(/&amp;/gi, "&")
+    .replace(/\s+/g, " ")
+    .trim();
+
+const shouldReplaceRichDefault = (current: string, fallback: string) => {
+  const currentText = richTextToPlainText(current);
+  return (
+    !currentText ||
+    currentText === richTextToPlainText(fallback)
+  );
+};
+
+type PricingOption = {
+  optionId: string;
+  plan: string;
+  label: string;
+  commissionRate: number;
+  customerPlatformFeeRate: number;
+  upfrontFee: number;
+  expectedPaidTickets: number;
+  expectedGrossSales: number;
+  hostPayout: number;
+  hoizrNetContribution: number;
+  payoutCycleDaysMin: number;
+  payoutCycleDaysMax: number;
+  badge: string;
+};
+
+type PlacesType = {
+  label: string;
+  value: string;
+};
+
+type TicketDraft = {
+  _id?: string;
+  ticketCategory: TicketCategoryValue;
+  ticketName: string;
+  ticketType: TicketTypeValue;
+  ticketCapacity: number;
+  ticketSold?: number;
+  ticketPrice: number;
+  ticketInfo?: string;
+  coverType: CoverTypeValue;
+  ticketGST: GstValue;
+  gstRate: number;
+  groupCapacity: number;
+  maxTicketPerUser: number;
+  ticketExpiryDateTime?: string;
+  markAsComingSoon: boolean;
+  markAsOnGroundOnly: boolean;
+  ticketVisible: boolean;
+  description?: string;
+};
+
+type HoizrExtraTypeValue =
+  | "VIP_UPGRADE"
+  | "MEET_AND_GREET"
+  | "MERCH"
+  | "FOOD_DRINK"
+  | "OTHER";
+
+type ExtraDraft = {
+  _id?: string;
+  name: string;
+  description?: string;
+  price: number;
+  quantity: number;
+  sold?: number;
+  image?: string;
+  type: HoizrExtraTypeValue;
+  linkedTicketTypes?: string[];
+};
+
+type ArtistSearchResult = {
+  id?: string;
+  source?: "ARTIST" | "PHANTOM" | string;
+  name: string;
+  firstName?: string | null;
+  lastName?: string | null;
+  picture?: string | null;
+  artistLinkId?: string | null;
+  tempArtistId?: string | null;
+  instagramLink?: string | null;
+  spotifyLink?: string | null;
+  youtubeLink?: string | null;
+};
+
+type CollaboratorSearchResult = {
+  _id: string;
+  name?: string | null;
+  email?: string | null;
+  phone?: string | null;
+  logo?: string | null;
+};
+
+// Saved-to-server shape for one collaborator host on the event. Hosts must
+// be on-platform — businessLinkId is the host._id from searchCollaboratorHosts.
+type CollaboratorEntry = {
+  name: string;
+  businessLinkId: string;
+  requestCustomerListAccess: boolean;
+  hideOnEventPage: boolean;
+  allowIssuingOfflineTickets: boolean;
+  sendTransactionalMails: boolean;
+  canSeeMetrics: boolean;
+  canRunCampaigns: boolean;
+  canCreateOffers: boolean;
+};
+
+// Saved-to-server shape for one lineup artist. artistLinkId is set when the
+// artist is on-platform; tempArtistId is set when the host attached an
+// off-platform name via search; otherwise both are blank and the entry is
+// a manual addition.
+type ArtistEntry = {
+  name: string;
+  actualName?: string;
+  picture: string;
+  artistLinkId?: string;
+  tempArtistId?: string;
+  instagramLink?: string;
+  spotifyLink?: string;
+  youtubeLink?: string;
+};
+
+type ConfirmAction = {
+  title: string;
+  description: ReactNode;
+  confirmLabel: string;
+  tone?: "default" | "danger" | "warning";
+  onConfirm: () => void | Promise<void>;
+};
+
+type CityOption = {
+  _id: string;
+  value: string;
+  state?: string | null;
+};
+
+const steps = [
+  "Event Category",
+  "Basic Details",
+  "Location",
+  "Tickets",
+  "Lineup",
+  "Additional",
+];
+const lastStepIndex = steps.length - 1;
+
+const eventTypeCards: {
+  value: EventTypeValue;
+  title: string;
+  description: string;
+  meta: string[];
+  recommended?: boolean;
+}[] = [
+  {
+    value: "FREE",
+    title: "Guestlist Event",
+    description:
+      "Free guestlist entry, such as couple before 10 PM, controlled by your terms.",
+    meta: ["Recommended", "0 commission", "0 customer fee"],
+    recommended: true,
+  },
+  {
+    value: "EXCLUSIVE",
+    title: "Exclusive Event",
+    description:
+      "Tickets are available only on Hoizr. Smart pricing stays below the exclusive cap.",
+    meta: ["Max 4.55% + GST", "Payout 5-7 working days"],
+  },
+  {
+    value: "NON_EXCLUSIVE",
+    title: "Non-Exclusive Event",
+    description:
+      "Tickets are available on Hoizr and other platforms. Built for multi-channel sales.",
+    meta: ["Max 8.99% + GST", "Payout 8-10 working days"],
+  },
+];
+
+const flyerTargetWidth = 1200;
+const flyerTargetHeight = 1500;
+const flyerMaxFileSizeBytes = 5 * 1024 * 1024;
+const flyerCropScaleFromPercent = (zoomPercent: number) => 1 + zoomPercent / 50;
+
+// MainBodyLayout hydrates `selectedHostId` asynchronously after the page mounts.
+// If the user opens the upload tile before that finishes, the prop reads as ""
+// and we used to fire a toast. Instead we subscribe and wait briefly so the
+// upload just works once the store hydrates. Falls back to a one-shot
+// `restaurantDetails` lookup so a slow store fetch still doesn't strand the user.
+const awaitSelectedHostId = async (timeoutMs = 4000): Promise<string> => {
+  const immediate = useHostsStore.getState().selectedHostId;
+  if (immediate) return immediate;
+  const fromStore = await new Promise<string>((resolve) => {
+    const timer = setTimeout(() => {
+      unsub();
+      resolve("");
+    }, timeoutMs);
+    const unsub = useHostsStore.subscribe((state) => {
+      if (state.selectedHostId) {
+        clearTimeout(timer);
+        unsub();
+        resolve(state.selectedHostId);
+      }
+    });
+  });
+  if (fromStore) return fromStore;
+  try {
+    const res = await sdk.restaurantDetails();
+    const hostId = res?.restaurantDetails?._id ?? "";
+    if (hostId) {
+      useHostsStore.getState().setSelectedHostId(hostId);
+    }
+    return hostId;
+  } catch {
+    return "";
+  }
+};
+const timePickerOptions = Array.from({ length: 24 * 12 }, (_, index) => {
+  const minutes = index * 5;
+  const hour = Math.floor(minutes / 60);
+  const minute = minutes % 60;
+  const value = `${String(hour).padStart(2, "0")}:${String(minute).padStart(2, "0")}`;
+  const suffix = hour >= 12 ? "PM" : "AM";
+  const displayHour = hour % 12 || 12;
+
+  return {
+    value,
+    label: `${displayHour}:${String(minute).padStart(2, "0")} ${suffix}`,
+  };
+});
+
+const ticketCategories: { value: TicketCategoryValue; label: string }[] = [
+  { value: "GUESTLIST", label: "Guestlist" },
+  { value: "NORMAL", label: "Normal" },
+  { value: "TABLE", label: "Table" },
+  { value: "GROUP", label: "Group" },
+];
+
+const rupee = (value: number) =>
+  new Intl.NumberFormat("en-IN", {
+    style: "currency",
+    currency: "INR",
+    maximumFractionDigits: 0,
+  }).format(value || 0);
+
+const formatPercentDelta = (value: number) =>
+  value.toFixed(2).replace(/\.?0+$/, "");
+
+const formatDate = (value?: string) => {
+  if (!value) return "Date pending";
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "Date pending";
+  return new Intl.DateTimeFormat("en-IN", {
+    weekday: "short",
+    day: "2-digit",
+    month: "short",
+    hour: "2-digit",
+    minute: "2-digit",
+  }).format(date);
+};
+
+const toDateTimeInput = (value?: string | Date | null) => {
+  if (!value) return "";
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "";
+  return date.toISOString().slice(0, 16);
+};
+
+const normalizeEnum = <T extends string>(value: any, fallback: T): T => {
+  if (!value) return fallback;
+  const raw = String(value);
+  if (raw.includes("_")) return raw as T;
+  return raw.replace(/([a-z])([A-Z])/g, "$1_$2").toUpperCase() as T;
+};
+
+const EventJourney = ({
+  eventId,
+  mode,
+}: {
+  eventId: string;
+  mode: EventJourneyMode;
+}) => {
+  const router = useRouter();
+  const {
+    setToastData,
+    showPayoutPromptModal,
+    showPayoutPendingVerificationModal,
+  } = useGlobalStore();
+  const { selectedHostId } = useHostsStore();
+  const [step, setStep] = useState(0);
+  const [maxStep, setMaxStep] = useState(mode === "update" ? steps.length - 1 : 0);
+  const [loading, setLoading] = useState(false);
+  const [fetching, setFetching] = useState(true);
+  const [status, setStatus] = useState("DRAFT");
+  const [firstStepCompleted, setFirstStepCompleted] = useState(false);
+
+  const [eventType, setEventType] = useState<EventTypeValue>("FREE");
+  const [title, setTitle] = useState("");
+  const [description, setDescription] = useState("");
+  // TASK-043 sub-item 10: genre chips (e.g. Comedy, Bollywood, EDM).
+  // Drives discoverability filters on the customer site.
+  const [allGenres, setAllGenres] = useState<{ _id: string; value: string }[]>([]);
+  const [selectedGenreIds, setSelectedGenreIds] = useState<string[]>([]);
+  const [eventFlyer, setEventFlyer] = useState("");
+  const [flyerPreview, setFlyerPreview] = useState("");
+  const [flyerFile, setFlyerFile] = useState<File | null>(null);
+  const [flyerCropOpen, setFlyerCropOpen] = useState(false);
+  const [cropZoom, setCropZoom] = useState(0);
+  const [cropX, setCropX] = useState(50);
+  const [cropY, setCropY] = useState(50);
+  const [uploadingFlyer, setUploadingFlyer] = useState(false);
+  const flyerImgRef = useRef<HTMLImageElement | null>(null);
+  const [flyerNaturalRatio, setFlyerNaturalRatio] = useState<number | null>(
+    null
+  );
+  const flyerCropScale = useMemo(
+    () => flyerCropScaleFromPercent(cropZoom),
+    [cropZoom]
+  );
+  // Largest 4:5 crop window that fits inside the displayed source image,
+  // expressed as a % of the displayed image's own dimensions. Multiplied by
+  // 1/cropScale so zoom shrinks the window (tighter crop). Both numbers are
+  // shared by the preview overlay and the canvas-cut math below.
+  const flyerCropWindow = useMemo(() => {
+    if (!flyerNaturalRatio || flyerCropScale <= 0) {
+      return { widthPct: 0, heightPct: 0 };
+    }
+    const targetRatio = flyerTargetWidth / flyerTargetHeight; // 0.8 for 4:5
+    const widthOfImg =
+      flyerNaturalRatio >= targetRatio
+        ? (targetRatio / flyerNaturalRatio) * 100
+        : 100;
+    const heightOfImg =
+      flyerNaturalRatio >= targetRatio
+        ? 100
+        : (flyerNaturalRatio / targetRatio) * 100;
+    return {
+      widthPct: widthOfImg / flyerCropScale,
+      heightPct: heightOfImg / flyerCropScale,
+    };
+  }, [flyerNaturalRatio, flyerCropScale]);
+  const [isComingSoon, setIsComingSoon] = useState(false);
+  const [startDate, setStartDate] = useState("");
+  const [endDate, setEndDate] = useState("");
+  const [markSeparateDays, setMarkSeparateDays] = useState(false);
+  const [isVisible, setIsVisible] = useState(true);
+
+  const [city, setCity] = useState("");
+  const [eventLocationDecided, setEventLocationDecided] = useState(true);
+  const [addressLine1, setAddressLine1] = useState("");
+  const [addressLine2, setAddressLine2] = useState("");
+  const [stateName, setStateName] = useState("");
+  const [pincode, setPincode] = useState("");
+  const [selectedPlace, setSelectedPlace] = useState<PlacesType | null>(null);
+  const [coords, setCoords] = useState<number[]>([]);
+  const [searchLoading, setSearchLoading] = useState(false);
+  const [manualLocationOpen, setManualLocationOpen] = useState(false);
+  const [ticketingEnabled, setTicketingEnabled] = useState(true);
+  const [ticketTab, setTicketTab] = useState<"tickets" | "advanced">("tickets");
+  const [ticketModalOpen, setTicketModalOpen] = useState(false);
+  const [ticketEditIndex, setTicketEditIndex] = useState<number | null>(null);
+  const [ticketAdvancedOpen, setTicketAdvancedOpen] = useState(false);
+  const [ticketCategory, setTicketCategory] =
+    useState<TicketCategoryValue>("GUESTLIST");
+  const [ticketName, setTicketName] = useState("General Entry");
+  const [ticketType, setTicketType] = useState<TicketTypeValue>("SINGLE");
+  const [ticketPrice, setTicketPrice] = useState(0);
+  const [ticketCapacity, setTicketCapacity] = useState(100);
+  const [coverType, setCoverType] = useState<CoverTypeValue>("NO_COVER");
+  // GST eligibility flag — only REGULAR / CASUAL_TAXABLE_PERSON hosts can
+  // collect ticket GST from customers (SoT §4). Fetched once after mount
+  // from the primary Payout. While loading we assume INELIGIBLE so the
+  // selector stays hidden and we don't accidentally show a host an option
+  // they aren't allowed to use.
+  const [hostGstEligible, setHostGstEligible] = useState(false);
+  // Default GST stays "NONE" until eligibility comes back true; matches
+  // server-side enforceTicketGstEligibility() which would force this to
+  // NONE on save anyway.
+  const [ticketGST, setTicketGST] = useState<GstValue>("NONE");
+  const [gstRate, setGstRate] = useState(0);
+  const [groupCapacity, setGroupCapacity] = useState(4);
+  const [maxTicketPerUser, setMaxTicketPerUser] = useState(10);
+  const [ticketExpiryDateTime, setTicketExpiryDateTime] = useState("");
+  const [ticketComingSoon, setTicketComingSoon] = useState(false);
+  const [ticketOnGroundOnly, setTicketOnGroundOnly] = useState(false);
+  const [ticketVisible, setTicketVisible] = useState(true);
+  const [ticketDescription, setTicketDescription] = useState("");
+  const [allowWalkIns, setAllowWalkIns] = useState(false);
+  const [requiresIDVerification, setRequiresIDVerification] = useState(false);
+  const [ticketSalesStartDate, setTicketSalesStartDate] = useState("");
+  const [ticketSalesEndDate, setTicketSalesEndDate] = useState("");
+  const [ticketingTerms, setTicketingTerms] = useState(DEFAULT_TICKETING_TERMS);
+  const [refundPolicy, setRefundPolicy] = useState(DEFAULT_REFUND_POLICY);
+  const [hostDefaultsLoaded, setHostDefaultsLoaded] = useState(false);
+  const hostDefaultsRef = useRef<{ ticketingTerms: string; refundPolicy: string }>({
+    ticketingTerms: "",
+    refundPolicy: "",
+  });
+  const [tickets, setTickets] = useState<TicketDraft[]>([]);
+  const [extras, setExtras] = useState<ExtraDraft[]>([]);
+  const [extraModalOpen, setExtraModalOpen] = useState(false);
+  const [extraEditIndex, setExtraEditIndex] = useState<number | null>(null);
+  const [extraName, setExtraName] = useState("");
+  const [extraDescription, setExtraDescription] = useState("");
+  const [extraPrice, setExtraPrice] = useState(0);
+  const [extraQuantity, setExtraQuantity] = useState(50);
+  const [extraImage, setExtraImage] = useState("");
+  const [extraType, setExtraType] = useState<HoizrExtraTypeValue>("OTHER");
+
+  const [peopleTab, setPeopleTab] = useState<"collaborators" | "artists">(
+    "collaborators"
+  );
+  const [lineupEnabled, setLineupEnabled] = useState(true);
+  const [lineUpToBeAnnounced, setLineUpToBeAnnounced] = useState(false);
+  const [artistQuery, setArtistQuery] = useState("");
+  const [artistSearchResults, setArtistSearchResults] = useState<ArtistSearchResult[]>([]);
+  const [artistSearchAttempted, setArtistSearchAttempted] = useState(false);
+  const [artistLinkId, setArtistLinkId] = useState("");
+  const [tempArtistId, setTempArtistId] = useState("");
+  const [artistActualName, setArtistActualName] = useState("");
+  const [artistName, setArtistName] = useState("");
+  const [artistPicture, setArtistPicture] = useState("");
+  const [artistInstagram, setArtistInstagram] = useState("");
+  const [artistSpotify, setArtistSpotify] = useState("");
+  const [artistYoutube, setArtistYoutube] = useState("");
+  const [collaboratorQuery, setCollaboratorQuery] = useState("");
+  const [collaboratorSearchResults, setCollaboratorSearchResults] = useState<CollaboratorSearchResult[]>([]);
+  const [collaboratorLinkId, setCollaboratorLinkId] = useState("");
+  const [collaboratorName, setCollaboratorName] = useState("");
+  const [requestCustomerListAccess, setRequestCustomerListAccess] =
+    useState(true);
+  const [hideOnEventPage, setHideOnEventPage] = useState(false);
+  const [allowIssuingOfflineTickets, setAllowIssuingOfflineTickets] =
+    useState(false);
+  const [sendTransactionalMails, setSendTransactionalMails] = useState(false);
+  const [canSeeMetrics, setCanSeeMetrics] = useState(true);
+  const [canRunCampaigns, setCanRunCampaigns] = useState(true);
+  const [canCreateOffers, setCanCreateOffers] = useState(true);
+
+  // Multi-entry collaborator + artist state. The single-field state above
+  // (collaboratorName, artistName, etc.) is the in-modal draft; commits go
+  // into these arrays. Persisted to event.eventCollaborationBusiness[] and
+  // event.lineup[] respectively — both arrays are already supported by the
+  // schema, so this is purely a UI/UX upgrade.
+  const [collaborators, setCollaborators] = useState<CollaboratorEntry[]>([]);
+  const [collabModalOpen, setCollabModalOpen] = useState(false);
+  const [collabEditIndex, setCollabEditIndex] = useState<number | null>(null);
+  const [artists, setArtists] = useState<ArtistEntry[]>([]);
+  const [artistModalOpen, setArtistModalOpen] = useState(false);
+  const [artistEditIndex, setArtistEditIndex] = useState<number | null>(null);
+
+  // Referral capture modal. Opens when collaborator search returns no
+  // results — instead of letting the host add an off-platform "phantom"
+  // collaborator (the old behavior), we capture the missing host's contact
+  // so platform ops can invite them. Credit-rules math is a separate task.
+  const [referralModalOpen, setReferralModalOpen] = useState(false);
+  const [referralHostName, setReferralHostName] = useState("");
+  const [referralHostContact, setReferralHostContact] = useState("");
+
+  const [confirmAction, setConfirmAction] = useState<ConfirmAction | null>(null);
+
+  const [instagramPost, setInstagramPost] = useState("");
+  const [instagramStory, setInstagramStory] = useState("");
+  const [tableLayoutImage, setTableLayoutImage] = useState("");
+  const [horizontalFlyer, setHorizontalFlyer] = useState("");
+  const [verticalVideo, setVerticalVideo] = useState("");
+  const [horizontalVideo, setHorizontalVideo] = useState("");
+  const [repeatEveryWeek, setRepeatEveryWeek] = useState(false);
+  const [contactForQueriesTables, setContactForQueriesTables] = useState("");
+  // expectedEventsDoneTillNow input was removed per Roop — the server still
+  // accepts the field for backwards compat (pricing calc + AI Boost
+  // generator read it), so we send 0 from the client now and a follow-up
+  // task will switch those consumers to a real-time per-host event count.
+  const [feeSettlementMode, setFeeSettlementMode] = useState<
+    "DEDUCT_FROM_PAYOUT" | "PAY_AFTER_EVENT"
+  >("DEDUCT_FROM_PAYOUT");
+  const [pricingOptions, setPricingOptions] = useState<PricingOption[]>([]);
+  // AI Boost generation is the source of truth for the publish modal's
+  // "smart offers" — see main-server/src/modules/eventOffer. The legacy
+  // eventPricingOptions fallback still feeds the modal when the AI
+  // pipeline is unconfigured or returns nothing usable.
+  const [aiBoostGeneration, setAiBoostGeneration] =
+    useState<AiBoostGeneration | null>(null);
+  const aiBoostOffersByCode = useMemo<Map<string, AiBoostCard>>(() => {
+    const map = new Map<string, AiBoostCard>();
+    for (const o of aiBoostGeneration?.offers ?? []) map.set(o.offerCode, o);
+    return map;
+  }, [aiBoostGeneration]);
+  const [selectedPricingOptionId, setSelectedPricingOptionId] = useState("");
+  const [publishModalOpen, setPublishModalOpen] = useState(false);
+  const [publishing, setPublishing] = useState(false);
+  const [cityOptions, setCityOptions] = useState<CityOption[]>([]);
+  const formScrollRef = useRef<HTMLElement | null>(null);
+
+  const isPaid = eventType !== "FREE";
+  // Offer selection moved off the wizard onto a publish-time modal,
+  // so the visible steps list now matches `steps` 1:1 for every event
+  // type. Kept as a memoised value for the call-sites that referenced it.
+  const visibleSteps = steps;
+  const isPublished = status === "PUBLISHED" || status === "Published";
+  const eventStarted = Boolean(
+    isPublished && startDate && new Date(startDate) <= new Date()
+  );
+  const canEditEventCategory = mode === "create" && !isPublished && !firstStepCompleted;
+  const multiDayEligible = useMemo(() => {
+    if (!startDate || !endDate) return false;
+    return (
+      new Date(endDate).getTime() - new Date(startDate).getTime() >
+      24 * 60 * 60 * 1000
+    );
+  }, [endDate, startDate]);
+
+  const stateOptions = useMemo(
+    () =>
+      Array.from(
+        new Set(cityOptions.map((option) => option.state).filter(Boolean))
+      ).sort() as string[],
+    [cityOptions]
+  );
+
+  const loadPlaceOptions = async (inputValue: string): Promise<PlacesType[]> => {
+    if (!inputValue || inputValue.trim().length < 2) {
+      return [];
+    }
+    try {
+      const response = await sdk.AllPlaces({ input: inputValue });
+      return (response.getPlacesList ?? []).map((place: any) => ({
+          label: place.displayName,
+          value: place.placeId,
+        }));
+    } catch {
+      return [];
+    }
+  };
+
+  const applyPlace = async (option: PlacesType | null) => {
+    setSelectedPlace(option);
+    if (!option?.value) {
+      setCoords([]);
+      return;
+    }
+    setManualLocationOpen(true);
+    setSearchLoading(true);
+    try {
+      const response = await sdk.PlaceDetails({ placeId: option.value });
+      const details = response.getPlaceDetails;
+      if (!details) return;
+      setCoords([details.latitude, details.longitude]);
+      setAddressLine1(details.address ?? "");
+      setAddressLine2("");
+      setCity(details.city ?? city);
+      setStateName(details.state ?? "");
+      setPincode(details.zipcode ?? "");
+    } catch (error) {
+      setToastData({ type: "error", message: extractErrorMessage(error) });
+    } finally {
+      setSearchLoading(false);
+    }
+  };
+
+  const selectCity = (value: string) => {
+    setCity(value);
+    const selected = cityOptions.find(
+      (option) => option.value.toLowerCase() === value.toLowerCase()
+    );
+    if (selected?.state) {
+      setStateName(selected.state);
+    }
+  };
+
+  const currentTicketDraft = (): TicketDraft => ({
+    ticketCategory,
+    ticketName,
+    ticketType,
+    ticketCapacity: Number(ticketCapacity) || 0,
+    ticketPrice: ticketCategory === "GUESTLIST" ? 0 : Number(ticketPrice) || 0,
+    coverType,
+    ticketGST,
+    gstRate: Number(gstRate) || 0,
+    groupCapacity: Number(groupCapacity) || 0,
+    maxTicketPerUser: Number(maxTicketPerUser) || 10,
+    ticketExpiryDateTime: ticketExpiryDateTime || undefined,
+    markAsComingSoon: ticketComingSoon,
+    markAsOnGroundOnly: ticketOnGroundOnly,
+    ticketVisible,
+    description: ticketDescription.trim() || undefined,
+  });
+
+  const ticketInputs = () => {
+    if (!ticketingEnabled) return [];
+    return tickets;
+  };
+
+  const resetTicketDraft = () => {
+    setTicketCategory(eventType === "FREE" ? "GUESTLIST" : "NORMAL");
+    setTicketName("");
+    setTicketType("SINGLE");
+    setTicketPrice(0);
+    setTicketCapacity(100);
+    setCoverType("NO_COVER");
+    // Default GST depends on host eligibility — eligible hosts get the
+    // standard 18% pre-selected; everyone else stays at NONE (the only
+    // legal option for them per SoT §4).
+    setTicketGST(hostGstEligible ? "CGST_SGST_18" : "NONE");
+    setGstRate(0);
+    setGroupCapacity(4);
+    setMaxTicketPerUser(10);
+    setTicketExpiryDateTime("");
+    setTicketComingSoon(false);
+    setTicketOnGroundOnly(false);
+    setTicketVisible(true);
+    setTicketDescription("");
+    setTicketAdvancedOpen(false);
+  };
+
+  const openTicketModal = (index?: number) => {
+    if (typeof index === "number") {
+      const ticket = tickets[index];
+      if (!ticket) return;
+      setTicketEditIndex(index);
+      setTicketCategory(ticket.ticketCategory);
+      setTicketName(ticket.ticketName);
+      setTicketType(ticket.ticketType);
+      setTicketPrice(ticket.ticketPrice);
+      setTicketCapacity(ticket.ticketCapacity);
+      setCoverType(ticket.coverType);
+      setTicketGST(ticket.ticketGST);
+      setGstRate(ticket.gstRate);
+      setGroupCapacity(ticket.groupCapacity);
+      setMaxTicketPerUser(ticket.maxTicketPerUser);
+      setTicketExpiryDateTime(ticket.ticketExpiryDateTime ?? "");
+      setTicketComingSoon(ticket.markAsComingSoon);
+      setTicketOnGroundOnly(ticket.markAsOnGroundOnly);
+      setTicketVisible(ticket.ticketVisible);
+      setTicketDescription(ticket.description ?? "");
+      setTicketAdvancedOpen(false);
+    } else {
+      setTicketEditIndex(null);
+      resetTicketDraft();
+    }
+    setTicketModalOpen(true);
+  };
+
+  const closeTicketModal = () => {
+    setTicketModalOpen(false);
+    setTicketEditIndex(null);
+    resetTicketDraft();
+  };
+
+  const saveTicketDraft = () => {
+    const draft = currentTicketDraft();
+    if (!draft.ticketName.trim()) {
+      setToastData({ type: "error", message: "Ticket name is required." });
+      return;
+    }
+    if (draft.ticketCapacity <= 0) {
+      setToastData({ type: "error", message: "Ticket capacity must be greater than 0." });
+      return;
+    }
+    if (draft.ticketCategory !== "GUESTLIST" && draft.ticketPrice <= 0) {
+      setToastData({ type: "error", message: "Paid tickets need a ticket price." });
+      return;
+    }
+    setTickets((current) => {
+      if (ticketEditIndex === null) {
+        return [...current, draft];
+      }
+      return current.map((ticket, index) =>
+        index === ticketEditIndex
+          ? { ...draft, _id: ticket._id, ticketSold: ticket.ticketSold }
+          : ticket
+      );
+    });
+    closeTicketModal();
+  };
+
+  const toggleTicketVisibility = (index: number) => {
+    setTickets((current) =>
+      current.map((ticket, itemIndex) =>
+        itemIndex === index
+          ? { ...ticket, ticketVisible: !ticket.ticketVisible }
+          : ticket
+      )
+    );
+  };
+
+  const requestTicketVisibilityToggle = (index: number) => {
+    const ticket = tickets[index];
+    if (!ticket) return;
+    const nextVisible = !ticket.ticketVisible;
+    setConfirmAction({
+      title: nextVisible ? "Show ticket?" : "Hide ticket?",
+      description: (
+        <>
+          {nextVisible ? "Show" : "Hide"} <strong>{ticket.ticketName}</strong> on
+          the event page. This only changes availability in the draft; you can
+          switch it back before saving.
+        </>
+      ),
+      confirmLabel: nextVisible ? "Show ticket" : "Hide ticket",
+      tone: nextVisible ? "default" : "warning",
+      onConfirm: () => toggleTicketVisibility(index),
+    });
+  };
+
+  const requestTicketDraftVisibilityChange = (checked: boolean) => {
+    if (checked === ticketVisible) return;
+    setConfirmAction({
+      title: checked ? "Show this ticket?" : "Hide this ticket?",
+      description: checked
+        ? "This ticket will be visible once the ticket is saved. You can hide it again later."
+        : "This ticket will stay hidden from customers once saved. You can show it again later.",
+      confirmLabel: checked ? "Show ticket" : "Hide ticket",
+      tone: checked ? "default" : "warning",
+      onConfirm: () => setTicketVisible(checked),
+    });
+  };
+
+  const requestTicketingChange = (checked: boolean) => {
+    if (checked === ticketingEnabled) return;
+    setConfirmAction({
+      title: checked ? "Enable ticketing?" : "Disable ticketing?",
+      description: checked
+        ? "Customers will be able to claim or purchase tickets after this event is saved and published."
+        : "Ticket sales and guestlist claims will be turned off for this event. Existing ticket drafts remain here if you enable ticketing again before saving.",
+      confirmLabel: checked ? "Enable ticketing" : "Disable ticketing",
+      tone: checked ? "default" : "warning",
+      onConfirm: () => setTicketingEnabled(checked),
+    });
+  };
+
+  const requestEventVisibilityChange = (checked: boolean) => {
+    if (checked === isVisible) return;
+    setConfirmAction({
+      title: checked ? "Make event visible?" : "Hide event?",
+      description: checked
+        ? "The event will be visible to customers when it is saved. Drafts still need publishing before checkout opens."
+        : "The event will be hidden from customers when it is saved. You can make it visible again later.",
+      confirmLabel: checked ? "Make visible" : "Hide event",
+      tone: checked ? "default" : "warning",
+      onConfirm: () => setIsVisible(checked),
+    });
+  };
+
+  const requestRemoveTicket = (index: number) => {
+    const ticket = tickets[index];
+    if (!ticket) return;
+    setConfirmAction({
+      title: "Remove ticket?",
+      description: (
+        <>
+          Remove <strong>{ticket.ticketName}</strong> from this event. This is
+          reversible only until you save the event.
+        </>
+      ),
+      confirmLabel: "Remove ticket",
+      tone: "danger",
+      onConfirm: () =>
+        setTickets((current) => current.filter((_, itemIndex) => itemIndex !== index)),
+    });
+  };
+
+  const resetExtraDraft = () => {
+    setExtraName("");
+    setExtraDescription("");
+    setExtraPrice(0);
+    setExtraQuantity(50);
+    setExtraImage("");
+    setExtraType("OTHER");
+  };
+
+  const openExtraModal = (index?: number) => {
+    if (typeof index === "number") {
+      const extra = extras[index];
+      if (!extra) return;
+      setExtraEditIndex(index);
+      setExtraName(extra.name);
+      setExtraDescription(extra.description ?? "");
+      setExtraPrice(extra.price);
+      setExtraQuantity(extra.quantity);
+      setExtraImage(extra.image ?? "");
+      setExtraType(extra.type);
+    } else {
+      setExtraEditIndex(null);
+      resetExtraDraft();
+    }
+    setExtraModalOpen(true);
+  };
+
+  const closeExtraModal = () => {
+    setExtraModalOpen(false);
+    setExtraEditIndex(null);
+    resetExtraDraft();
+  };
+
+  const saveExtraDraft = () => {
+    if (!extraName.trim()) {
+      setToastData({ type: "error", message: "Extra name is required." });
+      return;
+    }
+    if (extraPrice < 0) {
+      setToastData({ type: "error", message: "Extra price cannot be negative." });
+      return;
+    }
+    if (extraQuantity <= 0) {
+      setToastData({ type: "error", message: "Extra quantity must be greater than 0." });
+      return;
+    }
+    const draft: ExtraDraft = {
+      name: extraName.trim(),
+      description: extraDescription || undefined,
+      price: Number(extraPrice),
+      quantity: Number(extraQuantity),
+      image: extraImage || undefined,
+      type: extraType,
+    };
+    setExtras((current) => {
+      if (extraEditIndex === null) {
+        return [...current, draft];
+      }
+      return current.map((extra, index) =>
+        index === extraEditIndex
+          ? { ...draft, _id: extra._id, sold: extra.sold }
+          : extra
+      );
+    });
+    closeExtraModal();
+  };
+
+  const requestRemoveExtra = (index: number) => {
+    const extra = extras[index];
+    if (!extra) return;
+    setConfirmAction({
+      title: "Remove add-on?",
+      description: (
+        <>
+          Remove <strong>{extra.name}</strong> from this event. This is
+          reversible only until you save the event.
+        </>
+      ),
+      confirmLabel: "Remove add-on",
+      tone: "danger",
+      onConfirm: () => setExtras((current) => current.filter((_, i) => i !== index)),
+    });
+  };
+
+  const validateStep = (targetStep: number) => {
+    if (targetStep === 0 && !eventType) return "Choose an event category.";
+    if (targetStep === 1) {
+      if (!eventFlyer) return "Event flyer is required.";
+      if (!title.trim()) return "Event name is required.";
+      if (!description.trim()) return "Event description is required.";
+      if (!isComingSoon && (!startDate || !endDate)) {
+        return "Event start and end date are required.";
+      }
+      if (!isComingSoon && new Date(endDate) <= new Date(startDate)) {
+        return "Event end must be after event start.";
+      }
+    }
+    if (targetStep === 2) {
+      if (!city.trim()) return "City is required.";
+      if (eventLocationDecided && !addressLine1.trim()) {
+        return "Event address is required when venue is finalized.";
+      }
+    }
+    if (targetStep === 3 && ticketingEnabled) {
+      const variations = ticketInputs();
+      if (!variations.length) return "Add at least one ticket variation.";
+    }
+    if (targetStep === 4 && lineupEnabled && !lineUpToBeAnnounced) {
+      if (artists.length === 0) {
+        return "Add at least one artist or enable “Lineup to be announced.”";
+      }
+      const incomplete = artists.find(
+        (artist) => !artist.name.trim() || !artist.picture.trim()
+      );
+      if (incomplete) {
+        return "Every artist needs a stage name and a picture.";
+      }
+    }
+    if (targetStep === 5) {
+      if (!richTextToPlainText(ticketingTerms)) {
+        return "Ticketing Terms & Conditions are required.";
+      }
+      if (!richTextToPlainText(refundPolicy)) {
+        return "Refund Policy is required.";
+      }
+    }
+    return null;
+  };
+
+  // ---- Collaborator modal helpers ---------------------------------------
+  const resetCollabDraftFields = () => {
+    setCollaboratorName("");
+    setCollaboratorLinkId("");
+    setCollaboratorQuery("");
+    setCollaboratorSearchResults([]);
+    setRequestCustomerListAccess(true);
+    setHideOnEventPage(false);
+    setAllowIssuingOfflineTickets(false);
+    setSendTransactionalMails(false);
+    setCanSeeMetrics(true);
+    setCanRunCampaigns(true);
+    setCanCreateOffers(true);
+  };
+
+  const openAddCollaboratorModal = () => {
+    setCollabEditIndex(null);
+    resetCollabDraftFields();
+    setCollabModalOpen(true);
+  };
+
+  const openEditCollaboratorModal = (index: number) => {
+    const entry = collaborators[index];
+    if (!entry) return;
+    setCollabEditIndex(index);
+    setCollaboratorName(entry.name);
+    setCollaboratorLinkId(entry.businessLinkId);
+    setCollaboratorQuery("");
+    setCollaboratorSearchResults([]);
+    setRequestCustomerListAccess(entry.requestCustomerListAccess);
+    setHideOnEventPage(entry.hideOnEventPage);
+    setAllowIssuingOfflineTickets(entry.allowIssuingOfflineTickets);
+    setSendTransactionalMails(entry.sendTransactionalMails);
+    setCanSeeMetrics(entry.canSeeMetrics);
+    setCanRunCampaigns(entry.canRunCampaigns);
+    setCanCreateOffers(entry.canCreateOffers);
+    setCollabModalOpen(true);
+  };
+
+  const closeCollabModal = () => {
+    setCollabModalOpen(false);
+    setCollabEditIndex(null);
+    resetCollabDraftFields();
+  };
+
+  const saveCollaboratorDraft = () => {
+    // Only enforce on-platform host for NEW additions. Legacy phantom
+    // entries (loaded with no businessLinkId) can still be edited and
+    // saved as long as they were already on the event — we don't want to
+    // force the host to delete legacy data.
+    const isLegacyEdit =
+      collabEditIndex !== null &&
+      collaborators[collabEditIndex] &&
+      !collaborators[collabEditIndex].businessLinkId;
+
+    if (!collaboratorLinkId && !isLegacyEdit) {
+      setToastData({
+        type: "error",
+        message:
+          "Pick a host from search. If they aren’t on Hoizr yet, use “Refer this host” instead.",
+      });
+      return;
+    }
+    if (!collaboratorName.trim()) {
+      setToastData({
+        type: "error",
+        message: "Collaborator name is required.",
+      });
+      return;
+    }
+    const collabKey = collaboratorLinkId
+      ? `id:${collaboratorLinkId}`
+      : `name:${collaboratorName.trim().toLowerCase()}`;
+    const duplicate = collaborators.some((entry, index) => {
+      if (index === collabEditIndex) return false;
+      const entryKey = entry.businessLinkId
+        ? `id:${entry.businessLinkId}`
+        : `name:${entry.name.trim().toLowerCase()}`;
+      return entryKey === collabKey;
+    });
+    if (duplicate) {
+      setToastData({
+        type: "error",
+        message: "This collaborator is already on the event.",
+      });
+      return;
+    }
+    const draft: CollaboratorEntry = {
+      name: collaboratorName.trim(),
+      businessLinkId: collaboratorLinkId,
+      requestCustomerListAccess,
+      hideOnEventPage,
+      allowIssuingOfflineTickets,
+      sendTransactionalMails,
+      canSeeMetrics,
+      canRunCampaigns,
+      canCreateOffers,
+    };
+    setCollaborators((current) => {
+      if (collabEditIndex === null) return [...current, draft];
+      return current.map((existing, index) =>
+        index === collabEditIndex ? draft : existing
+      );
+    });
+    closeCollabModal();
+  };
+
+  const requestRemoveCollaborator = (index: number) => {
+    const target = collaborators[index];
+    if (!target) return;
+    setConfirmAction({
+      title: "Remove collaborator?",
+      description: (
+        <>
+          Remove <strong>{target.name || "this collaborator"}</strong> from this
+          event. You can add them back later if they should co-run the event.
+        </>
+      ),
+      confirmLabel: "Remove collaborator",
+      tone: "danger",
+      onConfirm: () =>
+        setCollaborators((current) =>
+          current.filter((_, itemIndex) => itemIndex !== index)
+        ),
+    });
+  };
+
+  const openReferralModalFromCollab = () => {
+    setReferralHostName(collaboratorQuery.trim());
+    setReferralHostContact("");
+    setReferralModalOpen(true);
+  };
+
+  const closeReferralModal = () => {
+    setReferralModalOpen(false);
+    setReferralHostName("");
+    setReferralHostContact("");
+  };
+
+  const submitReferral = () => {
+    if (!referralHostName.trim()) {
+      setToastData({ type: "error", message: "Host name is required." });
+      return;
+    }
+    if (!referralHostContact.trim()) {
+      setToastData({
+        type: "error",
+        message: "Add an email or phone so the team can reach this host.",
+      });
+      return;
+    }
+    // Capture-only for now. Backend referral endpoint + credit math lives
+    // in a follow-up task — see AI_TASKS.csv TASK-006 ai_handoff_context.
+    // eslint-disable-next-line no-console
+    console.info("[referral capture]", {
+      hostName: referralHostName.trim(),
+      hostContact: referralHostContact.trim(),
+      referringHostId: selectedHostId,
+      eventId,
+    });
+    setToastData({
+      type: "success",
+      message: `We’ll invite ${referralHostName.trim()} to Hoizr. You can collaborate with them once they join.`,
+    });
+    closeReferralModal();
+  };
+
+  // ---- Artist modal helpers ---------------------------------------------
+  const resetArtistDraftFields = () => {
+    setArtistQuery("");
+    setArtistSearchResults([]);
+    setArtistSearchAttempted(false);
+    setArtistLinkId("");
+    setTempArtistId("");
+    setArtistActualName("");
+    setArtistName("");
+    setArtistPicture("");
+    setArtistInstagram("");
+    setArtistSpotify("");
+    setArtistYoutube("");
+  };
+
+  const openAddArtistModal = () => {
+    setArtistEditIndex(null);
+    resetArtistDraftFields();
+    setArtistModalOpen(true);
+  };
+
+  const openEditArtistModal = (index: number) => {
+    const entry = artists[index];
+    if (!entry) return;
+    setArtistEditIndex(index);
+    setArtistQuery("");
+    setArtistSearchResults([]);
+    setArtistSearchAttempted(true);
+    setArtistName(entry.name);
+    setArtistActualName(entry.actualName ?? entry.name);
+    setArtistPicture(entry.picture);
+    setArtistLinkId(entry.artistLinkId ?? "");
+    setTempArtistId(entry.tempArtistId ?? "");
+    setArtistInstagram(entry.instagramLink ?? "");
+    setArtistSpotify(entry.spotifyLink ?? "");
+    setArtistYoutube(entry.youtubeLink ?? "");
+    setArtistModalOpen(true);
+  };
+
+  const closeArtistModal = () => {
+    setArtistModalOpen(false);
+    setArtistEditIndex(null);
+    resetArtistDraftFields();
+  };
+
+  const saveArtistDraft = () => {
+    if (!artistName.trim()) {
+      setToastData({ type: "error", message: "Stage name is required." });
+      return;
+    }
+    if (!artistPicture.trim()) {
+      setToastData({ type: "error", message: "Artist picture is required." });
+      return;
+    }
+    const artistKey = artistLinkId
+      ? `artist:${artistLinkId}`
+      : tempArtistId
+      ? `temp:${tempArtistId}`
+      : `name:${artistName.trim().toLowerCase()}`;
+    const duplicate = artists.some((entry, index) => {
+      if (index === artistEditIndex) return false;
+      const entryKey = entry.artistLinkId
+        ? `artist:${entry.artistLinkId}`
+        : entry.tempArtistId
+        ? `temp:${entry.tempArtistId}`
+        : `name:${entry.name.trim().toLowerCase()}`;
+      return entryKey === artistKey;
+    });
+    if (duplicate) {
+      setToastData({
+        type: "error",
+        message: "This artist is already in the lineup.",
+      });
+      return;
+    }
+    const draft: ArtistEntry = {
+      name: artistName.trim(),
+      actualName: artistActualName.trim() || undefined,
+      picture: artistPicture,
+      artistLinkId: artistLinkId || undefined,
+      tempArtistId: tempArtistId || undefined,
+      instagramLink: artistInstagram || undefined,
+      spotifyLink: artistSpotify || undefined,
+      youtubeLink: artistYoutube || undefined,
+    };
+    setArtists((current) => {
+      if (artistEditIndex === null) return [...current, draft];
+      return current.map((existing, index) =>
+        index === artistEditIndex ? draft : existing
+      );
+    });
+    closeArtistModal();
+  };
+
+  const requestRemoveArtist = (index: number) => {
+    const target = artists[index];
+    if (!target) return;
+    setConfirmAction({
+      title: "Remove artist?",
+      description: (
+        <>
+          Remove <strong>{target.name || "this artist"}</strong> from the lineup.
+          You can add them back later if they should appear on the event page.
+        </>
+      ),
+      confirmLabel: "Remove artist",
+      tone: "danger",
+      onConfirm: () =>
+        setArtists((current) => current.filter((_, itemIndex) => itemIndex !== index)),
+    });
+  };
+
+  const searchArtists = async () => {
+    if (artistQuery.trim().length < 2) {
+      setArtistSearchResults([]);
+      setArtistSearchAttempted(false);
+      return;
+    }
+    try {
+      const response = await sdk.searchEventArtists({ search: artistQuery.trim() });
+      setArtistSearchResults(response.searchEventArtists ?? []);
+      setArtistSearchAttempted(true);
+    } catch (error) {
+      setArtistSearchAttempted(true);
+      setToastData({ type: "error", message: extractErrorMessage(error) });
+    }
+  };
+
+  const selectArtist = (artist: ArtistSearchResult) => {
+    setArtistName(artist.name ?? "");
+    setArtistActualName(
+      [artist.firstName, artist.lastName].filter(Boolean).join(" ") ||
+        artist.name ||
+        ""
+    );
+    setArtistPicture(artist.picture ?? "");
+    setArtistInstagram(artist.instagramLink ?? "");
+    setArtistSpotify(artist.spotifyLink ?? "");
+    setArtistYoutube(artist.youtubeLink ?? "");
+    setArtistLinkId(artist.artistLinkId ?? "");
+    setTempArtistId(artist.tempArtistId ?? "");
+    setArtistSearchAttempted(true);
+  };
+
+  const searchCollaborators = async () => {
+    if (collaboratorQuery.trim().length < 2) {
+      setCollaboratorSearchResults([]);
+      return;
+    }
+    try {
+      const response = await sdk.searchCollaboratorHosts({
+        search: collaboratorQuery.trim(),
+      });
+      setCollaboratorSearchResults(response.searchCollaboratorHosts ?? []);
+    } catch (error) {
+      setToastData({ type: "error", message: extractErrorMessage(error) });
+    }
+  };
+
+  const selectCollaborator = (host: CollaboratorSearchResult) => {
+    setCollaboratorName(host.name ?? "");
+    setCollaboratorLinkId(host._id);
+  };
+
+  useEffect(() => {
+    const loadCities = async () => {
+      try {
+        const response = await sdk.getActiveIndianCities();
+        setCityOptions(response?.getActiveIndianCities ?? []);
+      } catch (error) {
+        setToastData({ type: "error", message: extractErrorMessage(error) });
+      }
+    };
+
+    loadCities();
+  }, [setToastData]);
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const res: any = await sdk.getActiveGenreTags();
+        if (!cancelled && Array.isArray(res?.getActiveGenreTags)) {
+          setAllGenres(
+            res.getActiveGenreTags.map((g: any) => ({
+              _id: String(g._id),
+              value: String(g.value),
+            }))
+          );
+        }
+      } catch {
+        // genre list is optional UX — silent fail.
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  // Determine host GST eligibility once on mount. Only REGULAR /
+  // CASUAL_TAXABLE_PERSON hosts may charge ticket GST per SoT §4 — every
+  // other host gets the GST Type selector hidden + ticket GST forced to
+  // NONE. Server enforces the same rule so even if a stale UI sends a
+  // GST value, the save is force-corrected.
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const res: any = await sdk.hostPayoutAccounts();
+        if (cancelled) return;
+        const accounts: any[] = Array.isArray(res?.hostPayoutAccounts)
+          ? res.hostPayoutAccounts
+          : [];
+        const primary =
+          accounts.find((a) => a?.isPrimary && a?.isActive !== false) ??
+          accounts.find((a) => a?.isActive !== false);
+        const type = primary?.gstRegistrationType;
+        const eligible =
+          !!primary?.isGstRegistered &&
+          !!primary?.gstin &&
+          (type === "Regular" || type === "CasualTaxablePerson");
+        setHostGstEligible(eligible);
+      } catch {
+        setHostGstEligible(false);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  useEffect(() => {
+    const timer = window.setTimeout(() => {
+      searchArtists();
+    }, 300);
+    return () => window.clearTimeout(timer);
+  }, [artistQuery]);
+
+  useEffect(() => {
+    const timer = window.setTimeout(() => {
+      searchCollaborators();
+    }, 300);
+    return () => window.clearTimeout(timer);
+  }, [collaboratorQuery]);
+
+  // Pricing/offer selection no longer lives in the wizard; the publish
+  // modal handles it inline.
+
+  const handleFlyerFile = (file?: File) => {
+    if (!file) return;
+    if (!file.type.startsWith("image/")) {
+      setToastData({ type: "error", message: "Please upload an image file." });
+      return;
+    }
+    if (file.size > flyerMaxFileSizeBytes) {
+      setToastData({
+        type: "error",
+        message: "Event flyer must be 5 MB or smaller.",
+      });
+      return;
+    }
+    if (flyerPreview) {
+      URL.revokeObjectURL(flyerPreview);
+    }
+    setFlyerFile(file);
+    setFlyerPreview(URL.createObjectURL(file));
+    setFlyerNaturalRatio(null);
+    setCropZoom(0);
+    setCropX(50);
+    setCropY(50);
+    setFlyerCropOpen(true);
+  };
+
+  const clearFlyerSelection = () => {
+    if (flyerPreview) {
+      URL.revokeObjectURL(flyerPreview);
+    }
+    setFlyerFile(null);
+    setFlyerPreview("");
+    setFlyerNaturalRatio(null);
+    setFlyerCropOpen(false);
+    setCropZoom(0);
+    setCropX(50);
+    setCropY(50);
+  };
+
+  const removeEventFlyer = () => {
+    clearFlyerSelection();
+    setEventFlyer("");
+  };
+
+  const cropFlyerToBlob = async (file: File): Promise<Blob> => {
+    const imageUrl = URL.createObjectURL(file);
+    const image = new Image();
+    image.src = imageUrl;
+    await new Promise((resolve, reject) => {
+      image.onload = resolve;
+      image.onerror = reject;
+    });
+
+    // Use the same crop-window math as the preview overlay. The overlay
+    // sits over the displayed image with width/height expressed in % of
+    // image bounds and left/top in % of available offset — mapping those
+    // % values straight onto natural pixel space gives a canvas cut that
+    // matches exactly what the user saw in the preview.
+    const naturalRatio = image.width / image.height;
+    const targetRatio = flyerTargetWidth / flyerTargetHeight;
+    const cropScale = flyerCropScaleFromPercent(cropZoom);
+    const widthPctOfImg =
+      (naturalRatio >= targetRatio
+        ? (targetRatio / naturalRatio) * 100
+        : 100) / cropScale;
+    const heightPctOfImg =
+      (naturalRatio >= targetRatio
+        ? 100
+        : (naturalRatio / targetRatio) * 100) / cropScale;
+    const sourceWidth = image.width * (widthPctOfImg / 100);
+    const sourceHeight = image.height * (heightPctOfImg / 100);
+    const maxX = Math.max(0, image.width - sourceWidth);
+    const maxY = Math.max(0, image.height - sourceHeight);
+    const sourceX = maxX * (cropX / 100);
+    const sourceY = maxY * (cropY / 100);
+    const canvas = document.createElement("canvas");
+    canvas.width = flyerTargetWidth;
+    canvas.height = flyerTargetHeight;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) throw new Error("Unable to crop event flyer");
+    ctx.drawImage(
+      image,
+      sourceX,
+      sourceY,
+      sourceWidth,
+      sourceHeight,
+      0,
+      0,
+      flyerTargetWidth,
+      flyerTargetHeight
+    );
+    URL.revokeObjectURL(imageUrl);
+
+    return await new Promise((resolve, reject) => {
+      canvas.toBlob(
+        (blob) =>
+          blob ? resolve(blob) : reject(new Error("Unable to crop event flyer")),
+        "image/jpeg",
+        0.9
+      );
+    });
+  };
+
+  const saveFlyerCrop = async () => {
+    if (!flyerFile) return;
+    setUploadingFlyer(true);
+    try {
+      const hostId = await awaitSelectedHostId();
+      if (!hostId) {
+        setToastData({
+          type: "error",
+          message:
+            "We couldn't load your host context. Refresh the page and try again.",
+        });
+        setUploadingFlyer(false);
+        return;
+      }
+      const croppedBlob = await cropFlyerToBlob(flyerFile);
+      const file = new File([croppedBlob], "event-flyer.jpg", {
+        type: "image/jpeg",
+      });
+      // Pass `eventFlyer` as previousUrl so the previously uploaded
+      // flyer is destroyed in Cloudinary right after this one lands —
+      // keeps `hoizr/{env}/hosts/{hostId}/events/{eventId}/flyer/`
+      // from accumulating one orphan per crop adjustment.
+      const result = await uploadHostAsset({
+        kind: "event-flyer",
+        hostId,
+        eventId,
+        file,
+        previousUrl: eventFlyer,
+      });
+      setEventFlyer(result.secureUrl);
+      clearFlyerSelection();
+      setToastData({ type: "success", message: "Event flyer uploaded" });
+    } catch (error) {
+      setToastData({ type: "error", message: extractErrorMessage(error) });
+    } finally {
+      setUploadingFlyer(false);
+    }
+  };
+
+  const copyHostAddress = async () => {
+    try {
+      const response = await sdk.restaurantDetails();
+      const host = response.restaurantDetails;
+      if (!host?.address) {
+        setToastData({ type: "error", message: "Host address is not available" });
+        return;
+      }
+      setSelectedPlace(
+        host.address.place?.placeId
+          ? {
+              label: host.address.place.displayName ?? host.address.addressLine1 ?? "",
+              value: host.address.place.placeId,
+            }
+          : null
+      );
+      setAddressLine1(host.address.addressLine1 ?? "");
+      setAddressLine2(host.address.addressLine2 ?? "");
+      setCity(host.address.city ?? city);
+      setStateName(host.address.state ?? "");
+      setPincode(host.address.pincode ?? "");
+      setCoords(host.address.coordinate?.coordinates ?? []);
+      setEventLocationDecided(true);
+      setManualLocationOpen(true);
+      setToastData({ type: "success", message: "Host address copied" });
+    } catch (error) {
+      setToastData({ type: "error", message: extractErrorMessage(error) });
+    }
+  };
+
+  useEffect(() => {
+    const loadEvent = async () => {
+      setFetching(true);
+      try {
+        const response = await sdk.getEvent({ id: eventId });
+        const event = response?.getEvent;
+        if (!event) {
+          setToastData({ type: "error", message: "Event not found" });
+          router.replace("/events");
+          return;
+        }
+
+        setStatus(event.status ?? "DRAFT");
+        setFirstStepCompleted(Boolean(event.firstStepCompleted));
+        setTitle(event.title ?? "");
+        setDescription(event.description ?? "");
+        setSelectedGenreIds(
+          Array.isArray(event.genreTagIds)
+            ? event.genreTagIds.map(String)
+            : []
+        );
+        setEventFlyer(event.eventFlyer ?? "");
+        setEventType(
+          normalizeEnum<EventTypeValue>(event.eventType?.[0], "FREE")
+        );
+        setIsComingSoon(Boolean(event.isComingSoon));
+        setStartDate(toDateTimeInput(event.startDate));
+        setEndDate(toDateTimeInput(event.endDate));
+        setMarkSeparateDays(Boolean(event.markSeparateDays));
+        setIsVisible(event.isVisible !== false);
+        setCity(event.city ?? "");
+        setEventLocationDecided(event.eventLocationDecided !== false);
+        setAddressLine1(event.location?.addressLine1 ?? "");
+        setAddressLine2(event.location?.addressLine2 ?? "");
+        setStateName(event.location?.state ?? "");
+        setPincode(event.location?.pincode ?? "");
+        setCoords(event.location?.coordinate?.coordinates ?? []);
+        setManualLocationOpen(
+          Boolean(
+            event.location?.place?.placeId ||
+              event.location?.addressLine1 ||
+              event.city
+          )
+        );
+        setSelectedPlace(
+          event.location?.place?.placeId
+            ? {
+                label:
+                  event.location.place.displayName ??
+                  event.location.addressLine1 ??
+                  "",
+                value: event.location.place.placeId,
+              }
+            : null
+        );
+        setTicketingEnabled(event.ticketingEnabled !== false);
+        setAllowWalkIns(Boolean(event.allowWalkIns));
+        setRequiresIDVerification(Boolean(event.requiresIDVerification));
+        setTicketSalesStartDate(toDateTimeInput(event.ticketSalesStartDate));
+        setTicketSalesEndDate(toDateTimeInput(event.ticketSalesEndDate));
+        setTicketingTerms(
+          richTextToPlainText(event.ticketingTerms ?? "")
+            ? event.ticketingTerms ?? DEFAULT_TICKETING_TERMS
+            : DEFAULT_TICKETING_TERMS
+        );
+        setRefundPolicy(
+          richTextToPlainText(event.refundPolicy ?? "")
+            ? event.refundPolicy ?? DEFAULT_REFUND_POLICY
+            : DEFAULT_REFUND_POLICY
+        );
+        setSelectedPricingOptionId(event.pricingSnapshot?.optionId ?? "");
+        if (event.feeSettlementMode) {
+          setFeeSettlementMode(
+            normalizeEnum<"DEDUCT_FROM_PAYOUT" | "PAY_AFTER_EVENT">(
+              event.feeSettlementMode,
+              "DEDUCT_FROM_PAYOUT"
+            )
+          );
+        }
+        setRepeatEveryWeek(Boolean(event.repeatEveryWeek));
+        setContactForQueriesTables(event.contactForQueriesTables ?? "");
+        setInstagramPost(event.instagramPost ?? "");
+        setInstagramStory(event.instagramStory ?? "");
+        setTableLayoutImage(event.tableLayoutImage ?? "");
+        setHorizontalFlyer((event as any).horizontalFlyer ?? "");
+        setVerticalVideo(event.verticalVideo ?? "");
+        setHorizontalVideo(event.horizontalVideo ?? "");
+
+        const mappedTickets =
+          event.tickets?.map((ticket: any) => ({
+            _id: ticket._id,
+            ticketCategory: normalizeEnum<TicketCategoryValue>(
+              ticket.ticketCategory,
+              "GUESTLIST"
+            ),
+            ticketName: ticket.ticketName ?? "General Entry",
+            ticketType: normalizeEnum<TicketTypeValue>(ticket.ticketType, "SINGLE"),
+            ticketCapacity: Number(ticket.ticketCapacity ?? 100),
+            ticketPrice: Number(ticket.ticketPrice ?? 0),
+            ticketInfo: ticket.ticketInfo ?? "",
+            coverType: normalizeEnum<CoverTypeValue>(ticket.coverType, "NO_COVER"),
+            ticketGST: normalizeEnum<GstValue>(ticket.ticketGST, "NONE"),
+            gstRate: Number(ticket.gstRate ?? 0),
+            groupCapacity: Number(ticket.groupCapacity ?? 4),
+            maxTicketPerUser: Number(ticket.maxTicketPerUser ?? 10),
+            ticketExpiryDateTime: toDateTimeInput(ticket.ticketExpiryDateTime),
+            markAsComingSoon: Boolean(ticket.markAsComingSoon),
+            markAsOnGroundOnly: Boolean(ticket.markAsOnGroundOnly),
+            ticketVisible: ticket.ticketVisible !== false,
+            ticketSold: Number(ticket.ticketSold ?? 0),
+            description: (ticket as any).description ?? undefined,
+          })) ?? [];
+        setTickets(mappedTickets);
+
+        const mappedExtras =
+          event.extras?.map((extra: any) => ({
+            _id: extra._id,
+            name: extra.name ?? "",
+            description: extra.description ?? "",
+            price: Number(extra.price ?? 0),
+            quantity: Number(extra.quantity ?? 0),
+            sold: Number(extra.sold ?? 0),
+            image: extra.image ?? "",
+            type: (extra.type ?? "OTHER") as HoizrExtraTypeValue,
+            linkedTicketTypes: extra.linkedTicketTypes ?? [],
+          })) ?? [];
+        setExtras(mappedExtras);
+
+        const ticket = mappedTickets[0];
+        if (ticket) {
+          resetTicketDraft();
+        }
+
+        const loadedArtists: ArtistEntry[] = (event.lineup ?? []).map(
+          (artist: any) => ({
+            name: artist?.name ?? "",
+            picture: artist?.picture ?? "",
+            artistLinkId: artist?.artistLinkId ?? "",
+            tempArtistId: artist?.tempArtistId ?? "",
+            instagramLink: artist?.instagramLink ?? "",
+            spotifyLink: artist?.spotifyLink ?? "",
+            youtubeLink: artist?.youtubeLink ?? "",
+          })
+        );
+        setArtists(loadedArtists);
+        if (loadedArtists.length > 0) setLineupEnabled(true);
+        setLineUpToBeAnnounced(Boolean(event.lineUpToBeAnnounced));
+
+        // Load all collaborators. Legacy off-platform "phantom" collabs
+        // (no businessLinkId) are kept on edit so we don't silently drop
+        // legacy data; the modal blocks adding new ones without a host
+        // selection.
+        const loadedCollabs: CollaboratorEntry[] = (
+          event.eventCollaborationBusiness ?? []
+        ).map((collab: any) => ({
+          name: collab?.name ?? "",
+          businessLinkId: collab?.businessLinkId ?? "",
+          requestCustomerListAccess: collab?.requestCustomerListAccess !== false,
+          hideOnEventPage: Boolean(collab?.hideOnEventPage),
+          allowIssuingOfflineTickets: Boolean(
+            collab?.allowIssuingOfflineTickets
+          ),
+          sendTransactionalMails: Boolean(collab?.sendTransactionalMails),
+          canSeeMetrics: collab?.canSeeMetrics !== false,
+          canRunCampaigns: collab?.canRunCampaigns !== false,
+          canCreateOffers: collab?.canCreateOffers !== false,
+        }));
+        setCollaborators(loadedCollabs);
+
+        // Resume the wizard at the furthest step the user has reached.
+        // Without this, re-mounting (e.g. after the host adds a payout
+        // and returns to /events/[id]) drops the user back to step 0
+        // ("Event Category"), making it feel like the wizard "keeps
+        // redirecting to the event type page".
+        if (mode === "create") {
+          const hasTickets = (event.tickets?.length ?? 0) > 0;
+          const hasLineupOrCollab =
+            (event.lineup?.length ?? 0) > 0 ||
+            (event.eventCollaborationBusiness?.length ?? 0) > 0 ||
+            Boolean(event.lineUpToBeAnnounced);
+          const hasLocation = Boolean(
+            event.city ||
+              event.location?.addressLine1 ||
+              event.location?.place?.placeId
+          );
+          // Only treat Basic Details as done when the server-managed
+          // firstStepCompleted flag is true. Previously a pre-filled
+          // placeholder title ("Untitled Event" written at createEvent
+          // time) made hasBasics truthy, so brand-new drafts jumped
+          // straight to step 1 instead of step 0 (Event Category).
+          const basicDetailsCompleted = Boolean(event.firstStepCompleted);
+
+          let resumeStep = 0;
+          if (hasTickets) resumeStep = 3;
+          else if (hasLocation) resumeStep = 2;
+          else if (basicDetailsCompleted) resumeStep = 1;
+          if (hasLineupOrCollab) resumeStep = Math.max(resumeStep, 4);
+
+          if (resumeStep > 0) {
+            setStep(resumeStep);
+            setMaxStep((current) => Math.max(current, resumeStep));
+          }
+        }
+      } catch (error) {
+        setToastData({ type: "error", message: extractErrorMessage(error) });
+      } finally {
+        setFetching(false);
+      }
+    };
+
+    if (eventId) loadEvent();
+  }, [eventId, router, setToastData]);
+
+  // Load host's saved defaults for Ticketing Terms + Refund Policy and
+  // prefill them on create mode if the event itself hasn't set them.
+  // Update mode never overwrites existing event content — we only fill
+  // empty fields.
+  useEffect(() => {
+    let cancelled = false;
+    const load = async () => {
+      try {
+        const res = await sdk.getMyHostContentDefaults();
+        if (cancelled) return;
+        const defaults = res?.getMyHostContentDefaults;
+        if (!defaults) {
+          setHostDefaultsLoaded(true);
+          return;
+        }
+        hostDefaultsRef.current = {
+          ticketingTerms: defaults.ticketingTerms ?? "",
+          refundPolicy: defaults.refundPolicy ?? "",
+        };
+        setTicketingTerms((current) =>
+          shouldReplaceRichDefault(current, DEFAULT_TICKETING_TERMS)
+            ? defaults.ticketingTerms || DEFAULT_TICKETING_TERMS
+            : current
+        );
+        setRefundPolicy((current) =>
+          shouldReplaceRichDefault(current, DEFAULT_REFUND_POLICY)
+            ? defaults.refundPolicy || DEFAULT_REFUND_POLICY
+            : current
+        );
+        setHostDefaultsLoaded(true);
+      } catch {
+        // No defaults yet (first event) or transient failure — host
+        // simply types their first version; we save it on publish.
+        if (!cancelled) setHostDefaultsLoaded(true);
+      }
+    };
+    load();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  useEffect(() => {
+    formScrollRef.current?.scrollTo({ top: 0, behavior: "auto" });
+  }, [step]);
+
+  const buildEventInput = () => ({
+    title: title || undefined,
+    description: description || undefined,
+    eventFlyer: eventFlyer || undefined,
+    eventType: [eventType],
+    isComingSoon,
+    startDate: !isComingSoon && startDate ? new Date(startDate) : undefined,
+    endDate: !isComingSoon && endDate ? new Date(endDate) : undefined,
+    markSeparateDays: multiDayEligible ? markSeparateDays : false,
+    isVisible,
+    city: city || undefined,
+    eventLocationDecided,
+    location: eventLocationDecided
+      ? {
+          addressLine1: addressLine1 || undefined,
+          addressLine2: addressLine2 || undefined,
+          city: city || undefined,
+          state: stateName || undefined,
+          pincode: pincode || undefined,
+          formattedAddress: addressLine1 || undefined,
+          coordinate: coords.length
+            ? {
+                type: "Point",
+                coordinates: coords,
+              }
+            : undefined,
+          place: selectedPlace
+            ? {
+                displayName: selectedPlace.label,
+                placeId: selectedPlace.value,
+              }
+            : undefined,
+        }
+      : undefined,
+    ticketingEnabled,
+    allowWalkIns,
+    requiresIDVerification,
+    ticketSalesStartDate: ticketSalesStartDate
+      ? new Date(ticketSalesStartDate)
+      : undefined,
+    ticketSalesEndDate: ticketSalesEndDate
+      ? new Date(ticketSalesEndDate)
+      : undefined,
+    ticketingTerms: ticketingTerms || undefined,
+    refundPolicy: refundPolicy || undefined,
+    repeatEveryWeek,
+    instagramPost: instagramPost || undefined,
+    instagramStory: instagramStory || undefined,
+    tableLayoutImage: tableLayoutImage || undefined,
+    horizontalFlyer: horizontalFlyer || undefined,
+    verticalVideo: verticalVideo || undefined,
+    horizontalVideo: horizontalVideo || undefined,
+    contactForQueriesTables: contactForQueriesTables || undefined,
+    expectedEventsDoneTillNow: 0,
+    genreTagIds: selectedGenreIds.length ? selectedGenreIds : undefined,
+    tickets: ticketingEnabled
+      ? ticketInputs().map((ticket) => ({
+          _id: ticket._id,
+          ticketCategory: ticket.ticketCategory,
+          ticketName: ticket.ticketName,
+          ticketType: ticket.ticketType,
+          ticketCapacity: Number(ticket.ticketCapacity),
+          ticketPrice:
+            ticket.ticketCategory === "GUESTLIST" ? 0 : Number(ticket.ticketPrice),
+          ticketInfo: ticket.ticketInfo || undefined,
+          maxTicketPerUser: Number(ticket.maxTicketPerUser) || 10,
+          ticketExpiryDateTime: ticket.ticketExpiryDateTime
+            ? new Date(ticket.ticketExpiryDateTime)
+            : undefined,
+          coverType:
+            ticket.ticketCategory === "GUESTLIST" ? undefined : ticket.coverType,
+          ticketGST:
+            ticket.ticketCategory === "GUESTLIST" ? undefined : ticket.ticketGST,
+          gstRate: ticket.ticketGST === "OTHER" ? Number(ticket.gstRate) : undefined,
+          markAsComingSoon: ticket.markAsComingSoon,
+          markAsOnGroundOnly: ticket.markAsOnGroundOnly,
+          groupCapacity:
+            ticket.ticketCategory === "GROUP" ? Number(ticket.groupCapacity) : undefined,
+          ticketVisible: ticket.ticketVisible,
+          description: ticket.description?.trim() || undefined,
+        }))
+      : undefined,
+    lineup:
+      lineupEnabled && artists.length > 0
+        ? artists.map((artist) => ({
+            name: artist.name,
+            picture: artist.picture || undefined,
+            artistLinkId: artist.artistLinkId || undefined,
+            tempArtistId: artist.tempArtistId || undefined,
+            instagramLink: artist.instagramLink || undefined,
+            spotifyLink: artist.spotifyLink || undefined,
+            youtubeLink: artist.youtubeLink || undefined,
+          }))
+        : undefined,
+    lineUpToBeAnnounced,
+    eventCollaborationBusiness:
+      collaborators.length > 0
+        ? collaborators.map((collab) => ({
+            name: collab.name,
+            businessLinkId: collab.businessLinkId || undefined,
+            requestCustomerListAccess: collab.requestCustomerListAccess,
+            hideOnEventPage: collab.hideOnEventPage,
+            allowIssuingOfflineTickets: collab.allowIssuingOfflineTickets,
+            sendTransactionalMails: collab.sendTransactionalMails,
+            canSeeMetrics: collab.canSeeMetrics,
+            canRunCampaigns: collab.canRunCampaigns,
+            canCreateOffers: collab.canCreateOffers,
+          }))
+        : undefined,
+    extras: extras.map((extra) => ({
+      _id: extra._id,
+      name: extra.name,
+      description: extra.description || undefined,
+      price: Number(extra.price),
+      quantity: Number(extra.quantity),
+      image: extra.image || undefined,
+      type: extra.type,
+    })),
+  });
+
+  const saveCurrentStep = async (nextStep = step + 1) => {
+    const error = validateStep(step);
+    if (error) {
+      setToastData({ type: "error", message: error });
+      return;
+    }
+    setLoading(true);
+    try {
+      await sdk.updateEventStep({
+        id: eventId,
+        step: Math.min(step + 1, 6),
+        stepInput: buildEventInput(),
+      });
+      setToastData({
+        type: "success",
+        message: mode === "update" ? "Event updated" : "Event draft saved",
+      });
+      if (mode === "update") {
+        return;
+      }
+      setMaxStep((current) => Math.max(current, nextStep));
+      if (nextStep < steps.length) {
+        setStep(nextStep);
+      }
+    } catch (error) {
+      const message = extractErrorMessage(error);
+      if (message.toLowerCase().includes("payout profile")) {
+        showPayoutPromptModal(true);
+      } else {
+        setToastData({ type: "error", message });
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const saveDraftAndExit = async () => {
+    if (isPublished) return;
+    setLoading(true);
+    try {
+      await sdk.updateEventStep({
+        id: eventId,
+        step: Math.min(step + 1, 6),
+        stepInput: { ...buildEventInput(), status: "DRAFT" as any },
+      });
+      setStatus("DRAFT");
+      router.push("/events");
+    } catch (error) {
+      const message = extractErrorMessage(error);
+      if (message.toLowerCase().includes("payout profile")) {
+        showPayoutPromptModal(true);
+      } else {
+        setToastData({ type: "error", message });
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Triggered by the "Publish" button on the final wizard step. For free
+  // events we just save + publish. For paid events we save, fetch the
+  // available offers, and open the publish modal so the host can pick
+  // one (or the "No offer" basic option) before the event goes live.
+  const openPublishFlow = async () => {
+    const error = validateStep(lastStepIndex);
+    if (error) {
+      setToastData({ type: "error", message: error });
+      return;
+    }
+    setLoading(true);
+    try {
+      await sdk.updateEventStep({
+        id: eventId,
+        step: 6,
+        stepInput: buildEventInput(),
+      });
+
+      if (!isPaid) {
+        await sdk.publishEvent({ id: eventId });
+        setStatus("PUBLISHED");
+        setToastData({ type: "success", message: "Event published" });
+        try {
+          await sdk.saveMyHostContentDefaults({
+            input: {
+              ticketingTerms: ticketingTerms.trim() || undefined,
+              refundPolicy: refundPolicy.trim() || undefined,
+            },
+          });
+          hostDefaultsRef.current = {
+            ticketingTerms: ticketingTerms.trim(),
+            refundPolicy: refundPolicy.trim(),
+          };
+        } catch {
+          // ignore — defaults persist on next publish
+        }
+        router.push(`/events/${eventId}/manage`);
+        return;
+      }
+
+      const response = await sdk.eventPricingOptions({
+        input: {
+          eventTypes: [eventType],
+          expectedEventsDoneTillNow: 0,
+          tickets: ticketInputs().map((ticket) => ({
+            ticketPrice:
+              ticket.ticketCategory === "GUESTLIST" ? 0 : Number(ticket.ticketPrice),
+            ticketCapacity: Number(ticket.ticketCapacity),
+          })),
+        },
+      });
+      const legacyOptions = response?.eventPricingOptions ?? [];
+
+      // Fetch the AI-generated offer set. The mutation is idempotent
+      // server-side: a fresh generation runs only on the first publish,
+      // subsequent opens of this modal return the same generation. We
+      // prepend AI offers above the legacy pricing plans so smart
+      // offers are the host's first choice while the basic plan stays
+      // visible as a fallback.
+      let aiOptions: PricingOption[] = [];
+      try {
+        const generation = await generateAiBoostsForEvent(eventId);
+        setAiBoostGeneration(generation);
+        aiOptions = generation.offers
+          .filter((boost) => (boost.confidenceScore ?? 0) >= 0.78)
+          .map(aiBoostToPricingOption);
+      } catch (err) {
+        // AI pipeline down / not configured → silently fall back to the
+        // legacy pricing plans. Log but never block the publish flow.
+        console.warn(
+          "AI offer generation unavailable; falling back to legacy plans",
+          err
+        );
+        setAiBoostGeneration(null);
+      }
+
+      const options = [...aiOptions, ...legacyOptions];
+      setPricingOptions(options);
+      if (!selectedPricingOptionId && options.length) {
+        setSelectedPricingOptionId(options[0].optionId);
+      }
+      setPublishModalOpen(true);
+    } catch (error) {
+      const message = extractErrorMessage(error);
+      if (message.toLowerCase().includes("payout profile")) {
+        showPayoutPromptModal(true);
+      } else {
+        setToastData({ type: "error", message });
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const requestPublishFlow = () => {
+    const error = validateStep(lastStepIndex);
+    if (error) {
+      setToastData({ type: "error", message: error });
+      return;
+    }
+
+    if (isPaid) {
+      void openPublishFlow();
+      return;
+    }
+
+    setConfirmAction({
+      title: "Publish event?",
+      description:
+        "This will save the event and publish it for customers. You can hide or update the event later, but customers may see it immediately after publishing.",
+      confirmLabel: "Publish event",
+      tone: "warning",
+      onConfirm: openPublishFlow,
+    });
+  };
+
+  // Called from the publish modal once the host has picked an offer
+  // (or accepted the no-offer basic option). Persists the offer choice
+  // then flips the event to PUBLISHED.
+  const publishEvent = async () => {
+    if (isPaid && !selectedPricingOptionId) {
+      setToastData({
+        type: "error",
+        message: "Select an offer to publish, or choose the basic option.",
+      });
+      return;
+    }
+    setPublishing(true);
+    try {
+      if (isPaid && selectedPricingOptionId) {
+        const isAiOffer = selectedPricingOptionId.startsWith(AI_OFFER_PREFIX);
+        if (isAiOffer && aiBoostGeneration?._id) {
+          const offerCode = selectedPricingOptionId.slice(AI_OFFER_PREFIX.length);
+          await selectAiBoost({
+            generationId: aiBoostGeneration._id,
+            offerCode,
+            feeSettlementMode,
+          });
+        } else {
+          await sdk.selectEventPricingOption({
+            input: {
+              eventId,
+              optionId: selectedPricingOptionId,
+              feeSettlementMode,
+            },
+          });
+        }
+      }
+      await sdk.publishEvent({ id: eventId });
+      setStatus("PUBLISHED");
+      setToastData({ type: "success", message: "Event published" });
+      setPublishModalOpen(false);
+      // Save the latest Terms & Refund Policy as the host's defaults
+      // so the next event prefills with them. Best-effort — a failure
+      // here must not block the publish that just succeeded.
+      try {
+        await sdk.saveMyHostContentDefaults({
+          input: {
+            ticketingTerms: ticketingTerms.trim() || undefined,
+            refundPolicy: refundPolicy.trim() || undefined,
+          },
+        });
+        hostDefaultsRef.current = {
+          ticketingTerms: ticketingTerms.trim(),
+          refundPolicy: refundPolicy.trim(),
+        };
+      } catch {
+        // ignore — host defaults will retry next publish
+      }
+      router.push(`/events/${eventId}/manage`);
+    } catch (error) {
+      const message = extractErrorMessage(error);
+      const lower = message.toLowerCase();
+      // No payout at all → prompt to add one.
+      if (lower.includes("payout profile")) {
+        showPayoutPromptModal(true);
+      } else if (
+        lower.includes("active verified payout") ||
+        lower.includes("verify a primary payout")
+      ) {
+        // Payout added but admin has not yet verified — soft modal
+        // explains the host can exit and explore marketing while the
+        // draft sits waiting for verification.
+        showPayoutPendingVerificationModal(true);
+        // Also close the publish modal so they can navigate away.
+        setPublishModalOpen(false);
+      } else {
+        setToastData({ type: "error", message });
+      }
+    } finally {
+      setPublishing(false);
+    }
+  };
+
+  const requestPublishEvent = () => {
+    if (isPaid && !selectedPricingOptionId) {
+      setToastData({
+        type: "error",
+        message: "Select an offer to publish, or choose the basic option.",
+      });
+      return;
+    }
+    const selectedOption = pricingOptions.find(
+      (option) => option.optionId === selectedPricingOptionId
+    );
+    setConfirmAction({
+      title: "Publish event?",
+      description: (
+        <>
+          Publish this event with{" "}
+          <strong>{selectedOption?.label ?? "the selected pricing plan"}</strong>.
+          Customers may see and book the event immediately after it goes live.
+        </>
+      ),
+      confirmLabel: "Publish event",
+      tone: "warning",
+      onConfirm: publishEvent,
+    });
+  };
+
+  const requestPricingOptionChange = (option: PricingOption) => {
+    if (option.optionId === selectedPricingOptionId) return;
+    setConfirmAction({
+      title: "Switch pricing plan?",
+      description: (
+        <>
+          Switch the publish plan to <strong>{option.label}</strong>. This changes
+          the commission and payout assumptions used when the event is published.
+        </>
+      ),
+      confirmLabel: "Switch plan",
+      tone: "warning",
+      onConfirm: () => setSelectedPricingOptionId(option.optionId),
+    });
+  };
+
+  const requestFeeSettlementModeChange = (
+    mode: "DEDUCT_FROM_PAYOUT" | "PAY_AFTER_EVENT"
+  ) => {
+    if (mode === feeSettlementMode) return;
+    setConfirmAction({
+      title: "Switch payment method?",
+      description:
+        mode === "DEDUCT_FROM_PAYOUT"
+          ? "Hoizr will deduct the offer amount from your ticket settlement after the event."
+          : "Hoizr will collect the offer amount after the event closes instead of deducting it from settlement.",
+      confirmLabel: "Switch method",
+      tone: "warning",
+      onConfirm: () => setFeeSettlementMode(mode),
+    });
+  };
+
+  const getPricingOptionInsight = (option: PricingOption) => {
+    const commission = Number(option.commissionRate) || 0;
+    const upfrontFee = Number(option.upfrontFee) || 0;
+
+    // AI offers carry an absolute ₹ savings number computed server-side
+    // against the host's baseline + projected GTV. Prefer that over the
+    // relative-percent-points hint we use for legacy plans.
+    if (option.optionId.startsWith(AI_OFFER_PREFIX)) {
+      const boost = aiBoostOffersByCode.get(
+        option.optionId.slice(AI_OFFER_PREFIX.length)
+      );
+      const savingsValue = boost?.totalSavingsForHosts?.value;
+      const customerMessage = boost?.customerViewingMessage;
+      return {
+        savings:
+          savingsValue && savingsValue > 0
+            ? `You save ${formatIndianRupees(savingsValue)} vs the basic plan`
+            : "Smart offer — same baseline commission",
+        hostRecommendation:
+          customerMessage ??
+          "AI-tuned offer for this event. Confirm before publishing.",
+      };
+    }
+
+    const highestCommission = pricingOptions.reduce(
+      (highest, current) =>
+        Math.max(highest, Number(current.commissionRate) || 0),
+      commission
+    );
+    const lowestUpfront = pricingOptions.reduce(
+      (lowest, current) => Math.min(lowest, Number(current.upfrontFee) || 0),
+      upfrontFee
+    );
+    const fastestSettlement = pricingOptions.reduce(
+      (fastest, current) =>
+        Math.min(fastest, Number(current.payoutCycleDaysMax) || fastest),
+      Number(option.payoutCycleDaysMax) || 0
+    );
+    const commissionSavings = Math.max(0, highestCommission - commission);
+    const isLowestUpfront = upfrontFee <= lowestUpfront;
+    const isFastestSettlement =
+      (Number(option.payoutCycleDaysMax) || 0) <= fastestSettlement;
+
+    return {
+      savings:
+        commissionSavings > 0
+          ? `${formatPercentDelta(commissionSavings)} pts lower commission than the highest plan`
+          : "Highest-reach plan with standard commission",
+      hostRecommendation: upfrontFee
+        ? "AI read: choose this when the offer is strong enough to lift conversion and you are comfortable funding it through settlement or after the event."
+        : isLowestUpfront
+        ? "AI read: lowest-friction option for publishing quickly without an upfront offer amount."
+        : "AI read: balanced plan for hosts who want a stronger offer without overcomplicating settlement.",
+      customerRecommendation: isFastestSettlement
+        ? "Customer angle: simple ticket decision, clear offer, and fast event momentum."
+        : "Customer angle: clear value message with no fee breakdown shown in the host publish flow.",
+    };
+  };
+
+  const artistManualEntryEnabled =
+    artistEditIndex !== null ||
+    Boolean(artistLinkId || tempArtistId) ||
+    (artistSearchAttempted &&
+      artistQuery.trim().length >= 2 &&
+      (artistSearchResults.length === 0 || Boolean(artistName.trim())));
+
+  if (fetching) {
+    return (
+      <div className="flex min-h-[100dvh] items-center justify-center bg-[var(--owner-bg-sidebar)] text-sm text-[var(--owner-fg-3)]">
+        Loading event...
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex h-[100dvh] min-h-0 flex-col overflow-hidden bg-[var(--owner-bg-sidebar)] text-[var(--owner-fg-1)]">
+      <header className="flex min-h-[64px] shrink-0 items-center justify-between border-b border-[var(--owner-border)] px-4 md:px-6">
+        <div className="min-w-0">
+          <p className="text-xs font-semibold uppercase tracking-[0.12em] text-[var(--owner-blue-500)]">
+            Event {mode === "create" ? "Creation" : "Update"}
+          </p>
+          <h1 className="truncate text-lg font-semibold">
+            {title || "Untitled Event"}
+          </h1>
+        </div>
+        <div className="flex items-center gap-3">
+          <span className="hidden rounded-md border border-[var(--owner-border)] bg-[var(--owner-bg)] px-3 py-1.5 text-xs font-semibold sm:inline-flex">
+            {status}
+          </span>
+          {/* Save draft is now available on every step (per Roop) so a
+              host can park work mid-wizard without losing progress.
+              Hidden once the event is published — at that point edits
+              go through Update, not draft save. */}
+          {!isPublished ? (
+            <button
+              type="button"
+              disabled={loading}
+              onClick={saveDraftAndExit}
+              className="inline-flex rounded-lg border border-[var(--owner-border-strong)] bg-[var(--owner-bg)] px-3 py-2 text-sm font-semibold disabled:opacity-50"
+            >
+              Save draft
+            </button>
+          ) : null}
+          <button
+            type="button"
+            onClick={() => router.push("/events")}
+            className="inline-flex items-center gap-2 rounded-lg border border-[var(--owner-border-strong)] bg-[var(--owner-bg)] px-3 py-2 text-sm font-semibold"
+          >
+            <DoorOpenIcon size={16} />
+            Exit
+          </button>
+        </div>
+      </header>
+
+      <main className="grid min-h-0 flex-1 grid-cols-1 grid-rows-[minmax(0,1fr)] overflow-hidden lg:grid-cols-[260px_minmax(0,1fr)_340px]">
+        <aside className="hidden min-h-0 border-r border-[var(--owner-border)] p-4 lg:block">
+          <nav className="space-y-2">
+            {visibleSteps.map((label) => {
+              const index = steps.indexOf(label);
+              const stepLocked = mode === "create" && index > maxStep;
+              return (
+              <button
+                key={label}
+                type="button"
+                disabled={stepLocked}
+                onClick={() => setStep(index)}
+                className={`flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left text-sm transition ${
+                  step === index
+                    ? "bg-[var(--owner-fg-1)] text-[var(--owner-bg)]"
+                    : stepLocked
+                    ? "cursor-not-allowed text-[var(--owner-fg-4)] opacity-50"
+                    : "text-[var(--owner-fg-3)] hover:bg-[var(--owner-bg-subtle)]"
+                }`}
+              >
+                <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-white/20 text-xs font-semibold">
+                  {index + 1}
+                </span>
+                {label}
+              </button>
+              );
+            })}
+          </nav>
+        </aside>
+
+        {/* Middle column is a flex column: scrolling form on top, action bar
+            pinned to its bottom. The bar is a flex sibling (not a sticky
+            child of the scrolling section) so it touches the viewport bottom
+            regardless of section padding — previous sticky-inside-padded-
+            scroll-container placed the bar 24px above the viewport bottom. */}
+        <div className="flex min-h-0 min-w-0 flex-col overflow-hidden">
+        <section
+          ref={formScrollRef}
+          className="min-h-0 min-w-0 flex-1 overflow-y-auto overflow-x-hidden p-4 md:p-6"
+        >
+          <div className="mx-auto flex max-w-5xl flex-col gap-5">
+            <div className="flex gap-2 overflow-x-auto pb-1 lg:hidden">
+              {visibleSteps.map((label) => {
+                const index = steps.indexOf(label);
+                const stepLocked = mode === "create" && index > maxStep;
+                return (
+                <button
+                  key={label}
+                  type="button"
+                  disabled={stepLocked}
+                  onClick={() => setStep(index)}
+                  className={`shrink-0 rounded-full px-3 py-1.5 text-xs font-semibold ${
+                    step === index
+                      ? "bg-[var(--owner-fg-1)] text-[var(--owner-bg)]"
+                      : stepLocked
+                      ? "cursor-not-allowed bg-[var(--owner-bg-subtle)] text-[var(--owner-fg-4)] opacity-50"
+                      : "bg-[var(--owner-bg-subtle)] text-[var(--owner-fg-3)]"
+                  }`}
+                >
+                  {index + 1}. {label}
+                </button>
+                );
+              })}
+            </div>
+
+            <div className="rounded-lg border border-[var(--owner-border)] bg-[var(--owner-bg)] p-4 md:p-5">
+              {step === 0 ? (
+                <StepSection
+                  title="Choose event category"
+                  subtitle="This controls ticketing rules, payout cycle, and whether Hoizr can offer smart commission options."
+                >
+                  {/* TASK-043 / TASK-011 sub-item: hover blocker overlay
+                      when the category cannot be changed (update mode +
+                      first step already completed). Tells the user
+                      *why* the cards are inert. */}
+                  <div className="relative">
+                    {!canEditEventCategory ? (
+                      <div
+                        className="absolute inset-0 z-10 flex cursor-not-allowed items-center justify-center rounded-lg bg-white/70 opacity-0 transition-opacity hover:opacity-100"
+                        title="Category cannot be changed after Basic Details are saved."
+                        aria-hidden="true"
+                      >
+                        <span className="rounded-full bg-[var(--owner-fg-1)] px-3 py-1 text-xs font-semibold text-white">
+                          Category locked — can&apos;t change after Basic Details
+                        </span>
+                      </div>
+                    ) : null}
+                  <div className={`grid gap-4 xl:grid-cols-3 ${!canEditEventCategory ? "pointer-events-none opacity-80" : ""}`}>
+                    {eventTypeCards.map((card) => (
+                      <button
+                        key={card.value}
+                        type="button"
+                        disabled={!canEditEventCategory}
+                        onClick={() => {
+                          if (!canEditEventCategory) return;
+                          if (eventType === card.value) return;
+
+                          // Switching paid ↔ free changes which ticket
+                          // categories are legal. Ask before nuking the
+                          // host's draft tickets — only when there's at
+                          // least one ticket configured.
+                          const wouldRequireClear =
+                            tickets.length > 0 &&
+                            ((eventType === "FREE" && card.value !== "FREE") ||
+                              (eventType !== "FREE" && card.value === "FREE"));
+
+                          const applyChange = () => {
+                            setEventType(card.value);
+                            if (card.value === "FREE") {
+                              setTicketCategory("GUESTLIST");
+                              setTicketPrice(0);
+                            } else if (ticketCategory === "GUESTLIST") {
+                              setTicketCategory("NORMAL");
+                            }
+                            if (wouldRequireClear) {
+                              setTickets([]);
+                              setToastData({
+                                type: "warning",
+                                message:
+                                  "Existing ticket variants were cleared to match the new event type. Add fresh tickets in step 4.",
+                              });
+                            }
+                          };
+
+                          if (wouldRequireClear) {
+                            setConfirmAction({
+                              title: "Switch event type and clear tickets?",
+                              description: (
+                                <>
+                                  You have <strong>{tickets.length}</strong>{" "}
+                                  ticket variant
+                                  {tickets.length === 1 ? "" : "s"} configured.
+                                  Switching to{" "}
+                                  <strong>{card.title}</strong> will remove
+                                  them — you&apos;ll need to add fresh tickets
+                                  that match the new event type.
+                                </>
+                              ),
+                              confirmLabel: "Switch and clear",
+                              tone: "danger",
+                              onConfirm: () => {
+                                applyChange();
+                                setConfirmAction(null);
+                              },
+                            });
+                            return;
+                          }
+                          applyChange();
+                        }}
+                        className={`rounded-lg border p-4 text-left transition ${
+                          eventType === card.value
+                            ? "border-[var(--owner-blue-500)] bg-white shadow-sm"
+                            : "border-[var(--owner-border)] bg-[var(--owner-bg)]"
+                        }`}
+                      >
+                        <div className="flex items-center justify-between gap-3">
+                          <h3 className="font-semibold">{card.title}</h3>
+                          {eventType === card.value ? (
+                            <CheckCircle2Icon className="text-[var(--owner-blue-500)]" />
+                          ) : (
+                            <CircleDashedIcon className="text-gray-400" />
+                          )}
+                        </div>
+                        <p className="mt-3 text-sm leading-6 text-[var(--owner-fg-3)]">
+                          {card.description}
+                        </p>
+                        <div className="mt-4 flex flex-wrap gap-2">
+                          {card.meta.map((item) => (
+                            <span
+                              key={item}
+                              className="rounded-md bg-[var(--owner-bg-subtle)] px-2.5 py-1 text-xs font-medium"
+                            >
+                              {item}
+                            </span>
+                          ))}
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+                  </div>
+                  {!canEditEventCategory ? (
+                    <div className="rounded-lg border border-[var(--owner-border)] bg-[var(--owner-bg)] p-4 text-sm text-[var(--owner-fg-3)]">
+                      Event category is locked after the event is created.
+                    </div>
+                  ) : null}
+                  <div className="rounded-lg border border-[var(--owner-border)] bg-white p-4 text-sm leading-6 text-[var(--owner-fg-3)]">
+                    Customer platform fee is fixed from platform config and
+                    defaults to 5%. It does not change by event category.
+                    Commission is charged on gross ticket value. Incorrect
+                    category information can lead to per-ticket penalties and
+                    listing restrictions.
+                  </div>
+                </StepSection>
+              ) : null}
+
+              {step === 1 ? (
+                <StepSection
+                  title="Basic details"
+                  subtitle="Keep this tight. The preview updates as details are saved."
+                >
+                  <div className="grid gap-5">
+                    <div className="rounded-lg border border-[var(--owner-border)] bg-white p-3 shadow-sm">
+                      <div className="flex flex-col gap-3 md:flex-row md:items-stretch">
+                        <label
+                          className="flex min-h-[118px] flex-1 cursor-pointer items-center gap-4 rounded-lg border border-dashed border-[var(--owner-border)] bg-[var(--owner-bg)] px-4 py-4 text-sm transition hover:border-[var(--owner-blue-500)] hover:bg-[var(--owner-bg-subtle)]"
+                          onDragOver={(event) => event.preventDefault()}
+                          onDrop={(event) => {
+                            event.preventDefault();
+                            handleFlyerFile(event.dataTransfer.files?.[0]);
+                          }}
+                        >
+                          {eventFlyer ? (
+                            <span
+                              className="h-24 w-20 shrink-0 rounded-lg bg-cover bg-center shadow-sm"
+                              style={{ backgroundImage: `url(${eventFlyer})` }}
+                            />
+                          ) : (
+                            <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-white text-[var(--owner-fg-3)] shadow-sm">
+                              <UploadCloudIcon size={22} />
+                            </span>
+                          )}
+                          <span className="min-w-0 text-left">
+                            <span className="block font-semibold text-[var(--owner-fg-1)]">
+                              Event Flyer *
+                            </span>
+                            <span className="mt-1 block text-xs leading-5 text-[var(--owner-fg-3)]">
+                              Drop an image or click to crop a 4:5 event poster.
+                              JPG, PNG, or WebP up to 5 MB.
+                            </span>
+                            {eventFlyer ? (
+                              <span className="mt-2 inline-flex items-center gap-1 text-xs font-semibold text-[var(--owner-blue-500)]">
+                                <ImagePlusIcon size={14} />
+                                Replace image
+                              </span>
+                            ) : null}
+                          </span>
+                          <input
+                            type="file"
+                            accept="image/*"
+                            className="sr-only"
+                            onChange={(event) => {
+                              handleFlyerFile(event.target.files?.[0]);
+                              event.currentTarget.value = "";
+                            }}
+                          />
+                        </label>
+                        {eventFlyer ? (
+                          <div className="flex shrink-0 gap-2 md:w-36 md:flex-col">
+                            <label className="inline-flex flex-1 cursor-pointer items-center justify-center gap-2 rounded-lg border border-[var(--owner-border)] bg-white px-3 py-2 text-xs font-semibold text-[var(--owner-fg-1)] transition hover:border-[var(--owner-blue-500)] md:flex-none">
+                              <ImagePlusIcon size={15} />
+                              Replace
+                              <input
+                                type="file"
+                                accept="image/*"
+                                className="sr-only"
+                                onChange={(event) => {
+                                  handleFlyerFile(event.target.files?.[0]);
+                                  event.currentTarget.value = "";
+                                }}
+                              />
+                            </label>
+                            <button
+                              type="button"
+                              onClick={removeEventFlyer}
+                              className="inline-flex flex-1 items-center justify-center gap-2 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-xs font-semibold text-red-700 transition hover:bg-red-100 md:flex-none"
+                            >
+                              <XIcon size={15} />
+                              Delete
+                            </button>
+                          </div>
+                        ) : null}
+                      </div>
+                    </div>
+
+                    <div className="grid gap-4 md:grid-cols-2">
+                      <div className="md:col-span-2">
+                        <Input label="Event Name *" value={title} onChange={setTitle} />
+                      </div>
+                      <div className="md:col-span-2">
+                        <RichTextEditor
+                          label="Event Description"
+                          value={description}
+                          onChange={setDescription}
+                        />
+                      </div>
+                      {/* Genres — multi-select chips. Tags drive
+                          discoverability filters on the customer site. */}
+                      {allGenres.length > 0 ? (
+                        <div className="md:col-span-2">
+                          <p className="mb-2 text-sm font-medium">
+                            Genres
+                            <span className="ml-2 text-xs font-normal text-[var(--owner-fg-3)]">
+                              (pick all that apply — Comedy, Bollywood, EDM, etc.)
+                            </span>
+                          </p>
+                          <div className="flex flex-wrap gap-2">
+                            {allGenres.map((g) => {
+                              const selected = selectedGenreIds.includes(g._id);
+                              return (
+                                <button
+                                  key={g._id}
+                                  type="button"
+                                  onClick={() =>
+                                    setSelectedGenreIds((prev) =>
+                                      prev.includes(g._id)
+                                        ? prev.filter((id) => id !== g._id)
+                                        : [...prev, g._id]
+                                    )
+                                  }
+                                  className={`rounded-full border px-3 py-1 text-xs font-semibold transition ${
+                                    selected
+                                      ? "border-[var(--owner-blue-500)] bg-[var(--owner-blue-050)] text-[var(--owner-blue-500)]"
+                                      : "border-[var(--owner-border)] bg-white text-[var(--owner-fg-3)] hover:border-[var(--owner-blue-500)]"
+                                  }`}
+                                >
+                                  {g.value}
+                                </button>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      ) : null}
+                      <ToggleSettingRow
+                        title="Coming Soon"
+                        subtitle="Start and end dates are not required while this is on."
+                        checked={isComingSoon}
+                        onCheckedChange={setIsComingSoon}
+                      />
+                      <ToggleSettingRow
+                        title="Make Event Visible"
+                        subtitle="Visible drafts still need publishing before customers can book."
+                        checked={isVisible}
+                        onCheckedChange={requestEventVisibilityChange}
+                      />
+                      {!isComingSoon ? (
+                        <>
+                          <DateTimeInput
+                            label="Event Start *"
+                            value={startDate}
+                            onChange={setStartDate}
+                            disabled={eventStarted}
+                          />
+                          <DateTimeInput
+                            label="Event End *"
+                            value={endDate}
+                            onChange={setEndDate}
+                            disabled={eventStarted}
+                          />
+                        </>
+                      ) : null}
+                      {multiDayEligible ? (
+                        <div className="md:col-span-2">
+                          <ToggleSettingRow
+                            title="Mark as separate dated events"
+                            subtitle="Customers must select which day they want to attend."
+                            checked={markSeparateDays}
+                            onCheckedChange={setMarkSeparateDays}
+                          />
+                        </div>
+                      ) : null}
+                    </div>
+                  </div>
+                </StepSection>
+              ) : null}
+              {step === 2 ? (
+                <StepSection
+                  title="Location"
+                  subtitle={
+                    eventStarted
+                      ? "Location is locked because this event has already started."
+                      : "Confirm whether the venue is finalized, then add the city or full address."
+                  }
+                >
+                  <div className="grid gap-4 md:grid-cols-2">
+                    <div className="md:col-span-2">
+                      <ToggleSettingRow
+                        title="Event Location Decided"
+                        subtitle="Turn this on when the venue address is finalized. Turn it off if only the city is confirmed."
+                        checked={eventLocationDecided}
+                        onCheckedChange={setEventLocationDecided}
+                        disabled={eventStarted}
+                      />
+                    </div>
+                    {eventLocationDecided ? (
+                      <>
+                        <div className="md:col-span-2">
+                          <div className="mb-2 flex items-center justify-between gap-3">
+                            <div className="text-sm font-semibold">Event address</div>
+                            <button
+                              type="button"
+                              disabled={eventStarted}
+                              onClick={copyHostAddress}
+                              className="text-xs font-semibold text-[var(--owner-blue-500)] hover:underline disabled:text-[var(--owner-fg-4)]"
+                            >
+                              Copy host address
+                            </button>
+                          </div>
+                          <label className="block min-w-0 text-sm font-medium">
+                            Search Address
+                            <AsyncSelect
+                              isDisabled={eventStarted}
+                              className="mt-1 text-sm text-left"
+                              classNamePrefix="react-select"
+                              placeholder="Search venue or area"
+                              value={selectedPlace}
+                              isClearable
+                              noOptionsMessage={() => "Search for the event location"}
+                              onChange={(option) => applyPlace(option as PlacesType | null)}
+                              loadOptions={loadPlaceOptions}
+                            />
+                            {searchLoading ? (
+                              <span className="mt-1 block text-xs text-[var(--owner-fg-3)]">
+                                Fetching address details...
+                              </span>
+                            ) : null}
+                          </label>
+                          <div className="mt-2 flex flex-wrap items-center justify-between gap-2">
+                            <p className="text-xs text-[var(--owner-fg-3)]">
+                              Search first. If the venue is not listed, enter the address manually.
+                            </p>
+                            <button
+                              type="button"
+                              disabled={eventStarted}
+                              onClick={() => setManualLocationOpen(true)}
+                              className="rounded-md border border-[var(--owner-border)] bg-white px-3 py-1.5 text-xs font-semibold text-[var(--owner-fg-2)] hover:bg-[var(--owner-bg-subtle)] disabled:opacity-50"
+                            >
+                              Enter manually
+                            </button>
+                          </div>
+                        </div>
+                        {manualLocationOpen ? (
+                          <>
+                            <Input
+                              label="Address Line 1 *"
+                              value={addressLine1}
+                              onChange={setAddressLine1}
+                              disabled={eventStarted}
+                            />
+                            <Input
+                              label="Address Line 2 (optional)"
+                              value={addressLine2}
+                              onChange={setAddressLine2}
+                              disabled={eventStarted}
+                            />
+                            <CityInput
+                              label="City *"
+                              value={city}
+                              onChange={selectCity}
+                              options={cityOptions}
+                              disabled={eventStarted}
+                            />
+                            <StateInput
+                              label="State (optional)"
+                              value={stateName}
+                              onChange={setStateName}
+                              options={stateOptions}
+                              disabled={eventStarted}
+                            />
+                            <Input
+                              label="Pincode (optional)"
+                              value={pincode}
+                              onChange={setPincode}
+                              disabled={eventStarted}
+                            />
+                          </>
+                        ) : (
+                          <div className="md:col-span-2 rounded-lg border border-dashed border-[var(--owner-border)] bg-[var(--owner-bg-subtle)] px-4 py-5 text-sm text-[var(--owner-fg-3)]">
+                            Pick a search result to prefill the address, or use
+                            manual entry when the place is not found.
+                          </div>
+                        )}
+                      </>
+                    ) : (
+                      <CityInput
+                        label="City *"
+                        value={city}
+                        onChange={selectCity}
+                        options={cityOptions}
+                        disabled={eventStarted}
+                      />
+                    )}
+                    {/* Map preview — shown once coords are set (host
+                        picked from Places autocomplete). Iframe avoids
+                        loading the full Google Maps JS bundle just for
+                        a static preview. */}
+                    {eventLocationDecided && coords.length === 2 ? (
+                      <div className="md:col-span-2 overflow-hidden rounded-lg border border-[var(--owner-border)]">
+                        <iframe
+                          title="Event location preview"
+                          src={`https://www.google.com/maps?q=${coords[0]},${coords[1]}&hl=en&z=16&output=embed`}
+                          className="h-56 w-full"
+                          loading="lazy"
+                          referrerPolicy="no-referrer-when-downgrade"
+                        />
+                      </div>
+                    ) : null}
+                  </div>
+                </StepSection>
+              ) : null}
+
+              {step === 3 ? (
+                <StepSection
+                  title="Tickets"
+                  subtitle="Create one clean ticket variation at a time. Master ticket settings are separate below."
+                >
+                  <ToggleSettingRow
+                    title="Enable Ticketing"
+                    subtitle="Allow attendees to purchase or claim tickets for this event."
+                    checked={ticketingEnabled}
+                    onCheckedChange={requestTicketingChange}
+                  />
+                  <div
+                    className={`space-y-5 ${
+                      ticketingEnabled ? "" : "pointer-events-none opacity-45"
+                    }`}
+                  >
+                    <div className="flex flex-wrap items-center justify-between gap-3">
+                      <div className="inline-flex rounded-lg border border-[var(--owner-border)] bg-[var(--owner-bg)] p-1">
+                        {[
+                          { id: "tickets", label: "Tickets" },
+                          { id: "advanced", label: "Advance Ticket Settings" },
+                        ].map((tab) => (
+                          <button
+                            key={tab.id}
+                            type="button"
+                            disabled={!ticketingEnabled}
+                            onClick={() =>
+                              setTicketTab(tab.id as "tickets" | "advanced")
+                            }
+                            className={`rounded-md px-3 py-2 text-sm font-semibold ${
+                              ticketTab === tab.id
+                                ? "bg-[var(--owner-fg-1)] text-[var(--owner-bg)]"
+                                : "text-[var(--owner-fg-3)]"
+                            }`}
+                          >
+                            {tab.label}
+                          </button>
+                        ))}
+                      </div>
+                      {ticketTab === "tickets" ? (
+                        <button
+                          type="button"
+                          disabled={!ticketingEnabled}
+                          onClick={() => openTicketModal()}
+                          className="inline-flex items-center justify-center gap-2 rounded-lg bg-[var(--owner-fg-1)] px-4 py-2 text-sm font-semibold text-[var(--owner-bg)] disabled:opacity-60"
+                        >
+                          <PlusIcon size={16} />
+                          Add Ticket
+                        </button>
+                      ) : null}
+                    </div>
+
+                    {ticketTab === "tickets" ? (
+                      <>
+                        <div className="rounded-lg border border-[var(--owner-border)] bg-white">
+                          <div className="grid grid-cols-[minmax(0,1.4fr)_120px_150px] gap-3 border-b border-[var(--owner-border)] px-4 py-3 text-xs font-semibold uppercase tracking-[0.08em] text-[var(--owner-fg-3)] max-md:hidden">
+                            <span>Ticket</span>
+                            <span>Status</span>
+                            <span className="text-right">Actions</span>
+                          </div>
+                          {tickets.length ? (
+                            tickets.map((ticket, index) => {
+                              const hasSales = Number(ticket.ticketSold ?? 0) > 0;
+                              return (
+                                <div
+                                  key={ticket._id ?? `${ticket.ticketName}-${index}`}
+                                  className="grid gap-3 border-b border-[var(--owner-bg-subtle)] px-4 py-3 text-sm last:border-b-0 md:grid-cols-[minmax(0,1.4fr)_120px_150px] md:items-center"
+                                >
+                                  <div className="min-w-0">
+                                    <div className="truncate font-semibold">
+                                      {ticket.ticketName}
+                                    </div>
+                                    <div className="mt-1 text-xs text-[var(--owner-fg-3)]">
+                                      {ticket.ticketCategory} · {ticket.ticketCapacity} capacity ·{" "}
+                                      {ticket.ticketCategory === "GUESTLIST"
+                                        ? "Free"
+                                        : rupee(ticket.ticketPrice)}
+                                    </div>
+                                  </div>
+                                  <span
+                                    className={`w-fit rounded-md px-2.5 py-1 text-xs font-semibold ${
+                                      ticket.ticketVisible
+                                        ? "bg-emerald-50 text-emerald-700"
+                                        : "bg-gray-100 text-gray-600"
+                                    }`}
+                                  >
+                                    {ticket.ticketVisible ? "Visible" : "Hidden"}
+                                  </span>
+                                  <div className="flex justify-start gap-2 md:justify-end">
+                                    <button
+                                      type="button"
+                                      onClick={() => requestTicketVisibilityToggle(index)}
+                                      className="inline-flex h-9 w-9 items-center justify-center rounded-md border border-[var(--owner-border)]"
+                                      title={
+                                        ticket.ticketVisible
+                                          ? "Hide ticket"
+                                          : "Show ticket"
+                                      }
+                                    >
+                                      {ticket.ticketVisible ? (
+                                        <EyeOffIcon size={15} />
+                                      ) : (
+                                        <EyeIcon size={15} />
+                                      )}
+                                    </button>
+                                    <button
+                                      type="button"
+                                      disabled={hasSales}
+                                      onClick={() => openTicketModal(index)}
+                                      className="inline-flex h-9 w-9 items-center justify-center rounded-md border border-[var(--owner-border)] disabled:cursor-not-allowed disabled:opacity-40"
+                                      title={
+                                        hasSales
+                                          ? "Tickets with sales cannot be edited"
+                                          : "Edit ticket"
+                                      }
+                                    >
+                                      <Edit3Icon size={15} />
+                                    </button>
+                                    <button
+                                      type="button"
+                                      disabled={hasSales}
+                                      onClick={() => requestRemoveTicket(index)}
+                                      className="inline-flex h-9 w-9 items-center justify-center rounded-md border border-red-200 text-red-700 disabled:cursor-not-allowed disabled:opacity-40"
+                                      title={
+                                        hasSales
+                                          ? "Tickets with sales cannot be removed"
+                                          : "Remove ticket"
+                                      }
+                                    >
+                                      <XIcon size={15} />
+                                    </button>
+                                  </div>
+                                </div>
+                              );
+                            })
+                          ) : (
+                            <div className="px-4 py-8 text-center text-sm text-[var(--owner-fg-3)]">
+                              No ticket variations added yet.
+                            </div>
+                          )}
+                        </div>
+
+                        <div className="space-y-3">
+                          <div className="flex flex-wrap items-center justify-between gap-3">
+                            <div>
+                              <div className="text-sm font-semibold">Event Add-ons (optional)</div>
+                              <p className="mt-0.5 text-xs text-[var(--owner-fg-3)]">
+                                Sell upgrades, merch, or food add-ons alongside tickets.
+                              </p>
+                            </div>
+                            <button
+                              type="button"
+                              disabled={!ticketingEnabled}
+                              onClick={() => openExtraModal()}
+                              className="inline-flex items-center justify-center gap-2 rounded-lg border border-[var(--owner-border)] bg-[var(--owner-bg)] px-4 py-2 text-sm font-semibold disabled:opacity-60"
+                            >
+                              <PlusIcon size={16} />
+                              Add Add-on
+                            </button>
+                          </div>
+                          {extras.length ? (
+                            <div className="rounded-lg border border-[var(--owner-border)] bg-white">
+                              <div className="grid grid-cols-[minmax(0,1fr)_120px] gap-3 border-b border-[var(--owner-border)] px-4 py-3 text-xs font-semibold uppercase tracking-[0.08em] text-[var(--owner-fg-3)] max-md:hidden">
+                                <span>Add-on</span>
+                                <span className="text-right">Actions</span>
+                              </div>
+                              {extras.map((extra, index) => (
+                                <div
+                                  key={extra._id ?? `${extra.name}-${index}`}
+                                  className="grid gap-3 border-b border-[var(--owner-bg-subtle)] px-4 py-3 text-sm last:border-b-0 md:grid-cols-[minmax(0,1fr)_120px] md:items-center"
+                                >
+                                  <div className="min-w-0">
+                                    <div className="truncate font-semibold">{extra.name}</div>
+                                    <div className="mt-1 text-xs text-[var(--owner-fg-3)]">
+                                      {extra.type.replace(/_/g, " ")} · {extra.quantity} qty ·{" "}
+                                      {rupee(extra.price)}
+                                      {extra.sold ? ` · ${extra.sold} sold` : ""}
+                                    </div>
+                                  </div>
+                                  <div className="flex justify-start gap-2 md:justify-end">
+                                    <button
+                                      type="button"
+                                      onClick={() => openExtraModal(index)}
+                                      className="inline-flex h-9 w-9 items-center justify-center rounded-md border border-[var(--owner-border)]"
+                                      title="Edit add-on"
+                                    >
+                                      <Edit3Icon size={15} />
+                                    </button>
+                                    <button
+                                      type="button"
+                                      onClick={() => requestRemoveExtra(index)}
+                                      className="inline-flex h-9 w-9 items-center justify-center rounded-md border border-red-200 text-red-700"
+                                      title="Remove add-on"
+                                    >
+                                      <XIcon size={15} />
+                                    </button>
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          ) : null}
+                        </div>
+                      </>
+                    ) : null}
+
+                    {ticketTab === "advanced" ? (
+                      <div className="rounded-lg border border-[var(--owner-border)] bg-white p-4">
+                        <div className="grid gap-4 md:grid-cols-2">
+                          <DateTimeInput
+                            label="Ticket Sales Start Date (optional)"
+                            value={ticketSalesStartDate}
+                            onChange={setTicketSalesStartDate}
+                          />
+                          <DateTimeInput
+                            label="Ticket Sales End Date (optional)"
+                            value={ticketSalesEndDate}
+                            onChange={setTicketSalesEndDate}
+                          />
+                          <ToggleSettingRow
+                            title="Allow Walk-ins"
+                            checked={allowWalkIns}
+                            onCheckedChange={setAllowWalkIns}
+                          />
+                          <ToggleSettingRow
+                            title="ID Verification Required"
+                            checked={requiresIDVerification}
+                            onCheckedChange={setRequiresIDVerification}
+                          />
+                        </div>
+                        <p className="mt-3 text-xs text-[var(--owner-fg-3)]">
+                          Ticketing Terms &amp; Conditions and Refund Policy are
+                          now required — and live on the final{" "}
+                          <strong>Additional</strong> step.
+                        </p>
+                      </div>
+                    ) : null}
+                  </div>
+                </StepSection>
+              ) : null}
+
+              {step === 4 ? (
+                <StepSection
+                  title="Lineup and collaborators"
+                  subtitle="Manual artists are saved as phantom artists and can be reused from search later."
+                >
+                  <div className="inline-flex rounded-lg border border-[var(--owner-border)] bg-[var(--owner-bg)] p-1">
+                    {[
+                      {
+                        id: "collaborators",
+                        label: "Event Collaborators",
+                        Icon: UsersRoundIcon,
+                      },
+                      { id: "artists", label: "Artist Lineup", Icon: Music2Icon },
+                    ].map(({ id, label, Icon }) => (
+                      <button
+                        key={id}
+                        type="button"
+                        onClick={() =>
+                          setPeopleTab(id as "collaborators" | "artists")
+                        }
+                        className={`inline-flex items-center gap-2 rounded-md px-3 py-2 text-sm font-semibold ${
+                          peopleTab === id
+                            ? "bg-[var(--owner-fg-1)] text-[var(--owner-bg)]"
+                            : "text-[var(--owner-fg-3)]"
+                        }`}
+                      >
+                        <Icon size={15} />
+                        {label}
+                      </button>
+                    ))}
+                  </div>
+
+                  {peopleTab === "collaborators" ? (
+                    <div className="grid gap-3">
+                      {/* Collaborator promise card — sits at the top of the
+                          tab to explain the "why" before the host adds
+                          someone. Mirrors the dashboard PromoCard. */}
+                      <div className="relative overflow-hidden rounded-lg p-4 text-white shadow-owner-sm" style={{ background: "linear-gradient(135deg,#1B0B3D 0%,#3B1E73 60%,#7E2BD6 100%)" }}>
+                        <div
+                          aria-hidden
+                          className="pointer-events-none absolute inset-0 opacity-[0.10]"
+                          style={{
+                            backgroundImage:
+                              "url(\"data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='240' height='240'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.92' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 .9 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>\")",
+                            mixBlendMode: "overlay",
+                          }}
+                        />
+                        <div className="relative text-[10px] font-semibold uppercase tracking-[0.14em] text-white/80">
+                          Collaborate to grow
+                        </div>
+                        <div className="relative mt-2 text-[16px] font-semibold leading-tight">
+                          Pool audiences. Boost sales together.
+                        </div>
+                        <p className="relative mt-1.5 text-[12.5px] text-white/82">
+                          Add another host as a collaborator and you can both market this event to
+                          your combined customer base. They get the event on their dashboard, you
+                          choose exactly what they can see and do.
+                        </p>
+                      </div>
+
+                      <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                        <p className="text-sm text-[var(--owner-fg-3)]">
+                          Collaborators must be Hoizr hosts. If they aren&apos;t on Hoizr yet, refer them — once they join you can add them as a collaborator.
+                        </p>
+                        <button
+                          type="button"
+                          onClick={openAddCollaboratorModal}
+                          className="inline-flex shrink-0 items-center justify-center gap-2 rounded-lg bg-[var(--owner-blue-500)] px-3 py-2 text-sm font-semibold text-[var(--owner-bg)]"
+                        >
+                          <PlusIcon size={14} />
+                          Add collaborator
+                        </button>
+                      </div>
+                      {collaborators.length === 0 ? (
+                        <div className="rounded-lg border border-dashed border-[var(--owner-border)] bg-white p-6 text-center text-sm text-[var(--owner-fg-3)]">
+                          No collaborators yet. Click <strong>Add collaborator</strong> to invite a business to co-run this event.
+                        </div>
+                      ) : (
+                        <ul className="grid gap-2">
+                          {collaborators.map((collab, index) => (
+                            <li
+                              key={`collab-${index}`}
+                              className="flex flex-col gap-3 rounded-lg border border-[var(--owner-border)] bg-white p-4 sm:flex-row sm:items-center sm:justify-between"
+                            >
+                              <div className="min-w-0">
+                                <p className="font-semibold">{collab.name || "Untitled business"}</p>
+                                <p className="mt-0.5 text-xs text-[var(--owner-fg-3)]">
+                                  {collab.businessLinkId
+                                    ? "On Hoizr"
+                                    : "Legacy entry — business not linked to Hoizr"}
+                                </p>
+                                <div className="mt-2 flex flex-wrap gap-1.5">
+                                  {collab.requestCustomerListAccess ? (
+                                    <span className="rounded-full bg-[var(--owner-bg-subtle)] px-2 py-0.5 text-[11px] font-semibold text-[var(--owner-fg-3)]">
+                                      Customer list
+                                    </span>
+                                  ) : null}
+                                  {collab.hideOnEventPage ? (
+                                    <span className="rounded-full bg-[var(--owner-bg-subtle)] px-2 py-0.5 text-[11px] font-semibold text-[var(--owner-fg-3)]">
+                                      Hidden on page
+                                    </span>
+                                  ) : null}
+                                  {collab.allowIssuingOfflineTickets ? (
+                                    <span className="rounded-full bg-[var(--owner-bg-subtle)] px-2 py-0.5 text-[11px] font-semibold text-[var(--owner-fg-3)]">
+                                      Offline tickets
+                                    </span>
+                                  ) : null}
+                                  {collab.sendTransactionalMails ? (
+                                    <span className="rounded-full bg-[var(--owner-bg-subtle)] px-2 py-0.5 text-[11px] font-semibold text-[var(--owner-fg-3)]">
+                                      Transactional emails
+                                    </span>
+                                  ) : null}
+                                </div>
+                              </div>
+                              <div className="flex gap-2 sm:shrink-0">
+                                <button
+                                  type="button"
+                                  onClick={() => openEditCollaboratorModal(index)}
+                                  className="rounded-md border border-[var(--owner-border-strong)] bg-white px-3 py-1.5 text-xs font-semibold"
+                                >
+                                  Edit
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => requestRemoveCollaborator(index)}
+                                  className="rounded-md border border-[var(--owner-border-strong)] bg-white px-3 py-1.5 text-xs font-semibold text-red-600"
+                                >
+                                  Remove
+                                </button>
+                              </div>
+                            </li>
+                          ))}
+                        </ul>
+                      )}
+                    </div>
+                  ) : null}
+
+                  {peopleTab === "artists" ? (
+                    <div className="grid gap-3">
+                      <div className="grid gap-3 md:grid-cols-2">
+                        <ToggleSettingRow
+                          title="Enable Artist Lineup"
+                          subtitle="Display artist lineup on the event page."
+                          checked={lineupEnabled}
+                          onCheckedChange={setLineupEnabled}
+                        />
+                        <ToggleSettingRow
+                          title="Lineup to be announced"
+                          checked={lineUpToBeAnnounced}
+                          onCheckedChange={setLineUpToBeAnnounced}
+                        />
+                      </div>
+                      {lineupEnabled && !lineUpToBeAnnounced ? (
+                        <>
+                          <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                            <p className="text-sm text-[var(--owner-fg-3)]">
+                              Add every artist on the lineup. Each appears as a separate card on the event page.
+                            </p>
+                            <button
+                              type="button"
+                              onClick={openAddArtistModal}
+                              className="inline-flex shrink-0 items-center justify-center gap-2 rounded-lg bg-[var(--owner-blue-500)] px-3 py-2 text-sm font-semibold text-[var(--owner-bg)]"
+                            >
+                              <PlusIcon size={14} />
+                              Add artist
+                            </button>
+                          </div>
+                          {artists.length === 0 ? (
+                            <div className="rounded-lg border border-dashed border-[var(--owner-border)] bg-white p-6 text-center text-sm text-[var(--owner-fg-3)]">
+                              No artists yet. Click <strong>Add artist</strong> to start the lineup.
+                            </div>
+                          ) : (
+                            <ul className="grid gap-2">
+                              {artists.map((artist, index) => (
+                                <li
+                                  key={`artist-${index}`}
+                                  className="flex flex-col gap-3 rounded-lg border border-[var(--owner-border)] bg-white p-4 sm:flex-row sm:items-center sm:justify-between"
+                                >
+                                  <div className="flex min-w-0 items-center gap-3">
+                                    <span
+                                      className="h-12 w-12 shrink-0 rounded-md bg-[var(--owner-bg-subtle)] bg-cover bg-center"
+                                      style={
+                                        artist.picture
+                                          ? { backgroundImage: `url(${artist.picture})` }
+                                          : undefined
+                                      }
+                                    />
+                                    <div className="min-w-0">
+                                      <p className="font-semibold">{artist.name}</p>
+                                      <p className="mt-0.5 text-xs text-[var(--owner-fg-3)]">
+                                        {artist.actualName || "Stage name only"}
+                                      </p>
+                                      <div className="mt-1 flex flex-wrap gap-1.5 text-[11px] text-[var(--owner-fg-3)]">
+                                        {artist.instagramLink ? <span>Instagram</span> : null}
+                                        {artist.spotifyLink ? <span>· Spotify</span> : null}
+                                        {artist.youtubeLink ? <span>· YouTube</span> : null}
+                                      </div>
+                                    </div>
+                                  </div>
+                                  <div className="flex gap-2 sm:shrink-0">
+                                    <button
+                                      type="button"
+                                      onClick={() => openEditArtistModal(index)}
+                                      className="rounded-md border border-[var(--owner-border-strong)] bg-white px-3 py-1.5 text-xs font-semibold"
+                                    >
+                                      Edit
+                                    </button>
+                                    <button
+                                      type="button"
+                                      onClick={() => requestRemoveArtist(index)}
+                                      className="rounded-md border border-[var(--owner-border-strong)] bg-white px-3 py-1.5 text-xs font-semibold text-red-600"
+                                    >
+                                      Remove
+                                    </button>
+                                  </div>
+                                </li>
+                              ))}
+                            </ul>
+                          )}
+                        </>
+                      ) : null}
+                    </div>
+                  ) : null}
+                </StepSection>
+              ) : null}
+
+              {step === 5 ? (
+                <StepSection
+                  title="Additional information"
+                  subtitle="Final details before publish. Ticketing Terms and Refund Policy are required and saved as your defaults for next time."
+                >
+                  <div className="rounded-lg border border-[var(--owner-border)] bg-white p-4">
+                    <div className="mb-3 flex items-start justify-between gap-3">
+                      <div>
+                        <div className="text-xs font-semibold uppercase tracking-[0.08em] text-[var(--owner-fg-3)]">
+                          Required for every event
+                        </div>
+                        <div className="mt-1 text-sm font-semibold text-[var(--owner-fg-1)]">
+                          Ticketing Terms &amp; Refund Policy
+                        </div>
+                      </div>
+                      {hostDefaultsLoaded && (hostDefaultsRef.current.ticketingTerms || hostDefaultsRef.current.refundPolicy) ? (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            if (hostDefaultsRef.current.ticketingTerms)
+                              setTicketingTerms(hostDefaultsRef.current.ticketingTerms);
+                            if (hostDefaultsRef.current.refundPolicy)
+                              setRefundPolicy(hostDefaultsRef.current.refundPolicy);
+                          }}
+                          className="rounded-md border border-[var(--owner-border)] px-3 py-1.5 text-xs font-semibold text-[var(--owner-fg-2)] hover:bg-[var(--owner-bg-subtle)]"
+                        >
+                          Reset to my defaults
+                        </button>
+                      ) : null}
+                    </div>
+                    <div className="grid gap-4 md:grid-cols-2">
+                      <RichTextEditor
+                        label="Ticketing Terms & Conditions *"
+                        value={ticketingTerms}
+                        onChange={setTicketingTerms}
+                      />
+                      <RichTextEditor
+                        label="Refund Policy *"
+                        value={refundPolicy}
+                        onChange={setRefundPolicy}
+                      />
+                    </div>
+                    <p className="mt-3 text-xs text-[var(--owner-fg-3)]">
+                      These appear on the customer ticket page and order
+                      confirmation. We save them as your defaults so the next
+                      event you create starts prefilled.
+                    </p>
+                  </div>
+
+                  <div className="mt-6">
+                    <div className="text-xs font-semibold uppercase tracking-[0.08em] text-[var(--owner-fg-3)]">
+                      Promotional assets — all optional
+                    </div>
+                    <p className="mt-1 text-xs text-[var(--owner-fg-3)]">
+                      Drop a public URL (Cloudinary, Drive, S3) for the formats you have. A{" "}
+                      <strong>horizontal flyer</strong> is a strong plus — we use it on the event
+                      page hero and OG/share previews, which lifts click-through on social.
+                    </p>
+                    <div className="mt-3 grid gap-4 md:grid-cols-2">
+                      <Input
+                        label="Horizontal flyer (16:9, optional)"
+                        value={horizontalFlyer}
+                        onChange={setHorizontalFlyer}
+                      />
+                      <Input
+                        label="Vertical video (optional)"
+                        value={verticalVideo}
+                        onChange={setVerticalVideo}
+                      />
+                      <Input
+                        label="Horizontal video (optional)"
+                        value={horizontalVideo}
+                        onChange={setHorizontalVideo}
+                      />
+                      <Input
+                        label="Promotional Instagram Post (optional)"
+                        value={instagramPost}
+                        onChange={setInstagramPost}
+                      />
+                      <Input
+                        label="Instagram Story (optional)"
+                        value={instagramStory}
+                        onChange={setInstagramStory}
+                      />
+                      <Input
+                        label="Venue Table Arrangement (optional)"
+                        value={tableLayoutImage}
+                        onChange={setTableLayoutImage}
+                      />
+                    </div>
+                  </div>
+
+                  <div className="mt-6 grid gap-4 md:grid-cols-2">
+                    <Input
+                      label="Contact for Table Queries (optional)"
+                      value={contactForQueriesTables}
+                      onChange={setContactForQueriesTables}
+                    />
+                    <ToggleSettingRow
+                      title="Weekly Recurrence"
+                      subtitle="Turn on only when the same event repeats every week."
+                      checked={repeatEveryWeek}
+                      onCheckedChange={setRepeatEveryWeek}
+                    />
+                    <ToggleSettingRow
+                      title="Event is visible to public"
+                      checked={isVisible}
+                      onCheckedChange={requestEventVisibilityChange}
+                    />
+                  </div>
+                </StepSection>
+              ) : null}
+
+            </div>
+          </div>
+        </section>
+        {/* Action bar sits OUTSIDE the scrolling section as a flex sibling
+            so it naturally pins to the bottom of the middle column and
+            touches the viewport bottom regardless of section padding. */}
+        <div className="shrink-0 border-t border-[var(--owner-border)] bg-[var(--owner-bg)]">
+          <div className="mx-auto flex max-w-5xl flex-col justify-between gap-3 px-4 py-3 sm:flex-row md:px-6">
+            <button
+              type="button"
+              disabled={step === 0 || loading}
+              onClick={() => setStep(step - 1)}
+              className="rounded-lg border border-[var(--owner-border)] px-4 py-2 text-sm font-semibold disabled:opacity-40"
+            >
+              Back
+            </button>
+            <div className="flex flex-col gap-3 sm:flex-row">
+              <button
+                type="button"
+                disabled={loading}
+                onClick={
+                  step === lastStepIndex ? requestPublishFlow : () => saveCurrentStep()
+                }
+                className="rounded-lg bg-[var(--owner-blue-500)] px-5 py-2 text-sm font-semibold text-[var(--owner-bg)] disabled:opacity-60"
+              >
+                {loading
+                  ? "Saving..."
+                  : step === lastStepIndex
+                  ? isPaid
+                    ? "Review & publish"
+                    : "Publish free event"
+                  : mode === "update"
+                  ? "Update"
+                  : "Save and continue"}
+              </button>
+            </div>
+          </div>
+        </div>
+        </div>
+
+        <aside className="hidden min-h-0 border-l border-[var(--owner-border)] bg-[var(--owner-fg-1)] p-5 text-[var(--owner-bg)] xl:block">
+          <div className="flex items-center gap-2 text-sm font-semibold text-[var(--owner-blue-100)]">
+            <SparklesIcon size={16} />
+            Live Event Preview
+          </div>
+          <div className="mt-5 overflow-hidden rounded-[22px] bg-white p-3 text-[var(--owner-fg-1)]">
+            <div
+              className="flex aspect-[4/5] items-center justify-center rounded-[18px] bg-[var(--owner-bg-subtle)] bg-cover bg-center"
+              style={
+                eventFlyer
+                  ? { backgroundImage: `url(${eventFlyer})` }
+                  : undefined
+              }
+            >
+              {!eventFlyer ? (
+                <CalendarDaysIcon size={42} className="text-[var(--owner-blue-500)]" />
+              ) : null}
+            </div>
+            <div className="space-y-2 px-2 pb-2 pt-4">
+              <p className="text-sm font-semibold text-[var(--owner-blue-500)]">
+                {formatDate(startDate)}
+              </p>
+              <h2 className="line-clamp-2 text-xl font-semibold leading-tight">
+                {title || "Untitled Event"}
+              </h2>
+              <p className="line-clamp-1 text-base font-medium text-[var(--owner-fg-3)]">
+                {city || "City pending"}
+              </p>
+              <p className="text-base font-semibold text-[var(--owner-fg-3)]">
+                {(() => {
+                  // Pull the cheapest visible PAID ticket from the saved
+                  // list — "0 onwards" used to leak through when only
+                  // `ticketPrice` (the modal draft) was checked.
+                  if (eventType === "FREE") return "Guestlist";
+                  const paid = (tickets ?? [])
+                    .filter(
+                      (t) =>
+                        t.ticketCategory !== "GUESTLIST" &&
+                        Number(t.ticketPrice ?? 0) > 0 &&
+                        (t.ticketVisible ?? true)
+                    )
+                    .map((t) => Number(t.ticketPrice ?? 0));
+                  if (paid.length === 0) return "Guestlist";
+                  const cheapest = Math.min(...paid);
+                  return `${rupee(cheapest)} onwards`;
+                })()}
+              </p>
+            </div>
+          </div>
+        </aside>
+        {ticketModalOpen ? (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/55 px-4 py-6">
+            <div className="flex max-h-[92dvh] w-full max-w-3xl flex-col overflow-hidden rounded-lg bg-[var(--owner-bg)] shadow-2xl">
+              <div className="flex shrink-0 items-center justify-between gap-3 border-b border-[var(--owner-border)] px-5 py-4">
+                <div>
+                  <div className="text-sm font-semibold">
+                    {ticketEditIndex === null ? "Add Ticket" : "Edit Ticket"}
+                  </div>
+                  <p className="mt-1 text-xs text-[var(--owner-fg-3)]">
+                    Ticket-level advanced settings stay collapsed until needed.
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={closeTicketModal}
+                  className="inline-flex h-9 w-9 items-center justify-center rounded-md border border-[var(--owner-border)]"
+                >
+                  <XIcon size={16} />
+                </button>
+              </div>
+              <div className="min-h-0 flex-1 overflow-y-auto p-5">
+                <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+                  {ticketCategories.map((category) => (
+                    <button
+                      key={category.value}
+                      type="button"
+                      disabled={
+                        eventType === "FREE" && category.value !== "GUESTLIST"
+                      }
+                      title={
+                        eventType === "FREE" && category.value !== "GUESTLIST"
+                          ? "Select Exclusive or Non-Exclusive event category to create paid tickets."
+                          : undefined
+                      }
+                      onClick={() => setTicketCategory(category.value)}
+                      className={`rounded-lg border px-3 py-3 text-left text-sm font-semibold disabled:cursor-not-allowed disabled:opacity-45 ${
+                        ticketCategory === category.value
+                          ? "border-[var(--owner-blue-500)] bg-white"
+                          : "border-[var(--owner-border)] bg-[var(--owner-bg)]"
+                      }`}
+                    >
+                      {category.label}
+                    </button>
+                  ))}
+                </div>
+
+                <div className="mt-5 grid gap-4 md:grid-cols-2">
+                  <Input
+                    label="Ticket Name *"
+                    value={ticketName}
+                    onChange={setTicketName}
+                  />
+                  {/* Single/Couple distinction is irrelevant for table
+                      and group bookings — the capacity field already
+                      describes the seating unit. */}
+                  {ticketCategory === "TABLE" || ticketCategory === "GROUP" ? null : (
+                    <Select
+                      label="Ticket Type *"
+                      value={ticketType}
+                      onChange={(value) => setTicketType(value as TicketTypeValue)}
+                      options={[
+                        { value: "SINGLE", label: "Single Entry" },
+                        { value: "COUPLE", label: "Couple Entry" },
+                      ]}
+                    />
+                  )}
+                  <div className="md:col-span-2">
+                    <Input
+                      label="Ticket Description (optional)"
+                      value={ticketDescription}
+                      onChange={setTicketDescription}
+                    />
+                  </div>
+                  <Input
+                    label="Ticket Capacity *"
+                    type="number"
+                    value={ticketCapacity > 0 ? String(ticketCapacity) : ""}
+                    onChange={(value) =>
+                      setTicketCapacity(value === "" ? 0 : Math.max(0, Number(value) || 0))
+                    }
+                  />
+                  {ticketCategory !== "GUESTLIST" ? (
+                    <Input
+                      label="Ticket Price (INR) *"
+                      type="number"
+                      value={ticketPrice > 0 ? String(ticketPrice) : ""}
+                      onChange={(value) =>
+                        setTicketPrice(value === "" ? 0 : Math.max(0, Number(value) || 0))
+                      }
+                    />
+                  ) : null}
+                  {ticketCategory !== "GUESTLIST" ? (
+                    <>
+                      <Select
+                        label="Cover Type"
+                        value={coverType}
+                        onChange={(value) => setCoverType(value as CoverTypeValue)}
+                        options={[
+                          { value: "FULL_COVER", label: "Full Cover" },
+                          { value: "FOOD_COVER", label: "Food Cover" },
+                          { value: "DRINK_COVER", label: "Drink Cover" },
+                          {
+                            value: "FOOD_AND_DRINK_COVER",
+                            label: "Food and Drink Cover",
+                          },
+                          { value: "NO_COVER", label: "No Cover" },
+                        ]}
+                      />
+                      {hostGstEligible ? (
+                        <Select
+                          label="GST Type"
+                          value={ticketGST}
+                          onChange={(value) => setTicketGST(value as GstValue)}
+                          options={[
+                            {
+                              value: "CGST_SGST_18",
+                              label: "GST 18% — CGST 9% + SGST/UTGST 9% (recommended)",
+                            },
+                            { value: "IGST_18", label: "IGST 18%" },
+                            { value: "ZERO", label: "No GST (0%)" },
+                            { value: "OTHER", label: "Custom rate" },
+                            { value: "NONE", label: "No GST line on customer invoice" },
+                          ]}
+                        />
+                      ) : (
+                        <div className="rounded-lg border border-[var(--owner-border)] bg-[var(--owner-bg-subtle)] p-3 text-xs text-[var(--owner-fg-3)]">
+                          <div className="font-semibold text-[var(--owner-fg-2)]">
+                            Ticket GST not applicable
+                          </div>
+                          <div className="mt-1 leading-5">
+                            Hoizr collects ticket GST from customers only when your payout profile is GST-registered as <em>Regular</em> or <em>Casual Taxable Person</em>. Add or update your GST details under Settings → Payouts to enable this.
+                          </div>
+                        </div>
+                      )}
+                    </>
+                  ) : null}
+                  {hostGstEligible && ticketGST === "OTHER" ? (
+                    <Input
+                      label="Custom GST Rate (%)"
+                      type="number"
+                      value={gstRate > 0 ? String(gstRate) : ""}
+                      onChange={(value) =>
+                        setGstRate(value === "" ? 0 : Math.max(0, Number(value) || 0))
+                      }
+                    />
+                  ) : null}
+                  {ticketCategory === "GROUP" ? (
+                    <Input
+                      label="Group Capacity *"
+                      type="number"
+                      value={groupCapacity > 0 ? String(groupCapacity) : ""}
+                      onChange={(value) =>
+                        setGroupCapacity(value === "" ? 0 : Math.max(0, Number(value) || 0))
+                      }
+                    />
+                  ) : null}
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => setTicketAdvancedOpen((open) => !open)}
+                  className="mt-5 flex w-full items-center justify-between rounded-lg border border-[var(--owner-border)] bg-white px-4 py-3 text-left text-sm font-semibold"
+                >
+                  Advanced settings
+                  <ChevronDownIcon
+                    size={16}
+                    className={`transition ${
+                      ticketAdvancedOpen ? "rotate-180" : ""
+                    }`}
+                  />
+                </button>
+                {ticketAdvancedOpen ? (
+                  <div className="mt-3 grid gap-4 rounded-lg border border-[var(--owner-border)] bg-white p-4 md:grid-cols-2">
+                    <Input
+                      label="Max Tickets Per User (optional)"
+                      type="number"
+                      value={maxTicketPerUser > 0 ? String(maxTicketPerUser) : ""}
+                      onChange={(value) =>
+                        setMaxTicketPerUser(value === "" ? 0 : Math.max(0, Number(value) || 0))
+                      }
+                    />
+                    <DateTimeInput
+                      label="Set Purchase Expiry (optional)"
+                      value={ticketExpiryDateTime}
+                      onChange={setTicketExpiryDateTime}
+                    />
+                    <ToggleSettingRow
+                      title="Coming Soon"
+                      subtitle="Show this ticket without allowing checkout yet."
+                      checked={ticketComingSoon}
+                      onCheckedChange={setTicketComingSoon}
+                    />
+                    <ToggleSettingRow
+                      title="On-Ground Only"
+                      subtitle="Hide online checkout for this ticket."
+                      checked={ticketOnGroundOnly}
+                      onCheckedChange={setTicketOnGroundOnly}
+                    />
+                    <ToggleSettingRow
+                      title="Ticket Visible"
+                      subtitle="Use this to pause a ticket without deleting it."
+                      checked={ticketVisible}
+                      onCheckedChange={requestTicketDraftVisibilityChange}
+                    />
+                  </div>
+                ) : null}
+              </div>
+              <div className="flex shrink-0 justify-end gap-2 border-t border-[var(--owner-border)] px-5 py-4">
+                <button
+                  type="button"
+                  onClick={closeTicketModal}
+                  className="rounded-lg border border-[var(--owner-border)] px-4 py-2 text-sm font-semibold"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  onClick={saveTicketDraft}
+                  className="rounded-lg bg-[var(--owner-blue-500)] px-4 py-2 text-sm font-semibold text-[var(--owner-bg)]"
+                >
+                  {ticketEditIndex === null ? "Add Ticket" : "Save Ticket"}
+                </button>
+              </div>
+            </div>
+          </div>
+        ) : null}
+        {extraModalOpen ? (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/55 px-4 py-6">
+            <div className="flex max-h-[92dvh] w-full max-w-lg flex-col overflow-hidden rounded-lg bg-[var(--owner-bg)] shadow-2xl">
+              <div className="flex shrink-0 items-center justify-between gap-3 border-b border-[var(--owner-border)] px-5 py-4">
+                <div className="text-sm font-semibold">
+                  {extraEditIndex === null ? "Add Add-on" : "Edit Add-on"}
+                </div>
+                <button
+                  type="button"
+                  onClick={closeExtraModal}
+                  className="inline-flex h-9 w-9 items-center justify-center rounded-md border border-[var(--owner-border)]"
+                >
+                  <XIcon size={16} />
+                </button>
+              </div>
+              <div className="min-h-0 flex-1 overflow-y-auto p-5">
+                <div className="grid gap-4 md:grid-cols-2">
+                  <Input label="Add-on Name *" value={extraName} onChange={setExtraName} />
+                  <Select
+                    label="Type *"
+                    value={extraType}
+                    onChange={(value) => setExtraType(value as HoizrExtraTypeValue)}
+                    options={[
+                      { value: "VIP_UPGRADE", label: "VIP Upgrade" },
+                      { value: "MEET_AND_GREET", label: "Meet & Greet" },
+                      { value: "MERCH", label: "Merchandise" },
+                      { value: "FOOD_DRINK", label: "Food & Drink" },
+                      { value: "OTHER", label: "Other" },
+                    ]}
+                  />
+                  <Input
+                    label="Price (INR) *"
+                    type="number"
+                    value={extraPrice > 0 ? String(extraPrice) : ""}
+                    onChange={(value) =>
+                      setExtraPrice(value === "" ? 0 : Math.max(0, Number(value) || 0))
+                    }
+                  />
+                  <Input
+                    label="Quantity *"
+                    type="number"
+                    value={extraQuantity > 0 ? String(extraQuantity) : ""}
+                    onChange={(value) =>
+                      setExtraQuantity(value === "" ? 0 : Math.max(0, Number(value) || 0))
+                    }
+                  />
+                  <div className="md:col-span-2">
+                    <Textarea
+                      label="Description (optional)"
+                      value={extraDescription}
+                      onChange={setExtraDescription}
+                    />
+                  </div>
+                  <div className="md:col-span-2">
+                    <ImageUrlInput
+                      label="Add-on Image (optional)"
+                      value={extraImage}
+                      onChange={setExtraImage}
+                      hostId={selectedHostId}
+                      eventId={eventId}
+                      uploadKind="event-extra"
+                    />
+                  </div>
+                </div>
+              </div>
+              <div className="flex shrink-0 justify-end gap-2 border-t border-[var(--owner-border)] px-5 py-4">
+                <button
+                  type="button"
+                  onClick={closeExtraModal}
+                  className="rounded-lg border border-[var(--owner-border)] px-4 py-2 text-sm font-semibold"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  onClick={saveExtraDraft}
+                  className="rounded-lg bg-[var(--owner-blue-500)] px-4 py-2 text-sm font-semibold text-[var(--owner-bg)]"
+                >
+                  {extraEditIndex === null ? "Add Add-on" : "Save Add-on"}
+                </button>
+              </div>
+            </div>
+          </div>
+        ) : null}
+
+        {collabModalOpen ? (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/55 px-4 py-6">
+            <div className="flex max-h-[92dvh] w-full max-w-2xl flex-col overflow-hidden rounded-lg bg-[var(--owner-bg)] shadow-2xl">
+              <div className="flex shrink-0 items-center justify-between gap-3 border-b border-[var(--owner-border)] px-5 py-4">
+                <div>
+                  <div className="text-sm font-semibold">
+                    {collabEditIndex === null ? "Add Collaborator" : "Edit Collaborator"}
+                  </div>
+                  <p className="mt-1 text-xs text-[var(--owner-fg-3)]">
+                    Collaborators must be on Hoizr. We&apos;ll email them when you add them — the event
+                    appears on their dashboard as <strong>Collaborator</strong> right away. They can leave anytime.
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={closeCollabModal}
+                  className="inline-flex h-9 w-9 items-center justify-center rounded-md border border-[var(--owner-border)]"
+                >
+                  <XIcon size={16} />
+                </button>
+              </div>
+              <div className="min-h-0 flex-1 overflow-y-auto p-5">
+                <div className="grid gap-4">
+                  <div>
+                    <label className="block text-sm font-medium">
+                      Search collaborator host
+                      <div className="mt-1">
+                        <input
+                          value={collaboratorQuery}
+                          onChange={(event) => setCollaboratorQuery(event.target.value)}
+                          className="input input-primary h-10 w-full px-3 text-sm"
+                          placeholder="Host name, email or phone"
+                        />
+                      </div>
+                    </label>
+                    {collaboratorSearchResults.length ? (
+                      <div className="mt-3 grid gap-2">
+                        {collaboratorSearchResults.map((host) => (
+                          <button
+                            key={host._id}
+                            type="button"
+                            onClick={() => selectCollaborator(host)}
+                            className={`flex items-center gap-3 rounded-md border px-3 py-2 text-left text-sm transition ${
+                              collaboratorLinkId === host._id
+                                ? "border-[var(--owner-blue-500)] bg-[var(--owner-blue-050)]"
+                                : "border-[var(--owner-border)] bg-[var(--owner-bg)] hover:bg-[var(--owner-bg-subtle)]"
+                            }`}
+                          >
+                            <span
+                              className="grid h-9 w-9 shrink-0 place-items-center rounded-md bg-[var(--owner-bg-subtle)] bg-cover bg-center text-xs font-semibold uppercase text-[var(--owner-fg-3)]"
+                              style={
+                                host.logo
+                                  ? { backgroundImage: `url(${host.logo})` }
+                                  : undefined
+                              }
+                            >
+                              {!host.logo
+                                ? (host.name ?? "?").slice(0, 1)
+                                : null}
+                            </span>
+                            <span className="min-w-0 flex-1">
+                              <span className="block truncate font-semibold">
+                                {host.name ?? "Unnamed host"}
+                              </span>
+                              <span className="block truncate text-xs text-[var(--owner-fg-3)]">
+                                {host.email ?? host.phone ?? "Host"}
+                              </span>
+                            </span>
+                          </button>
+                        ))}
+                      </div>
+                    ) : collaboratorQuery.trim().length >= 2 ? (
+                      <div className="mt-3 rounded-md border border-dashed border-[var(--owner-border)] bg-[var(--owner-bg-subtle)] p-3 text-sm">
+                        <p className="font-semibold">No host on Hoizr matches “{collaboratorQuery.trim()}”.</p>
+                        <p className="mt-1 text-xs text-[var(--owner-fg-3)]">
+                          Refer this host to bring them on board — you’ll be able to collaborate once they join.
+                        </p>
+                        <button
+                          type="button"
+                          onClick={openReferralModalFromCollab}
+                          className="mt-3 inline-flex items-center gap-2 rounded-lg border border-[var(--owner-blue-500)] bg-white px-3 py-1.5 text-xs font-semibold text-[var(--owner-blue-500)]"
+                        >
+                          Refer this host to Hoizr
+                        </button>
+                      </div>
+                    ) : null}
+                  </div>
+                  <Input
+                    label="Collaborator display name"
+                    value={collaboratorName}
+                    onChange={setCollaboratorName}
+                  />
+                  <div>
+                    <div className="text-xs font-semibold uppercase tracking-[0.08em] text-[var(--owner-fg-3)]">
+                      What this collaborator can do
+                    </div>
+                    <div className="mt-3 grid gap-3 md:grid-cols-2">
+                      <ToggleSettingRow
+                        title="See event metrics"
+                        subtitle="Sales, attendance, conversion."
+                        checked={canSeeMetrics}
+                        onCheckedChange={setCanSeeMetrics}
+                      />
+                      <ToggleSettingRow
+                        title="Run campaigns for this event"
+                        subtitle="Email blasts targeting attendees."
+                        checked={canRunCampaigns}
+                        onCheckedChange={setCanRunCampaigns}
+                      />
+                      <ToggleSettingRow
+                        title="Create offers / discount codes"
+                        subtitle="Promo codes that apply at checkout."
+                        checked={canCreateOffers}
+                        onCheckedChange={setCanCreateOffers}
+                      />
+                      <ToggleSettingRow
+                        title="Access customer list"
+                        subtitle="Download buyer contact details."
+                        checked={requestCustomerListAccess}
+                        onCheckedChange={setRequestCustomerListAccess}
+                      />
+                    </div>
+                  </div>
+                  <div>
+                    <div className="text-xs font-semibold uppercase tracking-[0.08em] text-[var(--owner-fg-3)]">
+                      Display &amp; operations
+                    </div>
+                    <div className="mt-3 grid gap-3 md:grid-cols-2">
+                      <ToggleSettingRow
+                        title="Hide on Event Page"
+                        subtitle="Don't show as a co-host publicly."
+                        checked={hideOnEventPage}
+                        onCheckedChange={setHideOnEventPage}
+                      />
+                      <ToggleSettingRow
+                        title="Allow Offline Tickets"
+                        subtitle="Can issue tickets at the door."
+                        checked={allowIssuingOfflineTickets}
+                        onCheckedChange={setAllowIssuingOfflineTickets}
+                      />
+                      <ToggleSettingRow
+                        title="Send Transactional Emails"
+                        subtitle="Cc'd on ticket purchase emails."
+                        checked={sendTransactionalMails}
+                        onCheckedChange={setSendTransactionalMails}
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div className="flex shrink-0 items-center justify-end gap-2 border-t border-[var(--owner-border)] px-5 py-3">
+                <button
+                  type="button"
+                  onClick={closeCollabModal}
+                  className="rounded-lg border border-[var(--owner-border-strong)] bg-white px-3 py-2 text-sm font-semibold"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  onClick={saveCollaboratorDraft}
+                  className="rounded-lg bg-[var(--owner-blue-500)] px-3 py-2 text-sm font-semibold text-[var(--owner-bg)]"
+                >
+                  {collabEditIndex === null ? "Add Collaborator" : "Save Collaborator"}
+                </button>
+              </div>
+            </div>
+          </div>
+        ) : null}
+
+        {artistModalOpen ? (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/55 px-4 py-6">
+            <div className="flex max-h-[92dvh] w-full max-w-2xl flex-col overflow-hidden rounded-lg bg-[var(--owner-bg)] shadow-2xl">
+              <div className="flex shrink-0 items-center justify-between gap-3 border-b border-[var(--owner-border)] px-5 py-4">
+                <div>
+                  <div className="text-sm font-semibold">
+                    {artistEditIndex === null ? "Add Artist" : "Edit Artist"}
+                  </div>
+                  <p className="mt-1 text-xs text-[var(--owner-fg-3)]">
+                    Search by stage or real name first. If there is no match, add the artist manually.
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={closeArtistModal}
+                  className="inline-flex h-9 w-9 items-center justify-center rounded-md border border-[var(--owner-border)]"
+                >
+                  <XIcon size={16} />
+                </button>
+              </div>
+              <div className="min-h-0 flex-1 overflow-y-auto p-5">
+                <div className="grid gap-4">
+                  <div>
+                    <label className="block text-sm font-medium">
+                      Search Artist
+                      <input
+                        value={artistQuery}
+                        onChange={(event) => setArtistQuery(event.target.value)}
+                        className="input input-primary mt-1 h-10 w-full px-3 text-sm"
+                        placeholder="Type stage name or real name"
+                      />
+                    </label>
+                    {artistSearchResults.length ? (
+                      <div className="mt-3 grid gap-2">
+                        {artistSearchResults.map((artist) => (
+                          <button
+                            key={`${artist.source}-${artist.id ?? artist.name}`}
+                            type="button"
+                            onClick={() => selectArtist(artist)}
+                            className="flex items-center gap-3 rounded-md border border-[var(--owner-border)] bg-[var(--owner-bg)] px-3 py-2 text-left text-sm hover:bg-[var(--owner-bg-subtle)]"
+                          >
+                            <span
+                              className="h-10 w-10 shrink-0 rounded-md bg-[var(--owner-bg-subtle)] bg-cover bg-center"
+                              style={
+                                artist.picture
+                                  ? { backgroundImage: `url(${artist.picture})` }
+                                  : undefined
+                              }
+                            />
+                            <span className="min-w-0">
+                              <span className="block truncate font-semibold">
+                                {artist.name}
+                              </span>
+                              <span className="block truncate text-xs text-[var(--owner-fg-3)]">
+                                {[artist.firstName, artist.lastName].filter(Boolean).join(" ") ||
+                                  (artist.source === "ARTIST"
+                                    ? "Verified artist"
+                                    : "Suggested match")}
+                              </span>
+                            </span>
+                          </button>
+                        ))}
+                      </div>
+                    ) : artistQuery.trim().length >= 2 && artistSearchAttempted ? (
+                      <p className="mt-2 text-xs text-[var(--owner-fg-3)]">
+                        No artist found. Continue with the manual fields below.
+                      </p>
+                    ) : artistEditIndex === null ? (
+                      <p className="mt-2 text-xs text-[var(--owner-fg-3)]">
+                        Manual fields unlock after a search returns no artist.
+                      </p>
+                    ) : null}
+                  </div>
+                  {artistManualEntryEnabled ? (
+                    <>
+                      <div className="grid gap-3 md:grid-cols-2">
+                        <Input
+                          label="Stage Name *"
+                          value={artistName}
+                          onChange={setArtistName}
+                        />
+                        <Input
+                          label="Real Name"
+                          value={artistActualName}
+                          onChange={setArtistActualName}
+                        />
+                      </div>
+                      <ImageUrlInput
+                        label="Artist Picture *"
+                        value={artistPicture}
+                        onChange={setArtistPicture}
+                        hostId={selectedHostId}
+                        eventId={eventId}
+                        uploadKind="event-extra"
+                      />
+                      <div className="grid gap-3 md:grid-cols-3">
+                        <Input
+                          label="Instagram Link"
+                          value={artistInstagram}
+                          onChange={setArtistInstagram}
+                        />
+                        <Input
+                          label="Spotify Link"
+                          value={artistSpotify}
+                          onChange={setArtistSpotify}
+                        />
+                        <Input
+                          label="YouTube Link"
+                          value={artistYoutube}
+                          onChange={setArtistYoutube}
+                        />
+                      </div>
+                    </>
+                  ) : (
+                    <div className="rounded-md border border-dashed border-[var(--owner-border)] bg-[var(--owner-bg-subtle)] px-4 py-5 text-sm text-[var(--owner-fg-3)]">
+                      Search for the artist first. Manual entry is available only when no existing artist is found.
+                    </div>
+                  )}
+                </div>
+              </div>
+              <div className="flex shrink-0 items-center justify-end gap-2 border-t border-[var(--owner-border)] px-5 py-3">
+                <button
+                  type="button"
+                  onClick={closeArtistModal}
+                  className="rounded-lg border border-[var(--owner-border-strong)] bg-white px-3 py-2 text-sm font-semibold"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  onClick={saveArtistDraft}
+                  disabled={!artistManualEntryEnabled}
+                  className="rounded-lg bg-[var(--owner-blue-500)] px-3 py-2 text-sm font-semibold text-[var(--owner-bg)] disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  {artistEditIndex === null ? "Add Artist" : "Save Artist"}
+                </button>
+              </div>
+            </div>
+          </div>
+        ) : null}
+
+        {referralModalOpen ? (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/55 px-4">
+            <div className="w-full max-w-md rounded-lg bg-[var(--owner-bg)] p-5 shadow-2xl">
+              <div className="text-sm font-semibold">Refer a host to Hoizr</div>
+              <p className="mt-2 text-xs leading-5 text-[var(--owner-fg-3)]">
+                We’ll reach out and invite this host. Once they accept and onboard, you can add them as a collaborator on this and future events.
+              </p>
+              <div className="mt-4 grid gap-3">
+                <Input
+                  label="Host or business name *"
+                  value={referralHostName}
+                  onChange={setReferralHostName}
+                />
+                <Input
+                  label="Email or phone *"
+                  value={referralHostContact}
+                  onChange={setReferralHostContact}
+                />
+              </div>
+              <div className="mt-5 flex items-center justify-end gap-2">
+                <button
+                  type="button"
+                  onClick={closeReferralModal}
+                  className="rounded-lg border border-[var(--owner-border-strong)] bg-white px-3 py-2 text-sm font-semibold"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  onClick={submitReferral}
+                  className="rounded-lg bg-[var(--owner-blue-500)] px-3 py-2 text-sm font-semibold text-[var(--owner-bg)]"
+                >
+                  Send referral
+                </button>
+              </div>
+            </div>
+          </div>
+        ) : null}
+
+        {flyerCropOpen ? (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/55 px-4">
+            <div className="w-full max-w-md rounded-lg bg-[var(--owner-bg)] p-5 shadow-2xl">
+              <div className="flex items-center gap-2 text-sm font-semibold">
+                <ImageIcon size={18} />
+                Crop event flyer
+              </div>
+              <p className="mt-2 text-xs leading-5 text-[var(--owner-fg-3)]">
+                Fixed 4:5 crop. Drag on the image to position the crop and use
+                zoom to adjust the selected area.
+              </p>
+              <div className="mt-4 flex justify-center">
+                <div
+                  className="relative inline-block touch-none cursor-grab overflow-hidden rounded-lg bg-[var(--owner-bg-subtle)] active:cursor-grabbing"
+                  onPointerDown={(event) => {
+                    if (!flyerNaturalRatio) return;
+                    const target = event.currentTarget;
+                    event.preventDefault();
+                    target.setPointerCapture(event.pointerId);
+                    const updatePosition = (clientX: number, clientY: number) => {
+                      const rect = target.getBoundingClientRect();
+                      const pctX = ((clientX - rect.left) / rect.width) * 100;
+                      const pctY = ((clientY - rect.top) / rect.height) * 100;
+                      const wRange = 100 - flyerCropWindow.widthPct;
+                      const hRange = 100 - flyerCropWindow.heightPct;
+                      setCropX(
+                        wRange > 0
+                          ? Math.max(
+                              0,
+                              Math.min(
+                                100,
+                                ((pctX - flyerCropWindow.widthPct / 2) /
+                                  wRange) *
+                                  100
+                              )
+                            )
+                          : 50
+                      );
+                      setCropY(
+                        hRange > 0
+                          ? Math.max(
+                              0,
+                              Math.min(
+                                100,
+                                ((pctY - flyerCropWindow.heightPct / 2) /
+                                  hRange) *
+                                  100
+                              )
+                            )
+                          : 50
+                      );
+                    };
+                    updatePosition(event.clientX, event.clientY);
+                    const move = (moveEvent: PointerEvent) => {
+                      updatePosition(moveEvent.clientX, moveEvent.clientY);
+                    };
+                    const up = () => {
+                      target.removeEventListener("pointermove", move);
+                      target.removeEventListener("pointerup", up);
+                      target.releasePointerCapture(event.pointerId);
+                    };
+                    target.addEventListener("pointermove", move);
+                    target.addEventListener("pointerup", up);
+                  }}
+                >
+                  {flyerPreview ? (
+                    <img
+                      ref={flyerImgRef}
+                      src={flyerPreview}
+                      alt=""
+                      draggable={false}
+                      onLoad={(event) => {
+                        const img = event.currentTarget;
+                        if (img.naturalWidth && img.naturalHeight) {
+                          setFlyerNaturalRatio(
+                            img.naturalWidth / img.naturalHeight
+                          );
+                        }
+                      }}
+                      className="pointer-events-none block h-auto max-h-[60vh] w-auto max-w-[20rem] select-none"
+                    />
+                  ) : null}
+                  {flyerNaturalRatio ? (
+                    <div
+                      className="pointer-events-none absolute rounded-md border-2 border-white shadow-[0_0_0_999px_rgba(0,0,0,0.45)]"
+                      style={{
+                        width: `${flyerCropWindow.widthPct}%`,
+                        height: `${flyerCropWindow.heightPct}%`,
+                        left: `${
+                          (100 - flyerCropWindow.widthPct) * (cropX / 100)
+                        }%`,
+                        top: `${
+                          (100 - flyerCropWindow.heightPct) * (cropY / 100)
+                        }%`,
+                      }}
+                    />
+                  ) : null}
+                </div>
+              </div>
+              <div className="mt-4 space-y-3">
+                <label className="block text-xs font-semibold text-[var(--owner-fg-3)]">
+                  Zoom {Math.round(cropZoom)}%
+                  <input
+                    type="range"
+                    min="0"
+                    max="100"
+                    step="1"
+                    value={cropZoom}
+                    onChange={(event) => setCropZoom(Number(event.target.value))}
+                    className="mt-1 w-full accent-[var(--owner-blue-500)]"
+                  />
+                </label>
+                <label className="block text-xs font-semibold text-[var(--owner-fg-3)]">
+                  Horizontal position
+                  <input
+                    type="range"
+                    min="0"
+                    max="100"
+                    value={cropX}
+                    onChange={(event) => setCropX(Number(event.target.value))}
+                    className="mt-1 w-full accent-[var(--owner-blue-500)]"
+                  />
+                </label>
+                <label className="block text-xs font-semibold text-[var(--owner-fg-3)]">
+                  Vertical position
+                  <input
+                    type="range"
+                    min="0"
+                    max="100"
+                    value={cropY}
+                    onChange={(event) => setCropY(Number(event.target.value))}
+                    className="mt-1 w-full accent-[var(--owner-blue-500)]"
+                  />
+                </label>
+              </div>
+              <div className="mt-5 flex justify-end gap-2">
+                <button
+                  type="button"
+                  disabled={uploadingFlyer}
+                  onClick={() => setFlyerCropOpen(false)}
+                  className="rounded-lg border border-[var(--owner-border)] px-4 py-2 text-sm font-semibold"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  disabled={uploadingFlyer}
+                  onClick={saveFlyerCrop}
+                  className="rounded-lg bg-[var(--owner-blue-500)] px-4 py-2 text-sm font-semibold text-[var(--owner-bg)] disabled:opacity-60"
+                >
+                  {uploadingFlyer ? "Uploading..." : "Save flyer"}
+                </button>
+              </div>
+            </div>
+          </div>
+        ) : null}
+
+        {publishModalOpen ? (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+            <div className="max-h-[90vh] w-full max-w-3xl overflow-y-auto rounded-2xl bg-white p-6 shadow-2xl">
+              <div className="flex items-start justify-between gap-4">
+                <div>
+                  <h2 className="text-xl font-semibold text-[var(--owner-fg-1)]">
+                    Pick an offer to publish
+                  </h2>
+                  <p className="mt-1 text-sm text-[var(--owner-fg-3)]">
+                    Choose the commission plan you want Hoizr to apply, or
+                    publish with the basic no-offer option.
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setPublishModalOpen(false)}
+                  disabled={publishing}
+                  className="rounded-md p-1 text-[var(--owner-fg-3)] hover:bg-[var(--owner-bg-subtle)]"
+                  aria-label="Close"
+                >
+                  <XIcon size={18} />
+                </button>
+              </div>
+
+              {/* Settlement-mode question only matters when the selected
+                  offer charges an upfront amount. For free offers / basic
+                  no-offer publishes we skip the prompt and default the
+                  settlement mode silently. */}
+              {(() => {
+                const selectedOption = pricingOptions.find(
+                  (o) => o.optionId === selectedPricingOptionId
+                );
+                const needsUpfrontChoice =
+                  selectedOption && (selectedOption.upfrontFee ?? 0) > 0;
+                if (!needsUpfrontChoice) return null;
+                return (
+                  <div className="mt-5 grid gap-3 md:grid-cols-2">
+                    <button
+                      type="button"
+                      onClick={() =>
+                        requestFeeSettlementModeChange("DEDUCT_FROM_PAYOUT")
+                      }
+                      className={`rounded-lg border p-3 text-left text-xs ${
+                        feeSettlementMode === "DEDUCT_FROM_PAYOUT"
+                          ? "border-[var(--owner-blue-500)] bg-[var(--owner-blue-50,#eef4ff)]"
+                          : "border-[var(--owner-border)] bg-[var(--owner-bg)]"
+                      }`}
+                    >
+                      <div className="font-semibold text-[var(--owner-fg-1)]">
+                        Deduct offer from payout
+                      </div>
+                      <div className="mt-1 text-[var(--owner-fg-3)]">
+                        Hoizr deducts the upfront amount from your ticket settlement.
+                      </div>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => requestFeeSettlementModeChange("PAY_AFTER_EVENT")}
+                      className={`rounded-lg border p-3 text-left text-xs ${
+                        feeSettlementMode === "PAY_AFTER_EVENT"
+                          ? "border-[var(--owner-blue-500)] bg-[var(--owner-blue-50,#eef4ff)]"
+                          : "border-[var(--owner-border)] bg-[var(--owner-bg)]"
+                      }`}
+                    >
+                      <div className="font-semibold text-[var(--owner-fg-1)]">
+                        Pay after event completion
+                      </div>
+                      <div className="mt-1 text-[var(--owner-fg-3)]">
+                        Pay the offer amount after the event closes.
+                      </div>
+                    </button>
+                  </div>
+                );
+              })()}
+
+              <div className="mt-5 space-y-3">
+                {pricingOptions.map((option) => {
+                  const selected = selectedPricingOptionId === option.optionId;
+                  const insight = getPricingOptionInsight(option);
+                  return (
+                    <button
+                      key={option.optionId}
+                      type="button"
+                      onClick={() => requestPricingOptionChange(option)}
+                      className={`w-full rounded-2xl border p-4 text-left transition ${
+                        selected
+                          ? "border-[var(--owner-blue-500)] bg-[var(--owner-blue-050)] shadow-sm"
+                          : "border-[var(--owner-border)] bg-white hover:border-[var(--owner-blue-500)]"
+                      }`}
+                    >
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="flex min-w-0 gap-3">
+                          <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white text-[var(--owner-blue-500)] shadow-sm">
+                            <BadgeIndianRupeeIcon size={18} />
+                          </span>
+                          <div className="min-w-0">
+                            <div className="flex flex-wrap items-center gap-2">
+                              <h3 className="text-sm font-semibold text-[var(--owner-fg-1)]">
+                                {option.label}
+                              </h3>
+                              <span className="rounded-md bg-[var(--owner-blue-500)] px-2 py-0.5 text-[11px] font-semibold text-white">
+                                {option.badge}
+                              </span>
+                            </div>
+                            <p className="mt-1 text-xs font-semibold text-[var(--owner-blue-500)]">
+                              {insight.savings}
+                            </p>
+                          </div>
+                        </div>
+                        {selected ? (
+                          <CheckCircle2Icon
+                            size={18}
+                            className="shrink-0 text-[var(--owner-blue-500)]"
+                          />
+                        ) : null}
+                      </div>
+                      <div className="mt-4 grid gap-2 text-xs text-[var(--owner-fg-3)] sm:grid-cols-3">
+                        <span className="rounded-lg bg-white px-3 py-2">
+                          Commission: {option.commissionRate}%
+                        </span>
+                        <span className="rounded-lg bg-white px-3 py-2">
+                          Upfront: {rupee(option.upfrontFee)}
+                        </span>
+                        <span className="rounded-lg bg-white px-3 py-2">
+                          Sales estimate: {option.expectedPaidTickets} tickets
+                        </span>
+                      </div>
+                      <div className="mt-3 rounded-xl border border-[var(--owner-border)] bg-white p-3 text-xs text-[var(--owner-fg-3)]">
+                        <div className="mb-1 flex items-center gap-1.5 font-semibold text-[var(--owner-fg-1)]">
+                          <SparklesIcon size={13} className="text-[var(--owner-blue-500)]" />
+                          AI recommendation
+                        </div>
+                        <p>{insight.hostRecommendation}</p>
+                        <p className="mt-1">{insight.customerRecommendation}</p>
+                      </div>
+                    </button>
+                  );
+                })}
+
+                {!pricingOptions.length ? (
+                  <div className="rounded-lg border border-[var(--owner-border)] bg-[var(--owner-bg)] p-4 text-sm text-[var(--owner-fg-3)]">
+                    No offers calculated yet — close this modal and reopen it
+                    after saving the last step.
+                  </div>
+                ) : null}
+              </div>
+
+              <div className="mt-6 flex flex-col gap-2 sm:flex-row sm:justify-end">
+                <button
+                  type="button"
+                  disabled={publishing}
+                  onClick={() => setPublishModalOpen(false)}
+                  className="rounded-lg border border-[var(--owner-border)] px-4 py-2 text-sm font-semibold disabled:opacity-50"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  disabled={publishing || !selectedPricingOptionId}
+                  onClick={requestPublishEvent}
+                  className="rounded-lg bg-[var(--owner-blue-500)] px-5 py-2 text-sm font-semibold text-[var(--owner-bg)] disabled:opacity-60"
+                >
+                  {publishing ? "Publishing..." : "Publish event"}
+                </button>
+              </div>
+            </div>
+          </div>
+        ) : null}
+        <ConfirmModal
+          isOpen={Boolean(confirmAction)}
+          title={confirmAction?.title ?? ""}
+          description={confirmAction?.description ?? null}
+          confirmLabel={confirmAction?.confirmLabel}
+          tone={confirmAction?.tone}
+          onCancel={() => setConfirmAction(null)}
+          onConfirm={async () => {
+            await confirmAction?.onConfirm();
+          }}
+        />
+      </main>
+    </div>
+  );
+};
+
+const StepSection = ({
+  title,
+  subtitle,
+  children,
+}: {
+  title: string;
+  subtitle: string;
+  children: ReactNode;
+}) => (
+  <div className="space-y-5">
+    <div>
+      <h2 className="text-xl font-semibold">{title}</h2>
+      <p className="mt-1 text-sm leading-6 text-[var(--owner-fg-3)]">{subtitle}</p>
+    </div>
+    {children}
+  </div>
+);
+
+const Input = ({
+  label,
+  value,
+  onChange,
+  type = "text",
+  disabled = false,
+}: {
+  label: string;
+  value: string;
+  onChange: (value: string) => void;
+  type?: string;
+  disabled?: boolean;
+}) => (
+  <label className="block min-w-0 text-sm font-medium">
+    {label}
+    <input
+      type={type}
+      value={value}
+      disabled={disabled}
+      onChange={(event) => onChange(event.target.value)}
+      onWheel={(event) => {
+        if (type === "number") event.currentTarget.blur();
+      }}
+      className="input input-primary mt-1 h-10 w-full px-3 text-sm disabled:cursor-not-allowed disabled:opacity-60"
+    />
+  </label>
+);
+
+const DateTimeInput = ({
+  label,
+  value,
+  onChange,
+  disabled = false,
+}: {
+  label: string;
+  value: string;
+  onChange: (value: string) => void;
+  disabled?: boolean;
+}) => {
+  const [date = "", time = ""] = value ? value.split("T") : ["", ""];
+  const [pendingTime, setPendingTime] = useState(time);
+  const [pickerOpen, setPickerOpen] = useState(false);
+  const [timePickerOpen, setTimePickerOpen] = useState(false);
+
+  useEffect(() => {
+    if (time) {
+      setPendingTime(time);
+    } else if (!value) {
+      setPendingTime("");
+    }
+  }, [time, value]);
+
+  const update = (nextDate: string, nextTime: string) => {
+    const resolvedDate = nextDate || date;
+    const resolvedTime = nextTime || time || pendingTime || "00:00";
+
+    if (!resolvedDate) {
+      setPendingTime(resolvedTime);
+      onChange("");
+      return;
+    }
+
+    onChange(`${resolvedDate}T${resolvedTime}`);
+  };
+
+  const dateAsDate = date ? new Date(`${date}T00:00:00`) : undefined;
+  const formatDate = (d?: Date) =>
+    d
+      ? new Intl.DateTimeFormat("en-IN", {
+          day: "2-digit",
+          month: "short",
+          year: "numeric",
+        }).format(d)
+      : "Pick a date";
+  const selectedTimeLabel =
+    timePickerOptions.find((option) => option.value === (time || pendingTime))
+      ?.label || (time || pendingTime || "Pick a time");
+
+  return (
+    <label className="block min-w-0 text-sm font-medium">
+      {label}
+      <div className="mt-1 rounded-lg border border-[var(--owner-border)] bg-white p-2 shadow-sm focus-within:border-[var(--owner-blue-500)]">
+        <div className="grid gap-2 sm:grid-cols-[1fr_120px]">
+          <Popover open={pickerOpen} onOpenChange={setPickerOpen}>
+            <PopoverTrigger asChild>
+              <button
+                type="button"
+                disabled={disabled}
+                className="flex h-10 items-center gap-2 rounded-md bg-[var(--owner-bg)] px-3 text-left text-sm disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                <CalendarDaysIcon size={16} className="shrink-0 text-[var(--owner-blue-500)]" />
+                <span className={`min-w-0 flex-1 truncate ${!date ? "text-[var(--owner-fg-4)]" : ""}`}>
+                  {date ? formatDate(dateAsDate) : "Pick a date"}
+                </span>
+              </button>
+            </PopoverTrigger>
+            <PopoverContent
+              align="start"
+              className="w-auto bg-white p-0 shadow-lg"
+            >
+              <Calendar
+                mode="single"
+                selected={dateAsDate}
+                onSelect={(d) => {
+                  if (!d) return;
+                  const iso = `${d.getFullYear()}-${String(
+                    d.getMonth() + 1
+                  ).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+                  update(iso, time);
+                  setPickerOpen(false);
+                }}
+                initialFocus
+              />
+            </PopoverContent>
+          </Popover>
+          <Popover open={timePickerOpen} onOpenChange={setTimePickerOpen}>
+            <PopoverTrigger asChild>
+              <button
+                type="button"
+                disabled={disabled}
+                className="flex h-10 items-center gap-2 rounded-md bg-[var(--owner-bg)] px-3 text-left text-sm disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                <ClockIcon size={15} className="shrink-0 text-[var(--owner-blue-500)]" />
+                <span className={`min-w-0 flex-1 truncate ${!(time || pendingTime) ? "text-[var(--owner-fg-4)]" : ""}`}>
+                  {selectedTimeLabel}
+                </span>
+              </button>
+            </PopoverTrigger>
+            <PopoverContent
+              align="start"
+              className="max-h-72 w-56 overflow-y-auto bg-white p-2 shadow-lg"
+            >
+              <div className="grid grid-cols-2 gap-1">
+                {timePickerOptions.map((option) => (
+                  <button
+                    key={option.value}
+                    type="button"
+                    onClick={() => {
+                      update(date, option.value);
+                      setTimePickerOpen(false);
+                    }}
+                    className={`rounded-md px-2 py-1.5 text-left text-xs transition ${
+                      option.value === (time || pendingTime)
+                        ? "bg-[var(--owner-blue-500)] font-semibold text-white"
+                        : "text-[var(--owner-fg-2)] hover:bg-[var(--owner-bg-subtle)]"
+                    }`}
+                  >
+                    {option.label}
+                  </button>
+                ))}
+              </div>
+            </PopoverContent>
+          </Popover>
+        </div>
+      </div>
+    </label>
+  );
+};
+
+const CityInput = ({
+  label,
+  value,
+  onChange,
+  options,
+  disabled = false,
+}: {
+  label: string;
+  value: string;
+  onChange: (value: string) => void;
+  options: CityOption[];
+  disabled?: boolean;
+}) => {
+  const hasCurrentValue = value && !options.some((option) => option.value === value);
+  return (
+    <label className="block min-w-0 text-sm font-medium">
+      {label}
+      <select
+        value={value}
+        disabled={disabled}
+        onChange={(event) => onChange(event.target.value)}
+        className="input input-primary mt-1 h-10 w-full px-3 text-sm disabled:cursor-not-allowed disabled:opacity-60"
+      >
+        <option value="">Select city</option>
+        {hasCurrentValue ? <option value={value}>{value}</option> : null}
+        {options.map((option) => (
+          <option
+            key={option._id}
+            value={option.value}
+          >
+            {option.value}
+            {option.state ? `, ${option.state}` : ""}
+          </option>
+        ))}
+      </select>
+    </label>
+  );
+};
+
+const StateInput = ({
+  label,
+  value,
+  onChange,
+  options,
+  disabled = false,
+}: {
+  label: string;
+  value: string;
+  onChange: (value: string) => void;
+  options: string[];
+  disabled?: boolean;
+}) => {
+  const listId = "event-state-options";
+  return (
+    <label className="block min-w-0 text-sm font-medium">
+      {label}
+      <input
+        list={listId}
+        value={value}
+        disabled={disabled}
+        onChange={(event) => onChange(event.target.value)}
+        className="input input-primary mt-1 h-10 w-full px-3 text-sm disabled:cursor-not-allowed disabled:opacity-60"
+        placeholder="Select state"
+      />
+      <datalist id={listId}>
+        {options.map((option) => (
+          <option key={option} value={option} />
+        ))}
+      </datalist>
+    </label>
+  );
+};
+
+const ImageUrlInput = ({
+  label,
+  value,
+  onChange,
+  uploadKind = "event-extra",
+  hostId,
+  eventId,
+}: {
+  label: string;
+  value: string;
+  onChange: (value: string) => void;
+  // Defaults to event-extra (lineup pictures, add-on images, etc).
+  // Pass an explicit kind when the asset belongs in a different
+  // subfolder so it lands in `hoizr/{env}/hosts/{hostId}/events/{eventId}/{kind}/`.
+  uploadKind?: "event-extra" | "event-instagram" | "event-table-layout";
+  hostId?: string;
+  eventId?: string;
+}) => {
+  const [uploading, setUploading] = useState(false);
+  const { setToastData } = useGlobalStore();
+  const handleFile = async (file?: File) => {
+    if (!file) return;
+    if (!file.type.startsWith("image/")) {
+      setToastData({ type: "error", message: "Please upload an image file." });
+      return;
+    }
+    if (file.size > flyerMaxFileSizeBytes) {
+      setToastData({
+        type: "error",
+        message: "Image must be 5 MB or smaller.",
+      });
+      return;
+    }
+    setUploading(true);
+    try {
+      const resolvedHostId = hostId || (await awaitSelectedHostId());
+      if (!resolvedHostId) {
+        setToastData({
+          type: "error",
+          message:
+            "We couldn't load your host context. Refresh the page and try again.",
+        });
+        setUploading(false);
+        return;
+      }
+      const result = await uploadHostAsset({
+        kind: uploadKind,
+        hostId: resolvedHostId,
+        eventId,
+        file,
+        previousUrl: value,
+      });
+      onChange(result.secureUrl);
+    } catch (error) {
+      setToastData({ type: "error", message: extractErrorMessage(error) });
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  // True drag-drop zone (TASK-004) — visual matches the Event Flyer
+  // uploader so Artist / Add-on / Extras all feel like the same primitive.
+  const [dragOver, setDragOver] = useState(false);
+  return (
+    <div className="block min-w-0 text-sm font-medium">
+      <span className="block">{label}</span>
+      <div className="mt-1 rounded-lg border border-[var(--owner-border)] bg-white p-3 shadow-sm">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-stretch">
+          <label
+            onDragOver={(event) => {
+              event.preventDefault();
+              setDragOver(true);
+            }}
+            onDragLeave={() => setDragOver(false)}
+            onDrop={(event) => {
+              event.preventDefault();
+              setDragOver(false);
+              handleFile(event.dataTransfer.files?.[0]);
+            }}
+            className={`flex min-h-[118px] flex-1 cursor-pointer items-center gap-4 rounded-lg border border-dashed px-4 py-4 text-sm transition ${
+              dragOver
+                ? "border-[var(--owner-blue-500)] bg-[var(--owner-blue-050)]"
+                : "border-[var(--owner-border)] bg-[var(--owner-bg)] hover:border-[var(--owner-blue-500)] hover:bg-[var(--owner-bg-subtle)]"
+            }`}
+          >
+            {value ? (
+              <span
+                className="h-24 w-20 shrink-0 rounded-lg bg-cover bg-center shadow-sm"
+                style={{ backgroundImage: `url(${value})` }}
+              />
+            ) : (
+              <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-white text-[var(--owner-fg-3)] shadow-sm">
+                <UploadCloudIcon size={22} />
+              </span>
+            )}
+            <span className="min-w-0 text-left">
+              <span className="block font-semibold text-[var(--owner-fg-1)]">
+                {value ? "Replace image" : "Drop or click to upload"}
+              </span>
+              <span className="mt-1 block text-xs leading-5 text-[var(--owner-fg-3)]">
+                {uploading
+                  ? "Uploading..."
+                  : "Drag an image here, or click to choose. JPG, PNG, or WebP."}
+              </span>
+            </span>
+            <input
+              type="file"
+              accept="image/*"
+              className="sr-only"
+              disabled={uploading}
+              onChange={(event) => {
+                handleFile(event.target.files?.[0]);
+                event.currentTarget.value = "";
+              }}
+            />
+          </label>
+          {value ? (
+            <button
+              type="button"
+              onClick={() => onChange("")}
+              className="inline-flex shrink-0 items-center justify-center gap-2 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-xs font-semibold text-red-700 transition hover:bg-red-100 sm:w-28"
+            >
+              <XIcon size={14} />
+              Remove
+            </button>
+          ) : null}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+const Select = ({
+  label,
+  value,
+  onChange,
+  options,
+}: {
+  label: string;
+  value: string;
+  onChange: (value: string) => void;
+  options: { value: string; label: string }[];
+}) => (
+  <label className="block min-w-0 text-sm font-medium">
+    {label}
+    <select
+      value={value}
+      onChange={(event) => onChange(event.target.value)}
+      className="input input-primary mt-1 h-10 w-full px-3 text-sm"
+    >
+      {options.map((option) => (
+        <option key={option.value} value={option.value}>
+          {option.label}
+        </option>
+      ))}
+    </select>
+  </label>
+);
+
+const RichTextEditor = ({
+  label,
+  value,
+  onChange,
+}: {
+  label: string;
+  value: string;
+  onChange: (value: string) => void;
+}) => {
+  const editorRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    if (editorRef.current && editorRef.current.innerHTML !== value) {
+      editorRef.current.innerHTML = value;
+    }
+  }, [value]);
+
+  const runCommand = (command: "bold" | "italic" | "insertUnorderedList") => {
+    editorRef.current?.focus();
+    document.execCommand(command);
+    onChange(editorRef.current?.innerHTML ?? "");
+  };
+
+  return (
+    <div className="block min-w-0 text-sm font-medium md:col-span-2">
+      <div className="mb-1 flex items-center justify-between gap-3">
+        <span>{label}</span>
+        <div className="flex items-center gap-1 rounded-md border border-[var(--owner-border)] bg-white p-1">
+          <button
+            type="button"
+            onClick={() => runCommand("bold")}
+            className="inline-flex h-7 w-7 items-center justify-center rounded text-[var(--owner-fg-2)] hover:bg-[var(--owner-bg-subtle)]"
+            title="Bold"
+          >
+            <BoldIcon size={14} />
+          </button>
+          <button
+            type="button"
+            onClick={() => runCommand("italic")}
+            className="inline-flex h-7 w-7 items-center justify-center rounded text-[var(--owner-fg-2)] hover:bg-[var(--owner-bg-subtle)]"
+            title="Italic"
+          >
+            <ItalicIcon size={14} />
+          </button>
+          <button
+            type="button"
+            onClick={() => runCommand("insertUnorderedList")}
+            className="inline-flex h-7 w-7 items-center justify-center rounded text-[var(--owner-fg-2)] hover:bg-[var(--owner-bg-subtle)]"
+            title="Bullet list"
+          >
+            <ListIcon size={14} />
+          </button>
+        </div>
+      </div>
+      <div
+        ref={editorRef}
+        role="textbox"
+        aria-multiline="true"
+        contentEditable
+        suppressContentEditableWarning
+        onInput={(event) => onChange(event.currentTarget.innerHTML)}
+        className="min-h-[132px] w-full rounded-lg border border-[var(--owner-border)] bg-white px-3 py-2 text-sm leading-6 outline-none transition focus:border-[var(--owner-blue-500)] focus:ring-2 focus:ring-[var(--owner-blue-050)] [&_ul]:ml-5 [&_ul]:list-disc"
+      />
+    </div>
+  );
+};
+
+const Textarea = ({
+  label,
+  value,
+  onChange,
+}: {
+  label: string;
+  value: string;
+  onChange: (value: string) => void;
+}) => (
+  <label className="block min-w-0 text-sm font-medium md:col-span-2">
+    {label}
+    <textarea
+      value={value}
+      onChange={(event) => onChange(event.target.value)}
+      rows={4}
+      className="input input-primary mt-1 w-full px-3 py-2 text-sm"
+    />
+  </label>
+);
+
+const PreviewRow = ({
+  Icon,
+  text,
+}: {
+  Icon: LucideIcon;
+  text: string;
+}) => (
+  <div className="flex items-center gap-2 text-sm">
+    <Icon size={16} />
+    <span className="truncate">{text}</span>
+  </div>
+);
+
+export default EventJourney;
