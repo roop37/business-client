@@ -43,11 +43,20 @@ export function generateMetadata({ params }: PageParams): Metadata {
       description: content.hero.body,
       url: canonical,
       type: "website",
+      images: [
+        {
+          url: "/opengraph-image.webp",
+          width: 1200,
+          height: 630,
+          alt: `${content.label} — Hoizr`,
+        },
+      ],
     },
     twitter: {
       card: "summary_large_image",
       title: `${content.label} — Hoizr`,
       description: content.hero.body,
+      images: ["/opengraph-image.webp"],
     },
   };
 }

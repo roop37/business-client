@@ -407,7 +407,7 @@ const OVERRIDES: Record<string, Override> = {
   "email-sms-marketing": {
     heroHeadline: "Owned-channel outreach. Not a marketplace rental.",
     heroBody:
-      "Your fan list is yours. Hoizr's email and SMS marketing keeps the relationship between you and your fans — with templates, audience filters, and reporting built for live-music drops, not for generic e-commerce.",
+      "Your fan list is yours. Hoizr's email and SMS marketing keeps the relationship between you and your fans — with templates, audience filters, and reporting built for nightlife drops, not for generic e-commerce.",
     bullets: [
       "Email and SMS playbooks tuned for on-sale and last-call moments",
       "Audience filters built on attendance history",
@@ -492,7 +492,7 @@ const OVERRIDES: Record<string, Override> = {
           "Target by who attended the last comparable show, who lives in the right city, or who's already bought a Phase 1 ticket.",
       },
       {
-        title: "Built for live-music moments.",
+        title: "Built for live-night moments.",
         body:
           "Playbooks for on-sale go-live, door-time reminders, and after-party drops — not generic e-commerce push templates.",
       },
@@ -522,7 +522,7 @@ const OVERRIDES: Record<string, Override> = {
       {
         title: "Perks fans actually want.",
         body:
-          "Early ticket access, skip-the-line at the door, lineup leaks before the public drop — perks built around live music, not gift card balances.",
+          "Early ticket access, skip-the-line at the door, lineup leaks before the public drop — perks built around real nights out, not gift card balances.",
       },
       {
         title: "Repeat business that compounds.",
@@ -609,7 +609,7 @@ const OVERRIDES: Record<string, Override> = {
   "automations": {
     heroHeadline: "Recipes that run the boring stuff.",
     heroBody:
-      "Hoizr automations let you ship the repetitive parts of a live-music business once — Phase 2 opens when Phase 1 sells out, reminder sends 24 hours before doors, refunds recycle back to the waitlist — and forget about them.",
+      "Hoizr automations let you ship the repetitive parts of a nightlife business once — Phase 2 opens when Phase 1 sells out, reminder sends 24 hours before doors, refunds recycle back to the waitlist — and forget about them.",
     bullets: [
       "Pre-built recipes for the most common operator workflows",
       "Triggers on sales, scans, refunds, and time-based events",

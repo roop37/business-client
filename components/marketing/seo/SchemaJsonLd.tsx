@@ -1,9 +1,7 @@
 /**
- * Hoizr JSON-LD helpers. Uses next/script so the inline JSON payload
- * doesn't require the consumer to wire dangerouslySetInnerHTML.
- * Search engines pick up these script tags during server render.
+ * Hoizr JSON-LD helpers. Render raw script tags in the server HTML so
+ * crawlers and AI agents do not need hydration to see structured data.
  */
-import Script from "next/script";
 import { ProductContent } from "../data/product-content";
 
 const SITE_URL = "https://business.hoizr.com";
@@ -18,18 +16,18 @@ const HOIZR_FAMILY = [
   { "@type": "Organization", name: "Hoizr Promoters", url: "https://promoters.hoizr.com" },
 ];
 
-const ldScript = (id: string, data: object) => (
-  <Script
+export const JsonLdScript = ({ id, data }: { id: string; data: object }) => (
+  <script
     id={id}
     type="application/ld+json"
-    strategy="afterInteractive"
-  >
-    {JSON.stringify(data)}
-  </Script>
+    dangerouslySetInnerHTML={{
+      __html: JSON.stringify(data).replace(/</g, "\\u003c"),
+    }}
+  />
 );
 
 export const OrganizationJsonLd = () =>
-  ldScript("hoizr-organization-jsonld", {
+  <JsonLdScript id="hoizr-organization-jsonld" data={{
     "@context": "https://schema.org",
     "@type": ["Organization", "SoftwareApplication"],
     name: ORG_NAME,
@@ -54,6 +52,7 @@ export const OrganizationJsonLd = () =>
         "@type": "ContactPoint",
         contactType: "customer support",
         email: "contact@hoizr.com",
+        telephone: "+91-83695-72945",
         areaServed: "IN",
         availableLanguage: ["en", "hi"],
       },
@@ -108,10 +107,10 @@ export const OrganizationJsonLd = () =>
       "@type": "GeoShape",
       addressCountry: "IN",
     },
-  });
+  }} />;
 
 export const WebSiteJsonLd = () =>
-  ldScript("hoizr-website-jsonld", {
+  <JsonLdScript id="hoizr-website-jsonld" data={{
     "@context": "https://schema.org",
     "@type": "WebSite",
     name: ORG_NAME,
@@ -130,14 +129,14 @@ export const WebSiteJsonLd = () =>
       },
       "query-input": "required name=search_term_string",
     },
-  });
+  }} />;
 
 export const BreadcrumbJsonLd = ({
   items,
 }: {
   items: { name: string; href: string }[];
 }) =>
-  ldScript("hoizr-breadcrumb-jsonld", {
+  <JsonLdScript id="hoizr-breadcrumb-jsonld" data={{
     "@context": "https://schema.org",
     "@type": "BreadcrumbList",
     itemListElement: items.map((item, i) => ({
@@ -146,10 +145,10 @@ export const BreadcrumbJsonLd = ({
       name: item.name,
       item: `${SITE_URL}${item.href}`,
     })),
-  });
+  }} />;
 
 export const ProductJsonLd = ({ content }: { content: ProductContent }) =>
-  ldScript(`hoizr-product-${content.slug}-jsonld`, {
+  <JsonLdScript id={`hoizr-product-${content.slug}-jsonld`} data={{
     "@context": "https://schema.org",
     "@type": "Service",
     name: `${content.label} — Hoizr`,
@@ -176,14 +175,14 @@ export const ProductJsonLd = ({ content }: { content: ProductContent }) =>
         itemOffered: { "@type": "Service", name: b },
       })),
     },
-  });
+  }} />;
 
 export const FaqJsonLd = ({
   items,
 }: {
   items: { q: string; a: string }[];
 }) =>
-  ldScript("hoizr-faq-jsonld", {
+  <JsonLdScript id="hoizr-faq-jsonld" data={{
     "@context": "https://schema.org",
     "@type": "FAQPage",
     mainEntity: items.map((item) => ({
@@ -191,4 +190,4 @@ export const FaqJsonLd = ({
       name: item.q,
       acceptedAnswer: { "@type": "Answer", text: item.a },
     })),
-  });
+  }} />;

@@ -1,11 +1,14 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { ArrowRight, CheckCircle2, Loader2, Mail, MapPin, Sparkles } from "lucide-react";
+import { ArrowRight, CheckCircle2, Loader2, Mail, MapPin, MessageCircle, PhoneCall, Sparkles } from "lucide-react";
 import { useState } from "react";
 import { useWaitlist } from "../waitlist/WaitlistContext";
 
 const EASE = [0.2, 0.6, 0.2, 1] as const;
+const CONTACT_PHONE_DISPLAY = "+91 83695 72945";
+const CONTACT_PHONE_TEL = "tel:+918369572945";
+const CONTACT_WHATSAPP = "https://wa.me/918369572945";
 
 type Field = {
   key: string;
@@ -104,6 +107,22 @@ export const ContactClient = () => {
             className="font-semibold text-[var(--m-forest-700)] hover:underline"
           >
             contact@hoizr.com
+          </a>
+          , call{" "}
+          <a
+            href={CONTACT_PHONE_TEL}
+            className="font-semibold text-[var(--m-forest-700)] hover:underline"
+          >
+            {CONTACT_PHONE_DISPLAY}
+          </a>
+          , or message us on{" "}
+          <a
+            href={CONTACT_WHATSAPP}
+            target="_blank"
+            rel="noreferrer"
+            className="font-semibold text-[var(--m-forest-700)] hover:underline"
+          >
+            WhatsApp
           </a>
           .
         </p>
@@ -226,6 +245,24 @@ export const ContactSidePanel = () => {
           </a>{" "}
           and a real human will reply within one working day.
         </p>
+        <div className="mt-4 flex flex-wrap gap-2">
+          <a
+            href={CONTACT_PHONE_TEL}
+            className="inline-flex items-center gap-2 rounded-full border border-[var(--m-border)] bg-white px-3 py-2 text-[12.5px] font-semibold text-[var(--m-ink-1)] transition hover:border-[var(--m-forest-300)] hover:text-[var(--m-forest-700)]"
+          >
+            <PhoneCall size={13} />
+            Call
+          </a>
+          <a
+            href={CONTACT_WHATSAPP}
+            target="_blank"
+            rel="noreferrer"
+            className="inline-flex items-center gap-2 rounded-full border border-[var(--m-border)] bg-white px-3 py-2 text-[12.5px] font-semibold text-[var(--m-ink-1)] transition hover:border-[var(--m-forest-300)] hover:text-[var(--m-forest-700)]"
+          >
+            <MessageCircle size={13} />
+            WhatsApp
+          </a>
+        </div>
       </div>
 
       <div className="rounded-[var(--m-r-lg)] border border-[var(--m-border)] bg-[var(--m-canvas-2)] p-6">

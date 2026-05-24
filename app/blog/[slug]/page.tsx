@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import Script from "next/script";
 import { BlogPost } from "@/components/marketing/blog/BlogPost";
 import {
   blogs,
@@ -8,7 +7,10 @@ import {
   getRelatedBlogs,
 } from "@/components/marketing/blog/blog-data";
 import { MarketingShell } from "@/components/marketing/MarketingShell";
-import { BreadcrumbJsonLd } from "@/components/marketing/seo/SchemaJsonLd";
+import {
+  BreadcrumbJsonLd,
+  JsonLdScript,
+} from "@/components/marketing/seo/SchemaJsonLd";
 
 type PageParams = { params: { slug: string } };
 
@@ -220,13 +222,10 @@ export default function BlogPostPage({ params }: PageParams) {
 
   return (
     <MarketingShell>
-      <Script
+      <JsonLdScript
         id={`hoizr-blog-${blog.id}-jsonld`}
-        type="application/ld+json"
-        strategy="afterInteractive"
-      >
-        {JSON.stringify(articleJsonLd)}
-      </Script>
+        data={articleJsonLd}
+      />
       <BreadcrumbJsonLd
         items={[
           { name: "Hoizr", href: "/" },

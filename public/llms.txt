@@ -22,7 +22,9 @@ Operated by Hoizr Technologies Pvt. Ltd.
 - [How it works](https://business.hoizr.com/how-it-works): End-to-end host journey from onboarding to settlement.
 - [Products](https://business.hoizr.com/product): Ticketing, fan CRM, scanner, marketing tools, AI offers, host payouts.
 - [Blog](https://business.hoizr.com/blog): Stories on live entertainment, ticketing, and India's nightlife economy.
-- [Legal](https://business.hoizr.com/legal): Terms, privacy, refund policy, GST policy, Section 24 disclosures.
+- [RSS](https://business.hoizr.com/rss.xml): Blog feed for crawlers, readers, and AI agents.
+- [Sitemap](https://business.hoizr.com/sitemap.xml): Canonical URL inventory for public marketing pages.
+- [Legal](https://business.hoizr.com/legal/terms): Terms, privacy, cookies, GST, and company disclosures.
 - [Contact](https://business.hoizr.com/contact): Sales and support inbound.
 
 ## Audience
@@ -32,4 +34,4 @@ Event hosts, club owners, festival promoters, comedy producers, and venue operat
 Customer-facing ticket buying lives at https://hoizr.com — that's where attendees discover events, book tickets, follow artists, and check in.
 
 ## Contact
-hello@hoizr.in · India
+contact@hoizr.com · +91 83695 72945 · WhatsApp: https://wa.me/918369572945 · India

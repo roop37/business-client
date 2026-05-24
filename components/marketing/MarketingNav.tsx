@@ -12,6 +12,7 @@ import { useWaitlist } from "./waitlist/WaitlistContext";
 type OpenMenu = "products" | "company" | "resources" | null;
 
 const RESOURCE_LINKS = [
+  { label: "Flyer stickers", href: "/resources#stickers", blurb: "Download Hoizr PNG stickers for posters, reels, stories, and venue screens." },
   { label: "Playbooks", href: "/resources#playbooks", blurb: "Short, opinionated guides for India's live nights — door ops, on-sale day, refund policy, teardown." },
   { label: "Blog", href: "/blog", blurb: "Migration playbooks, fan-CRM tactics, AI pricing studies — for Indian event organizers." },
   { label: "How Hoizr works", href: "/how-it-works", blurb: "Quick onboarding, same-day verification, and the operating flow from signup to a sold-out night." },
@@ -231,6 +232,15 @@ export const MarketingNav = () => {
               </motion.span>
             </button>
           </div>
+
+          <Link
+            href="/resources#stickers"
+            onClick={closeNow}
+            onMouseEnter={closeNow}
+            className="rounded-full px-3.5 py-2 text-[14px] font-medium text-[var(--m-ink-2)] hover:bg-[rgba(0,0,0,0.05)]"
+          >
+            Stickers
+          </Link>
         </nav>
 
         {/* Pre-launch: login/signup entry points are hidden while the
@@ -380,7 +390,7 @@ export const MarketingNav = () => {
                   </motion.div>
                 </div>
                 <div className="mt-5 border-t border-[var(--m-border)] pt-4 flex items-center justify-between text-[13px] text-[var(--m-ink-3)]">
-                  <span>Built for India. Engineered for live music.</span>
+                  <span>Built for India. Engineered for live nights.</span>
                   {/* Pre-launch: hidden signup CTA replaced by waitlist trigger.
                       <Link href="/signup" onClick={closeNow} className="font-semibold text-[var(--m-forest-700)] hover:underline">
                         Get your event rate →
@@ -545,6 +555,9 @@ export const MarketingNav = () => {
                 </Link>
                 <Link onClick={() => setMobileOpen(false)} href="/resources" className="rounded-xl px-3 py-2.5 -mx-3 text-[15px] font-medium hover:bg-[var(--m-canvas-2)]">
                   Resources
+                </Link>
+                <Link onClick={() => setMobileOpen(false)} href="/resources#stickers" className="rounded-xl px-3 py-2.5 -mx-3 text-[15px] font-medium hover:bg-[var(--m-canvas-2)]">
+                  Flyer stickers
                 </Link>
                 <Link onClick={() => setMobileOpen(false)} href="/blog" className="rounded-xl px-3 py-2.5 -mx-3 text-[15px] font-medium hover:bg-[var(--m-canvas-2)]">
                   Blog

@@ -32,6 +32,10 @@ type Tile = {
 
 const SPEED_PX_PER_SEC = 72;
 const METALLIC_BG = "/marketing/brand/metallic-line-banner.png";
+const LOOP_BADGE_CLASS =
+  "inline-flex items-center gap-1.5 rounded-full bg-[var(--m-acid)] px-2.5 py-1 text-[11px] font-bold uppercase tracking-[0.1em] text-[var(--m-forest-900)] shadow-[0_4px_10px_rgba(214,255,63,0.32)]";
+const LOOP_BADGE_DOT_CLASS =
+  "h-1.5 w-1.5 rounded-full bg-[var(--m-forest-900)]";
 
 const SOURCE: Tile[] = MARKETING_PILLARS.flatMap((pillar) =>
   pillar.products.map((p) => ({
@@ -51,6 +55,7 @@ const SOURCE: Tile[] = MARKETING_PILLARS.flatMap((pillar) =>
 
 export const ProductStoryGallery = () => {
   const [paused, setPaused] = useState(false);
+  const [dragging, setDragging] = useState(false);
   const trackRef = useRef<HTMLDivElement>(null);
   const sequenceRef = useRef<HTMLDivElement>(null);
   const x = useMotionValue(0);
@@ -67,15 +72,20 @@ export const ProductStoryGallery = () => {
     return () => window.removeEventListener("resize", measure);
   }, []);
 
-  useAnimationFrame((_, delta) => {
-    if (paused) return;
-    const next = x.get() - (delta / 1000) * SPEED_PX_PER_SEC;
+  // Normalize an arbitrary x offset into the seamless wrap window
+  // (-halfWidth, 0]. Used both during drag (so user can fling either
+  // direction without the row sliding off) and after release.
+  const wrap = (value: number) => {
     const half = halfWidthRef.current;
-    if (half > 0 && next <= -half) {
-      x.set(0);
-    } else {
-      x.set(next);
-    }
+    if (half <= 0) return value;
+    const wrapped = value % half;
+    return wrapped > 0 ? wrapped - half : wrapped;
+  };
+
+  useAnimationFrame((_, delta) => {
+    if (paused || dragging) return;
+    const next = wrap(x.get() - (delta / 1000) * SPEED_PX_PER_SEC);
+    x.set(next);
   });
 
   return (
@@ -103,8 +113,23 @@ export const ProductStoryGallery = () => {
       >
         <motion.div
           ref={trackRef}
-          style={{ x }}
-          className="flex w-max items-stretch"
+          style={{ x, touchAction: "pan-y" }}
+          drag="x"
+          dragMomentum
+          dragElastic={0}
+          dragTransition={{ power: 0.22, timeConstant: 320, bounceStiffness: 0, bounceDamping: 0 }}
+          onDragStart={() => setDragging(true)}
+          onDrag={() => {
+            // Keep the row inside the seamless wrap window while the
+            // user is dragging — without this, a long swipe slides the
+            // entire duplicated list off-screen and reveals empty space.
+            x.set(wrap(x.get()));
+          }}
+          onDragEnd={() => {
+            x.set(wrap(x.get()));
+            setDragging(false);
+          }}
+          className="flex w-max cursor-grab items-stretch active:cursor-grabbing"
         >
           {[0, 1].map((group) => (
             <div
@@ -155,10 +180,10 @@ const MarqueeTile = ({ tile }: { tile: Tile }) => {
         />
         <div
           aria-hidden
-          className="absolute inset-0 bg-gradient-to-br from-black/40 via-black/60 to-black/85"
+          className="absolute inset-0 bg-gradient-to-br from-black/15 via-black/25 to-black/55"
         />
-        <span className="relative inline-flex w-fit items-center gap-1.5 rounded-full bg-white/15 px-3 py-1.5 text-[12.5px] font-bold uppercase tracking-[0.12em] text-white backdrop-blur">
-          <span className="h-1.5 w-1.5 rounded-full bg-[var(--m-acid)]" />
+        <span className={`relative w-fit ${LOOP_BADGE_CLASS}`}>
+          <span className={LOOP_BADGE_DOT_CLASS} />
           {tile.pillar}
         </span>
         <div className="relative">
@@ -210,10 +235,11 @@ const MarqueeTile = ({ tile }: { tile: Tile }) => {
         className="absolute inset-0"
         style={{
           background:
-            "linear-gradient(180deg, rgba(0,0,0,0.0) 0%, rgba(0,0,0,0.10) 50%, rgba(0,0,0,0.78) 100%)",
+            "linear-gradient(180deg, rgba(0,0,0,0.0) 0%, rgba(0,0,0,0.04) 50%, rgba(0,0,0,0.56) 100%)",
         }}
       />
-      <span className="absolute left-4 top-4 inline-flex items-center gap-1 rounded-full bg-[var(--m-acid)] px-2.5 py-1 text-[11px] font-bold uppercase tracking-[0.1em] text-[var(--m-forest-900)] shadow-[0_4px_10px_rgba(214,255,63,0.32)]">
+      <span className={`absolute left-4 top-4 ${LOOP_BADGE_CLASS}`}>
+        <span className={LOOP_BADGE_DOT_CLASS} />
         {tile.pillar}
       </span>
       <div className="relative p-5">

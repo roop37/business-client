@@ -13,6 +13,7 @@ const COMPANY_LINKS = [
 const RESOURCE_LINKS = [
   { label: "Find Event", href: "https://hoizr.com" },
   { label: "Resources", href: "/resources" },
+  { label: "Flyer stickers", href: "/resources#stickers" },
   { label: "Playbooks", href: "/resources#playbooks" },
   { label: "Blog", href: "/blog" },
   { label: "Help center", href: "/help" },
@@ -27,6 +28,8 @@ const RESOURCE_LINKS = [
 const SUPPORT_LINKS = [
   { label: "Contact", href: "/contact" },
   { label: "contact@hoizr.com", href: "mailto:contact@hoizr.com" },
+  { label: "Call +91 83695 72945", href: "tel:+918369572945" },
+  { label: "WhatsApp +91 83695 72945", href: "https://wa.me/918369572945" },
   { label: "tech@hoizr.com", href: "mailto:tech@hoizr.com" },
 ];
 
