@@ -5,6 +5,7 @@ import { ArrowUpRight, ChevronDown, Menu, X } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { MARKETING_PILLARS } from "./data/nav-products";
 import { useWaitlist } from "./waitlist/WaitlistContext";
 
@@ -40,7 +41,12 @@ const EASE = [0.2, 0.6, 0.2, 1] as const;
 export const MarketingNav = () => {
   const [open, setOpen] = useState<OpenMenu>(null);
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [mounted, setMounted] = useState(false);
   const closeTimer = useRef<number | null>(null);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
   const lastHoverOpenAt = useRef(0);
   const navRef = useRef<HTMLElement | null>(null);
   const pathname = usePathname();
@@ -471,14 +477,18 @@ export const MarketingNav = () => {
         )}
       </AnimatePresence>
 
-      {/* Mobile slide-down */}
+      {/* Mobile slide-down — portaled to <body> so it escapes the
+          `.hm-nav` stacking/containing block (the nav uses
+          `backdrop-filter`, which traps fixed descendants inside the
+          ~60px-tall nav strip and only the close `X` ends up visible). */}
+      {mounted && createPortal(
       <AnimatePresence>
         {mobileOpen && (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[80] bg-[var(--m-canvas)] overflow-y-auto"
+            className="hoizr-marketing fixed inset-0 z-[80] bg-[var(--m-canvas)] overflow-y-auto"
           >
             <div className="flex items-center justify-between px-6 py-3 border-b border-[var(--m-border)]">
               <Link href="/" onClick={() => setMobileOpen(false)} className="hoizr-mark text-[22px] tracking-[0.06em]">
@@ -567,7 +577,9 @@ export const MarketingNav = () => {
             </div>
           </motion.div>
         )}
-      </AnimatePresence>
+      </AnimatePresence>,
+      document.body,
+      )}
     </header>
   );
 };
