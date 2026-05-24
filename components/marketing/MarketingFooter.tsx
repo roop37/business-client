@@ -1,5 +1,8 @@
+"use client";
+
 import Link from "next/link";
 import { MARKETING_PILLARS } from "./data/nav-products";
+import { useWaitlist } from "./waitlist/WaitlistContext";
 
 const COMPANY_LINKS = [
   { label: "Home", href: "/" },
@@ -14,15 +17,20 @@ const RESOURCE_LINKS = [
   { label: "Blog", href: "/blog" },
   { label: "Help center", href: "/help" },
 ];
-const ACCOUNT_LINKS = [
-  { label: "Get event rate", href: "/signup" },
-  { label: "Host login", href: "/login" },
-];
+// Pre-launch: account links (Get event rate · Host login) are hidden
+// while the dashboard is closed to the public. Restore when the
+// dashboard reopens.
+// const ACCOUNT_LINKS = [
+//   { label: "Get event rate", href: "/signup" },
+//   { label: "Host login", href: "/login" },
+// ];
 const SUPPORT_LINKS = [
   { label: "Contact", href: "/contact" },
-  { label: "support@hoizr.com", href: "mailto:support@hoizr.com" },
-  { label: "hello@hoizr.in", href: "mailto:hello@hoizr.in" },
+  { label: "contact@hoizr.com", href: "mailto:contact@hoizr.com" },
+  { label: "tech@hoizr.com", href: "mailto:tech@hoizr.com" },
 ];
+
+const INSTAGRAM_URL = "https://www.instagram.com/hoizr.technologies";
 const LEGAL_LINKS = [
   { label: "Privacy", href: "/legal/privacy" },
   { label: "Terms", href: "/legal/terms" },
@@ -31,6 +39,7 @@ const LEGAL_LINKS = [
 ];
 
 export const MarketingFooter = () => {
+  const { open: openWaitlist } = useWaitlist();
   return (
     <footer className="relative z-10 block shrink-0 overflow-hidden border-t border-white/10 bg-[#050504] text-white">
       {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -103,6 +112,16 @@ export const MarketingFooter = () => {
             </ul>
             <div className="hm-eyebrow mt-6 mb-3 !text-white/45">Account</div>
             <ul className="space-y-2">
+              <li>
+                <button
+                  type="button"
+                  onClick={() => openWaitlist("footer")}
+                  className="text-[13.5px] font-medium text-white/76 transition-colors duration-200 hover:text-[var(--m-acid)] hover:[text-shadow:0_0_14px_rgba(214,255,63,0.55)]"
+                >
+                  Join the waitlist
+                </button>
+              </li>
+              {/* Pre-launch: login + signup links hidden. Restore when dashboard reopens.
               {ACCOUNT_LINKS.map((l) => (
                 <li key={l.href}>
                   <Link href={l.href} className="text-[13.5px] font-medium text-white/76 transition-colors duration-200 hover:text-[var(--m-acid)] hover:[text-shadow:0_0_14px_rgba(214,255,63,0.55)]">
@@ -110,11 +129,21 @@ export const MarketingFooter = () => {
                   </Link>
                 </li>
               ))}
+              */}
             </ul>
             <div className="hm-eyebrow mt-6 mb-3 !text-white/45">India desk</div>
             <p className="text-[13.5px] font-medium leading-relaxed text-white/76">
               Mumbai · Bengaluru · Delhi NCR
             </p>
+            <div className="hm-eyebrow mt-6 mb-3 !text-white/45">Follow</div>
+            <a
+              href={INSTAGRAM_URL}
+              target="_blank"
+              rel="noreferrer"
+              className="text-[13.5px] font-medium text-white/76 transition-colors duration-200 hover:text-[var(--m-acid)] hover:[text-shadow:0_0_14px_rgba(214,255,63,0.55)]"
+            >
+              Instagram · @hoizr.technologies ↗
+            </a>
           </div>
         </div>
 

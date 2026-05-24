@@ -3,7 +3,9 @@
 import { motion } from "framer-motion";
 import { ArrowRight } from "lucide-react";
 import Link from "next/link";
+import { BlurImage } from "../visuals/BlurImage";
 import { MagneticButton } from "../visuals/MagneticButton";
+import { useWaitlist } from "../waitlist/WaitlistContext";
 const EASE = [0.2, 0.6, 0.2, 1] as const;
 
 /**
@@ -20,6 +22,7 @@ const EASE = [0.2, 0.6, 0.2, 1] as const;
  *   - /images/playbooks/Event-management-dashboard-overview.png (1586×992)
  */
 export const Hero = () => {
+  const { open: openWaitlist } = useWaitlist();
   return (
     <section className="relative overflow-hidden">
       {/* Hero background intentionally empty — the marketing canvas
@@ -89,10 +92,20 @@ export const Hero = () => {
           transition={{ duration: 0.7, ease: EASE, delay: 0.45 }}
           className="mt-9 flex flex-wrap items-center justify-center gap-3"
         >
+          {/* Pre-launch: signup CTA hidden until dashboard reopens.
           <MagneticButton href="/signup" className="hm-btn hm-btn-primary" pull={10}>
             Get my event rate
             <ArrowRight size={16} />
           </MagneticButton>
+          */}
+          <button
+            type="button"
+            onClick={() => openWaitlist("hero")}
+            className="hm-btn hm-btn-primary"
+          >
+            Join the waitlist
+            <ArrowRight size={16} />
+          </button>
           <Link href="/pricing" className="hm-btn hm-btn-ghost border border-[var(--m-border)]">
             See how it works
           </Link>
@@ -131,11 +144,12 @@ const HeroStage = () => {
         className="absolute inset-x-0 z-0 overflow-hidden rounded-[20px] shadow-[0_30px_70px_rgba(5,5,5,0.28)] md:rounded-[24px]"
         style={{ top: "32%", bottom: "6%" }}
       >
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
+        <BlurImage
           src="/marketing/hero/metallic-bg.png"
           alt=""
           aria-hidden
+          fill
+          sizes="(max-width: 1100px) 100vw, 1200px"
           className="absolute inset-0 h-full w-full object-cover"
           draggable={false}
         />
@@ -179,20 +193,23 @@ const MonitorWithDashboard = () => {
             measured glass rectangle. The source and frame ratios are
             close, so this keeps the full screenshot visible without
             any spill outside the MacBook screen. */}
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
+        <BlurImage
           src="/images/playbooks/Event-management-dashboard-overview.png"
           alt=""
           aria-hidden
+          fill
+          sizes="(max-width: 1100px) 80vw, 900px"
           className="h-full w-full select-none object-fill"
           draggable={false}
         />
       </div>
 
-      {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img
+      <BlurImage
         src="/marketing/hero/laptop-frame.png"
         alt="Hoizr business dashboard on a MacBook"
+        fill
+        sizes="(max-width: 1100px) 100vw, 1200px"
+        priority
         className="pointer-events-none absolute inset-0 z-20 h-full w-full select-none object-contain drop-shadow-[0_24px_42px_rgba(0,0,0,0.32)]"
         draggable={false}
       />

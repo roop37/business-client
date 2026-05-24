@@ -3,6 +3,7 @@
 import { motion } from "framer-motion";
 import { ArrowRight, Brain, FileSearch, Gauge, Gift, Radar, Sparkles } from "lucide-react";
 import Link from "next/link";
+import { useWaitlist } from "../waitlist/WaitlistContext";
 
 const EASE = [0.2, 0.6, 0.2, 1] as const;
 
@@ -37,6 +38,7 @@ const STEPS = [
  * the right uses the metallic-black surface to mirror the hero.
  */
 export const AiOfferSpotlight = () => {
+  const { open: openWaitlist } = useWaitlist();
   return (
     <section className="hm-section">
       <div className="relative overflow-hidden rounded-[var(--m-r-2xl)] border border-[var(--m-border)] bg-[var(--m-surface)]">
@@ -93,10 +95,20 @@ export const AiOfferSpotlight = () => {
             </ol>
 
             <div className="mt-10">
+              {/* Pre-launch: signup CTA hidden; waitlist trigger in its place.
               <Link href="/signup" className="hm-btn hm-btn-primary">
                 Get my AI Boost rate
                 <ArrowRight size={16} />
               </Link>
+              */}
+              <button
+                type="button"
+                onClick={() => openWaitlist("ai-boost")}
+                className="hm-btn hm-btn-primary"
+              >
+                Join the waitlist
+                <ArrowRight size={16} />
+              </button>
             </div>
 
             {/* Roadmap teaser — clearly labelled as upcoming, not live. */}

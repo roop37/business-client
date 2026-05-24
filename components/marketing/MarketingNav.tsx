@@ -6,6 +6,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { MARKETING_PILLARS } from "./data/nav-products";
+import { useWaitlist } from "./waitlist/WaitlistContext";
 
 type OpenMenu = "products" | "company" | "resources" | null;
 
@@ -43,6 +44,7 @@ export const MarketingNav = () => {
   const lastHoverOpenAt = useRef(0);
   const navRef = useRef<HTMLElement | null>(null);
   const pathname = usePathname();
+  const { open: openWaitlist } = useWaitlist();
 
   const clearCloseTimer = useCallback(() => {
     if (closeTimer.current) {
@@ -142,7 +144,7 @@ export const MarketingNav = () => {
           </Link>
         </motion.div>
 
-        <nav className="hidden lg:flex items-center gap-1">
+        <nav className="hidden lg:flex items-center gap-1 lg:ml-10 xl:ml-16">
           <div
             onMouseEnter={() => openMenu("products", true)}
             className="relative"
@@ -225,6 +227,11 @@ export const MarketingNav = () => {
           </div>
         </nav>
 
+        {/* Pre-launch: login/signup entry points are hidden while the
+            dashboard is closed to the public. The single CTA opens the
+            waitlist modal. Restore the commented Link components below
+            when the dashboard reopens. */}
+        {/*
         <div className="hidden lg:flex items-center gap-2">
           <Link
             href="/login"
@@ -242,6 +249,20 @@ export const MarketingNav = () => {
           >
             Get my event rate
           </Link>
+        </div>
+        */}
+        <div className="hidden lg:flex items-center gap-2">
+          <button
+            type="button"
+            onClick={() => {
+              closeNow();
+              openWaitlist("nav");
+            }}
+            onMouseEnter={closeNow}
+            className="hm-btn hm-btn-primary text-[14px] py-2.5 px-4"
+          >
+            Join the waitlist
+          </button>
         </div>
 
         <button
@@ -354,13 +375,21 @@ export const MarketingNav = () => {
                 </div>
                 <div className="mt-5 border-t border-[var(--m-border)] pt-4 flex items-center justify-between text-[13px] text-[var(--m-ink-3)]">
                   <span>Built for India. Engineered for live music.</span>
-                  <Link
-                    href="/signup"
-                    onClick={closeNow}
+                  {/* Pre-launch: hidden signup CTA replaced by waitlist trigger.
+                      <Link href="/signup" onClick={closeNow} className="font-semibold text-[var(--m-forest-700)] hover:underline">
+                        Get your event rate →
+                      </Link>
+                  */}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      closeNow();
+                      openWaitlist("nav-mega");
+                    }}
                     className="font-semibold text-[var(--m-forest-700)] hover:underline"
                   >
-                    Get your event rate →
-                  </Link>
+                    Join the waitlist →
+                  </button>
                 </div>
               </div>
             </div>
@@ -510,10 +539,13 @@ export const MarketingNav = () => {
                 <Link onClick={() => setMobileOpen(false)} href="/blog" className="rounded-xl px-3 py-2.5 -mx-3 text-[15px] font-medium hover:bg-[var(--m-canvas-2)]">
                   Blog
                 </Link>
+                {/* Pre-launch: login link hidden until dashboard reopens.
                 <Link onClick={() => setMobileOpen(false)} href="/login" className="rounded-xl px-3 py-2.5 -mx-3 text-[15px] font-medium hover:bg-[var(--m-canvas-2)]">
                   Login
                 </Link>
+                */}
               </div>
+              {/* Pre-launch: signup CTA hidden; replaced with waitlist trigger.
               <Link
                 href="/signup"
                 onClick={() => setMobileOpen(false)}
@@ -521,6 +553,17 @@ export const MarketingNav = () => {
               >
                 Get my event rate
               </Link>
+              */}
+              <button
+                type="button"
+                onClick={() => {
+                  setMobileOpen(false);
+                  openWaitlist("nav-mobile");
+                }}
+                className="hm-btn hm-btn-primary w-full"
+              >
+                Join the waitlist
+              </button>
             </div>
           </motion.div>
         )}

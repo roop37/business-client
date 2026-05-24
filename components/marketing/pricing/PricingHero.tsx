@@ -2,11 +2,12 @@
 
 import { motion } from "framer-motion";
 import { ArrowRight, BadgeCheck } from "lucide-react";
-import Link from "next/link";
+import { useWaitlist } from "../waitlist/WaitlistContext";
 
 const EASE = [0.2, 0.6, 0.2, 1] as const;
 
 export const PricingHero = () => {
+  const { open: openWaitlist } = useWaitlist();
   return (
     <section className="hm-section text-center pt-14 pb-12 md:pt-20 md:pb-16">
       <motion.span
@@ -46,6 +47,7 @@ export const PricingHero = () => {
         transition={{ duration: 0.7, ease: EASE, delay: 0.4 }}
         className="mt-9 flex items-center justify-center gap-3 flex-wrap"
       >
+        {/* Pre-launch: signup + login CTAs hidden; single waitlist trigger replaces them.
         <Link href="/signup" className="hm-btn hm-btn-primary">
           Get my event rate
           <ArrowRight size={16} />
@@ -56,6 +58,15 @@ export const PricingHero = () => {
         >
           I already have an account
         </Link>
+        */}
+        <button
+          type="button"
+          onClick={() => openWaitlist("pricing-hero")}
+          className="hm-btn hm-btn-primary"
+        >
+          Join the waitlist
+          <ArrowRight size={16} />
+        </button>
       </motion.div>
 
       <motion.p

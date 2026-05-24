@@ -25,6 +25,7 @@ import {
 import { MarketingShell } from "@/components/marketing/MarketingShell";
 import { AiOfferSpotlight } from "@/components/marketing/sections/AiOfferSpotlight";
 import { FinalCTA } from "@/components/marketing/sections/FinalCTA";
+import { WaitlistButton } from "@/components/marketing/waitlist/WaitlistButton";
 import {
   BreadcrumbJsonLd,
   FaqJsonLd,
@@ -373,10 +374,16 @@ const HowItWorksHero = () => (
           )}
         </div>
         <div className="mt-9 flex flex-wrap gap-3">
+          {/* Pre-launch: signup CTA hidden until dashboard reopens.
           <Link href="/signup" className="hm-btn hm-btn-primary">
             Get my event rate
             <ArrowRight size={16} />
           </Link>
+          */}
+          <WaitlistButton source="how-it-works-hero" className="hm-btn hm-btn-primary">
+            Join the waitlist
+            <ArrowRight size={16} />
+          </WaitlistButton>
           <Link
             href="#operating-flow"
             className="hm-btn hm-btn-ghost border border-[var(--m-border)]"
@@ -572,10 +579,10 @@ const QuickOnboarding = () => (
           <p className="mt-2 text-[12.5px] text-[var(--m-ink-4)]">
             Stuck mid-onboarding? Email{" "}
             <a
-              href="mailto:support@hoizr.in"
+              href="mailto:contact@hoizr.com"
               className="font-semibold text-[var(--m-forest-700)] hover:underline"
             >
-              support@hoizr.in
+              contact@hoizr.com
             </a>{" "}
             — the team unblocks verification queues in IST hours.
           </p>

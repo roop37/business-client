@@ -4,6 +4,7 @@ import { motion } from "framer-motion";
 import { ArrowLeft, ArrowUpRight, Linkedin } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
+import { useWaitlist } from "../waitlist/WaitlistContext";
 import { getRelatedBlogs, type Blog } from "./blog-data";
 import { BLOG_FIXED_TOP_PX, useFixedAfterReachTop } from "./useFixedAfterReachTop";
 
@@ -63,6 +64,7 @@ const buildToc = (
 };
 
 export const BlogPost = ({ blog }: { blog: Blog }) => {
+  const { open: openWaitlist } = useWaitlist();
   const { html, toc } = useMemo(() => {
     const withIds = buildToc(blog.content);
     return { html: sanitize(withIds.html), toc: withIds.toc };
@@ -194,21 +196,29 @@ export const BlogPost = ({ blog }: { blog: Blog }) => {
             }
           >
             {toc.length > 0 && (
-              <div className="rounded-[var(--m-r-lg)] border border-[var(--m-border)] bg-[var(--m-surface)] p-6">
-                <div className="text-[14.5px] font-semibold tracking-[-0.01em] text-[var(--m-ink-1)]">
+              <div className="rounded-[var(--m-r-lg)] border border-[var(--m-border)] bg-[var(--m-surface)] p-4">
+                <div className="text-[12.5px] font-semibold uppercase tracking-[0.12em] text-[var(--m-ink-3)]">
                   Table of Contents
                 </div>
-                <ul className="mt-4 space-y-1">
+                <ul className="mt-3 space-y-0.5 border-l border-[var(--m-border)] pl-3">
                   {toc.map((t) => {
                     const active = activeId === t.id;
                     return (
-                      <li key={t.id}>
+                      <li key={t.id} className="relative">
+                        {/* Acid accent strip on the active item — replaces the
+                            full-pill background so the TOC stays compact. */}
+                        {active ? (
+                          <span
+                            aria-hidden
+                            className="absolute -left-3 top-0 bottom-0 w-[2px] rounded-full bg-[var(--m-forest-700)]"
+                          />
+                        ) : null}
                         <a
                           href={`#${t.id}`}
-                          className={`block rounded-[8px] px-3 py-2 text-[13px] leading-snug transition ${
+                          className={`block rounded-[6px] px-2 py-1 text-[12.5px] leading-[1.35] transition ${
                             active
-                              ? "bg-[var(--m-forest-700)] text-white"
-                              : "text-[var(--m-ink-3)] hover:bg-[var(--m-canvas-2)] hover:text-[var(--m-ink-1)]"
+                              ? "font-semibold text-[var(--m-ink-1)]"
+                              : "text-[var(--m-ink-3)] hover:text-[var(--m-ink-1)]"
                           }`}
                         >
                           {t.text}
@@ -239,6 +249,7 @@ export const BlogPost = ({ blog }: { blog: Blog }) => {
                   Owned fan CRM, exportable
                 </li>
               </ul>
+              {/* Pre-launch: signup CTA hidden until dashboard reopens.
               <Link
                 href="/signup"
                 className="mt-5 inline-flex w-full items-center justify-center gap-1.5 rounded-full bg-[var(--m-forest-700)] px-4 py-2.5 text-[13.5px] font-semibold text-white transition hover:bg-[var(--m-forest-800)]"
@@ -246,6 +257,15 @@ export const BlogPost = ({ blog }: { blog: Blog }) => {
                 Get my event rate
                 <ArrowUpRight size={14} />
               </Link>
+              */}
+              <button
+                type="button"
+                onClick={() => openWaitlist("blog-sidebar")}
+                className="mt-5 inline-flex w-full items-center justify-center gap-1.5 rounded-full bg-[var(--m-forest-700)] px-4 py-2.5 text-[13.5px] font-semibold text-white transition hover:bg-[var(--m-forest-800)]"
+              >
+                Join the waitlist
+                <ArrowUpRight size={14} />
+              </button>
             </div>
           </div>
         </aside>

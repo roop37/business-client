@@ -13,7 +13,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: "Contact Hoizr — Indian event ticketing & marketing platform",
     description:
-      "Get your event-specific commission quote. Quick onboarding and same-day verification. Email hello@hoizr.in or fill the form.",
+      "Get your event-specific commission quote. Quick onboarding and same-day verification. Email contact@hoizr.com or fill the form.",
     url: "/contact",
     type: "website",
   },
