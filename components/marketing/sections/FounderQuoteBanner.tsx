@@ -59,32 +59,38 @@ export const FounderQuoteBanner = () => (
         From the founder
       </span>
 
-      <blockquote className="mt-7">
+      <blockquote className="relative mt-7">
+        {/* Opening quote mark — Q1.png, decorative anchor at top-left. */}
+        <BlurImage
+          src="/marketing/utils/Q1.png"
+          alt=""
+          aria-hidden
+          width={260}
+          height={260}
+          className="pointer-events-none absolute left-0 -top-2 h-[42px] w-[42px] opacity-90 sm:-top-4 sm:h-[58px] sm:w-[58px] md:-top-6 md:left-2 md:h-[78px] md:w-[78px]"
+          draggable={false}
+        />
         <p
-          className="mx-auto max-w-[920px] text-balance font-semibold leading-[1.18] tracking-[-0.018em] text-white"
+          className="mx-auto max-w-[920px] text-balance px-10 font-semibold leading-[1.18] tracking-[-0.018em] text-white sm:px-14 md:px-20"
           style={{
             fontFamily: "var(--m-font-display)",
             fontSize: "clamp(26px, 4.4vw, 50px)",
           }}
         >
-          <span
-            aria-hidden
-            className="mr-2 inline-block translate-y-[0.08em] text-[var(--m-acid)]"
-            style={{ fontSize: "1.1em", lineHeight: 1 }}
-          >
-            &ldquo;
-          </span>
           Event organisers and venues should focus on their thing — Hoizr
           handles the rest.
-          <span
-            aria-hidden
-            className="ml-2 inline-block translate-y-[0.08em] text-[var(--m-acid)]"
-            style={{ fontSize: "1.1em", lineHeight: 1 }}
-          >
-            &rdquo;
-          </span>
         </p>
-        <footer className="mt-8 flex flex-col items-center gap-1.5 text-white/85">
+        {/* Closing quote mark — Q2.png, decorative anchor at bottom-right. */}
+        <BlurImage
+          src="/marketing/utils/Q2.png"
+          alt=""
+          aria-hidden
+          width={260}
+          height={260}
+          className="pointer-events-none absolute right-0 -bottom-2 h-[42px] w-[42px] opacity-90 sm:-bottom-4 sm:h-[58px] sm:w-[58px] md:-bottom-6 md:right-2 md:h-[78px] md:w-[78px]"
+          draggable={false}
+        />
+        <footer className="mt-10 flex flex-col items-center gap-1.5 text-white/85">
           <span className="inline-block h-px w-12 bg-[var(--m-acid)] opacity-80" />
           <div className="text-[15px] font-semibold tracking-tight">
             Sanbedan Paul

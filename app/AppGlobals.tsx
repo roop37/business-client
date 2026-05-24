@@ -1,5 +1,6 @@
 "use client";
 
+import { PostHogAnalytics } from "@/components/analytics/PostHogProvider";
 import PayoutModals from "@/components/common/payout/PayoutModals";
 import Toast from "@/components/common/toast/toast";
 import { WaitlistProvider } from "@/components/marketing/waitlist/WaitlistContext";
@@ -29,13 +30,15 @@ export const AppGlobals = ({ children }: { children: React.ReactNode }) => {
   }, []);
 
   return (
-    <WaitlistProvider>
-      <NextNProgress color="#191C24" />
-      {children}
-      <PayoutModals />
-      {toastData ? (
-        <Toast message={toastData.message} type={toastData.type} />
-      ) : null}
-    </WaitlistProvider>
+    <PostHogAnalytics>
+      <WaitlistProvider>
+        <NextNProgress color="#191C24" />
+        {children}
+        <PayoutModals />
+        {toastData ? (
+          <Toast message={toastData.message} type={toastData.type} />
+        ) : null}
+      </WaitlistProvider>
+    </PostHogAnalytics>
   );
 };

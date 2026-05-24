@@ -1,7 +1,7 @@
 "use client";
 
 import { AnimatePresence, motion } from "framer-motion";
-import { CheckCircle2, Loader2, X } from "lucide-react";
+import { ArrowRight, CheckCircle2, Loader2, X } from "lucide-react";
 import { useEffect, useId, useState } from "react";
 
 type Role = "host" | "event-org" | "promoter" | "other";
@@ -45,11 +45,13 @@ export const WaitlistModal = ({
   const nameId = useId();
   const emailId = useId();
   const phoneId = useId();
+  const noteId = useId();
 
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
   const [role, setRole] = useState<Role | null>(null);
+  const [note, setNote] = useState("");
   const [status, setStatus] = useState<
     "idle" | "submitting" | "success" | "error"
   >("idle");
@@ -98,7 +100,10 @@ export const WaitlistModal = ({
       setErrorMsg("That email doesn't look right.");
       return;
     }
-    if (phone.trim().length < 7) {
+    // `phone` holds the digits the user typed after the locked +91
+    // prefix. Mobile numbers in India are 10 digits; accept 7+ to be
+    // forgiving of intentional landlines/foreign formats.
+    if (phone.replace(/\D/g, "").length < 7) {
       setErrorMsg("Please share a contactable phone number.");
       return;
     }
@@ -117,8 +122,11 @@ export const WaitlistModal = ({
         body: JSON.stringify({
           name: name.trim(),
           email: email.trim().toLowerCase(),
-          phone: phone.trim(),
+          // Re-attach the locked +91 country code so the API + email
+          // logs a complete, dialable number.
+          phone: `+91 ${phone.replace(/\D/g, "")}`,
           role,
+          note: note.trim() || undefined,
           source,
         }),
       });
@@ -131,6 +139,7 @@ export const WaitlistModal = ({
       setEmail("");
       setPhone("");
       setRole(null);
+      setNote("");
     } catch (err) {
       setStatus("error");
       setErrorMsg(
@@ -163,7 +172,7 @@ export const WaitlistModal = ({
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 20, scale: 0.97 }}
             transition={{ duration: 0.32, ease: EASE }}
-            className="relative z-10 flex max-h-[92vh] w-full max-w-[520px] flex-col overflow-hidden rounded-[24px] border border-white/10 bg-[#0a0a0a] text-white shadow-[0_30px_80px_rgba(0,0,0,0.5)]"
+            className="relative z-10 flex max-h-[92vh] w-full max-w-[720px] flex-col overflow-hidden rounded-[24px] border border-white/10 bg-[#0a0a0a] text-white shadow-[0_30px_80px_rgba(0,0,0,0.5)]"
           >
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
@@ -213,38 +222,40 @@ export const WaitlistModal = ({
                   </p>
 
                   <form onSubmit={submit} className="mt-6 space-y-5">
+                    {/* Name on its own row (always full-width). Email +
+                        phone pair on a single row at sm+ to make the
+                        wider modal feel intentional. */}
                     <Field
                       id={nameId}
                       label="Your name"
-                      placeholder="Riya Mehta"
+                      placeholder="Enter your name"
                       value={name}
                       onChange={setName}
                       autoComplete="name"
                     />
-                    <Field
-                      id={emailId}
-                      label="Email"
-                      type="email"
-                      placeholder="you@venue.in"
-                      value={email}
-                      onChange={setEmail}
-                      autoComplete="email"
-                    />
-                    <Field
-                      id={phoneId}
-                      label="Phone (with country code)"
-                      type="tel"
-                      placeholder="+91 98xxxxxxxx"
-                      value={phone}
-                      onChange={setPhone}
-                      autoComplete="tel"
-                    />
+                    <div className="grid gap-5 sm:grid-cols-2">
+                      <Field
+                        id={emailId}
+                        label="Email"
+                        type="email"
+                        placeholder="Enter your email"
+                        value={email}
+                        onChange={setEmail}
+                        autoComplete="email"
+                      />
+                      <PhoneField
+                        id={phoneId}
+                        label="Phone"
+                        value={phone}
+                        onChange={setPhone}
+                      />
+                    </div>
 
                     <div>
                       <label className="block text-[12px] font-semibold uppercase tracking-[0.12em] text-white/55">
                         I am a…
                       </label>
-                      <div className="mt-3 grid gap-2">
+                      <div className="mt-3 grid gap-2 sm:grid-cols-2">
                         {ROLE_OPTIONS.map((option) => {
                           const selected = role === option.value;
                           return (
@@ -252,10 +263,10 @@ export const WaitlistModal = ({
                               type="button"
                               key={option.value}
                               onClick={() => setRole(option.value)}
-                              className={`group rounded-2xl border px-4 py-3 text-left transition ${
+                              className={`group flex h-full flex-col rounded-2xl border px-4 py-3 text-left transition ${
                                 selected
-                                  ? "border-[var(--m-acid)] bg-[rgba(214,255,63,0.10)]"
-                                  : "border-white/10 bg-white/[0.04] hover:border-white/25 hover:bg-white/[0.07]"
+                                  ? "border-[var(--m-acid)] bg-[#0e120a] shadow-[inset_0_0_0_1px_rgba(214,255,63,0.18)]"
+                                  : "border-white/10 bg-[#0a0a0c] hover:border-white/25 hover:bg-[#101013]"
                               }`}
                             >
                               <div className="flex items-center justify-between gap-2">
@@ -265,7 +276,7 @@ export const WaitlistModal = ({
                                 {selected ? (
                                   <CheckCircle2
                                     size={16}
-                                    className="text-[var(--m-acid)]"
+                                    className="shrink-0 text-[var(--m-acid)]"
                                   />
                                 ) : null}
                               </div>
@@ -278,6 +289,38 @@ export const WaitlistModal = ({
                       </div>
                     </div>
 
+                    {/* Optional note — surfaces an explanatory textarea
+                        always (so hosts can leave context like the
+                        venue name or upcoming event). Slightly more
+                        prominent when "Other" is selected. */}
+                    <div>
+                      <label
+                        htmlFor={noteId}
+                        className="flex items-baseline justify-between text-[12px] font-semibold uppercase tracking-[0.12em] text-white/55"
+                      >
+                        <span>
+                          {role === "other"
+                            ? "Tell us about yourself"
+                            : "Anything we should know? (optional)"}
+                        </span>
+                        <span className="text-[10.5px] font-medium normal-case tracking-normal text-white/40">
+                          {note.length}/500
+                        </span>
+                      </label>
+                      <textarea
+                        id={noteId}
+                        value={note}
+                        onChange={(e) => setNote(e.target.value.slice(0, 500))}
+                        rows={3}
+                        placeholder={
+                          role === "other"
+                            ? "Tell us about your team — artist crew, agency, vendor, school, anything we missed."
+                            : "Upcoming event, venue name, scale, or a question. Anything that helps us prioritise."
+                        }
+                        className="mt-2 block w-full resize-y rounded-xl border border-white/10 bg-white/[0.05] px-4 py-3 text-[14px] leading-[1.5] text-white placeholder-white/35 outline-none transition focus:border-[var(--m-acid)] focus:bg-white/[0.08]"
+                      />
+                    </div>
+
                     {errorMsg ? (
                       <div className="rounded-xl border border-red-400/30 bg-red-500/10 px-3 py-2 text-[12.5px] text-red-200">
                         {errorMsg}
@@ -287,23 +330,24 @@ export const WaitlistModal = ({
                     <button
                       type="submit"
                       disabled={status === "submitting"}
-                      className="hm-btn hm-btn-acid w-full justify-center disabled:cursor-not-allowed disabled:opacity-70"
+                      className="hm-btn hm-btn-acid w-full justify-center !py-3.5 text-[15px] disabled:cursor-not-allowed disabled:opacity-70"
                     >
                       {status === "submitting" ? (
                         <>
-                          <Loader2
-                            size={16}
-                            className="animate-spin"
-                          />
-                          Sending…
+                          <Loader2 size={17} className="animate-spin" />
+                          Sending your details…
                         </>
                       ) : (
-                        "Join the waitlist"
+                        <>
+                          Confirm &amp; join the Hoizr waitlist
+                          <ArrowRight size={17} />
+                        </>
                       )}
                     </button>
 
                     <p className="text-center text-[11.5px] text-white/50">
-                      We&rsquo;ll only use these to onboard you. No marketing list.
+                      We&rsquo;ll only use these to onboard you. No marketing
+                      list. Reply to your confirmation email anytime.
                     </p>
                   </form>
                 </>
@@ -349,6 +393,55 @@ const Field = ({
       autoComplete={autoComplete}
       className="mt-2 block w-full rounded-xl border border-white/10 bg-white/[0.05] px-4 py-3 text-[15px] text-white placeholder-white/40 outline-none transition focus:border-[var(--m-acid)] focus:bg-white/[0.08]"
     />
+  </div>
+);
+
+/**
+ * Phone input with a locked "+91" country-code prefix. The `value`
+ * state only ever holds the digits the user typed; the parent
+ * re-attaches the prefix before submitting so the email logs read
+ * cleanly. Non-digit keystrokes are silently stripped and the input
+ * is capped at 10 digits — enough for any Indian mobile number.
+ */
+const PhoneField = ({
+  id,
+  label,
+  value,
+  onChange,
+}: {
+  id: string;
+  label: string;
+  value: string;
+  onChange: (v: string) => void;
+}) => (
+  <div>
+    <label
+      htmlFor={id}
+      className="block text-[12px] font-semibold uppercase tracking-[0.12em] text-white/55"
+    >
+      {label}
+    </label>
+    <div className="mt-2 flex items-stretch overflow-hidden rounded-xl border border-white/10 bg-white/[0.05] transition focus-within:border-[var(--m-acid)] focus-within:bg-white/[0.08]">
+      <span
+        aria-hidden
+        className="flex select-none items-center border-r border-white/10 bg-white/[0.06] px-3 text-[15px] font-medium text-white/70"
+      >
+        +91
+      </span>
+      <input
+        id={id}
+        type="tel"
+        inputMode="numeric"
+        autoComplete="tel-national"
+        placeholder="98xxxxxxxx"
+        value={value}
+        onChange={(e) => {
+          const digits = e.target.value.replace(/\D/g, "").slice(0, 10);
+          onChange(digits);
+        }}
+        className="block w-full bg-transparent px-3 py-3 text-[15px] text-white placeholder-white/40 outline-none"
+      />
+    </div>
   </div>
 );
 
