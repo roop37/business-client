@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { MARKETING_PILLARS } from "../data/nav-products";
 import { getProductStoryImageSrc } from "../product/product-story-images";
+import { BlurImage } from "../visuals/BlurImage";
 
 /**
  * ProductStoryGallery — compact one-row infinite marquee.
@@ -143,11 +144,12 @@ const MarqueeTile = ({ tile }: { tile: Tile }) => {
         whileHover={{ y: -3 }}
         className="group relative flex h-[384px] w-[216px] shrink-0 flex-col justify-between overflow-hidden rounded-[24px] px-5 py-6 text-white md:h-[432px] md:w-[243px]"
       >
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
+        <BlurImage
           src={METALLIC_BG}
           alt=""
           aria-hidden
+          fill
+          sizes="(max-width: 720px) 216px, 243px"
           className="absolute inset-0 h-full w-full object-cover"
           draggable={false}
         />
@@ -192,11 +194,12 @@ const MarqueeTile = ({ tile }: { tile: Tile }) => {
       whileHover={{ y: -3 }}
       className="group relative flex h-[384px] w-[216px] shrink-0 flex-col justify-end overflow-hidden rounded-[24px] text-white md:h-[432px] md:w-[243px]"
     >
-      {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img
+      <BlurImage
         src={tile.image!}
         alt=""
         aria-hidden
+        fill
+        sizes="(max-width: 720px) 216px, 243px"
         className="absolute inset-0 h-full w-full object-cover transition-transform duration-700 ease-out group-hover:scale-[1.06]"
         draggable={false}
       />

@@ -15,7 +15,7 @@ const HELP_LANES = [
     icon: MessagesSquare,
     title: "Talk to the team",
     body: "Hoizr's support team is staffed across IST hours and replies same-day for active hosts.",
-    cta: { label: "Email support", href: "mailto:support@hoizr.in" },
+    cta: { label: "Email support", href: "mailto:contact@hoizr.com" },
   },
   {
     icon: MailQuestion,
@@ -34,23 +34,23 @@ const HELP_LANES = [
 const COMMON_QUERIES = [
   {
     q: "I'm a host. How do I reach support during my event?",
-    a: "Email support@hoizr.in or use the in-dashboard help button. The team monitors both channels across IST hours and during weekend show windows.",
+    a: "Email contact@hoizr.com or use the in-dashboard help button. The team monitors both channels across IST hours and during weekend show windows.",
   },
   {
     q: "I'm a customer who bought a ticket. Who do I contact?",
-    a: "For ticket queries and refunds, reach the customer support team at hello@hoizr.in or the contact channel inside your order page.",
+    a: "For ticket queries and refunds, reach contact@hoizr.com or the contact channel inside your order page.",
   },
   {
     q: "I'm a journalist or press contact.",
-    a: "Write to press@hoizr.in and the team will share the press kit and interview path.",
+    a: "Write to contact@hoizr.com and the team will share the press kit and interview path.",
   },
   {
     q: "I'm thinking of partnering with Hoizr.",
-    a: "Email partners@hoizr.in with what you're building — agency, venue, collective, or operator network.",
+    a: "Email contact@hoizr.com with what you're building — agency, venue, collective, or operator network.",
   },
   {
     q: "Something looks broken on this website.",
-    a: "Send a quick note to hello@hoizr.in with the URL and a screenshot if possible. The engineering team triages these the same day.",
+    a: "Send a quick note to tech@hoizr.com with the URL and a screenshot if possible. The engineering team triages these the same day.",
   },
 ];
 

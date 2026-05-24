@@ -5,6 +5,7 @@ import { ArrowRight, Check, PlayCircle, Sparkles } from "lucide-react";
 import Link from "next/link";
 import { useRef } from "react";
 import { ProductContent } from "../data/product-content";
+import { useWaitlist } from "../waitlist/WaitlistContext";
 import { ProductVisual } from "./ProductVisual";
 
 const EASE = [0.2, 0.6, 0.2, 1] as const;
@@ -17,6 +18,7 @@ const wordSplit = (s: string): string[] =>
 
 export const ProductHero = ({ content }: { content: ProductContent }) => {
   const sectionRef = useRef<HTMLDivElement>(null);
+  const { open: openWaitlist } = useWaitlist();
   // Parallax — visual side drifts up slowly as the hero scrolls past.
   const { scrollYProgress } = useScroll({
     target: sectionRef,
@@ -122,11 +124,11 @@ export const ProductHero = ({ content }: { content: ProductContent }) => {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.7, ease: EASE, delay: 0.45 }}
           >
+            {/* Pre-launch: signup CTA hidden until dashboard reopens.
             <Link
               href="/signup"
               className="hm-btn hm-btn-primary group relative overflow-hidden"
             >
-              {/* Animated sheen passes across the button on hover. */}
               <span
                 aria-hidden
                 className="pointer-events-none absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/35 to-transparent transition-transform duration-700 ease-out group-hover:translate-x-full"
@@ -134,6 +136,20 @@ export const ProductHero = ({ content }: { content: ProductContent }) => {
               <span className="relative">Get my event rate</span>
               <ArrowRight size={16} className="relative" />
             </Link>
+            */}
+            <button
+              type="button"
+              onClick={() => openWaitlist("product-hero")}
+              className="hm-btn hm-btn-primary group relative overflow-hidden"
+            >
+              {/* Animated sheen passes across the button on hover. */}
+              <span
+                aria-hidden
+                className="pointer-events-none absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/35 to-transparent transition-transform duration-700 ease-out group-hover:translate-x-full"
+              />
+              <span className="relative">Join the waitlist</span>
+              <ArrowRight size={16} className="relative" />
+            </button>
             <Link
               href="/pricing"
               className="hm-btn hm-btn-ghost border border-[var(--m-border)]"

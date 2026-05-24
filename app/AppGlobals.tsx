@@ -2,6 +2,7 @@
 
 import PayoutModals from "@/components/common/payout/PayoutModals";
 import Toast from "@/components/common/toast/toast";
+import { WaitlistProvider } from "@/components/marketing/waitlist/WaitlistContext";
 import useGlobalStore from "@/store/global";
 import NextNProgress from "nextjs-progressbar";
 import { useEffect } from "react";
@@ -28,13 +29,13 @@ export const AppGlobals = ({ children }: { children: React.ReactNode }) => {
   }, []);
 
   return (
-    <>
+    <WaitlistProvider>
       <NextNProgress color="#191C24" />
       {children}
       <PayoutModals />
       {toastData ? (
         <Toast message={toastData.message} type={toastData.type} />
       ) : null}
-    </>
+    </WaitlistProvider>
   );
 };

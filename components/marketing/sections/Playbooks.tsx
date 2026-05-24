@@ -3,6 +3,7 @@
 import { motion } from "framer-motion";
 import { ArrowUpRight, BookOpen } from "lucide-react";
 import Link from "next/link";
+import { BlurImage } from "../visuals/BlurImage";
 
 const EASE = [0.2, 0.7, 0.2, 1] as const;
 
@@ -216,10 +217,11 @@ const CompactBlogCard = ({
         </div>
       </div>
       <div className="relative min-h-full overflow-hidden bg-[var(--m-canvas-2)]">
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
+        <BlurImage
           src={blog.image}
           alt={blog.title}
+          fill
+          sizes="(max-width: 1100px) 30vw, 200px"
           className="absolute inset-0 h-full w-full object-cover transition-transform duration-700 ease-out group-hover:scale-105"
           draggable={false}
         />
@@ -317,11 +319,12 @@ const PhotoCard = ({
         {/* Background image — sized to fill, grayscale boosted, scales
             on hover. No border, rounded radius lives on the parent. */}
         {playbook.image ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img
+          <BlurImage
             src={playbook.image}
             alt=""
             aria-hidden
+            fill
+            sizes="(max-width: 1100px) 100vw, 360px"
             className="absolute inset-0 h-full w-full object-cover brightness-105 transition-transform duration-1000 ease-out group-hover:scale-105"
             draggable={false}
           />

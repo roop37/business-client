@@ -14,9 +14,11 @@ export type LegalContent = {
   sections: LegalSection[];
 };
 
-const SUPPORT_EMAIL = "support@hoizr.com";
-const PRIVACY_EMAIL = "privacy@hoizr.com";
-const LEGAL_EMAIL = "legal@hoizr.com";
+// Pre-launch: single contact address for all customer-facing channels.
+// tech@hoizr.com is reserved for engineering / security disclosures.
+const SUPPORT_EMAIL = "contact@hoizr.com";
+const PRIVACY_EMAIL = "contact@hoizr.com";
+const LEGAL_EMAIL = "contact@hoizr.com";
 
 const LEGAL_CONTENT: Record<LegalSlug, LegalContent> = {
   privacy: {

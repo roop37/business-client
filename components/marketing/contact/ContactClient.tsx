@@ -3,6 +3,7 @@
 import { motion } from "framer-motion";
 import { ArrowRight, CheckCircle2, Loader2, Mail, MapPin, Sparkles } from "lucide-react";
 import { useState } from "react";
+import { useWaitlist } from "../waitlist/WaitlistContext";
 
 const EASE = [0.2, 0.6, 0.2, 1] as const;
 
@@ -72,7 +73,7 @@ export const ContactClient = () => {
       await new Promise((r) => setTimeout(r, 700));
       setSubmitted(true);
     } catch (err) {
-      setError("Couldn't send right now. Try emailing hello@hoizr.in directly.");
+      setError("Couldn't send right now. Try emailing contact@hoizr.com directly.");
     } finally {
       setSubmitting(false);
     }
@@ -99,10 +100,10 @@ export const ContactClient = () => {
           A real human from the Hoizr team will follow up within one working
           day. If you need us sooner, email{" "}
           <a
-            href="mailto:hello@hoizr.in"
+            href="mailto:contact@hoizr.com"
             className="font-semibold text-[var(--m-forest-700)] hover:underline"
           >
-            hello@hoizr.in
+            contact@hoizr.com
           </a>
           .
         </p>
@@ -205,6 +206,7 @@ export const ContactClient = () => {
 };
 
 export const ContactSidePanel = () => {
+  const { open: openWaitlist } = useWaitlist();
   return (
     <div className="space-y-4">
       <div className="rounded-[var(--m-r-lg)] border border-[var(--m-border)] bg-[var(--m-canvas-2)] p-6">
@@ -217,10 +219,10 @@ export const ContactSidePanel = () => {
         <p className="mt-1.5 text-[13.5px] leading-relaxed text-[var(--m-ink-3)]">
           Write to{" "}
           <a
-            href="mailto:hello@hoizr.in"
+            href="mailto:contact@hoizr.com"
             className="font-semibold text-[var(--m-forest-700)] hover:underline"
           >
-            hello@hoizr.in
+            contact@hoizr.com
           </a>{" "}
           and a real human will reply within one working day.
         </p>
@@ -245,15 +247,24 @@ export const ContactSidePanel = () => {
             <Sparkles size={12} className="text-[var(--m-acid)]" /> Ready to ship?
           </div>
           <div className="mt-4 text-[14.5px] font-semibold text-white">
-            Skip the form, get your event rate.
+            Skip the form, join the waitlist.
           </div>
           <p className="mt-1.5 text-[13px] leading-relaxed text-white/75">
-            Already know the event you want to publish? Sign up and the AI will
-            quote your rate inside the dashboard.
+            We&rsquo;re onboarding hosts in waves. Drop your details and
+            we&rsquo;ll reach out the moment your slot opens.
           </p>
+          {/* Pre-launch: signup CTA hidden until dashboard reopens.
           <a href="/signup" className="hm-btn hm-btn-acid mt-4">
             Get my event rate <ArrowRight size={16} />
           </a>
+          */}
+          <button
+            type="button"
+            onClick={() => openWaitlist("contact-sidepanel")}
+            className="hm-btn hm-btn-acid mt-4"
+          >
+            Join the waitlist <ArrowRight size={16} />
+          </button>
         </div>
       </div>
     </div>

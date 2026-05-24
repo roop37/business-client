@@ -8,13 +8,15 @@ import { DiscoveryBento } from "@/components/marketing/sections/DiscoveryBento";
 import { FAQ } from "@/components/marketing/sections/FAQ";
 import { FinalCTA } from "@/components/marketing/sections/FinalCTA";
 import { FounderCard } from "@/components/marketing/sections/FounderCard";
+import { FounderQuoteBanner } from "@/components/marketing/sections/FounderQuoteBanner";
 import { Hero } from "@/components/marketing/sections/Hero";
 import { OperationsBento } from "@/components/marketing/sections/OperationsBento";
 import { PillarGrid } from "@/components/marketing/sections/PillarGrid";
 import { Playbooks } from "@/components/marketing/sections/Playbooks";
 import { ProductStoryGallery } from "@/components/marketing/sections/ProductStoryGallery";
 import { RepeatFansBento } from "@/components/marketing/sections/RepeatFansBento";
-import { ValueMarquee } from "@/components/marketing/sections/ValueMarquee";
+// ValueMarquee retired in favour of the founder quote banner.
+// import { ValueMarquee } from "@/components/marketing/sections/ValueMarquee";
 
 export const metadata: Metadata = {
   title:
@@ -48,7 +50,7 @@ export default function Home() {
   return (
     <MarketingShell>
       <Hero />
-      <ValueMarquee />
+      <FounderQuoteBanner />
       <PillarGrid />
       <ProductStoryGallery />
       <AiSeoPanel />

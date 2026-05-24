@@ -3,6 +3,7 @@
 import { motion } from "framer-motion";
 import { ArrowRight, PlayCircle } from "lucide-react";
 import Link from "next/link";
+import { useWaitlist } from "../waitlist/WaitlistContext";
 
 const EASE = [0.2, 0.6, 0.2, 1] as const;
 
@@ -11,6 +12,7 @@ const EASE = [0.2, 0.6, 0.2, 1] as const;
  * and two CTAs. Sits directly above the footer.
  */
 export const FinalCTA = () => {
+  const { open: openWaitlist } = useWaitlist();
   return (
     <section className="hm-section">
       <motion.div
@@ -49,10 +51,20 @@ export const FinalCTA = () => {
         </p>
 
         <div className="mt-10 flex items-center justify-center gap-3 flex-wrap">
+          {/* Pre-launch: signup CTA hidden; waitlist trigger in its place.
           <Link href="/signup" className="hm-btn hm-btn-acid">
             Get my event rate
             <ArrowRight size={16} />
           </Link>
+          */}
+          <button
+            type="button"
+            onClick={() => openWaitlist("final-cta")}
+            className="hm-btn hm-btn-acid"
+          >
+            Join the waitlist
+            <ArrowRight size={16} />
+          </button>
           <Link
             href="/pricing"
             className="hm-btn hm-btn-on-dark border border-white/15"
