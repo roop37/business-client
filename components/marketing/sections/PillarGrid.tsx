@@ -31,7 +31,7 @@ export const PillarGrid = () => {
         <p className="hm-lead mt-5 max-w-[640px]">
           Four pillars, one platform. Wire your discovery, your sales engine,
           your fan relationship, and your night-of operations into a single
-          stack built for Indian live music.
+          stack built for Indian live nights.
         </p>
       </div>
 

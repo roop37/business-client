@@ -11,7 +11,7 @@ type ProductVisualProps = {
 };
 
 const FALLBACK_STORY_IMAGES: Record<string, string> = {
-  "reviews-engine": "/marketing/brand/product-reviews-engine.png",
+  "reviews-engine": "/marketing/product/event-review-platform.png",
 };
 
 const PRODUCT_VISUAL_IMAGES: Record<string, string> = {

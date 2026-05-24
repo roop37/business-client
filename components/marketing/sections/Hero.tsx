@@ -38,10 +38,10 @@ export const Hero = () => {
           <span className="hm-chip max-w-full flex-wrap justify-center text-center leading-snug">
             <span className="hm-chip-dot shrink-0" />
             <span className="font-semibold text-[var(--m-ink-1)]">
-              For India&apos;s live-music hosts
+              For India&apos;s nightlife hosts
             </span>
             <span className="hidden text-[var(--m-ink-4)] sm:inline">
-              : concerts · festivals · clubs
+              : comedy · clubbing · parties · venues
             </span>
           </span>
         </motion.div>

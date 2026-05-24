@@ -33,7 +33,7 @@ const PLAYBOOKS: Playbook[] = [
   {
     kicker: "Manifesto",
     title: "Playbooks from the operator side.",
-    body: "Sharper from the next weekend onward. Short, opinionated guides written for India's clubs, festivals, comedy promoters, and live music hosts.",
+    body: "Sharper from the next weekend onward. Short, opinionated guides written for India's clubs, festivals, comedy promoters, venues, and party crews.",
     href: "/blog",
     neon: true,
   },

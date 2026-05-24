@@ -116,6 +116,9 @@ export const metadata: Metadata = {
       "en-IN": "/",
       "x-default": "/",
     },
+    types: {
+      "application/rss+xml": "/rss.xml",
+    },
   },
   openGraph: {
     type: "website",
@@ -188,6 +191,14 @@ export default function RootLayout({
 }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="en">
+      <head>
+        <link
+          rel="alternate"
+          type="application/rss+xml"
+          title="Hoizr Business Blog RSS"
+          href="/rss.xml"
+        />
+      </head>
       <body
         className={`${font.className} ${karla.variable} ${tenor.variable} ${libre.variable} ${figtree.variable} ${bodoniModa.variable} ${manrope.variable}`}
       >

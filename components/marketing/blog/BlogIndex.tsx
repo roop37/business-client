@@ -49,7 +49,7 @@ export const BlogIndex = () => {
         </h1>
         <p className="mt-5 max-w-[620px] text-[17px] leading-relaxed text-[var(--m-ink-3)]">
           Fresh insights and practical playbooks for modern event hosts, venues,
-          and live-music operators in India.
+          and nightlife operators in India.
         </p>
       </div>
 

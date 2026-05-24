@@ -1,14 +1,16 @@
 import type { Metadata } from "next";
-import Script from "next/script";
 import { BlogIndex } from "@/components/marketing/blog/BlogIndex";
 import { blogs } from "@/components/marketing/blog/blog-data";
 import { MarketingShell } from "@/components/marketing/MarketingShell";
-import { BreadcrumbJsonLd } from "@/components/marketing/seo/SchemaJsonLd";
+import {
+  BreadcrumbJsonLd,
+  JsonLdScript,
+} from "@/components/marketing/seo/SchemaJsonLd";
 
 export const metadata: Metadata = {
   title: "Blog — for Indian event organizers, venues & promoters · Hoizr",
   description:
-    "Insights and playbooks for Indian event organizers, venues, comedy promoters, and live-music hosts. Migration guides, AI pricing studies, fan-CRM tactics, and door-ops field notes.",
+    "Insights and playbooks for Indian event organizers, venues, comedy promoters, nightlife hosts, and party crews. Migration guides, AI pricing studies, fan-CRM tactics, and door-ops field notes.",
   keywords: [
     "event organizer blog India",
     "venue marketing tips India",
@@ -33,6 +35,14 @@ export const metadata: Metadata = {
     url: "/blog",
     locale: "en_IN",
     siteName: "Hoizr",
+    images: [
+      {
+        url: "/opengraph-image.webp",
+        width: 1200,
+        height: 630,
+        alt: "Hoizr Blog for Indian event organizers and venues",
+      },
+    ],
   },
   twitter: {
     card: "summary_large_image",
@@ -41,6 +51,7 @@ export const metadata: Metadata = {
     title: "Hoizr Blog — for Indian event organizers & venues",
     description:
       "Migration playbooks, AI pricing studies, fan-CRM tactics, and operator field notes.",
+    images: ["/opengraph-image.webp"],
   },
 };
 
@@ -57,7 +68,7 @@ export default function BlogPage() {
     "@id": `${SITE_URL}/blog`,
     name: "Hoizr Blog",
     description:
-      "Insights and playbooks for Indian event organizers, venues, comedy promoters, and live-music hosts.",
+      "Insights and playbooks for Indian event organizers, venues, comedy promoters, nightlife hosts, and party crews.",
     url: `${SITE_URL}/blog`,
     inLanguage: "en-IN",
     publisher: {
@@ -87,13 +98,10 @@ export default function BlogPage() {
 
   return (
     <MarketingShell>
-      <Script
+      <JsonLdScript
         id="hoizr-blog-collection-jsonld"
-        type="application/ld+json"
-        strategy="afterInteractive"
-      >
-        {JSON.stringify(blogJsonLd)}
-      </Script>
+        data={blogJsonLd}
+      />
       <BreadcrumbJsonLd
         items={[
           { name: "Hoizr", href: "/" },

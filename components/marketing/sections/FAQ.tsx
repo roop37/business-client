@@ -9,7 +9,7 @@ const EASE = [0.2, 0.6, 0.2, 1] as const;
 const ITEMS: { q: string; a: string }[] = [
   {
     q: "Who is Hoizr built for?",
-    a: "Hoizr is built for Indian event organizers, venues, and promoters — clubs, festivals, comedy promoters, live-music hosts, and nightclub operators across Mumbai, Bangalore, Delhi, Pune, Hyderabad, Chennai, and Goa. The platform is tuned to how Indian fans actually book, pay, and show up: WhatsApp-first promotion, guestlist culture, INR per-event settlement, and refund policies that account for monsoon postponements.",
+    a: "Hoizr is built for Indian event organizers, venues, and promoters — clubs, festivals, comedy promoters, party crews, and nightclub operators across Mumbai, Bangalore, Delhi, Pune, Hyderabad, Chennai, and Goa. The platform is tuned to how Indian fans actually book, pay, and show up: WhatsApp-first promotion, guestlist culture, INR per-event settlement, and refund policies that account for monsoon postponements.",
   },
   {
     q: "What's included with Hoizr?",

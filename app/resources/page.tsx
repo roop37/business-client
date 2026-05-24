@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { ArrowUpRight, BookOpen, Compass, Newspaper } from "lucide-react";
+import { ArrowUpRight, BookOpen, Compass, Download, Newspaper } from "lucide-react";
 import { blogs } from "@/components/marketing/blog/blog-data";
 import { MarketingShell } from "@/components/marketing/MarketingShell";
 import { Beliefs } from "@/components/marketing/sections/Beliefs";
@@ -24,6 +24,39 @@ export const metadata: Metadata = {
 };
 
 const FEATURED_BLOGS = blogs.slice(0, 3);
+
+const FLYER_STICKERS = [
+  {
+    title: "Get tickets · black",
+    context: "For light posters, stories, and reels.",
+    href: "/images/flyerstickers/get-ticets-on-black.png",
+  },
+  {
+    title: "Get tickets · white",
+    context: "For dark flyers and high-contrast artwork.",
+    href: "/images/flyerstickers/get-ticets-on-white.png",
+  },
+  {
+    title: "Guestlist · black",
+    context: "For RSVP-first or limited-entry nights.",
+    href: "/images/flyerstickers/guestlist-black.png",
+  },
+  {
+    title: "Guestlist · white",
+    context: "For dark venue posters and club-night reels.",
+    href: "/images/flyerstickers/guestlist-on-whte.png",
+  },
+  {
+    title: "RSVP · black",
+    context: "For invite-led launches and private drops.",
+    href: "/images/flyerstickers/rsvp-on-black.png",
+  },
+  {
+    title: "RSVP · white",
+    context: "For darker flyers with clean sticker contrast.",
+    href: "/images/flyerstickers/rsvp-on-white.png",
+  },
+] as const;
 
 export default function ResourcesPage() {
   return (
@@ -50,7 +83,7 @@ export default function ResourcesPage() {
           </p>
         </div>
 
-        <div className="mt-8 grid grid-cols-1 gap-3 sm:grid-cols-3">
+        <div className="mt-8 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
           <a
             href="#playbooks"
             className="group flex items-center justify-between gap-3 rounded-2xl border border-[var(--m-border)] bg-[var(--m-surface)] p-5 transition hover:border-[var(--m-forest-300)]"
@@ -105,10 +138,82 @@ export default function ResourcesPage() {
               className="shrink-0 text-[var(--m-ink-3)] transition-transform duration-300 group-hover:-translate-y-0.5 group-hover:translate-x-0.5"
             />
           </a>
+          <a
+            href="#stickers"
+            className="group flex items-center justify-between gap-3 rounded-2xl border border-[var(--m-border)] bg-[var(--m-surface)] p-5 transition hover:border-[var(--m-forest-300)]"
+          >
+            <div>
+              <div className="flex items-center gap-2 text-[12px] font-semibold uppercase tracking-[0.12em] text-[var(--m-ink-4)]">
+                <Download size={12} />
+                Stickers
+              </div>
+              <div className="mt-1 text-[14px] font-semibold text-[var(--m-ink-1)]">
+                Download PNGs for flyers
+              </div>
+            </div>
+            <ArrowUpRight
+              size={18}
+              className="shrink-0 text-[var(--m-ink-3)] transition-transform duration-300 group-hover:-translate-y-0.5 group-hover:translate-x-0.5"
+            />
+          </a>
         </div>
       </section>
 
       <Playbooks />
+
+      <section id="stickers" className="hm-section">
+        <div className="flex flex-col gap-5 md:flex-row md:items-end md:justify-between">
+          <div className="max-w-[620px]">
+            <div className="hm-eyebrow inline-flex items-center gap-2">
+              <Download size={12} strokeWidth={2.2} />
+              Flyer stickers
+            </div>
+            <h2 className="hm-h2 mt-3">Hoizr stickers for event artwork.</h2>
+            <p className="hm-lead mt-5 max-w-[540px]">
+              Download transparent PNG stickers for posters, stories, reels,
+              venue screens, and last-mile event announcements.
+            </p>
+          </div>
+        </div>
+
+        <div className="mt-10 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+          {FLYER_STICKERS.map((sticker) => (
+            <article
+              key={sticker.href}
+              className="overflow-hidden rounded-[var(--m-r-xl)] border border-[var(--m-border)] bg-[var(--m-surface)]"
+            >
+              <div className="grid aspect-square place-items-center bg-[linear-gradient(135deg,var(--m-canvas-2),var(--m-forest-900))] p-8">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={sticker.href}
+                  alt={`${sticker.title} Hoizr flyer sticker`}
+                  className="h-full w-full object-contain drop-shadow-[0_18px_32px_rgba(0,0,0,0.28)]"
+                  draggable={false}
+                />
+              </div>
+              <div className="p-5">
+                <h3
+                  className="font-semibold leading-snug text-[var(--m-ink-1)]"
+                  style={{ fontFamily: "var(--m-font-display)" }}
+                >
+                  {sticker.title}
+                </h3>
+                <p className="mt-2 text-[13px] leading-relaxed text-[var(--m-ink-3)]">
+                  {sticker.context}
+                </p>
+                <a
+                  href={sticker.href}
+                  download
+                  className="mt-4 inline-flex items-center gap-2 rounded-full border border-[var(--m-border)] px-4 py-2 text-[12px] font-semibold text-[var(--m-ink-1)] transition hover:border-[var(--m-forest-300)] hover:text-[var(--m-forest-600)]"
+                >
+                  <Download size={14} />
+                  Download PNG
+                </a>
+              </div>
+            </article>
+          ))}
+        </div>
+      </section>
 
       <section id="blogs" className="hm-section">
         <div className="flex flex-col gap-5 md:flex-row md:items-end md:justify-between">

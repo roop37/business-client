@@ -78,7 +78,7 @@ export default function AboutPage() {
             </div>
             <div className="space-y-5 text-[17px] leading-[1.65] text-[var(--m-ink-2)]">
               <p>
-                India&apos;s live-music economy runs on operators who book the
+                India&apos;s nightlife and live-event economy runs on operators who book the
                 lineup, manage the door, run promo, and balance the books —
                 often the same person. The tools they&apos;re handed treat them
                 like a row in a database.
