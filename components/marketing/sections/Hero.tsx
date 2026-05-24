@@ -103,7 +103,7 @@ export const Hero = () => {
             onClick={() => openWaitlist("hero")}
             className="hm-btn hm-btn-primary"
           >
-            Join the waitlist
+            Join the Hoizr waitlist
             <ArrowRight size={16} />
           </button>
           <Link href="/pricing" className="hm-btn hm-btn-ghost border border-[var(--m-border)]">

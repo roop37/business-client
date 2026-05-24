@@ -71,6 +71,7 @@
     "nextjs-progressbar": "^0.0.16",
     "nookies": "^2.5.2",
     "papaparse": "^5.4.1",
+    "posthog-js": "^1.376.0",
     "postprocessing": "^6.39.1",
     "react": "^18",
     "react-beautiful-dnd": "^13.1.1",

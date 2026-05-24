@@ -1,9 +1,9 @@
 "use client";
 
 import { motion, useScroll, useTransform } from "framer-motion";
-import { Quote } from "lucide-react";
 import { useRef } from "react";
 import { ProductContent } from "../data/product-content";
+import { BlurImage } from "../visuals/BlurImage";
 import { getProductStoryImageSrc } from "./product-story-images";
 
 const EASE = [0.2, 0.7, 0.2, 1] as const;
@@ -117,10 +117,14 @@ export const ProductNarrative = ({
             transition={{ duration: 0.8, ease: EASE, delay: 0.25 }}
             className="relative mt-9 rounded-[var(--m-r-lg)] border border-[var(--m-border-strong)] bg-[var(--m-surface-elevated)] p-7 shadow-[var(--m-shadow-card)] md:p-8"
           >
-            <Quote
-              size={22}
-              className="absolute -top-3 left-6 rounded-full bg-[var(--m-acid)] p-1.5 text-[var(--m-forest-900)]"
-              strokeWidth={2.4}
+            <BlurImage
+              src="/marketing/utils/Q1.png"
+              alt=""
+              aria-hidden
+              width={260}
+              height={260}
+              className="pointer-events-none absolute -top-5 left-5 h-9 w-9 md:-top-6 md:left-6 md:h-11 md:w-11"
+              draggable={false}
             />
             <p
               className="text-[18px] leading-[1.5] text-[var(--m-ink-1)]"
@@ -128,6 +132,15 @@ export const ProductNarrative = ({
             >
               {content.narrative.pullQuote}
             </p>
+            <BlurImage
+              src="/marketing/utils/Q2.png"
+              alt=""
+              aria-hidden
+              width={260}
+              height={260}
+              className="pointer-events-none absolute -bottom-5 right-5 h-9 w-9 opacity-80 md:-bottom-6 md:right-6 md:h-11 md:w-11"
+              draggable={false}
+            />
           </motion.blockquote>
 
           {/* Long-form paragraphs — each fades up independently. */}
