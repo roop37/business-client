@@ -22,12 +22,25 @@ export function generateMetadata({ params }: Params): Metadata {
   return {
     title: `${content.title} — Hoizr`,
     description: content.intro,
-    alternates: { canonical },
+    alternates: {
+      canonical,
+      languages: { "en-IN": canonical, "x-default": canonical },
+    },
     openGraph: {
       title: `${content.title} — Hoizr`,
       description: content.intro,
       url: canonical,
       type: "article",
+      siteName: "Hoizr",
+      locale: "en_IN",
+      images: [
+        {
+          url: "/opengraph-image.webp",
+          width: 1200,
+          height: 630,
+          alt: `${content.title} — Hoizr`,
+        },
+      ],
     },
     robots: { index: true, follow: true },
   };

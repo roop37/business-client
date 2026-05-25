@@ -24,7 +24,13 @@ export const metadata: Metadata = {
     "Hoizr — Ticketing & marketing for Indian event organizers, venues, and promoters",
   description:
     "Hoizr is built for Indian event organizers, venues, and promoters. Direct publishing, owned fan CRM, AI event evaluation, and marketing tools tuned for clubs, festivals, comedy shows, and live music nights.",
-  alternates: { canonical: "/" },
+  alternates: {
+    canonical: "/",
+    languages: { "en-IN": "/", "x-default": "/" },
+  },
+  // Next.js does not deep-merge `openGraph` — declaring it here
+  // replaces the layout block in full, so the images array has to
+  // be repeated explicitly or the home page ships with no OG image.
   openGraph: {
     title:
       "Hoizr — Ticketing & marketing for Indian event organizers, venues, and promoters",
@@ -32,6 +38,17 @@ export const metadata: Metadata = {
       "The operating stack for India's clubs, festivals, comedy promoters, and live music venues. Direct ticketing, owned fan CRM, and AI event evaluation.",
     url: "/",
     type: "website",
+    siteName: "Hoizr",
+    locale: "en_IN",
+    countryName: "India",
+    images: [
+      {
+        url: "/opengraph-image.webp",
+        width: 1200,
+        height: 630,
+        alt: "Hoizr — India's ticketing and marketing platform for event organizers, venues, and promoters",
+      },
+    ],
   },
 };
 
