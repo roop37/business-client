@@ -13,19 +13,19 @@ const ITEMS: { q: string; a: string }[] = [
   },
   {
     q: "What's included with Hoizr?",
-    a: "The full platform on every account — direct ticketing, organisation page, fan CRM, campaigns, AI Offer pricing, door scanning, automations, reporting, and settlement workflows. No feature gates by tier.",
+    a: "The full operating stack: direct ticketing, organisation page, fan CRM, campaigns, AI event evaluation, door scanning, automations, reporting, and settlement workflows. No subscription tiers or card-details friction.",
   },
   {
     q: "How do I get started?",
-    a: "Book a 30-minute call with our team. We'll walk through your event format, set up your organisation page + first show, and hand the keys over. Most hosts ship their first Hoizr-hosted night within 4 business days of signing up.",
+    a: "Set up your organisation workspace, add your first event, and publish directly when the required event details are ready. No subscription wall or card-details friction.",
   },
   {
     q: "Can I run Hoizr alongside other ticketing platforms?",
-    a: "Yes. You decide where each ticket type sells. Plenty of our hosts keep a percentage on marketplaces for top-of-funnel reach and route everything past their core fanbase through Hoizr — which keeps the email, the phone, and the loyalty progression in your CRM, not the marketplace's.",
+    a: "Yes. You decide where each ticket type sells. Plenty of our event organizers keep a percentage on marketplaces for top-of-funnel reach and route everything past their core fanbase through Hoizr — which keeps the email, the phone, and the loyalty progression in your CRM, not the marketplace's.",
   },
   {
-    q: "Do you charge for free events?",
-    a: "No. Free events stay free. Hoizr's fee only applies when a paid ticket is purchased — so RSVPs, guestlists, and complimentary entries cost you nothing.",
+    q: "Do I need a subscription to publish?",
+    a: "No. Hoizr does not put publishing behind a subscription tier, setup fee, listing fee, monthly minimum, or card requirement for event organizers.",
   },
   {
     q: "How do payouts work?",
@@ -36,8 +36,8 @@ const ITEMS: { q: string; a: string }[] = [
     a: "No long-term contract. Hoizr is month-to-month. If we stop being the right partner, you keep your event history, your fan CRM, and your branding — and you can take everything with you.",
   },
   {
-    q: "What's the commission rate?",
-    a: "The lowest in India. Your exact offer depends on event format, city, scale, and ticket mix, so Hoizr gives you an event-specific commission rate instead of publishing a generic number.",
+    q: "What does the AI event evaluation do?",
+    a: "It studies the event format, city, scale, ticket mix, listing quality, and demand signals, then provides the best possible offer and lowered commission where the event qualifies.",
   },
 ];
 

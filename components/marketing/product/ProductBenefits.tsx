@@ -45,7 +45,7 @@ export const ProductBenefits = ({ content }: { content: ProductContent }) => {
   return (
     <section ref={sectionRef} className="hm-section">
       <motion.div style={{ y: headerY }}>
-        <div className="hm-eyebrow">Why hosts pick this</div>
+        <div className="hm-eyebrow">Why event organizers pick this</div>
         <h2 className="hm-h2 mt-3 max-w-[760px]">
           Three things {content.label} actually changes for your business.
         </h2>

@@ -135,7 +135,7 @@ const PayoutModals = () => {
             </p>
           </div>
           <p className="text-sm leading-6 text-[#6f6255]">
-            In the meantime, draft your next campaign, top up marketing credit, or polish your event listing.
+            In the meantime, draft your next campaign, polish your event listing, or finish your team setup.
           </p>
           <div className="flex justify-end">
             <CButton

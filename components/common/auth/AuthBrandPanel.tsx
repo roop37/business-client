@@ -4,8 +4,8 @@ import AuthLogo from "@/components/common/auth/AuthLogo";
 import {
   BarChart3,
   Bot,
+  BadgeCheck,
   Megaphone,
-  TrendingDown,
   type LucideIcon,
 } from "lucide-react";
 import Link from "next/link";
@@ -19,9 +19,9 @@ type AuthStory = {
 
 const AUTH_STORIES: AuthStory[] = [
   {
-    icon: TrendingDown,
-    title: "Lowest commission in India.",
-    body: "Get a single per-event ticket commission with no convenience fees. We will match or beat verified Indian competitors.",
+    icon: BadgeCheck,
+    title: "Free to create and publish.",
+    body: "No subscription, no setup fee, no listing fee, and no card details required to start running events on Hoizr.",
   },
   {
     icon: Megaphone,
@@ -35,8 +35,8 @@ const AUTH_STORIES: AuthStory[] = [
   },
   {
     icon: Bot,
-    title: "Claude AI in your workflow.",
-    body: "Smarter guidance for event setup, copy, and campaign decisions — without adding manual work to the team.",
+    title: "AI event evaluation.",
+    body: "Hoizr studies event setup, ticket mix, city context, and campaign signals to surface the best possible offer and operating guidance.",
   },
 ];
 

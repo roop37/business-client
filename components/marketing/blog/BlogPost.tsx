@@ -4,7 +4,7 @@ import { motion } from "framer-motion";
 import { ArrowLeft, ArrowUpRight, Linkedin } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { useWaitlist } from "../waitlist/WaitlistContext";
+import { WaitlistButton } from "../waitlist/WaitlistButton";
 import { getRelatedBlogs, type Blog } from "./blog-data";
 import { BLOG_FIXED_TOP_PX, useFixedAfterReachTop } from "./useFixedAfterReachTop";
 
@@ -64,7 +64,6 @@ const buildToc = (
 };
 
 export const BlogPost = ({ blog }: { blog: Blog }) => {
-  const { open: openWaitlist } = useWaitlist();
   const { html, toc } = useMemo(() => {
     const withIds = buildToc(blog.content);
     return { html: sanitize(withIds.html), toc: withIds.toc };
@@ -73,8 +72,14 @@ export const BlogPost = ({ blog }: { blog: Blog }) => {
   const contentRef = useRef<HTMLDivElement>(null);
   const sidebarRef = useRef<HTMLElement>(null);
   const authorRef = useRef<HTMLDivElement>(null);
+  const tocListRef = useRef<HTMLUListElement>(null);
+  const liRefs = useRef<Record<string, HTMLLIElement | null>>({});
   const sidebarFixed = useFixedAfterReachTop(sidebarRef, authorRef);
   const [activeId, setActiveId] = useState<string | null>(toc[0]?.id ?? null);
+  const [indicator, setIndicator] = useState<{ top: number; height: number }>({
+    top: 0,
+    height: 0,
+  });
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -85,21 +90,69 @@ export const BlogPost = ({ blog }: { blog: Blog }) => {
       .filter((el): el is HTMLHeadingElement => Boolean(el));
     if (!headings.length) return;
 
+    let raf = 0;
+    const updateActiveFromLayout = () => {
+      raf = 0;
+      const readingLine = Math.max(
+        BLOG_FIXED_TOP_PX + 56,
+        Math.round(window.innerHeight * 0.3)
+      );
+      let next = headings[0].id;
+
+      for (const heading of headings) {
+        if (heading.getBoundingClientRect().top <= readingLine) {
+          next = heading.id;
+        } else {
+          break;
+        }
+      }
+
+      setActiveId((current) => (current === next ? current : next));
+    };
+
+    const scheduleUpdate = () => {
+      if (raf) window.cancelAnimationFrame(raf);
+      raf = window.requestAnimationFrame(updateActiveFromLayout);
+    };
+
     const observer = new IntersectionObserver(
-      (entries) => {
-        const visible = entries
-          .filter((e) => e.isIntersecting)
-          .sort(
-            (a, b) =>
-              a.boundingClientRect.top - b.boundingClientRect.top
-          );
-        if (visible[0]) setActiveId(visible[0].target.id);
-      },
-      { rootMargin: "-30% 0px -55% 0px", threshold: 0.1 }
+      () => scheduleUpdate(),
+      {
+        rootMargin: `-${BLOG_FIXED_TOP_PX + 20}px 0px -58% 0px`,
+        threshold: [0, 0.01, 0.1, 0.5, 1],
+      }
     );
     headings.forEach((h) => observer.observe(h));
-    return () => observer.disconnect();
+    window.addEventListener("scroll", scheduleUpdate, { passive: true });
+    window.addEventListener("resize", scheduleUpdate);
+    scheduleUpdate();
+    return () => {
+      if (raf) window.cancelAnimationFrame(raf);
+      window.removeEventListener("scroll", scheduleUpdate);
+      window.removeEventListener("resize", scheduleUpdate);
+      observer.disconnect();
+    };
   }, [toc]);
+
+  // Animated TOC rail: measure the active list item and drive a
+  // motion thumb to follow it as the reader scrolls. Recomputes on
+  // active-id change AND on resize so the indicator stays glued even
+  // when long titles wrap across breakpoints.
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    if (!activeId) return;
+
+    const measure = () => {
+      const list = tocListRef.current;
+      const li = liRefs.current[activeId];
+      if (!list || !li) return;
+      setIndicator({ top: li.offsetTop, height: li.offsetHeight });
+    };
+
+    measure();
+    window.addEventListener("resize", measure);
+    return () => window.removeEventListener("resize", measure);
+  }, [activeId, toc]);
 
   return (
     <article className="hm-section pt-12 md:pt-16">
@@ -200,47 +253,63 @@ export const BlogPost = ({ blog }: { blog: Blog }) => {
                 <div className="text-[12.5px] font-semibold uppercase tracking-[0.12em] text-[var(--m-ink-3)]">
                   Table of Contents
                 </div>
-                <ul className="mt-3 space-y-0.5 border-l border-[var(--m-border)] pl-3">
-                  {toc.map((t) => {
-                    const active = activeId === t.id;
-                    return (
-                      <li key={t.id} className="relative">
-                        {/* Acid accent strip on the active item — replaces the
-                            full-pill background so the TOC stays compact. */}
-                        {active ? (
-                          <span
-                            aria-hidden
-                            className="absolute -left-3 top-0 bottom-0 w-[2px] rounded-full bg-[var(--m-forest-700)]"
-                          />
-                        ) : null}
-                        <a
-                          href={`#${t.id}`}
-                          className={`block rounded-[6px] px-2 py-1 text-[12.5px] leading-[1.35] transition ${
-                            active
-                              ? "font-semibold text-[var(--m-ink-1)]"
-                              : "text-[var(--m-ink-3)] hover:text-[var(--m-ink-1)]"
-                          }`}
+                <div className="relative mt-3 pl-3">
+                  {/* Faint full-height guide line — the static rail. */}
+                  <span
+                    aria-hidden
+                    className="pointer-events-none absolute left-0 top-0 bottom-0 w-px bg-[var(--m-border)]"
+                  />
+                  {/* Animated active thumb — slides to the active item
+                      as the reader scrolls through the article. */}
+                  <motion.span
+                    aria-hidden
+                    layout={false}
+                    initial={false}
+                    animate={{ y: indicator.top, height: indicator.height }}
+                    transition={{ type: "spring", stiffness: 320, damping: 30, mass: 0.6 }}
+                    className="pointer-events-none absolute left-[-1px] top-0 w-[3px] rounded-full bg-[var(--m-forest-700)] shadow-[0_0_0_3px_rgba(46,93,73,0.12)]"
+                    style={{ opacity: indicator.height > 0 ? 1 : 0 }}
+                  />
+                  <ul ref={tocListRef} className="space-y-0.5">
+                    {toc.map((t) => {
+                      const active = activeId === t.id;
+                      return (
+                        <li
+                          key={t.id}
+                          ref={(el) => {
+                            liRefs.current[t.id] = el;
+                          }}
+                          className="relative"
                         >
-                          {t.text}
-                        </a>
-                      </li>
-                    );
-                  })}
-                </ul>
+                          <a
+                            href={`#${t.id}`}
+                            className={`block rounded-[6px] px-2 py-1 text-[12.5px] leading-[1.35] transition ${
+                              active
+                                ? "font-semibold text-[var(--m-ink-1)]"
+                                : "text-[var(--m-ink-3)] hover:text-[var(--m-ink-1)]"
+                            }`}
+                          >
+                            {t.text}
+                          </a>
+                        </li>
+                      );
+                    })}
+                  </ul>
+                </div>
               </div>
             )}
 
             <div className="rounded-[var(--m-r-lg)] bg-[var(--m-blue-050,#EFF4FE)] p-6">
               <p className="text-[14px] leading-relaxed text-[var(--m-ink-2)]">
-                Ready to lower your commission and own your fan data? Get a
-                quick event-specific quote from Hoizr.
+                Ready to publish your next event directly? Bring it onto Hoizr
+                and keep your fan data in your own CRM.
               </p>
               <ul className="mt-4 space-y-2 text-[13px] text-[var(--m-ink-2)]">
                 <li className="flex items-center gap-2">
                   <span className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-[var(--m-forest-700)] text-white">
                     ✓
                   </span>
-                  Lowest commission in India
+                  No subscription wall
                 </li>
                 <li className="flex items-center gap-2">
                   <span className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-[var(--m-forest-700)] text-white">
@@ -249,69 +318,76 @@ export const BlogPost = ({ blog }: { blog: Blog }) => {
                   Owned fan CRM, exportable
                 </li>
               </ul>
-              {/* Pre-launch: signup CTA hidden until dashboard reopens.
-              <Link
-                href="/signup"
-                className="mt-5 inline-flex w-full items-center justify-center gap-1.5 rounded-full bg-[var(--m-forest-700)] px-4 py-2.5 text-[13.5px] font-semibold text-white transition hover:bg-[var(--m-forest-800)]"
-              >
-                Get my event rate
-                <ArrowUpRight size={14} />
-              </Link>
-              */}
-              <button
-                type="button"
-                onClick={() => openWaitlist("blog-sidebar")}
+              <WaitlistButton
+                source="blog-post-sidebar"
                 className="mt-5 inline-flex w-full items-center justify-center gap-1.5 rounded-full bg-[var(--m-forest-700)] px-4 py-2.5 text-[13.5px] font-semibold text-white transition hover:bg-[var(--m-forest-800)]"
               >
                 Join the waitlist
                 <ArrowUpRight size={14} />
-              </button>
+              </WaitlistButton>
             </div>
           </div>
         </aside>
       </div>
 
-      <div ref={authorRef} className="mt-16 rounded-[var(--m-r-xl)] border border-[var(--m-border)] bg-[var(--m-surface)] p-8 md:p-10">
-        <div className="text-[14.5px] font-semibold tracking-[-0.01em] text-[var(--m-ink-1)]">
-          About the author
-        </div>
-        <div className="mt-6 flex flex-col items-start gap-6 md:flex-row md:items-start">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            src={blog.author.image}
-            alt={blog.author.name}
-            className="h-24 w-24 shrink-0 rounded-full object-cover"
-            draggable={false}
-          />
-          <div className="flex-1">
-            <div className="flex items-center justify-between gap-4">
-              <div>
-                <div
-                  className="font-semibold leading-tight text-[var(--m-ink-1)]"
-                  style={{
-                    fontFamily: "var(--m-font-display)",
-                    fontSize: "clamp(20px, 2.2vw, 26px)",
-                  }}
+      <div
+        ref={authorRef}
+        className="relative mt-16 overflow-hidden rounded-[var(--m-r-xl)] border border-[var(--m-border)] bg-[var(--m-surface)] p-8 md:p-10"
+      >
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src="/marketing/hero/hero-lines-star.svg"
+          alt=""
+          aria-hidden
+          className="pointer-events-none absolute inset-0 h-full w-full object-cover opacity-[0.16]"
+          draggable={false}
+        />
+        <div
+          aria-hidden
+          className="pointer-events-none absolute inset-0 bg-[linear-gradient(90deg,rgba(255,255,255,0.96)_0%,rgba(255,255,255,0.9)_48%,rgba(255,255,255,0.72)_100%)]"
+        />
+        <div className="relative z-10">
+          <div className="text-[14.5px] font-semibold tracking-[-0.01em] text-[var(--m-ink-1)]">
+            About the author
+          </div>
+          <div className="mt-6 flex flex-col items-start gap-6 md:flex-row md:items-start">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={blog.author.image}
+              alt={blog.author.name}
+              className="h-24 w-24 shrink-0 rounded-full object-cover"
+              draggable={false}
+            />
+            <div className="flex-1">
+              <div className="flex items-center justify-between gap-4">
+                <div>
+                  <div
+                    className="font-semibold leading-tight text-[var(--m-ink-1)]"
+                    style={{
+                      fontFamily: "var(--m-font-display)",
+                      fontSize: "clamp(20px, 2.2vw, 26px)",
+                    }}
+                  >
+                    {blog.author.name}
+                  </div>
+                  <div className="mt-1 text-[13px] text-[var(--m-ink-4)]">
+                    {blog.author.role}
+                  </div>
+                </div>
+                <a
+                  href="https://www.linkedin.com/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label="LinkedIn"
+                  className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-[var(--m-border)] bg-white/70 text-[var(--m-ink-2)] transition hover:bg-white"
                 >
-                  {blog.author.name}
-                </div>
-                <div className="mt-1 text-[13px] text-[var(--m-ink-4)]">
-                  {blog.author.role}
-                </div>
+                  <Linkedin size={16} />
+                </a>
               </div>
-              <a
-                href="https://www.linkedin.com/"
-                target="_blank"
-                rel="noopener noreferrer"
-                aria-label="LinkedIn"
-                className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-[var(--m-border)] text-[var(--m-ink-2)] transition hover:bg-[var(--m-canvas-2)]"
-              >
-                <Linkedin size={16} />
-              </a>
+              <p className="mt-4 max-w-[640px] text-[14.5px] leading-relaxed text-[var(--m-ink-3)]">
+                {blog.author.description}
+              </p>
             </div>
-            <p className="mt-4 max-w-[640px] text-[14.5px] leading-relaxed text-[var(--m-ink-3)]">
-              {blog.author.description}
-            </p>
           </div>
         </div>
       </div>

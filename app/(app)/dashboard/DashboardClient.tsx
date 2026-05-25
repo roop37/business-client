@@ -265,17 +265,17 @@ export const DashboardClient = () => {
 
           {/* Marketing promise cards — dark-image-led, mirroring the
               public landing aesthetic. These nudge hosts into the two
-              actions that compound for them: list events here for the
-              lowest commission in India, and collab with other hosts
-              to pool audiences for campaign reach. */}
+              actions that compound for them: publish directly on the
+              platform and collab with other hosts to pool
+              audiences for campaign reach. */}
           <div className="mt-6 grid gap-4 md:grid-cols-2">
             <PromoCard
-              eyebrow="Pricing promise"
-              title="The lowest ticket commission in India."
-              body="Hoizr quotes a single per-event commission with no convenience fees. Compare us — we'll match or beat any rate from a verified Indian competitor."
-              ctaLabel="See your event commission"
+              eyebrow="Platform access"
+              title="Create and publish without card details."
+              body="Publish your next event directly without a subscription wall, setup fee, listing fee, or stripped-down starter tier."
+              ctaLabel="Why Hoizr"
               icon={<TrendingDown size={18} />}
-              onClick={() => router.push("/pricing")}
+              onClick={() => router.push("/about")}
             />
             <PromoCard
               eyebrow="Collaborators"

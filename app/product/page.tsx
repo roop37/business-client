@@ -8,7 +8,7 @@ import { BreadcrumbJsonLd } from "@/components/marketing/seo/SchemaJsonLd";
 export const metadata: Metadata = {
   title: "Hoizr products for event organizers, venues & promoters",
   description:
-    "Explore Hoizr products for Indian event organizers, venues, and promoters: ticketing, event SEO, fan CRM, marketing campaigns, door scanning, guestlist management, analytics, and AI event pricing.",
+    "Explore Hoizr products for Indian event organizers, venues, and promoters: ticketing, event SEO, fan CRM, marketing campaigns, door scanning, guestlist management, analytics, and AI event evaluation.",
   alternates: {
     canonical: "/product",
     languages: { "en-IN": "/product", "x-default": "/product" },

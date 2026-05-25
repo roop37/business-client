@@ -9,7 +9,7 @@ type Role = "host" | "event-org" | "promoter" | "other";
 const ROLE_OPTIONS: { value: Role; label: string; blurb: string }[] = [
   {
     value: "host",
-    label: "Venue / Host",
+    label: "Venue",
     blurb: "I run the room — club, bar, festival ground, or open-air venue.",
   },
   {
@@ -161,7 +161,7 @@ export const WaitlistModal = ({
           aria-labelledby="waitlist-title"
         >
           <motion.div
-            className="absolute inset-0 bg-black/55 backdrop-blur-sm"
+            className="absolute inset-0 bg-black/80 backdrop-blur-md"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
@@ -172,7 +172,7 @@ export const WaitlistModal = ({
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 20, scale: 0.97 }}
             transition={{ duration: 0.32, ease: EASE }}
-            className="relative z-10 flex max-h-[92vh] w-full max-w-[720px] flex-col overflow-hidden rounded-[24px] border border-white/10 bg-[#0a0a0a] text-white shadow-[0_30px_80px_rgba(0,0,0,0.5)]"
+            className="relative z-10 flex max-h-[92vh] w-full max-w-[720px] flex-col overflow-hidden rounded-[24px] border border-white/10 bg-[#050504] text-white shadow-[0_30px_90px_rgba(0,0,0,0.72)]"
           >
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
@@ -182,11 +182,15 @@ export const WaitlistModal = ({
               className="pointer-events-none absolute inset-0 h-full w-full object-cover"
               draggable={false}
             />
+            <div
+              aria-hidden
+              className="pointer-events-none absolute inset-0 bg-black/48"
+            />
 
             <div className="relative z-10 flex items-start justify-between gap-4 px-7 pt-7 pb-2">
               <div>
                 <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[var(--m-acid)]">
-                  Pre-launch waitlist
+                  Hoizr Business access
                 </div>
                 <h2
                   id="waitlist-title"
@@ -216,9 +220,8 @@ export const WaitlistModal = ({
               ) : (
                 <>
                   <p className="mt-2 text-[14px] leading-relaxed text-white/72">
-                    The dashboard opens to verified hosts in waves. Drop your
-                    details and we&rsquo;ll reach out personally when your
-                    slot opens.
+                    Share your details and the Hoizr team will help you bring
+                    your first event onto the platform.
                   </p>
 
                   <form onSubmit={submit} className="mt-6 space-y-5">
@@ -339,15 +342,15 @@ export const WaitlistModal = ({
                         </>
                       ) : (
                         <>
-                          Confirm &amp; join the Hoizr waitlist
-                          <ArrowRight size={17} />
+                          Join the waitlist
+                          <ArrowRight size={17} className="mt-[1px] shrink-0" />
                         </>
                       )}
                     </button>
 
                     <p className="text-center text-[11.5px] text-white/50">
-                      We&rsquo;ll only use these to onboard you. No marketing
-                      list. Reply to your confirmation email anytime.
+                      We&rsquo;ll only use these to onboard you. Reply to your
+                      confirmation email anytime.
                     </p>
                   </form>
                 </>
@@ -454,11 +457,11 @@ const SuccessState = ({ onClose }: { onClose: () => void }) => (
       className="mt-5 font-bold tracking-tight"
       style={{ fontFamily: "var(--m-font-display)", fontSize: "22px" }}
     >
-      You&rsquo;re on the list.
+      We&rsquo;ve got your details.
     </h3>
     <p className="mx-auto mt-3 max-w-[380px] text-[14px] leading-relaxed text-white/70">
-      Confirmation is on its way to your inbox. The team will reach out
-      personally when your slot opens.
+      Confirmation is on its way to your inbox. The team will help you bring
+      your first event onto Hoizr.
     </p>
     <button
       type="button"

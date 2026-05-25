@@ -45,12 +45,12 @@ export type ProductContent = {
  * template generated from its nav blurb.
  *
  * Copy rules baked in (per Roop, 2026-05):
- *   - Never expose commission percentages (we quote per event).
+ *   - Never expose public pricing tables; platform access is free.
  *   - Never name third-party integrations (payments, messaging,
  *     scanner SDKs, etc.).
- *   - Never claim AI capability we don't ship — AI Offer (commission
- *     pricing) is the only AI feature in scope today.
- *   - No testimonials or "social proof" claims — Hoizr is pre-launch.
+ *   - Never claim AI capability we don't ship — event evaluation and
+ *     offer context are the AI features in scope today.
+ *   - No testimonials or unsupported social-proof claims.
  */
 type Override = Partial<{
   heroHeadline: string;
@@ -102,35 +102,44 @@ const OVERRIDES: Record<string, Override> = {
   "event-seo": {
     heroHeadline: "AI does the SEO. You do the show.",
     heroBody:
-      "Hoizr writes the schema, the city pages, the meta tags, and the search snippets for every show — and keeps them fresh whenever you update the listing. Your event lands the top result while you focus on the room.",
+      "Hoizr checks every listing the way search engines, Maps surfaces, and discovery integrations read it: venue, geo, category, date, tickets, canonical URL, structured data, and share previews. Then it builds and refreshes the signals that give your event the strongest possible path to the top surfaces.",
     bullets: [
-      "Auto-generated Event + Organisation JSON-LD per show",
-      "City + genre landing pages tuned for local search intent",
-      "Meta, OpenGraph, and link-share cards refreshed on every edit",
-      "Continuous monitoring of how each page is performing",
+      "Pre-publish checks for venue, geo, category, ticket, and organizer data",
+      "Event + Organization JSON-LD, canonical metadata, link cards, and sitemap entries",
+      "City, genre, and venue landing pages tuned for local search intent",
+      "Search, Maps, social preview, and integration data refreshed after every edit",
     ],
     benefits: [
       {
-        title: "Top-of-page from day one.",
+        title: "Built for machine discovery.",
         body:
-          "Your show ships with the rich-result schema search engines reserve for the best-tagged page in its category.",
+          "Every event ships with the structured fields search engines and discovery systems need to understand what it is, where it is, when it happens, and why it matters.",
       },
       {
-        title: "Local-first by default.",
+        title: "Local intent from every angle.",
         body:
-          "City-by-city, neighbourhood-by-neighbourhood, Hoizr produces the pages that match how Indian fans actually search.",
+          "Hoizr connects your event to city, genre, venue, and weekend pages so the listing is not floating alone. It becomes part of a local search graph.",
       },
       {
-        title: "Quiet upkeep, always on.",
+        title: "Edits do not break the signal.",
         body:
-          "Tags, snippets, and structured data refresh automatically every time you edit the listing — no migration call, no extra invoice.",
+          "Change a date, venue, image, ticket tier, or headline and Hoizr refreshes the metadata, social cards, sitemap entry, and integration payloads automatically.",
       },
     ],
     howItWorks: [
-      { title: "Publish your event", body: "Drop title, venue, date, and lineup. Hoizr handles the tagging." },
-      { title: "Hoizr ships search-ready", body: "Schema, city pages, and meta tags go live the moment you publish." },
-      { title: "Stay on top", body: "Edits to your listing flow through to every search-ready surface automatically." },
+      { title: "Hoizr validates the listing", body: "Before publish, the system checks venue, geo, category, dates, ticket state, images, and organizer details for search-readiness." },
+      { title: "The discovery graph goes live", body: "Structured data, canonical metadata, city pages, genre pages, sitemap entries, and share cards are generated from the same source of truth." },
+      { title: "Every edit re-syncs the signal", body: "Updates flow back into search-ready pages, Maps-facing fields, social previews, and downstream integration payloads without manual cleanup." },
     ],
+    narrative: {
+      pullQuote:
+        "Event SEO turns one published show into a search-ready network of signals across search engines, Maps surfaces, social previews, and discovery integrations.",
+      paragraphs: [
+        "Most event pages stop at a title, poster, and buy button. That is not enough for machine discovery. Search engines need structure, Maps surfaces need clean venue and geo signals, social apps need fresh link cards, and city intent pages need enough context to understand why this night belongs in the result.",
+        "Hoizr treats the event listing as the source of truth. When you publish, the platform confirms the venue, city, category, date, ticket state, organizer identity, canonical URL, image metadata, and structured data before the listing goes live. Then it generates the technical layer around it: Event and Organization JSON-LD, canonical tags, sitemap entries, OpenGraph/Twitter cards, city pages, genre surfaces, and integration-ready payloads.",
+        "The goal is straightforward: give every event the strongest possible path into the places fans already search. If you update a venue, poster, time, ticket tier, or headline, Hoizr refreshes the surrounding signals instead of leaving stale metadata behind. Your team focuses on the night; the platform keeps the event understandable to search engines, Maps, social apps, and the rest of the discovery graph.",
+      ],
+    },
   },
   "organisation-page": {
     heroHeadline: "Your brand's permanent home.",
@@ -236,20 +245,37 @@ const OVERRIDES: Record<string, Override> = {
   // PILLAR 2 — SALES
   // ============================================================
   "event-listing": {
-    heroHeadline: "Listings built to convert. Not just describe.",
+    heroHeadline: "A listing engineered to sell. A marketplace engineered around your flyer.",
     heroBody:
-      "Hoizr event listings are designed to move a curious browser into a paid ticket buyer in under a minute. Sharp pricing tiers, mobile-first checkout, and a cart lock that holds your stock while fans pay.",
+      "Every Hoizr event lives on a page designed to convert — and inside a consumer marketplace at hoizr.com built around your show, not against it. No competing ads, no distractions, no pop-ups. Just your flyer, your lineup, and a swift, India-tuned checkout.",
     bullets: [
       "Mobile-first listing with India-tuned checkout",
+      "Marketplace environment with zero ads, zero distractions",
+      "Layout engineered to enhance your flyer, not bury it",
       "Phase pricing, add-ons, and capacity caps per tier",
       "Cart lock holds inventory while fans complete payment",
-      "Built-in fraud and chargeback safeguards",
+      "Frictionless flow from discovery to QR ticket",
     ],
     benefits: [
       {
         title: "Designed to close.",
         body:
-          "The listing layout, button hierarchy, and form flow are tuned for the fan who's on their phone, in a rush, deciding right now.",
+          "Layout, button hierarchy, and form flow are tuned for the fan who's on their phone, in a rush, deciding right now. Every interaction was rebuilt against measured drop-off points.",
+      },
+      {
+        title: "Zero distractions, zero ads.",
+        body:
+          "hoizr.com runs no banner ads, no third-party retargeting pixels stalking your fans, no 'sponsored shows' pushing your flyer down the page. Your event is the page.",
+      },
+      {
+        title: "Your flyer, treated like art.",
+        body:
+          "The marketplace surfaces your cover art at the scale and aspect a fan actually reads. Typography, contrast, and breathing room are built around the poster — not the platform's brand.",
+      },
+      {
+        title: "Swift, psychological checkout.",
+        body:
+          "Decision points are sequenced the way buyers naturally think: pick → confirm → pay. Cart locks remove the panic of stock disappearing. UPI-first checkout, OTP-light auth, no surprise upsell pop-ups at the wrong moment.",
       },
       {
         title: "No oversells, no scrambling.",
@@ -264,9 +290,20 @@ const OVERRIDES: Record<string, Override> = {
     ],
     howItWorks: [
       { title: "Compose the listing", body: "Lineup, tiers, add-ons, refund policy — all in one screen." },
-      { title: "Hoizr handles checkout", body: "Cart locks, payments, and confirmations run in the background." },
+      { title: "Marketplace places it", body: "Your event lands on hoizr.com inside a curated, ad-free environment built to enhance how the flyer reads." },
+      { title: "Hoizr handles checkout", body: "Cart locks, UPI payments, and confirmations run in the background." },
       { title: "Watch sales land", body: "Real-time sell-through, source attribution, and order detail." },
     ],
+    narrative: {
+      pullQuote:
+        "The marketplace is not a billboard. It is a quiet, distraction-free room that hands your flyer the microphone.",
+      paragraphs: [
+        "Most ticketing marketplaces are noisy. Banner ads compete for the eye, sponsored cards push your event down the page, retargeting pixels chase your fans across the internet, and the platform brand demands more visual real estate than the show itself. Hoizr was built against this. The consumer marketplace at hoizr.com runs no banner ads, no sponsored placement, no third-party pixels — by design. Every pixel that isn't yours is either functional or removed.",
+        "The visual system is engineered around the flyer. Cover art surfaces at the aspect and scale fans actually read; the page typography sits in a deliberate hierarchy so the lineup, venue, and ticket ladder read in the same order a buyer naturally considers them. The result is a listing that feels less like a marketplace cell and more like a microsite — without the cost or work of building one.",
+        "The checkout flow is shaped by behavioral science as much as engineering. Decision points are short, payment options are India-first, the cart lock removes the 'will tickets disappear' panic, and confirmation lands on the device a fan will actually scan with. The whole flow is sequenced to match how the buyer is already thinking — pick the night, confirm the tier, pay, done — rather than what would be operationally convenient for us.",
+        "Underneath the marketplace surface, the platform also auto-tunes the SEO, schema, and share previews so the event ranks and travels well in WhatsApp, Instagram, and search. You don't write any of it. Hoizr handles the technical layer, and you focus on the show. The listing module and the marketplace it lives in are not two products — they are one engineered surface, and every choice in it is in service of one outcome: more of the right fans converting on the first visit.",
+      ],
+    },
   },
   "smart-upsells": {
     heroHeadline: "Add-ons that lift your average order.",
@@ -469,13 +506,22 @@ const OVERRIDES: Record<string, Override> = {
       { title: "Hoizr ships with rules", body: "Consent, opt-outs, and template approval all handled in flow." },
       { title: "Watch fans reply", body: "Real-time delivery and engagement reporting per message." },
     ],
+    narrative: {
+      pullQuote:
+        "Conversation Marketing turns high-intent replies into a controlled campaign channel, not another inbox your team has to babysit.",
+      paragraphs: [
+        "For Indian events, the final buying decision often happens in chat: a friend asks about the lineup, someone checks entry rules, a group waits for one person to confirm. Conversation Marketing is built around that reality. The goal is not to spam every contact; it is to send the right prompt when a fan is close enough to answer.",
+        "Hoizr keeps the workflow disciplined. Templates, consent, opt-outs, audience filters, and reporting stay inside the campaign composer, so the team can run launch alerts, last-call nudges, and post-event loops without exposing vendor plumbing or losing control of the customer relationship.",
+        "The belief is simple: chat should reduce uncertainty, not create chaos. When a campaign produces replies, clicks, and sales, Hoizr ties that signal back to the event and the fan profile. The next message becomes sharper because the last conversation taught the system who actually cared.",
+      ],
+    },
   },
   "push-notifications": {
     heroHeadline: "On-sale alerts. Last calls. Lineup drops.",
     heroBody:
       "Push notifications hit the lockscreen with no per-message cost — perfect for the moments that need to land now. Hoizr targets pushes by attendance history so the right fan gets the right nudge.",
     bullets: [
-      "Free per-message — no SMS or chat carrier costs",
+      "No SMS or chat carrier costs per message",
       "Targeted by city, attendance history, and ticket type",
       "Per-event push playbooks ready to ship",
       "Delivery and open-rate reporting per send",
@@ -500,7 +546,7 @@ const OVERRIDES: Record<string, Override> = {
     howItWorks: [
       { title: "Fans opt in once", body: "Push permission is captured during their first event with you." },
       { title: "Pick the playbook", body: "On-sale, last-call, lineup-drop, or a custom send." },
-      { title: "Hoizr delivers", body: "Push lands on the lockscreen — instant, free, measurable." },
+      { title: "Hoizr delivers", body: "Push lands on the lockscreen — instant, measurable, and native to the Hoizr stack." },
     ],
   },
   "loyalty-rewards": {
@@ -543,7 +589,7 @@ const OVERRIDES: Record<string, Override> = {
   "reporting-analytics": {
     heroHeadline: "Sell-through. Sources. Settlement.",
     heroBody:
-      "Hoizr's reporting answers the three questions every host actually asks Monday morning: what sold, what drove it, and what's owed. Plain-English numbers — not a BI tool you need a degree to operate.",
+      "Hoizr's reporting answers the three questions every event organizer actually asks Monday morning: what sold, what drove it, and what's owed. Plain-English numbers — not a BI tool you need a degree to operate.",
     bullets: [
       "Sell-through curve per event, with phase-by-phase breakdown",
       "Channel + source attribution for every ticket",
@@ -640,36 +686,190 @@ const OVERRIDES: Record<string, Override> = {
     ],
   },
   "ai-event-assistant": {
-    heroHeadline: "AI quotes your event's best commission rate.",
+    heroHeadline: "AI studies your event and returns the best possible offer.",
     heroBody:
-      "Hoizr's AI Event Assistant reads your event — format, city, scale, ticket mix — and proposes the lowest commission we can offer for that specific show. One AI feature, scoped tightly, done well.",
+      "Hoizr's AI Event Assistant reads your event — format, city, scale, ticket mix, listing quality — and provides the best possible offer with lowered commission where the event qualifies. One AI feature, scoped tightly, done well.",
     bullets: [
-      "Reads format, city, scale, and ticket mix per event",
-      "Proposes the lowest commission Hoizr can quote for that show",
-      "Explainable recommendation — see the comparable events behind the rate",
-      "Approve in one tap, commission locks in for that event",
+      "Reads format, city, scale, ticket mix, and listing quality",
+      "Provides the best possible offer for that specific show",
+      "Explains the event signals behind the recommendation",
+      "Full workspace access without a subscription wall",
     ],
     benefits: [
       {
-        title: "Commission tuned to your night.",
+        title: "Offer tuned to your night.",
         body:
-          "A 200-capacity club night and a 5,000-capacity festival shouldn't pay the same rate. AI Event Assistant gives each event its own offer.",
+          "A 200-capacity club night and a 5,000-capacity festival should not be evaluated the same way. AI Event Assistant gives each event its own context.",
       },
       {
-        title: "Lowest in India for your category.",
+        title: "Lowered commission where eligible.",
         body:
-          "The AI's job is to find the lowest rate Hoizr can defensibly offer for your format and city — backed by our lowest-commission guarantee.",
+          "The AI's job is to study the event honestly and surface the best possible offer, including lowered commission where the event qualifies.",
       },
       {
         title: "Transparent, not magic.",
         body:
-          "Every quote ships with the comparable events that informed it. You can see why your rate is what it is, and override the model if you disagree.",
+          "Every recommendation explains the signals that informed it, so you can see why the offer looks the way it does before you publish.",
       },
     ],
     howItWorks: [
       { title: "Tell us about the event", body: "Format, city, capacity, ticket mix." },
-      { title: "AI scores your event", body: "Comparable nights, reach signals, and risk inform the model." },
-      { title: "Get your rate", body: "The lowest commission Hoizr can offer for that show — locked in on approval." },
+      { title: "AI studies the event", body: "Comparable nights, reach signals, and listing quality inform the model." },
+      { title: "Get your offer", body: "The best possible offer for that show, including lowered commission where eligible." },
+    ],
+  },
+  "ai-marketing-intelligence": {
+    heroHeadline: "AI splits your marketing budget across the right channels — with reasoning, not vibes.",
+    heroBody:
+      "Hoizr reads your CRM and your event, then proposes how to spend your next budget — SMS to repeat buyers, push to new-fan acquisition, email for the post-event flow — and tells you why. Every recommendation comes with the data behind it, so you stay the operator, not the spectator.",
+    bullets: [
+      "Splits budget across SMS, push, WhatsApp, email, and in-app",
+      "Segment-aware: repeat buyers vs lookalike new fans vs lapsed",
+      "Reasoning attached to every rupee — no black-box recommendations",
+      "Generates the audience filters automatically, ready to send",
+      "Upcoming: filter-builder campaigns end-to-end across all channels",
+    ],
+    benefits: [
+      {
+        title: "60/40, not a flat blast.",
+        body:
+          "Instead of a uniform send to your whole list, AI suggests a real split — example: 60% of this budget on SMS to 1,400 repeat buyers because they convert at ~3x, 40% on push to lookalike new fans in your top two micro-markets. You get reasoning, then approve or override.",
+      },
+      {
+        title: "Filters built for you.",
+        body:
+          "AI proposes the audience filters worth sending to — 'attended in last 90 days', 'opened but didn't buy', 'genre + city + price tolerance' — already wired into the campaign builder. No more building segments by hand from scratch.",
+      },
+      {
+        title: "Channels picked by behaviour, not habit.",
+        body:
+          "Push is great for new-customer acquisition; SMS is great for repeat buyers who've shown up before; email is great for the post-event loyalty loop. The model knows the difference and routes accordingly.",
+      },
+      {
+        title: "You stay in control.",
+        body:
+          "Recommendations, never silent auto-pilot. Every send needs your approval. Override the split anytime — the next recommendation learns from what you actually shipped.",
+      },
+      {
+        title: "Compounds across events.",
+        body:
+          "Each campaign you ship feeds the next one. Response rates, opt-in mix, conversion-by-channel — all of it sharpens the next budget split.",
+      },
+    ],
+    howItWorks: [
+      { title: "Pick the event + budget", body: "Tell Hoizr the event you're promoting and how much you have to spend." },
+      { title: "AI proposes the split", body: "Channels, segments, and rupee allocation, with the reasoning behind each line." },
+      { title: "You approve or edit", body: "Adjust the mix, lock segments out, or accept as-is. The campaign builder is pre-filled." },
+      { title: "Ship and learn", body: "Hoizr tracks response and conversion per channel so the next event's allocation is sharper." },
+    ],
+    narrative: {
+      pullQuote:
+        "Spend smart, not loud. AI Marketing Intelligence reads your fans and your event, then tells you exactly where each rupee should go.",
+      paragraphs: [
+        "Most event marketing is still a flat blast to a single list with a single message. It is fast, easy to operate, and quietly wasteful — the SMS that lands with a fan who already bought is a missed opportunity, the push to a long-lapsed fan is noise, and the WhatsApp template that fits one segment annoys another. Hoizr's AI Marketing Intelligence is built to replace the flat blast with a sequenced, segment-aware plan.",
+        "The model reads two inputs that most platforms cannot reason about together: your CRM (who has bought from you, who has shown up, who has opened but not converted, who is dormant) and the event (format, city, lineup, price band, expected scale). From those, it proposes a channel-and-segment split — for example, the bulk of the budget routed to SMS for the 1,400 fans who attended your last comedy night, the rest routed to push for lookalike new fans in Bandra and Andheri, with email reserved for the post-event flow.",
+        "Every recommendation is annotated. You see the historical conversion rate of each segment, the response rate of each channel for your account, and the assumed cost. You can lock segments out, adjust the split, or run the AI's plan as-is. Nothing ships without your approval — the model proposes, you operate.",
+        "The next release extends the same filter logic into a full campaign builder: pick a hypothesis (e.g. 'bring back fans who attended once but never returned'), and AI composes the multi-channel send end-to-end. The roadmap is to make complex audience composition feel as simple as email-builder filters do today — but spanning SMS, push, WhatsApp, email, and in-app from a single canvas.",
+      ],
+    },
+    faq: [
+      {
+        q: "Does the AI send messages without me reviewing them?",
+        a: "No. Every recommendation needs your explicit approval before it ships. The AI proposes, you operate. Nothing leaves Hoizr without an explicit send action from a real person on your team.",
+      },
+      {
+        q: "What channels does it cover?",
+        a: "SMS, push notifications, WhatsApp, email, and in-app surfaces. The model picks the channel mix based on which one a given segment actually responds to in your account history.",
+      },
+      {
+        q: "How does it know which segments will convert?",
+        a: "It reads your CRM history — past purchases, attendance, opens, clicks, and event-level conversion — and combines that with the current event's format, city, price band, and lineup. The result is a per-segment expectation that gets sharper every time you ship.",
+      },
+      {
+        q: "Can I override the split if I disagree with the model?",
+        a: "Yes. The split, the segments, the channel mix, and the message templates are all editable before send. The next recommendation learns from what you actually shipped, so overrides are not penalised — they are training signal.",
+      },
+      {
+        q: "Is this included in the Hoizr workspace?",
+        a: "Yes. AI Marketing Intelligence ships inside the Hoizr workspace without a separate add-on subscription or starter-tier limitation.",
+      },
+    ],
+  },
+  "competitive-analysis": {
+    heroHeadline: "See how peer event organizers in your city actually perform — and what the top quartile does differently.",
+    heroBody:
+      "Competitive Analysis turns the platform's anonymised event history into a private benchmark for your account. See sell-through, on-sale curves, refund rates, and average ticket price for event organizers running shows similar to yours — same city, format, capacity, and price band — and surface the operating patterns the strongest performers share.",
+    bullets: [
+      "Anonymised peer benchmarks by city, format, capacity, and price band",
+      "Compare your sell-through curve to the top quartile of similar shows",
+      "See what top performers do differently on-sale, mid-funnel, and at the door",
+      "Identify pricing, ladder, and timing gaps before you publish",
+      "All peer data is aggregate and anonymised — never identifiable",
+    ],
+    benefits: [
+      {
+        title: "A real benchmark, not a guess.",
+        body:
+          "Stop comparing your event to nothing. Hoizr can show you how similar shows — same city, same format, same price band — actually performed across the platform, and where your current run sits in that distribution.",
+      },
+      {
+        title: "Patterns from the top quartile.",
+        body:
+          "When the top 25% of similar events consistently launch tickets two weeks earlier, ladder pricing more aggressively, or run a particular campaign cadence, Hoizr surfaces that pattern. You see what high performers actually do — without anyone naming the venue.",
+      },
+      {
+        title: "Gap analysis before you publish.",
+        body:
+          "Before an event goes live, Hoizr can flag where your listing, pricing, or campaign plan diverges from the patterns that correlate with strong sell-through. You get a chance to fix it before launch, not after.",
+      },
+      {
+        title: "Healthy competition, not a leaderboard.",
+        body:
+          "The point is not to shame an event organizer. The product never identifies individual venues or organisers. You see ranges, distributions, and patterns — never names. The competition is against the median, not your friends.",
+      },
+      {
+        title: "Clearer picture of performance.",
+        body:
+          "Across your own portfolio, see how each event ranks relative to its peers — not just last weekend's number. A 70% sold-out night in a soft format may be a stronger performance than a 90% sold-out night in a saturated one.",
+      },
+    ],
+    howItWorks: [
+      { title: "Hoizr picks the peer set", body: "For any event you run, the platform selects the cohort of similar shows — same city, format, capacity band, and price tier." },
+      { title: "Benchmarks are computed", body: "Sell-through curve, on-sale velocity, refund rate, average ticket, and door arrival rate are aggregated across the cohort." },
+      { title: "Patterns are surfaced", body: "The platform highlights what the top quartile of the cohort does differently — pricing, ladder, timing, campaign cadence." },
+      { title: "Gaps are flagged", body: "Where your event diverges from the high-performer pattern, Hoizr suggests where to look first." },
+    ],
+    narrative: {
+      pullQuote:
+        "You can't get sharper without something to measure against. Competitive Analysis gives you a real, anonymous benchmark — and the patterns that separate top performers from the median.",
+      paragraphs: [
+        "Operating an event business without peer data is operating with one eye closed. You know what your numbers were last weekend, but you don't know if 1,800 tickets at ₹600 in Bandra on a Friday is a strong result or a soft one, because you can't see what a similar room in a similar slot actually did. Competitive Analysis closes that gap. The platform takes the events you run and silently builds a peer cohort — same city, same format, same capacity band, same price band — and shows you where your run sits in that distribution.",
+        "The data is anonymised by construction. No event organizer, venue, or organisation is named. You see ranges, percentiles, and trend lines — never a leaderboard with names attached. The goal is not to shame an event organizer but to give every operator on Hoizr a real, honest mirror. The platform protects the privacy of every event organizer's individual numbers while pooling enough signal across the market to make those numbers meaningful.",
+        "The most valuable layer is the pattern detection. When the top quartile of similar events consistently launches tickets two weeks earlier than the median, or runs a tighter ladder, or shifts more spend to SMS in the final week, that pattern surfaces in the report — with the implied lift attached. You don't have to guess what high performers do; the platform shows you, and you decide whether that pattern fits your room.",
+        "Before any new event goes live, Hoizr will also run a pre-publish check that compares the draft against the high-performer pattern in its cohort and flags the soft points — a too-flat pricing ladder, a too-late on-sale date, a too-short campaign window. You get the chance to tighten the event before it ships, not after the post-mortem. The product turns the platform's collective experience into a quiet, private advantage for every event organizer who uses it.",
+      ],
+    },
+    faq: [
+      {
+        q: "Will other event organizers see my numbers?",
+        a: "No. All peer comparisons are anonymous and aggregate. The platform never exposes individual venues, organisers, or shows. You see ranges and distributions — never names.",
+      },
+      {
+        q: "What counts as a peer for my event?",
+        a: "The platform selects events on the same city, format (e.g. club night, comedy, festival), capacity band, and price band. If no statistically meaningful cohort exists for an exotic event, the report says so rather than fudge the data.",
+      },
+      {
+        q: "Does this require sharing my own data?",
+        a: "Your data is already on Hoizr because that's where you run your events. Competitive Analysis uses your own numbers to place you in a cohort but never exposes them to anyone outside your account. Aggregate cohort data is computed in a way that no single event organizer can be reconstructed from it.",
+      },
+      {
+        q: "Can I opt out of being part of peer benchmarks?",
+        a: "Yes. Event organizers can opt out of being included in the aggregate cohort with a single setting. Opting out means your data is not used in any benchmark — including in the benchmarks you yourself see.",
+      },
+      {
+        q: "Is this a paid add-on?",
+        a: "No. It ships with every Hoizr account. No subscription, no setup fee, no card details required.",
+      },
     ],
   },
   "guestlist-management": {
@@ -743,21 +943,21 @@ const fallbackContent = (p: MarketingProduct, pillarLabel: string): ProductConte
     { title: "Watch it compound", body: "Each event feeds the next — recommendations and defaults get sharper." },
   ],
   narrative: {
-    pullQuote: `${p.label} is built so the night runs itself — and your team gets their Sundays back.`,
+    pullQuote: `${p.label} turns ${p.blurb.toLowerCase()} into a repeatable operating advantage.`,
     paragraphs: [
-      `Indian live events are not a copy of the US. The crowd is local, the genres are layered, the ticket mix is unique, and the people deciding to come out tonight do it on WhatsApp at 7 PM. Most platforms were not built for this. They were built for ticket-only resale in a market that already trusts the buying funnel. ${p.label} starts from the opposite premise — that the platform should adapt to how India already goes out, not the other way around.`,
-      `Inside Hoizr, ${p.label.toLowerCase()} is not a standalone tool. It sits next to your discovery surface, your fan CRM, your marketing campaigns, your scanners, and your payout settlement — so every signal it gathers gets reused everywhere else. Add another event to the dashboard and ${p.label.toLowerCase()} is already configured. Update your lineup and the change propagates without a single re-publish click.`,
-      `The result is a stack that compounds. The first ticket sold for your next night is informed by the last three nights you ran. The campaigns you send tomorrow inherit the fans you converted last weekend. ${p.label} is part of that loop — it does its job tonight, and quietly makes the next ten weekends easier.`,
+      `${p.label} solves one clear job inside the Hoizr stack: ${p.blurb.toLowerCase()} The point is not to add another dashboard. The point is to remove the manual gap that slows an event team down before, during, or after the night.`,
+      `That is why ${p.label.toLowerCase()} shares data with the rest of Hoizr: the event page, buyer history, campaign activity, door scans, guestlist records, and settlement trail. When one part of the night changes, the surrounding tools already understand the change instead of forcing your team to repeat it five times.`,
+      `The belief behind the product is simple: every tool should leave the next event stronger. ${p.label} does its job for the current show, but it also feeds the operating memory that makes the next listing, campaign, door plan, and report sharper.`,
     ],
   },
   faq: [
     {
-      q: `Is ${p.label} included on every Hoizr plan?`,
-      a: `Yes. ${p.label} ships with every active Hoizr account at no extra charge. Hoizr earns on per-event commission only — never on add-on platform fees.`,
+      q: `Is ${p.label} included on every Hoizr account?`,
+      a: `Yes. ${p.label} ships inside the Hoizr workspace without a subscription wall, setup fee, listing fee, or starter-tier limitation.`,
     },
     {
       q: `How long does it take to get ${p.label.toLowerCase()} live for my events?`,
-      a: "Onboarding is quick — signup, organisation page, first event, payout profile, and team access in a single guided pass. Verification (KYC, bank, GSTIN if applicable) runs in parallel and clears for most hosts within hours. The product is active the moment you publish your first event.",
+      a: "Onboarding is quick — signup, organisation page, first event, payout profile, and team access in a single guided pass. Verification (KYC, bank, GSTIN if applicable) runs in parallel. The product is active the moment you publish your first event.",
     },
     {
       q: "Do I need to integrate with any other tool to use it?",
@@ -765,7 +965,7 @@ const fallbackContent = (p: MarketingProduct, pillarLabel: string): ProductConte
     },
     {
       q: "Does it work for free events and guestlist-only nights?",
-      a: "Yes. Free events and guestlist-only nights are first-class on Hoizr — no commission, no platform fee, full access to every product including this one.",
+      a: "Yes. Free events and guestlist-only nights are first-class on Hoizr, with full access to every product including this one.",
     },
     {
       q: "Can I export my data if I leave?",

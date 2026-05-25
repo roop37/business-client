@@ -83,7 +83,7 @@ export const ProductNarrative = ({
 
         {/* RIGHT — heading + pull quote + paragraphs */}
         <div>
-          <div className="hm-eyebrow">The story</div>
+          <div className="hm-eyebrow">Why it exists</div>
           <h2
             className="mt-3 flex flex-wrap gap-x-2.5 gap-y-1.5 font-bold leading-[1.04] tracking-[-0.025em] text-[var(--m-ink-1)]"
             style={{

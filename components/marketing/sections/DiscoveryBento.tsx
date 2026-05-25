@@ -35,8 +35,8 @@ export const DiscoveryBento = () => {
           span={7}
           minHeight={460}
           eyebrow="Event SEO"
-          title="Schema, city pages, meta — all auto-tuned."
-          body="Every show ships with structured data and India-specific city + genre pages. Your event lands the rich-result spot Google reserves for the best-tagged page."
+          title="Search signals tuned before you publish."
+          body="Hoizr validates the listing, generates structured data, syncs Maps-ready fields, and builds city + genre pages so your event has a stronger path into high-intent search surfaces."
           href="/product/event-seo"
           visual={
             <BrandImageVisual
@@ -81,10 +81,10 @@ export const DiscoveryBento = () => {
             <BrandImageVisual
               src="/images/discovery/Reviews-Engine-Discovery-get-found.png"
               alt="Reviews engine discovery workflow"
-              fit="cover"
-              position="center"
+              fit="contain"
+              position="left center"
               dark
-              dim
+              pad={12}
             />
           }
           layout="fill"

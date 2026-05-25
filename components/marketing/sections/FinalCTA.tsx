@@ -3,7 +3,7 @@
 import { motion } from "framer-motion";
 import { ArrowRight, PlayCircle } from "lucide-react";
 import Link from "next/link";
-import { useWaitlist } from "../waitlist/WaitlistContext";
+import { WaitlistButton } from "../waitlist/WaitlistButton";
 
 const EASE = [0.2, 0.6, 0.2, 1] as const;
 
@@ -12,7 +12,6 @@ const EASE = [0.2, 0.6, 0.2, 1] as const;
  * and two CTAs. Sits directly above the footer.
  */
 export const FinalCTA = () => {
-  const { open: openWaitlist } = useWaitlist();
   return (
     <section className="hm-section">
       <motion.div
@@ -32,7 +31,7 @@ export const FinalCTA = () => {
         <div className="relative">
         <span className="inline-flex items-center gap-2 rounded-full bg-white/10 border border-white/15 px-3 py-1.5 text-[12px] font-semibold tracking-wider text-white/95 backdrop-blur">
           <span className="h-1.5 w-1.5 rounded-full bg-[var(--m-acid)]" />
-          Get your event rate
+          Full event operating stack
         </span>
 
         <h2
@@ -46,27 +45,17 @@ export const FinalCTA = () => {
         </h2>
 
         <p className="mt-6 text-[17px] leading-relaxed text-white/75 max-w-[560px] mx-auto">
-          Direct sales. Owned fan CRM. AI pricing. Built for the way India
-          actually goes out. Start with the commission offer for your next night.
+          Direct sales. Owned fan CRM. AI event evaluation. No setup fee, no
+          subscription, no card details required. Publish events directly.
         </p>
 
         <div className="mt-10 flex items-center justify-center gap-3 flex-wrap">
-          {/* Pre-launch: signup CTA hidden; waitlist trigger in its place.
-          <Link href="/signup" className="hm-btn hm-btn-acid">
-            Get my event rate
-            <ArrowRight size={16} />
-          </Link>
-          */}
-          <button
-            type="button"
-            onClick={() => openWaitlist("final-cta")}
-            className="hm-btn hm-btn-acid"
-          >
+          <WaitlistButton source="final-cta" className="hm-btn hm-btn-acid">
             Join the waitlist
             <ArrowRight size={16} />
-          </button>
+          </WaitlistButton>
           <Link
-            href="/pricing"
+            href="/how-it-works"
             className="hm-btn hm-btn-on-dark border border-white/15"
             style={{ background: "transparent", color: "white" }}
           >

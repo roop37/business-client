@@ -35,7 +35,7 @@ export const OrganizationJsonLd = () =>
     url: SITE_URL,
     logo: LOGO_URL,
     description:
-      "Hoizr Business is the ticketing, marketing, and ops platform built for Indian event organizers, venues, and promoters. Lowest commission in India, owned fan CRM, and event-specific AI pricing for clubs, festivals, comedy promoters, and live music venues.",
+      "Hoizr Business is the ticketing, marketing, and ops platform built for Indian event organizers, venues, and promoters. Publish events directly, keep an owned fan CRM, and use AI event evaluation for clubs, festivals, comedy promoters, and live music venues.",
     parentOrganization: {
       "@type": "Organization",
       name: LEGAL_NAME,
@@ -79,14 +79,14 @@ export const OrganizationJsonLd = () =>
       priceCurrency: "INR",
       price: "0",
       description:
-        "Hoizr quotes an event-specific commission per show. No setup fee, no long-term contract.",
+        "Direct event publishing with no subscription wall, setup fee, card-details friction, or starter-tier limitation.",
     },
     // Audience targeting — Schema.org Audience type signals to AI
     // search engines + Google who this product is for.
     audience: {
       "@type": "BusinessAudience",
       audienceType:
-        "Event organizers, venues, promoters, festival hosts, comedy promoters, nightclub operators in India",
+        "Event organizers, venues, promoters, festival organizers, comedy promoters, nightclub operators in India",
       geographicArea: { "@type": "Country", name: "India" },
     },
     knowsAbout: [
@@ -98,7 +98,7 @@ export const OrganizationJsonLd = () =>
       "Fan CRM",
       "Event marketing automation",
       "WhatsApp marketing for events",
-      "AI commission pricing for events",
+      "AI event evaluation for events",
       "Door scanning",
       "Guestlist management",
       "Promoter management",
@@ -164,7 +164,7 @@ export const ProductJsonLd = ({ content }: { content: ProductContent }) =>
     audience: {
       "@type": "BusinessAudience",
       audienceType:
-        "Indian event organizers, venues, promoters, festival hosts, comedy promoters, nightclub operators",
+        "Indian event organizers, venues, promoters, festival organizers, comedy promoters, nightclub operators",
       geographicArea: { "@type": "Country", name: "India" },
     },
     hasOfferCatalog: {

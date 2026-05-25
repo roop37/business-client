@@ -221,7 +221,7 @@ export default function ResourcesPage() {
             <div className="hm-eyebrow">From the Hoizr blog</div>
             <h2 className="hm-h2 mt-3">Latest posts.</h2>
             <p className="hm-lead mt-5 max-w-[520px]">
-              Deeper reads on migration, fan CRM, AI pricing, and the way
+              Deeper reads on migration, fan CRM, AI event strategy, and the way
               Indian live nights actually run.
             </p>
           </div>

@@ -79,7 +79,7 @@ const tenor = Tenor_Sans({
   display: "swap",
 });
 
-// Marketing-site fonts. Used only on /, /pricing, /product/*, /blog/*
+// Marketing-site fonts. Used only on /, /about, /product/*, /blog/*
 // via the .hoizr-marketing wrapper. Bodoni Moda is the wordmark +
 // display face; Manrope is the body face.
 const bodoniModa = Bodoni_Moda({

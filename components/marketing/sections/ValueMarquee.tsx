@@ -3,7 +3,7 @@
 const VALUE_TOKENS = [
   "Direct ticketing",
   "Owned fan CRM",
-  "AI pricing",
+  "AI event evaluation",
   "Conversation marketing",
   "Settlement-ready ops",
   "Door scanner ops",
@@ -18,7 +18,7 @@ const VALUE_TOKENS = [
 /**
  * Slim marquee that runs Hoizr capability tokens horizontally below the
  * hero. Replaces the proof-logo strip used on most SaaS landings —
- * Hoizr is pre-launch so we lead with what the product does, not who
+ * Lead with what the product does, not who
  * is using it. The track is duplicated so the CSS infinite loop reads
  * continuous.
  */

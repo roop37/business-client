@@ -1,6 +1,6 @@
 # Hoizr Business — Ticketing, marketing & ops for India's live nights
 
-> Hoizr Business is the host-side product in the Hoizr family. Direct ticketing with no hidden fees, an owned fan CRM, AI-quoted event-specific commissions, and built-in marketing and ops. Built by Hoizr Technologies Pvt. Ltd. for clubs, festivals, comedy, and live music organisers.
+> Hoizr Business is the organizer-side product in the Hoizr family. Venues and event organizers can publish events directly and use direct ticketing, owned fan CRM, AI event evaluation, and built-in marketing and ops without a subscription wall. Built by Hoizr Technologies Pvt. Ltd. for clubs, festivals, comedy, and live music organisers.
 
 ## The Hoizr family
 Operated by Hoizr Technologies Pvt. Ltd.
@@ -12,13 +12,14 @@ Operated by Hoizr Technologies Pvt. Ltd.
 
 ## Core values
 - Owned audience, not rented. Hosts keep their own customer relationships and full data ownership.
-- Transparent commercials. AI quotes a single per-event commission — no hidden percentages or convenience fees.
+- No gatekeeping. Event organizers can publish directly without a subscription wall or stripped-down starter tier.
+- AI event evaluation. Hoizr studies the event and provides the best possible offer, including lowered commission where the event qualifies.
 - India-first. UPI, GST invoices, Section 24 compliance, regional language support, host payouts in INR.
 
 ## Key surfaces
 
 - [Home](https://business.hoizr.com/): Platform overview and primary CTAs.
-- [Pricing](https://business.hoizr.com/pricing): Transparent commission tiers + AI Boost pricing.
+- [Platform access](https://business.hoizr.com/pricing): Direct event publishing without a subscription wall.
 - [How it works](https://business.hoizr.com/how-it-works): End-to-end host journey from onboarding to settlement.
 - [Products](https://business.hoizr.com/product): Ticketing, fan CRM, scanner, marketing tools, AI offers, host payouts.
 - [Blog](https://business.hoizr.com/blog): Stories on live entertainment, ticketing, and India's nightlife economy.

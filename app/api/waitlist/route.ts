@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { Resend } from "resend";
 
 /**
- * Pre-launch waitlist endpoint. Posts from the WaitlistModal,
+ * Hoizr Business access endpoint. Posts from the legacy WaitlistModal,
  * fires two transactional emails via Resend:
  *
  *   1. Confirmation to the lead.
@@ -10,7 +10,7 @@ import { Resend } from "resend";
  *
  * Self-contained — runs without the main API server. Reads keys from
  * .env (recoverable values committed there for now while the team is
- * pre-launch). Move to Vercel env + secret rotation before any
+ * early access). Move to Vercel env + secret rotation before any
  * external traffic.
  */
 
@@ -27,13 +27,13 @@ interface WaitlistBody {
 }
 
 const ROLE_LABEL: Record<Role, string> = {
-  host: "Venue / Host",
+  host: "Venue",
   "event-org": "Event organiser",
   promoter: "Promoter",
   other: "Other",
 };
 
-// Apple-style waitlist emails are sent from a real person, not a brand
+// Apple-style account-request emails are sent from a real person, not a brand
 // mailbox — open rates run 30%+ higher. `contact@hoizr.com` is still
 // the deliverability address; the display name puts a human face on
 // the inbox preview.
@@ -44,7 +44,7 @@ const SITE_URL =
   process.env.NEXT_PUBLIC_SITE_URL ?? "https://business.hoizr.com";
 const LOGO_URL = `${SITE_URL}/logo/logoDark.png`;
 const UNSUBSCRIBE_MAILTO = `mailto:contact@hoizr.com?subject=${encodeURIComponent(
-  "Remove me from the Hoizr waitlist",
+  "Remove me from Hoizr account updates",
 )}`;
 
 const NOTIFY_TO = process.env.WAITLIST_NOTIFY_EMAIL ?? "sanbedan9989@gmail.com";
@@ -114,14 +114,14 @@ export async function POST(req: Request) {
         from: FROM_ADDRESS,
         to: email,
         replyTo: REPLY_TO,
-        subject: "You're on the Hoizr waitlist",
+        subject: "We got your Hoizr account request",
         html: userHtml,
       }),
       resend.emails.send({
         from: FROM_ADDRESS,
         to: NOTIFY_TO,
         replyTo: email,
-        subject: `New waitlist signup · ${name} (${roleLabel})`,
+        subject: `New Hoizr account request · ${name} (${roleLabel})`,
         html: internalHtml,
       }),
     ]);
@@ -154,7 +154,7 @@ function renderUserEmail({
   name: string;
   roleLabel: string;
 }) {
-  // Apple-style waitlist confirmation. Plain-text feel, single CTA
+  // Apple-style confirmation. Plain-text feel, single CTA
   // (reply with event date), real human signature, original Hoizr
   // logo at the top, explicit unsubscribe path in the footer.
   // Designed to look like a personal note, not a marketing blast.
@@ -174,14 +174,14 @@ function renderUserEmail({
         <tr><td style="font-size:17px;line-height:1.55;color:#1d1d1f;">
           <p style="margin:0 0 18px;">Hey ${escape(firstName)},</p>
           <p style="margin:0 0 18px;">
-            You&rsquo;re on the Hoizr waitlist — you&rsquo;ll be among the first
-            ${escape(roleLabel.toLowerCase())}s we onboard when the dashboard opens.
+            We got your Hoizr Business access request. Event organizers can publish
+            directly and start without a subscription wall.
           </p>
           <p style="margin:0 0 18px;">Here&rsquo;s what happens next:</p>
           <ul style="margin:0 0 22px;padding:0 0 0 20px;color:#1d1d1f;">
-            <li style="margin:0 0 6px;line-height:1.55;">We&rsquo;re onboarding hosts in small waves so every account gets a personal walkthrough.</li>
-            <li style="margin:0 0 6px;line-height:1.55;">When your slot opens, you&rsquo;ll get a direct invite from me with login details and your event-specific commission quote.</li>
-            <li style="margin:0;line-height:1.55;">Verification (KYC / bank / GSTIN) runs in parallel — most hosts clear it within hours.</li>
+            <li style="margin:0 0 6px;line-height:1.55;">You can publish directly without a subscription wall, setup fee, listing fee, or starter-tier limitation.</li>
+            <li style="margin:0 0 6px;line-height:1.55;">Hoizr AI studies the event and provides the best possible offer, including lowered commission where the event qualifies.</li>
+            <li style="margin:0;line-height:1.55;">Verification (KYC / bank / GSTIN, if applicable) runs alongside event setup.</li>
           </ul>
           <p style="margin:0 0 18px;">
             <strong>If you have an event coming up soon, just hit reply with the
@@ -205,7 +205,7 @@ function renderUserEmail({
 
         <!-- Footer / unsubscribe — required for deliverability -->
         <tr><td style="padding-top:32px;font-size:11px;line-height:1.55;color:#86868b;">
-          You&rsquo;re receiving this because you joined the Hoizr waitlist at
+          You&rsquo;re receiving this because you shared your details with Hoizr at
           business.hoizr.com.
           <br />
           Don&rsquo;t want updates? <a href="${UNSUBSCRIBE_MAILTO}" style="color:#86868b;text-decoration:underline;">Unsubscribe</a> — one click, no hard feelings.
@@ -239,7 +239,7 @@ function renderInternalEmail({
     <tr><td align="center">
       <table role="presentation" width="100%" style="max-width:560px;background:#ffffff;border-radius:14px;border:1px solid #ececea;">
         <tr><td style="padding:24px 28px;">
-          <div style="font-size:11px;font-weight:700;letter-spacing:0.14em;text-transform:uppercase;color:#5a5e55;">New waitlist signup</div>
+          <div style="font-size:11px;font-weight:700;letter-spacing:0.14em;text-transform:uppercase;color:#5a5e55;">New Hoizr account request</div>
           <h1 style="margin:6px 0 18px;font-size:20px;font-weight:700;">${escape(name)} · ${escape(roleLabel)}</h1>
           <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="font-size:14px;border-top:1px solid #ececea;">
             <tr><td style="padding:10px 0;width:90px;color:#7a7e75;">Email</td><td style="padding:10px 0;"><a href="mailto:${escape(email)}" style="color:#0e0f0c;">${escape(email)}</a></td></tr>

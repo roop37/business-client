@@ -14,7 +14,7 @@ type OpenMenu = "products" | "company" | "resources" | null;
 const RESOURCE_LINKS = [
   { label: "Flyer stickers", href: "/resources#stickers", blurb: "Download Hoizr PNG stickers for posters, reels, stories, and venue screens." },
   { label: "Playbooks", href: "/resources#playbooks", blurb: "Short, opinionated guides for India's live nights — door ops, on-sale day, refund policy, teardown." },
-  { label: "Blog", href: "/blog", blurb: "Migration playbooks, fan-CRM tactics, AI pricing studies — for Indian event organizers." },
+  { label: "Blog", href: "/blog", blurb: "Migration playbooks, fan-CRM tactics, AI event strategy — for Indian event organizers." },
   { label: "How Hoizr works", href: "/how-it-works", blurb: "Quick onboarding, same-day verification, and the operating flow from signup to a sold-out night." },
   { label: "Help center", href: "/help", blurb: "Support routes, dashboard basics, launch-day checks, and weekend escalation." },
 ];
@@ -37,6 +37,19 @@ const NAV_BLOG_CARDS = [
   },
 ];
 
+const NAV_RESOURCE_PLAYBOOK_CARDS = [
+  {
+    title: "Campaign cadence that holds attention",
+    href: "/blog/campaign-cadence-playbook-for-event-marketing",
+    image: "/images/playbooks/Backstage-tech-control-in-ambient-lighting.png",
+  },
+  {
+    title: "Refund copy that reduces disputes",
+    href: "/blog/refund-policy-playbook-for-event-hosts",
+    image: "/images/playbooks/Rainy-night-at-the-club-entrance.png",
+  },
+];
+
 const EASE = [0.2, 0.6, 0.2, 1] as const;
 
 export const MarketingNav = () => {
@@ -51,7 +64,7 @@ export const MarketingNav = () => {
   const lastHoverOpenAt = useRef(0);
   const navRef = useRef<HTMLElement | null>(null);
   const pathname = usePathname();
-  const { open: openWaitlist } = useWaitlist();
+  const waitlist = useWaitlist();
 
   const clearCloseTimer = useCallback(() => {
     if (closeTimer.current) {
@@ -144,7 +157,7 @@ export const MarketingNav = () => {
         >
           <Link
             href="/"
-            className="hoizr-mark text-[22px] tracking-[0.06em] text-[var(--m-ink-1)]"
+            className="hoizr-mark text-[26px] leading-none tracking-[0.06em] text-[var(--m-ink-1)]"
             onClick={closeNow}
           >
             HOIZR
@@ -175,20 +188,13 @@ export const MarketingNav = () => {
 
           <Link
             href="https://hoizr.com"
+            target="_blank"
+            rel="noreferrer"
             onClick={closeNow}
             onMouseEnter={closeNow}
             className="rounded-full px-3.5 py-2 text-[14px] font-medium text-[var(--m-ink-2)] hover:bg-[rgba(0,0,0,0.05)]"
           >
             Find Event
-          </Link>
-
-          <Link
-            href="/pricing"
-            onClick={closeNow}
-            onMouseEnter={closeNow}
-            className="rounded-full px-3.5 py-2 text-[14px] font-medium text-[var(--m-ink-2)] hover:bg-[rgba(0,0,0,0.05)]"
-          >
-            Pricing
           </Link>
 
           <div
@@ -232,47 +238,17 @@ export const MarketingNav = () => {
               </motion.span>
             </button>
           </div>
-
-          <Link
-            href="/resources#stickers"
-            onClick={closeNow}
-            onMouseEnter={closeNow}
-            className="rounded-full px-3.5 py-2 text-[14px] font-medium text-[var(--m-ink-2)] hover:bg-[rgba(0,0,0,0.05)]"
-          >
-            Stickers
-          </Link>
         </nav>
 
-        {/* Pre-launch: login/signup entry points are hidden while the
-            dashboard is closed to the public. The single CTA opens the
-            waitlist modal. Restore the commented Link components below
-            when the dashboard reopens. */}
-        {/*
-        <div className="hidden lg:flex items-center gap-2">
-          <Link
-            href="/login"
-            onClick={closeNow}
-            onMouseEnter={closeNow}
-            className="rounded-full px-3.5 py-2 text-[14px] font-medium text-[var(--m-ink-2)] hover:bg-[rgba(0,0,0,0.05)]"
-          >
-            Login
-          </Link>
-          <Link
-            href="/signup"
-            onClick={closeNow}
-            onMouseEnter={closeNow}
-            className="hm-btn hm-btn-primary text-[14px] py-2.5 px-4"
-          >
-            Get my event rate
-          </Link>
-        </div>
-        */}
+        {/* Pre-launch: login is hidden — accounts open once we leave
+            the waitlist phase. The only auth-adjacent CTA on the
+            marketing surface is "Join the waitlist". */}
         <div className="hidden lg:flex items-center gap-2">
           <button
             type="button"
             onClick={() => {
               closeNow();
-              openWaitlist("nav");
+              waitlist.open("nav");
             }}
             onMouseEnter={closeNow}
             className="hm-btn hm-btn-primary text-[14px] py-2.5 px-4"
@@ -391,16 +367,11 @@ export const MarketingNav = () => {
                 </div>
                 <div className="mt-5 border-t border-[var(--m-border)] pt-4 flex items-center justify-between text-[13px] text-[var(--m-ink-3)]">
                   <span>Built for India. Engineered for live nights.</span>
-                  {/* Pre-launch: hidden signup CTA replaced by waitlist trigger.
-                      <Link href="/signup" onClick={closeNow} className="font-semibold text-[var(--m-forest-700)] hover:underline">
-                        Get your event rate →
-                      </Link>
-                  */}
                   <button
                     type="button"
                     onClick={() => {
                       closeNow();
-                      openWaitlist("nav-mega");
+                      waitlist.open("nav-products-menu");
                     }}
                     className="font-semibold text-[var(--m-forest-700)] hover:underline"
                   >
@@ -460,27 +431,72 @@ export const MarketingNav = () => {
             transition={{ duration: 0.22, ease: EASE }}
             className="absolute left-1/2 -translate-x-1/2 top-full"
           >
-            <div className="mt-0 mx-auto w-[560px] px-6 pb-6">
+            <div className="mt-0 mx-auto w-[860px] px-6 pb-6">
               <div className="rounded-[24px] border border-[var(--m-border)] bg-[var(--m-surface-elevated)] shadow-[var(--m-shadow-pop)] p-4">
-                <ul className="space-y-1">
-                  {RESOURCE_LINKS.map((r, i) => (
-                    <motion.li
-                      key={r.href}
-                      initial={{ opacity: 0, x: -6 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      transition={{ duration: 0.28, ease: EASE, delay: i * 0.04 }}
-                    >
-                      <Link
-                        href={r.href}
-                        onClick={closeNow}
-                        className="block rounded-xl p-3 transition-colors hover:bg-[var(--m-canvas-2)]"
+                <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_300px]">
+                  <ul className="space-y-1">
+                    {RESOURCE_LINKS.map((r, i) => (
+                      <motion.li
+                        key={r.href}
+                        initial={{ opacity: 0, x: -6 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ duration: 0.28, ease: EASE, delay: i * 0.04 }}
                       >
-                        <div className="text-[14px] font-semibold text-[var(--m-ink-1)]">{r.label}</div>
-                        <div className="mt-0.5 text-[12.5px] text-[var(--m-ink-3)]">{r.blurb}</div>
+                        <Link
+                          href={r.href}
+                          onClick={closeNow}
+                          className="block rounded-xl p-3 transition-colors hover:bg-[var(--m-canvas-2)]"
+                        >
+                          <div className="text-[14px] font-semibold text-[var(--m-ink-1)]">{r.label}</div>
+                          <div className="mt-0.5 text-[12.5px] text-[var(--m-ink-3)]">{r.blurb}</div>
+                        </Link>
+                      </motion.li>
+                    ))}
+                  </ul>
+                  <motion.div
+                    initial={{ opacity: 0, x: 8 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ duration: 0.3, ease: EASE, delay: 0.08 }}
+                    className="grid gap-3"
+                  >
+                    {NAV_RESOURCE_PLAYBOOK_CARDS.map((card) => (
+                      <Link
+                        key={card.href}
+                        href={card.href}
+                        onClick={closeNow}
+                        className="group relative min-h-[142px] overflow-hidden rounded-[18px] bg-[#111] text-white"
+                      >
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img
+                          src={card.image}
+                          alt=""
+                          aria-hidden
+                          className="absolute inset-0 h-full w-full object-cover object-left transition-transform duration-700 group-hover:scale-105"
+                          draggable={false}
+                        />
+                        <span
+                          aria-hidden
+                          className="absolute inset-0 bg-[linear-gradient(180deg,rgba(0,0,0,0.06),rgba(0,0,0,0.76))]"
+                        />
+                        <span className="relative flex h-full min-h-[142px] flex-col justify-end p-4">
+                          <span className="text-[10px] font-bold uppercase tracking-[0.14em] text-white/70">
+                            Playbook
+                          </span>
+                          <span className="mt-1.5 text-[19px] font-semibold leading-[1.08] tracking-[-0.02em]">
+                            {card.title}
+                          </span>
+                          <span className="mt-2 inline-flex items-center gap-1 text-[12px] font-semibold text-[var(--m-acid)]">
+                            Read
+                            <ArrowUpRight
+                              size={13}
+                              className="transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5"
+                            />
+                          </span>
+                        </span>
                       </Link>
-                    </motion.li>
-                  ))}
-                </ul>
+                    ))}
+                  </motion.div>
+                </div>
               </div>
             </div>
           </motion.div>
@@ -538,11 +554,8 @@ export const MarketingNav = () => {
                 </motion.div>
               ))}
               <div className="pt-4 border-t border-[var(--m-border)] grid gap-1">
-                <Link onClick={() => setMobileOpen(false)} href="https://hoizr.com" className="rounded-xl px-3 py-2.5 -mx-3 text-[15px] font-medium hover:bg-[var(--m-canvas-2)]">
+                <Link onClick={() => setMobileOpen(false)} href="https://hoizr.com" target="_blank" rel="noreferrer" className="rounded-xl px-3 py-2.5 -mx-3 text-[15px] font-medium hover:bg-[var(--m-canvas-2)]">
                   Find Event
-                </Link>
-                <Link onClick={() => setMobileOpen(false)} href="/pricing" className="rounded-xl px-3 py-2.5 -mx-3 text-[15px] font-medium hover:bg-[var(--m-canvas-2)]">
-                  Pricing
                 </Link>
                 <Link onClick={() => setMobileOpen(false)} href="/about" className="rounded-xl px-3 py-2.5 -mx-3 text-[15px] font-medium hover:bg-[var(--m-canvas-2)]">
                   About
@@ -562,26 +575,12 @@ export const MarketingNav = () => {
                 <Link onClick={() => setMobileOpen(false)} href="/blog" className="rounded-xl px-3 py-2.5 -mx-3 text-[15px] font-medium hover:bg-[var(--m-canvas-2)]">
                   Blog
                 </Link>
-                {/* Pre-launch: login link hidden until dashboard reopens.
-                <Link onClick={() => setMobileOpen(false)} href="/login" className="rounded-xl px-3 py-2.5 -mx-3 text-[15px] font-medium hover:bg-[var(--m-canvas-2)]">
-                  Login
-                </Link>
-                */}
               </div>
-              {/* Pre-launch: signup CTA hidden; replaced with waitlist trigger.
-              <Link
-                href="/signup"
-                onClick={() => setMobileOpen(false)}
-                className="hm-btn hm-btn-primary w-full"
-              >
-                Get my event rate
-              </Link>
-              */}
               <button
                 type="button"
                 onClick={() => {
                   setMobileOpen(false);
-                  openWaitlist("nav-mobile");
+                  waitlist.open("nav-mobile");
                 }}
                 className="hm-btn hm-btn-primary w-full"
               >

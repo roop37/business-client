@@ -1,18 +1,21 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { AboutIncluded } from "@/components/marketing/about/AboutIncluded";
+import { AboutPromise } from "@/components/marketing/about/AboutPromise";
 import { MarketingShell } from "@/components/marketing/MarketingShell";
+import { AiOfferSpotlight } from "@/components/marketing/sections/AiOfferSpotlight";
 import { Beliefs } from "@/components/marketing/sections/Beliefs";
 import { FinalCTA } from "@/components/marketing/sections/FinalCTA";
 
 export const metadata: Metadata = {
   title: "About Hoizr — operating system for Indian event organizers & venues",
   description:
-    "Hoizr Technologies Pvt. Ltd. is the operating system for India's live-event ecosystem — built for event organizers, venues, festival hosts, comedy promoters, and nightclub operators across Mumbai, Bangalore, Delhi, Pune, Hyderabad, Chennai, and Goa.",
+    "Hoizr Technologies Pvt. Ltd. is the operating system for India's live-event ecosystem — built for event organizers, venues, festival organizers, comedy promoters, and nightclub operators across Mumbai, Bangalore, Delhi, Pune, Hyderabad, Chennai, and Goa.",
   alternates: { canonical: "/about" },
   openGraph: {
     title: "About Hoizr — built for Indian event organizers & venues",
     description:
-      "Founded by people who've actually run live nights in India. Hoizr puts the ticketing, marketing, and ops stack that national chains use into a single-venue operator's hands.",
+      "Hoizr is building an India-first operating stack for organizers and venues: direct publishing, owned fan CRM, AI event evaluation, and event-night operations.",
     url: "/about",
     type: "website",
   },
@@ -20,8 +23,32 @@ export const metadata: Metadata = {
 
 const VALUES_STRIP = [
   { value: "India-first", note: "Built for the way Indian fans book, pay, and show up — not retrofitted from abroad." },
+  { value: "No gatekeeping", note: "The full operating stack is available from day one — no subscription wall, no stripped-down starter tier." },
   { value: "Organiser-owned", note: "Your fan list, your data, your brand. We're a platform, not a marketplace that hoards." },
-  { value: "AI as leverage", note: "The same tooling that scaled national festival circuits — handed to a one-venue operator." },
+  { value: "AI as leverage", note: "AI studies the event and helps surface the best possible offer and operating guidance." },
+];
+
+const OPERATING_LAYERS = [
+  {
+    title: "Publish with less guesswork",
+    body:
+      "One listing becomes your event page, SEO source, ticket setup, collaborator access, campaign base, and door setup. You are not rebuilding the same event in five tools.",
+  },
+  {
+    title: "Turn buyers into owned leverage",
+    body:
+      "Ticket buyers, saves, scans, reviews, and campaign responses feed the fan profile you own. Every event leaves a warmer audience for the next one.",
+  },
+  {
+    title: "Run the room from one truth",
+    body:
+      "Door staff see clean scan and guestlist states, marketing sees source attribution, and finance sees settlement-ready totals from the same operating record.",
+  },
+  {
+    title: "Get sharper after every night",
+    body:
+      "AI offer evaluation and reporting help you understand which formats, channels, ticket ladders, and launch timings are actually moving sales.",
+  },
 ];
 
 export default function AboutPage() {
@@ -42,17 +69,16 @@ export default function AboutPage() {
             <span className="text-[var(--m-forest-600)]">for India&apos;s live nights.</span>
           </h1>
           <p className="hm-lead mt-7 max-w-[600px]">
-            Hoizr was built by people who&apos;ve spent more weekends on the
-            door than the dance floor — running clubs, festivals, and live
-            music nights across India. We got tired of cobbling together
-            spreadsheets, marketplace dashboards, and group chats. So we built
-            the platform we wished existed.
+            Hoizr exists to make Indian event operations direct, owned, and
+            compounding. Create the event once, launch it everywhere it needs
+            to live, run the room with clean data, and leave with an audience
+            you can actually bring back.
           </p>
         </div>
       </section>
 
       <section className="hm-section pt-0">
-        <div className="grid grid-cols-1 gap-5 md:grid-cols-3">
+        <div className="grid grid-cols-1 gap-5 md:grid-cols-2 lg:grid-cols-4">
           {VALUES_STRIP.map((v) => (
             <div
               key={v.value}
@@ -80,26 +106,70 @@ export default function AboutPage() {
               <p>
                 India&apos;s nightlife and live-event economy runs on operators who book the
                 lineup, manage the door, run promo, and balance the books —
-                often the same person. The tools they&apos;re handed treat them
-                like a row in a database.
+                often the same person. They need one operating system, not a
+                chain of tabs and follow-up calls.
               </p>
               <p>
-                Marketplaces capture their fans. Generic ticketing platforms
-                charge enterprise rates for last-decade software. Spreadsheets
-                eat their Sundays. Promoters take cuts off discount codes that
-                were never authorised.
+                Marketplaces can capture the fan relationship. Generic tools
+                make organizers stitch ticketing, CRM, guestlist, campaigns,
+                and scanner operations together by hand. Spreadsheets eat the
+                weekend before the event even starts.
               </p>
               <p>
                 Hoizr is the alternative: one workspace for everything from
-                onboarding to settlement, an owned fan CRM (not a marketplace
-                rental), AI that quotes the lowest commission for your specific
-                event, and the operational rigour of a stadium-grade team
-                without the headcount.
+                onboarding to settlement, an owned fan CRM, direct publishing,
+                AI that studies the event and surfaces the best possible offer,
+                and the operational rigour of a larger event team without the
+                headcount.
               </p>
             </div>
           </div>
         </div>
       </section>
+
+      <section className="hm-section pt-0">
+        <div className="grid gap-8 lg:grid-cols-[0.9fr,1.6fr] lg:gap-16">
+          <div>
+            <div className="hm-eyebrow">What changes</div>
+            <h2 className="hm-h2 mt-3">
+              The event stops being a one-night transaction.
+            </h2>
+            <p className="mt-5 text-[16px] leading-relaxed text-[var(--m-ink-3)]">
+              Hoizr is built so every show strengthens the next one: better
+              discovery, cleaner door operations, owned fan data, clearer
+              attribution, and decisions backed by what actually happened.
+            </p>
+          </div>
+
+          <div className="grid gap-4 md:grid-cols-2">
+            {OPERATING_LAYERS.map((layer, index) => (
+              <div
+                key={layer.title}
+                className="rounded-[var(--m-r-lg)] border border-[var(--m-border)] bg-[var(--m-surface)] p-6"
+              >
+                <div className="hoizr-mark text-[18px] text-[var(--m-forest-700)]">
+                  {String(index + 1).padStart(2, "0")}
+                </div>
+                <h3
+                  className="mt-4 text-[20px] font-bold leading-tight text-[var(--m-ink-1)]"
+                  style={{ fontFamily: "var(--m-font-display)" }}
+                >
+                  {layer.title}
+                </h3>
+                <p className="mt-3 text-[14.5px] leading-relaxed text-[var(--m-ink-3)]">
+                  {layer.body}
+                </p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <AboutPromise />
+
+      <AboutIncluded />
+
+      <AiOfferSpotlight />
 
       <Beliefs />
 
@@ -109,7 +179,7 @@ export default function AboutPage() {
             <div>
               <div className="hm-eyebrow">Founder</div>
               <h2 className="hm-h2 mt-3">
-                Built by someone who&apos;s done the door shift.
+                Founder-led, India-first, product-heavy.
               </h2>
               <div className="mt-7 flex items-center gap-4">
                 <div className="h-14 w-14 shrink-0 rounded-full bg-[var(--m-forest-700)] text-[var(--m-acid)] text-[18px] font-bold flex items-center justify-center">
@@ -127,22 +197,21 @@ export default function AboutPage() {
             </div>
             <div className="space-y-5 text-[17px] leading-[1.65] text-[var(--m-ink-2)]">
               <p>
-                Hoizr started inside the kind of rooms it now ticks ticket
-                stubs for — clubs, festivals, open-air nights across India,
-                where running the night was equal parts logistics and luck.
+                Hoizr is led by Sanbedan Paul and built around a simple
+                operating belief: Indian organizers should not need a subscription
+                or card details before they can publish a serious event.
               </p>
               <p>
-                The platform is opinionated because we&apos;ve been on the
-                wrong side of every problem it solves: spreadsheets that
-                broke at midnight, promoter codes nobody could attribute,
-                marketplace fees that ate the headliner&apos;s margin, and AI
-                tooling that only the national chains could afford. We&apos;re
-                building Hoizr to put those same advantages in every Indian
-                operator&apos;s hands.
+                The product is opinionated because event work is operational:
+                promoter links need attribution, guestlists need caps, door
+                staff need clean scan states, finance needs settlement-ready
+                numbers, and the next campaign should learn from the last
+                night.
               </p>
               <p>
                 The team behind it is small, India-based, AI-first in its
-                daily workflow, and not running public hiring right now.
+                daily workflow, and focused on making the organizer workspace
+                direct, powerful, and practical for PAN-India events.
               </p>
               <div className="flex flex-wrap items-center gap-3 pt-4">
                 <Link href="/contact" className="hm-btn hm-btn-primary">

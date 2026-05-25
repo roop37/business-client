@@ -1,9 +1,10 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { ArrowRight, CheckCircle2, Loader2, Mail, MapPin, MessageCircle, PhoneCall, Sparkles } from "lucide-react";
+import { ArrowRight, CheckCircle2, Loader2, Mail, MessageCircle, PhoneCall, Sparkles } from "lucide-react";
+import Link from "next/link";
 import { useState } from "react";
-import { useWaitlist } from "../waitlist/WaitlistContext";
+import { WaitlistButton } from "../waitlist/WaitlistButton";
 
 const EASE = [0.2, 0.6, 0.2, 1] as const;
 const CONTACT_PHONE_DISPLAY = "+91 83695 72945";
@@ -47,7 +48,7 @@ const FIELDS: Field[] = [
     key: "message",
     label: "Tell us about your next show",
     placeholder:
-      "Date, capacity, ticket mix, anything that helps Hoizr quote your event rate accurately.",
+      "Date, capacity, ticket mix, venue, or anything that helps Hoizr understand the event.",
     type: "textarea",
     full: true,
   },
@@ -70,13 +71,24 @@ export const ContactClient = () => {
     }
     setSubmitting(true);
     try {
-      // Submission endpoint not yet wired. The form captures the
-      // intent and surfaces a thank-you state; backend route + lead
-      // routing to be added in a follow-up.
-      await new Promise((r) => setTimeout(r, 700));
+      const res = await fetch("/api/contact", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(values),
+      });
+      const data = (await res.json().catch(() => null)) as
+        | { error?: string }
+        | null;
+      if (!res.ok) {
+        throw new Error(data?.error ?? "Unable to send your message.");
+      }
       setSubmitted(true);
     } catch (err) {
-      setError("Couldn't send right now. Try emailing contact@hoizr.com directly.");
+      setError(
+        err instanceof Error
+          ? err.message
+          : "Couldn't send right now. Try emailing contact@hoizr.com directly.",
+      );
     } finally {
       setSubmitting(false);
     }
@@ -225,7 +237,6 @@ export const ContactClient = () => {
 };
 
 export const ContactSidePanel = () => {
-  const { open: openWaitlist } = useWaitlist();
   return (
     <div className="space-y-4">
       <div className="rounded-[var(--m-r-lg)] border border-[var(--m-border)] bg-[var(--m-canvas-2)] p-6">
@@ -265,43 +276,36 @@ export const ContactSidePanel = () => {
         </div>
       </div>
 
-      <div className="rounded-[var(--m-r-lg)] border border-[var(--m-border)] bg-[var(--m-canvas-2)] p-6">
-        <div className="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-[var(--m-forest-700)] text-[var(--m-acid)]">
-          <MapPin size={18} strokeWidth={1.7} />
-        </div>
-        <div className="mt-4 text-[14.5px] font-semibold text-[var(--m-ink-1)]">
-          India desk
-        </div>
-        <p className="mt-1.5 text-[13.5px] leading-relaxed text-[var(--m-ink-3)]">
-          Mumbai · Bengaluru · Delhi NCR. The team works IST hours and
-          responds the same day for time-sensitive event nights.
-        </p>
-      </div>
-
-      <div className="rounded-[var(--m-r-lg)] hm-forest-panel relative p-6 text-white">
-        <div className="relative">
+      <div className="relative overflow-hidden rounded-[var(--m-r-lg)] bg-[#050504] p-6 text-white">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src="/marketing/hero/hero-lines-star.svg"
+          alt=""
+          aria-hidden
+          className="pointer-events-none absolute inset-0 h-full w-full object-cover"
+          draggable={false}
+        />
+        <div
+          aria-hidden
+          className="absolute inset-0 bg-black/48"
+        />
+        <div className="relative z-10">
           <div className="inline-flex items-center gap-2 rounded-full bg-white/10 px-3 py-1.5 text-[11.5px] font-semibold backdrop-blur">
             <Sparkles size={12} className="text-[var(--m-acid)]" /> Ready to ship?
           </div>
           <div className="mt-4 text-[14.5px] font-semibold text-white">
-            Skip the form, join the waitlist.
+            Bring your next event onto Hoizr.
           </div>
           <p className="mt-1.5 text-[13px] leading-relaxed text-white/75">
-            We&rsquo;re onboarding hosts in waves. Drop your details and
-            we&rsquo;ll reach out the moment your slot opens.
+            Publish directly, keep every fan relationship, and run the night
+            from one operating stack.
           </p>
-          {/* Pre-launch: signup CTA hidden until dashboard reopens.
-          <a href="/signup" className="hm-btn hm-btn-acid mt-4">
-            Get my event rate <ArrowRight size={16} />
-          </a>
-          */}
-          <button
-            type="button"
-            onClick={() => openWaitlist("contact-sidepanel")}
+          <WaitlistButton
+            source="contact-page"
             className="hm-btn hm-btn-acid mt-4"
           >
             Join the waitlist <ArrowRight size={16} />
-          </button>
+          </WaitlistButton>
         </div>
       </div>
     </div>

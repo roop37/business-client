@@ -87,7 +87,7 @@ type GstValue = "NONE" | "ZERO" | "CGST_SGST_18" | "IGST_18" | "OTHER";
 
 const DEFAULT_TICKETING_TERMS = `<p>Tickets are valid only for the event, date, and time shown on this listing. Entry is subject to venue security, age restrictions, and the organizer's right of admission.</p><ul><li>Carry a valid government ID and the QR ticket at entry.</li><li>Damaged, duplicated, or resold tickets may be rejected.</li><li>Lineup, set times, and entry rules may change for operational or safety reasons.</li></ul>`;
 
-const DEFAULT_REFUND_POLICY = `<p>Refunds are handled by the event organizer according to the policy shown at checkout.</p><ul><li>Organizer-approved refunds are returned to the original payment method.</li><li>Platform fees, payment gateway charges, and already used tickets may be non-refundable.</li><li>If an event is cancelled by the organizer, eligible ticket holders will be notified with the next steps.</li></ul>`;
+const DEFAULT_REFUND_POLICY = `<p>Refunds are handled by the event organizer according to the policy shown at checkout.</p><ul><li>Organizer-approved refunds are returned to the original payment method.</li><li>Payment-provider charges and already used tickets may be non-refundable where applicable.</li><li>If an event is cancelled by the organizer, eligible ticket holders will be notified with the next steps.</li></ul>`;
 
 const richTextToPlainText = (value: string) =>
   value
@@ -255,22 +255,22 @@ const eventTypeCards: {
     title: "Guestlist Event",
     description:
       "Free guestlist entry, such as couple before 10 PM, controlled by your terms.",
-    meta: ["Recommended", "0 commission", "0 customer fee"],
+    meta: ["Recommended", "Free entry", "No card required"],
     recommended: true,
   },
   {
     value: "EXCLUSIVE",
     title: "Exclusive Event",
     description:
-      "Tickets are available only on Hoizr. Smart pricing stays below the exclusive cap.",
-    meta: ["Max 4.55% + GST", "Payout 5-7 working days"],
+      "Tickets are available only on Hoizr. AI studies the event before publish.",
+    meta: ["Direct checkout", "Payout 5-7 working days"],
   },
   {
     value: "NON_EXCLUSIVE",
     title: "Non-Exclusive Event",
     description:
       "Tickets are available on Hoizr and other platforms. Built for multi-channel sales.",
-    meta: ["Max 8.99% + GST", "Payout 8-10 working days"],
+    meta: ["Multi-channel", "Payout 8-10 working days"],
   },
 ];
 
@@ -2220,7 +2220,7 @@ const EventJourney = ({
       description: (
         <>
           Publish this event with{" "}
-          <strong>{selectedOption?.label ?? "the selected pricing plan"}</strong>.
+          <strong>{selectedOption?.label ?? "the selected offer"}</strong>.
           Customers may see and book the event immediately after it goes live.
         </>
       ),
@@ -2233,11 +2233,11 @@ const EventJourney = ({
   const requestPricingOptionChange = (option: PricingOption) => {
     if (option.optionId === selectedPricingOptionId) return;
     setConfirmAction({
-      title: "Switch pricing plan?",
+      title: "Switch publish offer?",
       description: (
         <>
-          Switch the publish plan to <strong>{option.label}</strong>. This changes
-          the commission and payout assumptions used when the event is published.
+          Switch the publish offer to <strong>{option.label}</strong>. This changes
+          the offer context used when the event is published.
         </>
       ),
       confirmLabel: "Switch plan",
@@ -2251,12 +2251,12 @@ const EventJourney = ({
   ) => {
     if (mode === feeSettlementMode) return;
     setConfirmAction({
-      title: "Switch payment method?",
+      title: "Switch settlement handling?",
       description:
         mode === "DEDUCT_FROM_PAYOUT"
-          ? "Hoizr will deduct the offer amount from your ticket settlement after the event."
-          : "Hoizr will collect the offer amount after the event closes instead of deducting it from settlement.",
-      confirmLabel: "Switch method",
+          ? "Hoizr will reconcile the offer through the event settlement after the event."
+          : "Hoizr will reconcile the offer after the event closes instead of through settlement.",
+      confirmLabel: "Switch handling",
       tone: "warning",
       onConfirm: () => setFeeSettlementMode(mode),
     });
@@ -2278,8 +2278,8 @@ const EventJourney = ({
       return {
         savings:
           savingsValue && savingsValue > 0
-            ? `You save ${formatIndianRupees(savingsValue)} vs the basic plan`
-            : "Smart offer — same baseline commission",
+            ? `AI found ${formatIndianRupees(savingsValue)} in host-side savings`
+            : "Smart offer — baseline event context",
         hostRecommendation:
           customerMessage ??
           "AI-tuned offer for this event. Confirm before publishing.",
@@ -2308,16 +2308,16 @@ const EventJourney = ({
     return {
       savings:
         commissionSavings > 0
-          ? `${formatPercentDelta(commissionSavings)} pts lower commission than the highest plan`
-          : "Highest-reach plan with standard commission",
+          ? `${formatPercentDelta(commissionSavings)} pts lower commission than the highest offer`
+          : "Best-reach offer for this event",
       hostRecommendation: upfrontFee
-        ? "AI read: choose this when the offer is strong enough to lift conversion and you are comfortable funding it through settlement or after the event."
+        ? "AI read: choose this when the offer is strong enough to lift conversion and you are comfortable reconciling it through settlement or after the event."
         : isLowestUpfront
-        ? "AI read: lowest-friction option for publishing quickly without an upfront offer amount."
+        ? "AI read: lowest-friction option for publishing quickly."
         : "AI read: balanced plan for hosts who want a stronger offer without overcomplicating settlement.",
       customerRecommendation: isFastestSettlement
         ? "Customer angle: simple ticket decision, clear offer, and fast event momentum."
-        : "Customer angle: clear value message with no fee breakdown shown in the host publish flow.",
+        : "Customer angle: clear value message in the host publish flow.",
     };
   };
 
@@ -2445,7 +2445,7 @@ const EventJourney = ({
               {step === 0 ? (
                 <StepSection
                   title="Choose event category"
-                  subtitle="This controls ticketing rules, payout cycle, and whether Hoizr can offer smart commission options."
+                  subtitle="This controls ticketing rules, payout cycle, and whether Hoizr can offer smart event context."
                 >
                   {/* TASK-043 / TASK-011 sub-item: hover blocker overlay
                       when the category cannot be changed (update mode +
@@ -2562,11 +2562,10 @@ const EventJourney = ({
                     </div>
                   ) : null}
                   <div className="rounded-lg border border-[var(--owner-border)] bg-white p-4 text-sm leading-6 text-[var(--owner-fg-3)]">
-                    Customer platform fee is fixed from platform config and
-                    defaults to 5%. It does not change by event category.
-                    Commission is charged on gross ticket value. Incorrect
-                    category information can lead to per-ticket penalties and
-                    listing restrictions.
+                    Hoizr host accounts are free to create and publish from.
+                    No subscription, setup fee, listing fee, or card details
+                    are required before publishing. Incorrect category
+                    information can lead to review or listing restrictions.
                   </div>
                 </StepSection>
               ) : null}
@@ -3576,7 +3575,7 @@ const EventJourney = ({
                       }
                       title={
                         eventType === "FREE" && category.value !== "GUESTLIST"
-                          ? "Select Exclusive or Non-Exclusive event category to create paid tickets."
+                          ? "Select Exclusive or Non-Exclusive event category to create ticketed entries."
                           : undefined
                       }
                       onClick={() => setTicketCategory(category.value)}
@@ -4372,7 +4371,7 @@ const EventJourney = ({
                     Pick an offer to publish
                   </h2>
                   <p className="mt-1 text-sm text-[var(--owner-fg-3)]">
-                    Choose the commission plan you want Hoizr to apply, or
+                    Choose the offer context you want Hoizr to apply, or
                     publish with the basic no-offer option.
                   </p>
                 </div>
@@ -4388,7 +4387,7 @@ const EventJourney = ({
               </div>
 
               {/* Settlement-mode question only matters when the selected
-                  offer charges an upfront amount. For free offers / basic
+                  offer needs a separate settlement path. For basic
                   no-offer publishes we skip the prompt and default the
                   settlement mode silently. */}
               {(() => {
@@ -4412,10 +4411,10 @@ const EventJourney = ({
                       }`}
                     >
                       <div className="font-semibold text-[var(--owner-fg-1)]">
-                        Deduct offer from payout
+                        Reconcile through payout
                       </div>
                       <div className="mt-1 text-[var(--owner-fg-3)]">
-                        Hoizr deducts the upfront amount from your ticket settlement.
+                        Hoizr reconciles the offer through your ticket settlement.
                       </div>
                     </button>
                     <button
@@ -4428,10 +4427,10 @@ const EventJourney = ({
                       }`}
                     >
                       <div className="font-semibold text-[var(--owner-fg-1)]">
-                        Pay after event completion
+                        Reconcile after event completion
                       </div>
                       <div className="mt-1 text-[var(--owner-fg-3)]">
-                        Pay the offer amount after the event closes.
+                        Reconcile the offer after the event closes.
                       </div>
                     </button>
                   </div>
@@ -4481,10 +4480,10 @@ const EventJourney = ({
                       </div>
                       <div className="mt-4 grid gap-2 text-xs text-[var(--owner-fg-3)] sm:grid-cols-3">
                         <span className="rounded-lg bg-white px-3 py-2">
-                          Commission: {option.commissionRate}%
+                          Offer: event-specific
                         </span>
                         <span className="rounded-lg bg-white px-3 py-2">
-                          Upfront: {rupee(option.upfrontFee)}
+                          Access: no subscription wall
                         </span>
                         <span className="rounded-lg bg-white px-3 py-2">
                           Sales estimate: {option.expectedPaidTickets} tickets

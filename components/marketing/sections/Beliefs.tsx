@@ -17,25 +17,25 @@ const BELIEFS: Belief[] = [
     n: "01",
     title: "Operational clarity beats infinite knobs.",
     body:
-      "Hoizr is opinionated. We won't let you ship a checkout that bleeds conversion or a marketing flow that confuses your fans. In return, every host on the platform inherits the rigour of a stadium-grade ops team — without the headcount.",
+      "Hoizr is opinionated. We won't let you ship a checkout that bleeds conversion or a marketing flow that confuses your fans. In return, every event organizer on the platform inherits the rigour of a stadium-grade ops team — without the headcount.",
   },
   {
     n: "02",
-    title: "AI shouldn't be a feature only national chains can afford.",
+    title: "AI should not be a feature only national chains can afford.",
     body:
-      "The best technology is invisible. Hoizr puts event-specific pricing AI behind a single approve button — so a one-venue operator in Pune ships with the budget and brainpower of a national festival circuit.",
+      "The best technology is invisible. Hoizr puts event-specific AI evaluation behind a simple event workflow, so a one-venue operator in Pune can study the night with the discipline of a national festival circuit.",
   },
   {
     n: "03",
     title: "We win when your room is full.",
     body:
-      "Most platforms make pricing feel fixed before they understand the night. Hoizr starts with the event itself — format, city, scale, and ticket mix — then gives you the lowest commission offer we can stand behind in India.",
+      "Most platforms ask organizers to accept generic terms before they understand the night. Hoizr starts with the event itself — format, city, scale, and ticket mix — then gives you the best possible offer and lowered commission where eligible.",
   },
   {
     n: "04",
     title: "AI belongs in every operator's daily routine.",
     body:
-      "I'm building Hoizr because I genuinely believe every operator — venue owner, festival promoter, independent club host — should wake up with AI inside their day-to-day workflow. Not buried as a feature flag, but as the default way to study what worked last night, optimise this weekend's drop, and excel at the night after that. The big chains already use these tools. Hoizr puts the same leverage in your hands.",
+      "I'm building Hoizr because I genuinely believe every operator — venue owner, festival promoter, independent club organizer — should wake up with AI inside their day-to-day workflow. Not buried as a feature flag, but as the default way to study what worked last night, optimise this weekend's drop, and excel at the night after that. The big chains already use these tools. Hoizr puts the same leverage in your hands.",
     signoff: { name: "Sanbedan Paul", role: "Founder & CEO, Hoizr" },
   },
 ];

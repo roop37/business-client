@@ -184,6 +184,69 @@
   letter-spacing: -0.005em;
 }
 
+/* Hero quick-badges — replaces the muted caption line under the
+   primary CTAs. Each badge is a compact pill: icon + tight label.
+   The active accent (forest-700 ink, acid icon dot) signals every
+   one of them is something Hoizr actually ships. */
+.hoizr-marketing .hm-hero-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 7px 12px 7px 8px;
+  border-radius: 999px;
+  background: var(--m-surface);
+  border: 1px solid var(--m-border);
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--m-ink-1);
+  letter-spacing: -0.005em;
+  transition:
+    transform 200ms ease,
+    border-color 200ms ease,
+    box-shadow 200ms ease;
+}
+.hoizr-marketing .hm-hero-badge:hover {
+  border-color: var(--m-forest-700);
+  box-shadow: 0 6px 18px -10px rgba(46, 93, 73, 0.4);
+  transform: translateY(-1px);
+}
+.hoizr-marketing .hm-hero-badge__icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 999px;
+  background: var(--m-forest-700);
+  color: var(--m-acid);
+  flex-shrink: 0;
+}
+
+/* Floating variant — used absolute-positioned over the dark metallic
+   hero card. Brighter background, deeper shadow, subtle acid border
+   so the chip reads cleanly on the dark mottled metal underneath. */
+.hoizr-marketing .hm-hero-badge--floating {
+  background: rgba(255, 255, 255, 0.94);
+  border: 1px solid rgba(214, 255, 63, 0.32);
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.6) inset,
+    0 16px 36px -10px rgba(0, 0, 0, 0.55),
+    0 6px 14px -4px rgba(0, 0, 0, 0.35);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  color: var(--m-ink-1);
+  white-space: nowrap;
+  will-change: transform;
+}
+.hoizr-marketing .hm-hero-badge--floating:hover {
+  border-color: var(--m-acid);
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.6) inset,
+    0 0 0 1px rgba(214, 255, 63, 0.35),
+    0 22px 44px -10px rgba(214, 255, 63, 0.45),
+    0 8px 18px -4px rgba(0, 0, 0, 0.4);
+}
+
 /* Rich article body rendered from admin-authored, server-sanitized HTML. */
 .hoizr-marketing .hm-rich-text {
   color: var(--m-ink-2);
@@ -233,10 +296,13 @@
 
 /* ---------- Buttons ---------- */
 .hoizr-marketing .hm-btn {
+  position: relative;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 8px;
+  overflow: hidden;
+  isolation: isolate;
   padding: 14px 22px;
   border-radius: var(--m-r-pill);
   font-family: inherit;
@@ -245,7 +311,7 @@
   border: 0;
   cursor: pointer;
   white-space: nowrap;
-  letter-spacing: -0.005em;
+  letter-spacing: 0;
   transition:
     background var(--m-base) var(--m-ease),
     color var(--m-base) var(--m-ease),
@@ -254,6 +320,32 @@
   text-decoration: none;
 }
 .hoizr-marketing .hm-btn:active { transform: translateY(1px); }
+.hoizr-marketing .hm-btn-primary::before,
+.hoizr-marketing .hm-btn-acid::before,
+.hoizr-marketing .hm-btn-on-dark::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  transform: translateX(-115%);
+  background: linear-gradient(
+    110deg,
+    transparent 0%,
+    rgba(255,255,255,0.12) 34%,
+    rgba(255,255,255,0.46) 50%,
+    rgba(255,255,255,0.12) 66%,
+    transparent 100%
+  );
+  transition: transform 760ms var(--m-ease);
+}
+.hoizr-marketing .hm-btn-primary:hover::before,
+.hoizr-marketing .hm-btn-acid:hover::before,
+.hoizr-marketing .hm-btn-on-dark:hover::before {
+  transform: translateX(115%);
+}
+.hoizr-marketing .hm-btn > * {
+  position: relative;
+}
 .hoizr-marketing .hm-btn-primary {
   background: var(--m-forest-800);
   color: #fff;

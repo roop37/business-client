@@ -33,17 +33,17 @@ const sanbedan: Author = {
     "https://res.cloudinary.com/duhefgqh4/image/upload/v1748974724/IMG_0652_slotkd__1_ehtwxq.jpg",
   role: "Founder & CEO, Hoizr Technologies Pvt. Ltd.",
   description:
-    "Founder of Hoizr and a full-stack engineer by training, Sanbedan Paul is redefining how India's live-event industry connects, books, and scales. With a background in building robust tech platforms, he blends engineering precision with deep cultural insight into music and events. At Hoizr, he's leading the charge to digitize live nights — from smart ticketing to AI-powered commercial tools — empowering venues, festivals, and clubs to operate at their highest potential.",
+    "Founder of Hoizr and a full-stack engineer by training, Sanbedan Paul is redefining how India's live-event industry connects, books, and scales. With a background in building robust tech platforms, he blends engineering precision with deep cultural insight into music and events. At Hoizr, he's leading the charge to digitize live nights — from smart ticketing to AI-powered event tools — empowering venues, festivals, and clubs to operate at their highest potential.",
 };
 
 export const blogs: Blog[] = [
   {
     id: "on-sale-day-playbook-indian-event-hosts",
-    title: "On-Sale Day Playbook for Indian Event Hosts",
+    title: "On-Sale Day Playbook for Indian Event Organizers",
     excerpt:
       "The first 24 hours decide the tone of the whole campaign. Here is how to plan the drop, segment the first blast, and keep momentum after launch.",
     content: `<h3>The first day is a choreography problem</h3>
-<p>On-sale day is not just the moment you publish a ticket link. It is the first public signal of demand, pricing confidence, and campaign discipline. The best hosts treat launch day like show night: roles are assigned, timing is locked, and every channel knows what it is supposed to do.</p>
+<p>On-sale day is not just the moment you publish a ticket link. It is the first public signal of demand, pricing confidence, and campaign discipline. The best event organizers treat launch day like show night: roles are assigned, timing is locked, and every channel knows what it is supposed to do.</p>
 
 <p>Before the link goes live, decide who gets the first message. Past buyers, high-intent followers, promoters, artist communities, and venue regulars should not all receive the same copy at the same minute.</p>
 
@@ -125,11 +125,11 @@ export const blogs: Blog[] = [
   },
   {
     id: "genre-aware-ticket-pricing-playbook-india",
-    title: "Genre-Aware Ticket Pricing in India",
+    title: "Genre-Aware Ticket Tiers in India",
     excerpt:
       "Why a techno night, comedy show, rooftop sundowner, and live-band gig should not use the same ticket tier logic.",
-    content: `<h3>Flat pricing ignores why people buy</h3>
-<p>Genre changes buying behavior. A comedy room may sell later but convert strongly near showtime. A techno night may move early if the artist has a defined fan base. A sundowner may depend more on group plans and weather. Pricing should reflect that reality.</p>
+    content: `<h3>Flat tiers ignore why people buy</h3>
+<p>Genre changes buying behavior. A comedy room may sell later but convert strongly near showtime. A techno night may move early if the artist has a defined fan base. A sundowner may depend more on group plans and weather. Ticket tiers should reflect that reality.</p>
 
 <h3>Start with the buying curve</h3>
 <p>Ask when your fans normally commit. If they buy late, keep early-bird inventory small and use it as proof rather than revenue. If they buy early, give your first tier enough capacity to create visible momentum.</p>
@@ -143,7 +143,7 @@ export const blogs: Blog[] = [
 </ul>
 
 <h3>Where Hoizr AI helps</h3>
-<p>Hoizr can read event format, city, scale, ticket mix, and listing quality before quoting an event-specific commission rate. The same context helps hosts think about price tiers more honestly before publishing.</p>`,
+<p>Hoizr can read event format, city, scale, ticket mix, and listing quality before providing the best possible offer and lowered commission where the event qualifies. The same context helps event organizers think about price tiers more honestly before publishing.</p>`,
     image: "/images/playbooks/Nightclub-vibes-DJ-in-the-mix .png",
     date: "May 23, 2026",
     category: "Playbooks",
@@ -152,7 +152,7 @@ export const blogs: Blog[] = [
   },
   {
     id: "refund-policy-playbook-for-event-hosts",
-    title: "Refund Policy Playbook for Event Hosts",
+    title: "Refund Policy Playbook for Event Organizers",
     excerpt:
       "A clean refund policy reduces support pressure, door disputes, and chargeback confusion, especially during rain-heavy weekends.",
     content: `<h3>Refund copy should be visible before payment</h3>
@@ -182,7 +182,7 @@ export const blogs: Blog[] = [
     id: "event-teardown-playbook-after-the-show",
     title: "Event Teardown: What to Measure After Every Show",
     excerpt:
-      "The 30-minute Monday review that turns one event into better pricing, sharper campaigns, and cleaner operations for the next weekend.",
+      "The 30-minute Monday review that turns one event into clearer ticket tiers, sharper campaigns, and cleaner operations for the next weekend.",
     content: `<h3>Post-event review should happen before memory fades</h3>
 <p>The best teardown happens the morning after, not three weeks later. By then the team still remembers the door pressure, campaign misses, guestlist arguments, and moments when the room actually turned.</p>
 
@@ -211,41 +211,41 @@ export const blogs: Blog[] = [
     id: "why-indian-event-organizers-should-watch-hoizr-business",
     title: "Why Indian Event Organizers Should Watch Hoizr Business",
     excerpt:
-      "Hoizr Business is a new India-first event platform built for organizers, venues, promoters, and hosts who want lower commissions, owned fan data, smarter guestlists, and cleaner event operations from day one.",
+      "Hoizr Business is an India-first event platform built for organizers, venues, promoters, and event organizers who want direct publishing, owned fan data, smarter guestlists, and cleaner event operations from day one.",
     content: `<h3>A New Platform Built for the Way India Actually Goes Out</h3>
 <p>India's live-event scene is moving fast. Nightclubs are running weekly DJ nights, comedy rooms are building loyal repeat audiences, venues are programming more live music, and independent promoters are creating sharper, more local event brands.</p>
 
-<p>But the tools many hosts use still feel fragmented. Ticketing sits in one place. Guestlist lives in WhatsApp. Promoter invites are tracked manually. Door staff work with limited context. Customer data is either delayed, restricted, or difficult to reuse for the next event.</p>
+<p>But the tools many event organizers use still feel fragmented. Ticketing sits in one place. Guestlist lives in WhatsApp. Promoter invites are tracked manually. Door staff work with limited context. Customer data is either delayed, restricted, or difficult to reuse for the next event.</p>
 
-<p>Hoizr Business is being built to solve that from the host side: one platform for ticketing, marketing, guestlist, door scanning, fan CRM, reporting, and settlement.</p>
+<p>Hoizr Business is being built to solve that from the event organizer side: one platform for ticketing, marketing, guestlist, door scanning, fan CRM, reporting, and settlement.</p>
 
 <blockquote>Hoizr is not trying to own your audience. Your fans are yours. Your brand is yours. We are building the platform around that principle.</blockquote>
 
 <h3>Why We Are Building Hoizr Now</h3>
 <p>Indian organizers do not need another generic event listing page. They need infrastructure that understands how events actually run in Mumbai, Bangalore, Delhi, Pune, Hyderabad, Chennai, Goa, and the next wave of Tier-2 cities.</p>
 
-<p>A nightclub operator needs clean guestlist control. A comedy promoter needs pricing that respects smaller rooms. A festival host needs ticket phases, tiered sales, and source tracking. A live music venue needs repeat-fan data. A promoter needs invite caps, QR-based entry, and live arrival visibility.</p>
+<p>A nightclub operator needs clean guestlist control. A comedy promoter needs pricing that respects smaller rooms. A festival event organizer needs ticket phases, tiered sales, and source tracking. A live music venue needs repeat-fan data. A promoter needs invite caps, QR-based entry, and live arrival visibility.</p>
 
 <p>Hoizr Business is being designed around these real operator problems instead of forcing every event into the same global template.</p>
 
-<h3>Lowest Commission in India, Quoted Per Event</h3>
-<p>One of Hoizr's biggest principles is simple: event pricing should not be one-size-fits-all.</p>
+<h3>Platform Access, Event-Specific AI Offers</h3>
+<p>One of Hoizr's biggest principles is simple: organizers should be able to create an account and publish without a subscription, setup fee, listing fee, or card details.</p>
 
-<p>A 150-person comedy night, a club residency, a warehouse gig, and a multi-stage festival all have different economics. Hoizr's commission model is designed to be quoted per event based on the event format, city, ticket mix, scale, and commercial structure.</p>
+<p>A 150-person comedy night, a club residency, a warehouse gig, and a multi-stage festival all have different economics. Hoizr's AI studies the event format, city, ticket mix, scale, and listing quality before surfacing the best possible offer and lowered commission where the event qualifies.</p>
 
-<p>That means organizers will be able to compare offers before publishing instead of being locked into a generic public rate card.</p>
+<p>That means organizers get clearer event context before publishing instead of being forced through a generic template.</p>
 
 <h3>Owned Fan CRM from Day One</h3>
-<p>For most hosts, the most valuable asset is not only the ticket sale. It is the relationship with the person who bought the ticket.</p>
+<p>For most event organizers, the most valuable asset is not only the ticket sale. It is the relationship with the person who bought the ticket.</p>
 
-<p>Hoizr Business is being built so every paid-ticket buyer's phone and email lands inside the host's own CRM. That data can be used to understand repeat attendees, segment audiences, run campaigns, and bring the same crowd back for the next event.</p>
+<p>Hoizr Business is being built so every paid-ticket buyer's phone and email lands inside the event organizer's own CRM. That data can be used to understand repeat attendees, segment audiences, run campaigns, and bring the same crowd back for the next event.</p>
 
 <p>The goal is simple: after every event, the organizer should be stronger than before — with more data, more context, and a clearer path to repeat sales.</p>
 
 <h3>Guestlist and Promoter Control Without Spreadsheet Chaos</h3>
 <p>Guestlist culture is a major part of Indian nightlife and live events. But unmanaged guestlists create problems fast: over-comping, duplicate names, unclear promoter accountability, and confusion at the door.</p>
 
-<p>Hoizr Business is being designed with promoter invite codes, cap limits, QR-based entry, live arrival counters, and audit trails so hosts can see who invited whom, who arrived, and where capacity is being used.</p>
+<p>Hoizr Business is being designed with promoter invite codes, cap limits, QR-based entry, live arrival counters, and audit trails so event organizers can see who invited whom, who arrived, and where capacity is being used.</p>
 
 <p>For clubs, venues, and promoters, this means cleaner control before the event and fewer arguments at the gate.</p>
 
@@ -259,7 +259,7 @@ export const blogs: Blog[] = [
 <h3>Marketing That Starts After the First Event</h3>
 <p>Most platforms focus heavily on selling the current event. Hoizr is also being built for what happens after the event.</p>
 
-<p>With owned fan CRM, hosts can prepare segmented marketing campaigns for repeat attendees, past buyers, genre-specific audiences, and high-intent customers. The long-term vision is simple: every event should make the next event easier to sell.</p>
+<p>With owned fan CRM, event organizers can prepare segmented marketing campaigns for repeat attendees, past buyers, genre-specific audiences, and high-intent customers. The long-term vision is simple: every event should make the next event easier to sell.</p>
 
 <ul>
   <li>Send on-sale announcements to past buyers</li>
@@ -270,14 +270,14 @@ export const blogs: Blog[] = [
 </ul>
 
 <h3>AI Offers Without Fake Magic</h3>
-<p>Hoizr is not claiming that AI will magically sell out an event. The first AI layer is practical: event evaluation and commission offer generation.</p>
+<p>Hoizr is not claiming that AI will magically sell out an event. The first AI layer is practical: event evaluation and offer context.</p>
 
-<p>The system is being built to read event quality, ticket structure, listing completeness, city context, and event format before generating commercial offers the host can compare. The goal is to make pricing more transparent, more event-specific, and more useful than a flat public rate.</p>
+<p>The system is being built to read event quality, ticket structure, listing completeness, city context, and event format before giving the event organizer the best possible offer. The goal is to make event decisions more transparent and more useful than a flat public template.</p>
 
-<p>For hosts, this means a clearer decision before publishing. For Hoizr, it means we win only when the event works commercially.</p>
+<p>For event organizers, this means a clearer decision before publishing, without needing to enter card details just to start.</p>
 
-<h3>What Hosts Should Expect at Launch</h3>
-<p>Hoizr Business is currently pre-launch, so we are not publishing customer logos, testimonials, or inflated success claims. The focus right now is building the platform correctly before opening it to organizers and venues.</p>
+<h3>What Event Organizers Should Expect at Launch</h3>
+<p>Hoizr Business keeps platform access direct and avoids inflated success claims. The focus is building the platform correctly for organizers and venues across India.</p>
 
 <p>At launch, Hoizr Business is being shaped around four core needs:</p>
 
@@ -294,20 +294,20 @@ export const blogs: Blog[] = [
 <ul>
   <li>Nightclub operators running weekly or monthly nights</li>
   <li>Independent venues hosting live music, comedy, or cultural events</li>
-  <li>Festival hosts planning multi-phase ticket sales</li>
+  <li>Festival event organizers planning multi-phase ticket sales</li>
   <li>Promoters managing guestlists, invites, and artist-led events</li>
   <li>Comedy promoters running repeat shows across cities</li>
   <li>Event organizers who want ticketing, marketing, door, and reporting in one place</li>
 </ul>
 
 <h3>The Bigger Belief</h3>
-<p>Hoizr is being built from a simple belief: Indian hosts should not have to give up their audience, brand, or data just to sell tickets online.</p>
+<p>Hoizr is being built from a simple belief: Indian event organizers should not have to give up their audience, brand, or data just to sell tickets online.</p>
 
 <p>The future of event technology in India should be more operator-first, more transparent, and more respectful of the people actually building the scene.</p>
 
-<blockquote>Built for the way India actually goes out. Built so hosts own the relationship from day one.</blockquote>
+<blockquote>Built for the way India actually goes out. Built so event organizers own the relationship from day one.</blockquote>
 
-<p>If you are an organizer, venue, promoter, or host preparing upcoming events in India, Hoizr Business is being built for you.</p>`,
+<p>If you are an organizer, venue, promoter, or event organizer preparing upcoming events in India, Hoizr Business is being built for you.</p>`,
     image:
       "https://res.cloudinary.com/duhefgqh4/image/upload/v1748802768/pexels-wendywei-1190297_jwisnp.jpg",
     date: "May 23, 2026",
@@ -325,32 +325,32 @@ export const blogs: Blog[] = [
 
 <p>But the real business starts after the first sale. Who came? Who bought early? Who came back twice? Who only attends techno nights? Who buys VIP? Who responds to WhatsApp campaigns? Who brings friends?</p>
 
-<p>If that data is not owned by the host, every event starts from zero again.</p>
+<p>If that data is not owned by the event organizer, every event starts from zero again.</p>
 
 <blockquote>Ticketing sells the night. Fan CRM builds the season.</blockquote>
 
 <h3>The Problem With Marketplace-Led Event Platforms</h3>
 <p>Many ticketing platforms are built like marketplaces. They help sell tickets, but the audience relationship often stays closer to the platform than the organizer.</p>
 
-<p>That may work for discovery, but it creates a long-term problem for venues, clubs, comedy rooms, live music spaces, and promoters. If the host cannot clearly access, segment, and reuse fan data, they become dependent on paid reach every time they announce a new event.</p>
+<p>That may work for discovery, but it creates a long-term problem for venues, clubs, comedy rooms, live music spaces, and promoters. If the event organizer cannot clearly access, segment, and reuse fan data, they become dependent on paid reach every time they announce a new event.</p>
 
-<p>For Indian event businesses, that is expensive. Audiences move fast. WhatsApp groups change. Instagram reach fluctuates. Ads get costlier. A host needs a reliable first-party audience database that grows with every event.</p>
+<p>For Indian event businesses, that is expensive. Audiences move fast. WhatsApp groups change. Instagram reach fluctuates. Ads get costlier. A event organizer needs a reliable first-party audience database that grows with every event.</p>
 
 <h3>What Hoizr Business Is Building Differently</h3>
-<p>Hoizr Business is being built around a simple principle: every buyer should strengthen the host's own business.</p>
+<p>Hoizr Business is being built around a simple principle: every buyer should strengthen the event organizer's own business.</p>
 
-<p>When a paid-ticket buyer purchases through Hoizr, the host-side CRM is designed to capture the relationship in a structured way. That includes contact details, purchase history, attendance signals, event preferences, and repeat behavior over time.</p>
+<p>When a paid-ticket buyer purchases through Hoizr, the organizer-side CRM is designed to capture the relationship in a structured way. That includes contact details, purchase history, attendance signals, event preferences, and repeat behavior over time.</p>
 
-<p>The goal is not just to help hosts sell one event. The goal is to help them build an owned audience engine.</p>
+<p>The goal is not just to help event organizers sell one event. The goal is to help them build an owned audience engine.</p>
 
 <h3>How Owned CRM Changes the Next Event</h3>
-<p>Once a host has structured fan data, the next event becomes easier to plan and market.</p>
+<p>Once a event organizer has structured fan data, the next event becomes easier to plan and market.</p>
 
 <ul>
   <li>A venue can invite past live-music attendees to a similar gig</li>
   <li>A nightclub can identify repeat late-night buyers</li>
   <li>A comedy promoter can message people who attended previous shows</li>
-  <li>A festival host can understand which city or ticket tier performed best</li>
+  <li>A festival event organizer can understand which city or ticket tier performed best</li>
   <li>A promoter can separate real buyers from casual interest</li>
 </ul>
 
@@ -359,11 +359,11 @@ export const blogs: Blog[] = [
 <h3>Why This Matters More in India</h3>
 <p>Indian events are deeply relationship-driven. People discover events through Instagram, WhatsApp, friend circles, college groups, artist communities, venue pages, and local promoters.</p>
 
-<p>That means the organizer's audience is not just a spreadsheet. It is a living community. The more clearly a host understands that community, the better they can price, promote, program, and repeat.</p>
+<p>That means the organizer's audience is not just a spreadsheet. It is a living community. The more clearly a event organizer understands that community, the better they can price, promote, program, and repeat.</p>
 
 <p>Hoizr Business is being built for that Indian reality: WhatsApp-first communication, city-wise scenes, guestlist culture, repeat weekend programming, and organizer-owned fan relationships.</p>
 
-<h3>What Hosts Should Prepare Before Launch</h3>
+<h3>What Event Organizers Should Prepare Before Launch</h3>
 <p>If you are an organizer or venue preparing to use Hoizr Business, start thinking beyond the next event poster.</p>
 
 <ul>
@@ -376,12 +376,12 @@ export const blogs: Blog[] = [
 
 <p>These are the questions Hoizr Business is being built to answer.</p>
 
-<h3>The Future Belongs to Hosts Who Own Their Audience</h3>
+<h3>The Future Belongs to Event Organizers Who Own Their Audience</h3>
 <p>India's live-event ecosystem is becoming more competitive. The organizers who win will not only be the ones with better posters or bigger artists. They will be the ones who understand their audience deeply and can bring them back repeatedly.</p>
 
 <blockquote>Your fans are yours. Your brand is yours. Your event history should be yours too.</blockquote>
 
-<p>Hoizr Business is being built to give Indian hosts that foundation from day one.</p>`,
+<p>Hoizr Business is being built to give Indian event organizers that foundation from day one.</p>`,
     image:
       "https://res.cloudinary.com/duhefgqh4/image/upload/v1748802768/pexels-wendywei-1190297_jwisnp.jpg",
     date: "May 23, 2026",
@@ -395,7 +395,7 @@ export const blogs: Blog[] = [
     excerpt:
       "Guestlist is a powerful growth tool for clubs, venues, and promoters — but only when caps, invites, arrivals, and accountability are handled properly.",
     content: `<h3>Guestlist Is Not the Problem. Poor Control Is.</h3>
-<p>In Indian nightlife and live events, guestlist is not going away. It is how promoters build rooms, how venues seed energy early, how artists bring their circle, and how hosts create the right crowd before ticket sales peak.</p>
+<p>In Indian nightlife and live events, guestlist is not going away. It is how promoters build rooms, how venues seed energy early, how artists bring their circle, and how event organizers create the right crowd before ticket sales peak.</p>
 
 <p>The problem is not guestlist itself. The problem is how guestlist is usually managed.</p>
 
@@ -410,7 +410,7 @@ export const blogs: Blog[] = [
   <li>Promoters over-share invites without clear caps</li>
   <li>Guests arrive under slightly different names</li>
   <li>Door staff cannot verify invite source quickly</li>
-  <li>Hosts cannot see live arrivals by promoter</li>
+  <li>Event organizers cannot see live arrivals by promoter</li>
   <li>Capacity gets used without clear accountability</li>
   <li>Post-event reporting becomes guesswork</li>
 </ul>
@@ -420,21 +420,21 @@ export const blogs: Blog[] = [
 <h3>What Hoizr Business Is Building</h3>
 <p>Hoizr Business is being designed to make guestlist operationally clean without removing its flexibility.</p>
 
-<p>The idea is simple: each promoter, host, or invite source should be trackable. Invites should be QR-based. Caps should be enforced. Arrivals should be visible live. And after the event, the organizer should know exactly which invite sources performed.</p>
+<p>The idea is simple: each promoter, organizer, or invite source should be trackable. Invites should be QR-based. Caps should be enforced. Arrivals should be visible live. And after the event, the organizer should know exactly which invite sources performed.</p>
 
 <p>This turns guestlist from a loose WhatsApp workflow into a measurable growth channel.</p>
 
 <h3>Promoter Caps Matter</h3>
 <p>Promoter-led events need trust. But trust works better when the system is clear.</p>
 
-<p>With structured promoter caps, organizers can decide how much access each promoter receives before the event begins. The promoter gets a clean invite flow. The host gets visibility. The door team gets a faster check-in experience.</p>
+<p>With structured promoter caps, organizers can decide how much access each promoter receives before the event begins. The promoter gets a clean invite flow. The event organizer gets visibility. The door team gets a faster check-in experience.</p>
 
 <p>No confusion. No last-minute spreadsheet edits. No arguing over who was supposed to be on the list.</p>
 
-<h3>Live Arrivals Change How Hosts Run the Night</h3>
+<h3>Live Arrivals Change How Event Organizers Run the Night</h3>
 <p>Guestlist is not only a pre-event tool. It is also a live operations signal.</p>
 
-<p>If a host can see which promoter's guests are arriving, how quickly the room is filling, and how much capacity is being used, they can make better decisions during the night.</p>
+<p>If a event organizer can see which promoter's guests are arriving, how quickly the room is filling, and how much capacity is being used, they can make better decisions during the night.</p>
 
 <ul>
   <li>Open or pause additional guestlist access</li>
@@ -446,15 +446,15 @@ export const blogs: Blog[] = [
 <h3>Guestlist Should Feed the CRM</h3>
 <p>A guestlist arrival is still a valuable audience signal. Even if the person did not buy a paid ticket, they showed up. That matters.</p>
 
-<p>Hoizr Business is being built so hosts can understand attendance patterns across tickets, guestlist, promoter invites, and repeat visits. Over time, that helps venues and organizers understand not only who buys, but who actually attends.</p>
+<p>Hoizr Business is being built so event organizers can understand attendance patterns across tickets, guestlist, promoter invites, and repeat visits. Over time, that helps venues and organizers understand not only who buys, but who actually attends.</p>
 
-<h3>For Indian Hosts, This Is a Core Workflow</h3>
+<h3>For Indian Event Organizers, This Is a Core Workflow</h3>
 <p>In cities like Mumbai, Delhi, Bangalore, Pune, Hyderabad, Chennai, and Goa, guestlist is part of how events move. It is connected to promoters, artists, colleges, communities, influencers, and venue relationships.</p>
 
 <p>So Hoizr is not treating guestlist like an afterthought. It is being built as part of the operating system for Indian event nights.</p>
 
 <h3>The Goal</h3>
-<p>Hoizr Business wants to help hosts keep the cultural flexibility of guestlist while adding the structure needed to scale it.</p>
+<p>Hoizr Business wants to help event organizers keep the cultural flexibility of guestlist while adding the structure needed to scale it.</p>
 
 <blockquote>Less spreadsheet chaos. More control at the door. Better data after the night ends.</blockquote>
 
@@ -480,19 +480,19 @@ export const blogs: Blog[] = [
 
 <blockquote>Modern events need an operating system, not just a payment link.</blockquote>
 
-<h3>The Real Workflow of an Event Host</h3>
-<p>Before an event goes live, a host has to set the event page, ticket tiers, artist lineup, visuals, venue details, promoter access, and launch plan.</p>
+<h3>The Real Workflow of an Event Organizer</h3>
+<p>Before an event goes live, a event organizer has to set the event page, ticket tiers, artist lineup, visuals, venue details, promoter access, and launch plan.</p>
 
 <p>During sales, they need to understand which channels are moving tickets, when to push last-call campaigns, whether a ticket phase should close, and how guestlist is affecting capacity.</p>
 
 <p>On event night, the team needs scanner access, live entry counters, refund visibility, duplicate prevention, and a clean door experience.</p>
 
-<p>After the event, the host needs reporting, settlement clarity, customer data, campaign lists, and insights for the next event.</p>
+<p>After the event, the event organizer needs reporting, settlement clarity, customer data, campaign lists, and insights for the next event.</p>
 
 <p>This is why Hoizr Business is being built as a full operating layer for events.</p>
 
 <h3>The Four Pillars Behind Hoizr Business</h3>
-<p>Every major Hoizr Business feature is being shaped around four practical host needs.</p>
+<p>Every major Hoizr Business feature is being shaped around four practical event organizer needs.</p>
 
 <ul>
   <li><strong>Discovery:</strong> help new fans find the event</li>
@@ -504,7 +504,7 @@ export const blogs: Blog[] = [
 <p>This structure keeps the platform focused. Every feature must help the organizer either get discovered, sell better, repeat stronger, or operate cleaner.</p>
 
 <h3>Why This Matters for Venues</h3>
-<p>Venues are not one-time sellers. They run programming calendars. A good venue may host club nights, comedy shows, live music, cultural events, private gigs, and artist-led shows across the same month.</p>
+<p>Venues are not one-time sellers. They run programming calendars. A good venue may event organizer club nights, comedy shows, live music, cultural events, private gigs, and artist-led shows across the same month.</p>
 
 <p>That means the venue needs a permanent brand home, repeat audience data, clean reporting, and marketing tools that compound over time.</p>
 
@@ -513,23 +513,23 @@ export const blogs: Blog[] = [
 <h3>Why This Matters for Promoters</h3>
 <p>Promoters need speed and accountability. They need invite links, promoter caps, ticket visibility, live arrivals, and clean reporting after the event.</p>
 
-<p>When promoter performance is measurable, hosts can reward the right partners and reduce confusion around guestlist, comps, and actual attendance.</p>
+<p>When promoter performance is measurable, event organizers can reward the right partners and reduce confusion around guestlist, comps, and actual attendance.</p>
 
 <p>Hoizr Business is being built to make promoter-led growth easier to manage.</p>
 
 <h3>Why This Matters for Festivals</h3>
 <p>Festivals have a different level of complexity. Multiple phases, ticket tiers, lineup announcements, city-wise marketing, source tracking, refunds, settlements, and door operations all need to work together.</p>
 
-<p>A festival host should not have to stitch together five different tools to understand what is happening.</p>
+<p>A festival event organizer should not have to stitch together five different tools to understand what is happening.</p>
 
 <p>Hoizr's long-term product direction is to give festival teams one system that connects ticketing, marketing, entry, reporting, and audience data.</p>
 
-<h3>Why We Are Building This Pre-Launch</h3>
-<p>Hoizr Business is currently pre-launch, which means the platform is still being shaped before public rollout. That is intentional.</p>
+<h3>Why We Are Building This Carefully</h3>
+<p>Hoizr Business is being shaped around real operator workflows instead of a generic event listing template.</p>
 
 <p>Instead of launching as a generic event listing tool, Hoizr is being built around the deeper workflows that Indian event operators actually need.</p>
 
-<p>The aim is not to be the loudest platform on day one. The aim is to be the most useful platform for hosts who care about control, margins, data, and repeat growth.</p>
+<p>The aim is not to be the loudest platform on day one. The aim is to be the most useful platform for event organizers who care about control, margins, data, and repeat growth.</p>
 
 <h3>The Direction Is Clear</h3>
 <p>The future of event technology in India will not be only about who lists the most events. It will be about who helps organizers build stronger businesses.</p>
@@ -546,80 +546,46 @@ export const blogs: Blog[] = [
   },
   {
     id: "how-indian-event-hosts-should-think-about-lower-commission",
-    title: "How Indian Event Hosts Should Think About Lower Commission",
+    title: "How Indian Event Organizers Should Think About AI Offers",
     excerpt:
-      "Lower commission is not only about paying less. It changes pricing, marketing budget, risk, settlement expectations, and how confidently hosts can plan their next event.",
-    content: `<h3>Lower Commission Is Not Just a Discount</h3>
-<p>When organizers hear lower commission, they usually think about saving money on ticket sales. That is important, but it is only one part of the story.</p>
+      "Hoizr AI studies each event before publishing so event organizers can see the best possible offer, lowered commission where eligible, and the operating context behind it.",
+    content: `<h3>AI Offers Are Event Context, Not a Paid Plan</h3>
+<p>Hoizr does not put publishing behind a subscription wall, setup fee, listing fee, or card-details requirement before an organizer can start.</p>
 
-<p>For Indian event hosts, commission affects the entire event plan: ticket pricing, artist budgets, production risk, marketing spend, promoter incentives, settlement expectations, and whether the host can confidently run the next show.</p>
+<p>The AI offer layer exists for a different reason: every event has a different shape. A comedy room with 120 seats does not operate like a multi-stage festival. A club night with table sales does not operate like a seated cultural show.</p>
 
-<p>That is why Hoizr Business is being built with event-specific commercial thinking instead of a one-size-fits-all public rate.</p>
+<blockquote>Platform access stays open. Event offers should still respect the event.</blockquote>
 
-<blockquote>Every event has different economics. The platform fee should respect that.</blockquote>
-
-<h3>A Small Room and a Festival Should Not Be Priced the Same Way</h3>
-<p>A comedy room with 120 seats does not operate like a multi-stage festival. A club night with table sales does not operate like a seated cultural show. A first-time independent promoter does not carry the same risk profile as a large recurring festival.</p>
-
-<p>But many platforms still treat event pricing too broadly.</p>
-
-<p>Hoizr's approach is different. The platform is being designed to quote per event based on the format, city, scale, ticket structure, and commercial model.</p>
-
-<p>The goal is to make the pricing feel closer to how the event actually works.</p>
-
-<h3>Why Hosts Need Commercial Flexibility</h3>
-<p>Indian organizers often operate with tight margins. Venue minimums, artist fees, production, sound, lighting, hospitality, marketing, influencer spends, and last-minute changes can all affect profitability.</p>
-
-<p>If platform costs are too rigid, the host has less room to adjust.</p>
-
-<p>Flexible event-based pricing gives hosts more control over how they structure the night.</p>
+<h3>What the AI Studies</h3>
+<p>Hoizr looks at practical inputs: listing quality, event format, city context, ticket structure, expected audience, capacity, and event completeness. The output is an event-specific recommendation before publishing.</p>
 
 <ul>
-  <li>Some events may need lower commission to protect margins</li>
-  <li>Some events may support a different commercial structure</li>
-  <li>Some events may need upfront fee handling instead of only percentage-based pricing</li>
-  <li>Some hosts may value marketing support, CRM, or operational tools more than a basic checkout page</li>
+  <li>Format and genre</li>
+  <li>City and demand context</li>
+  <li>Ticket mix and phase structure</li>
+  <li>Listing completeness and operational readiness</li>
+  <li>Signals that can qualify an event for lowered commission</li>
 </ul>
 
-<h3>What Hoizr's AI Offer System Is Designed to Do</h3>
-<p>Hoizr's AI offer system is being built to evaluate the event before suggesting commercial options.</p>
+<h3>Why Event Organizers Should Care</h3>
+<p>Indian organizers work with venue minimums, artist budgets, production costs, hospitality, marketing pressure, guestlist expectations, and last-minute changes. A generic template does not explain that reality well.</p>
 
-<p>It looks at practical inputs like listing quality, event format, city context, ticket structure, expected audience, and event completeness. Based on that, the host can see different offer options before publishing.</p>
-
-<p>This is not fake AI hype. It is a commercial decision-support layer built around the event.</p>
-
-<h3>The Basic Plan Still Matters</h3>
-<p>Not every host will want an AI-generated offer. Some may prefer a simpler plan. That is why Hoizr is designed to keep a basic option visible as a fallback.</p>
-
-<p>The point is choice. Hosts should be able to compare options and pick the structure that makes sense for their event.</p>
-
-<h3>No Convenience Fee Philosophy</h3>
-<p>One of Hoizr's key positioning principles is to avoid adding unnecessary convenience fees on top of the customer ticket price.</p>
-
-<p>For fans, the checkout should feel cleaner. For hosts, pricing communication becomes simpler. And for the platform, the commercial model stays aligned with the organizer instead of quietly pushing extra cost to the buyer.</p>
+<p>AI event evaluation gives event organizers clearer context before launch. It does not replace judgment, but it helps the organizer understand what Hoizr can offer for that specific night.</p>
 
 <h3>What Organizers Should Ask Before Choosing a Platform</h3>
-<p>Before choosing any event platform, hosts should ask a few direct questions:</p>
-
 <ul>
+  <li>Can I create an account without card details?</li>
+  <li>Can I publish directly?</li>
   <li>Do I own my buyer data?</li>
   <li>Can I export my audience?</li>
-  <li>Is the commission suitable for this specific event?</li>
   <li>Are guestlist and promoter workflows included?</li>
   <li>Can I track which channels actually sold tickets?</li>
-  <li>Will this platform help my next event perform better?</li>
 </ul>
 
-<p>If the answer is unclear, the platform may be solving only part of the problem.</p>
-
 <h3>The Hoizr View</h3>
-<p>Hoizr Business is being built around a simple belief: the platform should grow when the host grows.</p>
+<p>Hoizr Business is being built around a simple belief: platform access should not be gated, and every event should make the event organizer stronger.</p>
 
-<p>Lower commission is one part of that. Owned CRM, cleaner operations, better guestlist control, smarter marketing, and transparent settlement workflows are the rest.</p>
-
-<blockquote>We win when you win. That is the commercial foundation Hoizr is building toward.</blockquote>
-
-<p>For Indian organizers preparing upcoming events, the right platform should not only sell tickets. It should protect margin, strengthen audience ownership, and make the next event easier to run.</p>`,
+<p>Owned CRM, cleaner operations, better guestlist control, smarter marketing, transparent reporting, and AI event evaluation are the pieces that make that happen.</p>`,
     image:
       "https://res.cloudinary.com/duhefgqh4/image/upload/v1748802769/pexels-isabella-mendes-107313-332688_vtgnt0.jpg",
     date: "May 23, 2026",
@@ -633,14 +599,14 @@ export const blogs: Blog[] = [
     excerpt:
       "Before publishing your next event, here is the practical checklist every Indian organizer, venue, club, and promoter should prepare — from ticket tiers to guestlist control.",
     content: `<h3>Publishing an Event Is Easy. Running It Cleanly Is the Real Work.</h3>
-<p>Most event hosts think the launch begins when the poster goes live. In reality, the quality of the event is decided much earlier: ticket structure, guestlist rules, promoter access, audience data, refund logic, door process, and post-event follow-up.</p>
+<p>Most event event organizers think the launch begins when the poster goes live. In reality, the quality of the event is decided much earlier: ticket structure, guestlist rules, promoter access, audience data, refund logic, door process, and post-event follow-up.</p>
 
 <p>Hoizr Business is being built for organizers who want to prepare properly before opening sales, not scramble after the event link is already public.</p>
 
 <blockquote>A good event page sells tickets. A good event system protects the entire night.</blockquote>
 
 <h3>1. Decide the Event Format Clearly</h3>
-<p>Before listing the event, the host should be clear about the commercial format.</p>
+<p>Before listing the event, the event organizer should be clear about the commercial format.</p>
 
 <ul>
   <li>Is this a free RSVP event?</li>
@@ -651,19 +617,19 @@ export const blogs: Blog[] = [
   <li>Will ticket prices increase in phases?</li>
 </ul>
 
-<p>These decisions affect pricing, capacity, door flow, marketing, and settlement. Hoizr Business is being designed so hosts can structure these choices before the event goes live.</p>
+<p>These decisions affect pricing, capacity, door flow, marketing, and settlement. Hoizr Business is being designed so event organizers can structure these choices before the event goes live.</p>
 
 <h3>2. Build Ticket Tiers Around Real Demand</h3>
 <p>Indian events often need more than one ticket type. A club night may need early bird, general access, couple entry, VIP, and table-linked options. A festival may need phase-wise ticketing. A comedy show may need seat categories or limited early pricing.</p>
 
-<p>The mistake many hosts make is creating too many tiers without a clear reason. Every tier should answer one question: why should the buyer act now?</p>
+<p>The mistake many event organizers make is creating too many tiers without a clear reason. Every tier should answer one question: why should the buyer act now?</p>
 
 <p>Hoizr's event setup flow is being built to support practical ticket structures without making the checkout confusing.</p>
 
 <h3>3. Set Guestlist Rules Before Invites Start Moving</h3>
 <p>Guestlist becomes messy when rules are decided after invites have already been shared.</p>
 
-<p>Before launch, hosts should define:</p>
+<p>Before launch, event organizers should define:</p>
 
 <ul>
   <li>Who can create invites?</li>
@@ -678,7 +644,7 @@ export const blogs: Blog[] = [
 <h3>4. Prepare the Door Team Early</h3>
 <p>The door team should not learn the system when the queue is already outside the venue.</p>
 
-<p>Hosts should decide who gets scanner access, how many scanners are needed, what the entry rules are, and how refunded or duplicate tickets should be handled.</p>
+<p>Event organizers should decide who gets scanner access, how many scanners are needed, what the entry rules are, and how refunded or duplicate tickets should be handled.</p>
 
 <p>Hoizr's scanner flow is being designed for real event pressure: fast scans, clear statuses, multiple staff members, and simple access-code provisioning.</p>
 
@@ -687,10 +653,10 @@ export const blogs: Blog[] = [
 
 <p>The people who buy tickets, show up, bring friends, respond to campaigns, or join guestlist are the foundation for the next event. That data should not disappear after settlement.</p>
 
-<p>Hoizr Business is being built so hosts can use every event to grow their own fan CRM.</p>
+<p>Hoizr Business is being built so event organizers can use every event to grow their own fan CRM.</p>
 
 <h3>6. Prepare Marketing Segments Before Sales Slow Down</h3>
-<p>Marketing should not start only when ticket sales are weak. Hosts should prepare audience segments early:</p>
+<p>Marketing should not start only when ticket sales are weak. Event organizers should prepare audience segments early:</p>
 
 <ul>
   <li>Past attendees</li>
@@ -704,9 +670,9 @@ export const blogs: Blog[] = [
 <p>Once the platform is live, Hoizr Business is being shaped to help organizers use these segments for email, SMS, WhatsApp, push, and in-app campaigns.</p>
 
 <h3>The Hoizr View</h3>
-<p>India's best event hosts are not only creative. They are operationally sharp. They understand ticketing, audience ownership, promoter accountability, and door control.</p>
+<p>India's best event event organizers are not only creative. They are operationally sharp. They understand ticketing, audience ownership, promoter accountability, and door control.</p>
 
-<blockquote>Hoizr Business is being built for hosts who want to launch cleaner, run tighter, and own the relationship after the night ends.</blockquote>
+<blockquote>Hoizr Business is being built for event organizers who want to launch cleaner, run tighter, and own the relationship after the night ends.</blockquote>
 
 <p>If you are preparing upcoming events in India, this is the mindset to bring before going live.</p>`,
     image:
@@ -724,14 +690,14 @@ export const blogs: Blog[] = [
     content: `<h3>An Event Link Expires. A Venue Brand Should Not.</h3>
 <p>Most event pages are temporary. They go live for one night, sell tickets, close after the event, and slowly disappear from audience memory.</p>
 
-<p>That may be fine for a one-off listing, but it is not enough for venues, clubs, comedy rooms, live music spaces, and cultural hosts that run programming every month.</p>
+<p>That may be fine for a one-off listing, but it is not enough for venues, clubs, comedy rooms, live music spaces, and cultural event organizers that run programming every month.</p>
 
 <p>A venue needs a permanent home where fans can understand what kind of events happen there, what is coming next, and why they should return.</p>
 
 <blockquote>Your event is temporary. Your brand should compound.</blockquote>
 
 <h3>The Problem With One-Off Event Pages</h3>
-<p>When every event exists as a separate disconnected page, the host loses continuity.</p>
+<p>When every event exists as a separate disconnected page, the event organizer loses continuity.</p>
 
 <ul>
   <li>Past events do not strengthen future discovery</li>
@@ -744,28 +710,28 @@ export const blogs: Blog[] = [
 <p>This is especially limiting for Indian venues that rely on repeat audiences and recurring formats.</p>
 
 <h3>What a Permanent Organisation Page Should Do</h3>
-<p>Hoizr Business is being built with the idea that every serious host should have a permanent organisation page.</p>
+<p>Hoizr Business is being built with the idea that every serious event organizer should have a permanent organisation page.</p>
 
 <p>This page should act as the venue or organizer's long-term event identity. It can show upcoming events, event history, genre focus, brand positioning, direct ticket access, and eventually audience-facing trust signals.</p>
 
-<p>The goal is to make the host's brand stronger with every event published.</p>
+<p>The goal is to make the event organizer's brand stronger with every event published.</p>
 
 <h3>Why This Matters for Venues</h3>
-<p>A live music venue may host indie gigs, jam nights, artist showcases, and ticketed performances. A nightclub may run recurring Friday and Saturday properties. A comedy room may host open mics, touring comics, and weekend specials.</p>
+<p>A live music venue may event organizer indie gigs, jam nights, artist showcases, and ticketed performances. A nightclub may run recurring Friday and Saturday properties. A comedy room may event organizer open mics, touring comics, and weekend specials.</p>
 
 <p>Each of these events should feed the venue's long-term identity.</p>
 
 <p>With a permanent page, fans do not only discover one event. They discover the place behind the event.</p>
 
 <h3>Search and Discovery Should Build Over Time</h3>
-<p>Event discovery in India is fragmented across Instagram, Google, WhatsApp, Maps, and word of mouth. A permanent event page gives the host one stable destination to keep improving.</p>
+<p>Event discovery in India is fragmented across Instagram, Google, WhatsApp, Maps, and word of mouth. A permanent event page gives the event organizer one stable destination to keep improving.</p>
 
-<p>Hoizr's discovery layer is being built around event SEO, city and genre metadata, fresh event pages, and organisation-level visibility. The aim is to help hosts become easier to find over time.</p>
+<p>Hoizr's discovery layer is being built around event SEO, city and genre metadata, fresh event pages, and organisation-level visibility. The aim is to help event organizers become easier to find over time.</p>
 
 <h3>The CRM Connection</h3>
 <p>A permanent page becomes even more powerful when it connects to owned fan CRM.</p>
 
-<p>If fans discover the venue, buy tickets, attend events, and return later, the host should be able to understand that journey. Over time, this helps answer important questions:</p>
+<p>If fans discover the venue, buy tickets, attend events, and return later, the event organizer should be able to understand that journey. Over time, this helps answer important questions:</p>
 
 <ul>
   <li>Which event formats bring repeat attendees?</li>
@@ -774,7 +740,7 @@ export const blogs: Blog[] = [
   <li>Which channels bring people back?</li>
 </ul>
 
-<h3>What Hosts Should Prepare</h3>
+<h3>What Event Organizers Should Prepare</h3>
 <p>Before Hoizr Business opens publicly, venues and organizers can start preparing their brand assets:</p>
 
 <ul>
@@ -791,7 +757,7 @@ export const blogs: Blog[] = [
 <h3>The Hoizr View</h3>
 <p>India's event scene is becoming more brand-led. Fans do not only follow artists. They follow venues, promoters, collectives, comedy rooms, festivals, and cultural communities.</p>
 
-<blockquote>Hoizr Business is being built so every host can create a permanent home for that audience.</blockquote>
+<blockquote>Hoizr Business is being built so every event organizer can create a permanent home for that audience.</blockquote>
 
 <p>The event may end at midnight. The brand should keep working after that.</p>`,
     image:
@@ -813,7 +779,7 @@ export const blogs: Blog[] = [
 
 <p>That is where duplicate tickets, screenshots, refunded orders, guestlist confusion, promoter invites, late arrivals, and capacity pressure all collide in real time.</p>
 
-<blockquote>If the door fails, the guest remembers the platform and the host together.</blockquote>
+<blockquote>If the door fails, the guest remembers the platform and the event organizer together.</blockquote>
 
 <h3>Why Door Scanning Cannot Be an Afterthought</h3>
 <p>Some ticketing systems treat scanning like a small add-on. For Indian venues and organizers, that is risky.</p>
@@ -841,10 +807,10 @@ export const blogs: Blog[] = [
 
 <p>Hoizr is being built to surface important context instead of hiding edge cases. The scanner should help staff make faster decisions without pretending every situation is black and white.</p>
 
-<h3>Live Entry Counters Help the Host React</h3>
+<h3>Live Entry Counters Help the Event Organizer React</h3>
 <p>Door scanning is not only about validating tickets. It is also a live operations signal.</p>
 
-<p>If the host can see how many people have entered, which guestlist sources are arriving, and how fast the queue is moving, they can make better decisions during the night.</p>
+<p>If the event organizer can see how many people have entered, which guestlist sources are arriving, and how fast the queue is moving, they can make better decisions during the night.</p>
 
 <ul>
   <li>Adjust guestlist access</li>
@@ -861,8 +827,8 @@ export const blogs: Blog[] = [
 
 <p>Hoizr's scanner direction is built around practical access, quick status recognition, and operational reliability.</p>
 
-<h3>Why This Matters Before Launch</h3>
-<p>Hoizr Business is pre-launch, and this is exactly why door operations are being planned deeply from the start.</p>
+<h3>Why This Matters From Day One</h3>
+<p>Hoizr Business plans door operations deeply because the door is where the platform has to prove itself.</p>
 
 <p>It is easy to build a good-looking event page. It is harder to build a system that still works when hundreds of people are arriving, the promoter is calling, the artist is late, and the venue manager wants live numbers.</p>
 
@@ -871,7 +837,7 @@ export const blogs: Blog[] = [
 
 <blockquote>Hoizr is being built so the online ticket, the guestlist, and the real-world entry experience stay connected.</blockquote>
 
-<p>For Indian hosts, that connection can be the difference between a chaotic gate and a controlled night.</p>`,
+<p>For Indian event organizers, that connection can be the difference between a chaotic gate and a controlled night.</p>`,
     image:
       "https://res.cloudinary.com/duhefgqh4/image/upload/v1748802768/pexels-wendywei-1190297_jwisnp.jpg",
     date: "May 23, 2026",
@@ -883,22 +849,22 @@ export const blogs: Blog[] = [
     id: "why-whatsapp-first-marketing-matters-for-indian-events",
     title: "Why WhatsApp-First Marketing Matters for Indian Events",
     excerpt:
-      "Indian event discovery does not happen only through ads. Hoizr Business is being built for WhatsApp-first audience communication, repeat campaigns, and host-owned fan relationships.",
+      "Indian event discovery does not happen only through ads. Hoizr Business is being built for WhatsApp-first audience communication, repeat campaigns, and organizer-owned fan relationships.",
     content: `<h3>India Does Not Discover Events in One Place</h3>
 <p>Fans discover events through Instagram stories, WhatsApp groups, artist pages, venue handles, friend circles, college communities, Google searches, and promoter broadcasts.</p>
 
-<p>That makes Indian event marketing different from generic global playbooks. A host cannot rely on one channel and expect consistent results.</p>
+<p>That makes Indian event marketing different from generic global playbooks. A event organizer cannot rely on one channel and expect consistent results.</p>
 
 <p>For many organizers, WhatsApp is not just a messaging app. It is where intent becomes action.</p>
 
 <blockquote>In India, the campaign often starts publicly — but converts privately.</blockquote>
 
-<h3>Why WhatsApp Matters for Hosts</h3>
+<h3>Why WhatsApp Matters for Event Organizers</h3>
 <p>WhatsApp works because it feels direct. People forward event links to friends, ask questions before buying, coordinate group plans, confirm guestlist, and share last-minute updates.</p>
 
 <p>For clubs, comedy shows, live gigs, and festivals, this behavior is already happening. The problem is that it usually happens outside the event platform.</p>
 
-<p>Hoizr Business is being built to bring that reality into the host's marketing workflow.</p>
+<p>Hoizr Business is being built to bring that reality into the event organizer's marketing workflow.</p>
 
 <h3>The Problem With Disconnected Campaigns</h3>
 <p>When marketing runs separately from ticketing and CRM, the organizer loses context.</p>
@@ -911,12 +877,12 @@ export const blogs: Blog[] = [
   <li>They cannot connect post-event communication to attendance</li>
 </ul>
 
-<p>This creates noise for fans and extra work for hosts.</p>
+<p>This creates noise for fans and extra work for event organizers.</p>
 
 <h3>What Hoizr Business Is Being Built to Support</h3>
 <p>Hoizr's marketing direction is multi-channel, but India-aware. Email, SMS, WhatsApp, push, and in-app communication all have different roles.</p>
 
-<p>The platform is being shaped so hosts can build campaigns from their own fan CRM instead of starting from a blank list every time.</p>
+<p>The platform is being shaped so event organizers can build campaigns from their own fan CRM instead of starting from a blank list every time.</p>
 
 <ul>
   <li>On-sale announcements for past buyers</li>
@@ -932,7 +898,7 @@ export const blogs: Blog[] = [
 
 <p>A fan who attended a techno night should not always receive the same campaign as someone who bought a comedy ticket. A repeat VIP buyer should not be treated like a first-time visitor. A guestlist arrival should not be ignored just because they did not purchase a paid ticket.</p>
 
-<p>Hoizr Business is being built so hosts can understand these differences and act on them.</p>
+<p>Hoizr Business is being built so event organizers can understand these differences and act on them.</p>
 
 <h3>Marketing Should Not End After the Event</h3>
 <p>Many organizers go quiet after the event ends. That is a missed opportunity.</p>
@@ -947,7 +913,7 @@ export const blogs: Blog[] = [
 <h3>The Hoizr View</h3>
 <p>Indian event marketing is not only about reach. It is about trust, timing, community, and repeat behavior.</p>
 
-<blockquote>Hoizr Business is being built to help hosts turn one-time attention into owned audience momentum.</blockquote>
+<blockquote>Hoizr Business is being built to help event organizers turn one-time attention into owned audience momentum.</blockquote>
 
 <p>For organizers preparing to scale, WhatsApp-first thinking is not optional. It is part of how India actually goes out.</p>`,
     image:
@@ -958,24 +924,24 @@ export const blogs: Blog[] = [
     author: sanbedan,
   },
   {
-    id: "why-pre-launch-event-platforms-must-earn-host-trust",
-    title: "Why New Event Platforms Must Earn Host Trust Before Scale",
+    id: "why-new-event-platforms-must-earn-host-trust",
+    title: "Why New Event Platforms Must Earn Event Organizer Trust Before Scale",
     excerpt:
-      "Hoizr is a new platform preparing for launch in India. Here is how we think about trust, data ownership, pricing clarity, and operator-first product design before going live.",
+      "Hoizr is a new platform in India. Here is how we think about trust, direct event organizer access, data ownership, and operator-first product design.",
     content: `<h3>Being New Means Trust Has to Be Earned</h3>
 <p>Hoizr is a new platform preparing for launch in India. That means we cannot rely on legacy, old customer logos, or years of market presence.</p>
 
-<p>We have to earn trust in a different way: by being clear about what we are building, who we are building for, and how the platform is designed to respect hosts from day one.</p>
+<p>We have to earn trust in a different way: by being clear about what we are building, who we are building for, and how the platform is designed to respect event organizers from day one.</p>
 
 <blockquote>New platforms do not deserve trust automatically. They earn it by solving real problems honestly.</blockquote>
 
-<h3>What Hosts Should Expect From a Serious Platform</h3>
-<p>Event organizers, venues, promoters, and festival hosts should ask hard questions before trusting any platform with their event.</p>
+<h3>What Event Organizers Should Expect From a Serious Platform</h3>
+<p>Event organizers, venues, promoters, and festival event organizers should ask hard questions before trusting any platform with their event.</p>
 
 <ul>
   <li>Who owns the customer relationship?</li>
-  <li>Can the host export buyer data?</li>
-  <li>Is pricing clear before publishing?</li>
+  <li>Can the event organizer export buyer data?</li>
+  <li>Is direct event organizer access clear before publishing?</li>
   <li>Does the platform understand guestlist culture?</li>
   <li>Can the door team operate smoothly?</li>
   <li>Is settlement thinking built into the workflow?</li>
@@ -985,23 +951,23 @@ export const blogs: Blog[] = [
 <p>These are the questions Hoizr Business is being built around.</p>
 
 <h3>Our Position on Audience Ownership</h3>
-<p>Hoizr's stance is simple: the host should own the fan relationship.</p>
+<p>Hoizr's stance is simple: the event organizer should own the fan relationship.</p>
 
-<p>If someone buys a ticket for a venue's event, joins a guestlist, attends a show, or returns for another night, that relationship should strengthen the host's own business.</p>
+<p>If someone buys a ticket for a venue's event, joins a guestlist, attends a show, or returns for another night, that relationship should strengthen the event organizer's own business.</p>
 
 <p>Hoizr is not being built to trap the audience inside a marketplace model. It is being built as infrastructure for the organizer.</p>
 
-<h3>Our Position on Pricing</h3>
-<p>Hoizr is being designed around event-specific pricing instead of one generic public commission rate.</p>
+<h3>Our Position on Platform Access</h3>
+<p>Hoizr is designed so event organizers can create an account and publish without a subscription, setup fee, listing fee, or card details.</p>
 
-<p>Different events have different economics. A small comedy room, a club night, an independent gig, a cultural show, and a festival do not carry the same scale or risk.</p>
+<p>Different events still have different operating realities. A small comedy room, a club night, an independent gig, a cultural show, and a festival do not carry the same scale or risk.</p>
 
-<p>The goal is to quote commission per event in a way that respects format, city, ticket structure, and commercial context.</p>
+<p>The goal is for AI to study the event context and present the best possible offer, including lowered commission where the event qualifies.</p>
 
 <h3>Our Position on AI</h3>
-<p>Hoizr will not use AI language as decoration. The AI scope is practical: event evaluation and commercial offer generation.</p>
+<p>Hoizr will not use AI language as decoration. The AI scope is practical: event evaluation and offer context.</p>
 
-<p>The platform is being built to evaluate event details, listing quality, ticket structure, and expected audience signals before presenting offer options to the host.</p>
+<p>The platform is being built to evaluate event details, listing quality, ticket structure, and expected audience signals before presenting offer options to the event organizer.</p>
 
 <p>That is the kind of AI we believe is useful: not vague magic, but decision support for real event operations.</p>
 
@@ -1011,16 +977,16 @@ export const blogs: Blog[] = [
 <p>Hoizr Business is being built with guestlist, promoter caps, QR invites, scanner access, live arrivals, reporting, and settlement workflows because those are the parts that matter when the night is actually running.</p>
 
 <h3>Why We Are Saying This Before Launch</h3>
-<p>Pre-launch is the right time to be transparent. We are not publishing testimonials we do not have. We are not claiming guaranteed outcomes. We are not pretending the platform is already everywhere.</p>
+<p>Early product stages are the right time to be transparent. We are not publishing testimonials we do not have. We are not claiming guaranteed outcomes. We are not pretending the platform is already everywhere.</p>
 
 <p>Instead, we are sharing the product philosophy early so organizers can understand the direction before onboarding.</p>
 
 <h3>The Hoizr Promise</h3>
-<p>Hoizr is being built for Indian hosts who want more control over their margins, audience, brand, data, and event operations.</p>
+<p>Hoizr is being built for Indian event organizers who want platform access without gatekeeping, plus more control over their audience, brand, data, and event operations.</p>
 
 <blockquote>Your fans are yours. Your brand is yours. We are building Hoizr to support that, not replace it.</blockquote>
 
-<p>If you are an organizer, venue, promoter, or festival host preparing future events in India, Hoizr Business is being built with your workflow in mind.</p>`,
+<p>If you are an organizer, venue, promoter, or festival event organizer preparing future events in India, Hoizr Business is being built with your workflow in mind.</p>`,
     image:
       "https://res.cloudinary.com/duhefgqh4/image/upload/v1748802768/pexels-wendywei-1190297_jwisnp.jpg",
     date: "May 23, 2026",
