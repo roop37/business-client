@@ -68,7 +68,7 @@ export const metadata: Metadata = {
     template: "%s · Hoizr",
   },
   description:
-    "Hoizr is the ticketing, marketing, and ops platform built for Indian event organizers, venues, and promoters. Publish directly, keep your fan CRM, and run the night from one operating stack.",
+    "Hoizr is the ticketing, marketing, and ops platform built for Indian event organizers, venues, and promoters. Publish directly, keep your fan CRM, use AI event evaluation, and compete with better market signal.",
   applicationName: "Hoizr",
   keywords: [
     // Audience-targeted
@@ -128,7 +128,7 @@ export const metadata: Metadata = {
     title:
       "Hoizr — Ticketing & marketing for Indian event organizers, venues, and promoters",
     description:
-      "Direct ticketing, owned fan CRM, and AI event evaluation. Built for India's clubs, festivals, comedy promoters, and live music venues.",
+      "Direct ticketing, owned fan CRM, AI event evaluation, and peer benchmarks. Built to make India's clubs, festivals, comedy promoters, and live music venues sharper.",
     images: [
       {
         url: "/opengraph-image.webp",
@@ -138,16 +138,6 @@ export const metadata: Metadata = {
       },
     ],
     countryName: "India",
-  },
-  twitter: {
-    card: "summary_large_image",
-    site: "@hoizr",
-    creator: "@hoizr",
-    title:
-      "Hoizr — Ticketing & marketing for Indian event organizers, venues, and promoters",
-    description:
-      "Direct ticketing, owned fan CRM, and AI event evaluation. Built for India's live music, comedy, and festival circuit.",
-    images: ["/opengraph-image.webp"],
   },
   robots: {
     index: true,

@@ -21,7 +21,7 @@ const RESOURCE_LINKS = [
 
 const COMPANY_LINKS = [
   { label: "About", href: "/about", blurb: "Why Hoizr exists and who is building it." },
-  { label: "Contact", href: "/contact", blurb: "Talk to the team about events, venues, partnerships, or support." },
+  { label: "Contact", href: "/contact", blurb: "Talk to Hoizr about events, venues, partnerships, or support." },
 ];
 
 const NAV_BLOG_CARDS = [

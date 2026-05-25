@@ -35,7 +35,7 @@ export const OrganizationJsonLd = () =>
     url: SITE_URL,
     logo: LOGO_URL,
     description:
-      "Hoizr Business is the ticketing, marketing, and ops platform built for Indian event organizers, venues, and promoters. Publish events directly, keep an owned fan CRM, and use AI event evaluation for clubs, festivals, comedy promoters, and live music venues.",
+      "Hoizr Business is the ticketing, marketing, and operations platform powering India's live-event industry. Event organizers, venues, and promoters publish directly, keep owned fan CRM, use AI event evaluation, compare anonymous peer benchmarks, and run clubs, festivals, comedy nights, and live music events from one stack.",
     parentOrganization: {
       "@type": "Organization",
       name: LEGAL_NAME,
@@ -99,6 +99,8 @@ export const OrganizationJsonLd = () =>
       "Event marketing automation",
       "WhatsApp marketing for events",
       "AI event evaluation for events",
+      "Competitive event benchmarking",
+      "Live event operations India",
       "Door scanning",
       "Guestlist management",
       "Promoter management",

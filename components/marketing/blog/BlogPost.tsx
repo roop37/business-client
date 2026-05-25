@@ -3,12 +3,13 @@
 import { motion } from "framer-motion";
 import { ArrowLeft, ArrowUpRight, Linkedin } from "lucide-react";
 import Link from "next/link";
+import type { MouseEvent } from "react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { WaitlistButton } from "../waitlist/WaitlistButton";
 import { getRelatedBlogs, type Blog } from "./blog-data";
-import { BLOG_FIXED_TOP_PX, useFixedAfterReachTop } from "./useFixedAfterReachTop";
 
 const EASE = [0.2, 0.6, 0.2, 1] as const;
+const BLOG_TOC_TOP_PX = 96;
 
 type TocItem = { id: string; text: string };
 
@@ -70,11 +71,9 @@ export const BlogPost = ({ blog }: { blog: Blog }) => {
   }, [blog.content]);
   const related = useMemo(() => getRelatedBlogs(blog.id, 3), [blog.id]);
   const contentRef = useRef<HTMLDivElement>(null);
-  const sidebarRef = useRef<HTMLElement>(null);
-  const authorRef = useRef<HTMLDivElement>(null);
+  const tocViewportRef = useRef<HTMLDivElement>(null);
   const tocListRef = useRef<HTMLUListElement>(null);
   const liRefs = useRef<Record<string, HTMLLIElement | null>>({});
-  const sidebarFixed = useFixedAfterReachTop(sidebarRef, authorRef);
   const [activeId, setActiveId] = useState<string | null>(toc[0]?.id ?? null);
   const [indicator, setIndicator] = useState<{ top: number; height: number }>({
     top: 0,
@@ -85,44 +84,60 @@ export const BlogPost = ({ blog }: { blog: Blog }) => {
     if (typeof window === "undefined") return;
     const root = contentRef.current;
     if (!root || toc.length === 0) return;
-    const headings = toc
-      .map((t) => root.querySelector<HTMLHeadingElement>(`#${CSS.escape(t.id)}`))
-      .filter((el): el is HTMLHeadingElement => Boolean(el));
-    if (!headings.length) return;
+
+    setActiveId(toc[0]?.id ?? null);
+    setIndicator({ top: 0, height: 0 });
+    tocViewportRef.current?.scrollTo({ top: 0 });
+
+    const getHeadings = () =>
+      toc
+        .map((t) => root.querySelector<HTMLHeadingElement>(`#${CSS.escape(t.id)}`))
+        .filter((el): el is HTMLHeadingElement => Boolean(el));
 
     let raf = 0;
-    const updateActiveFromLayout = () => {
+    const updateActiveFromScroll = () => {
       raf = 0;
-      const readingLine = Math.max(
-        BLOG_FIXED_TOP_PX + 56,
+      const headings = getHeadings();
+      if (!headings.length) return;
+
+      const readingLine = window.scrollY + Math.max(
+        BLOG_TOC_TOP_PX + 64,
         Math.round(window.innerHeight * 0.3)
       );
       let next = headings[0].id;
 
       for (const heading of headings) {
-        if (heading.getBoundingClientRect().top <= readingLine) {
+        const headingTop = heading.getBoundingClientRect().top + window.scrollY;
+        if (headingTop <= readingLine) {
           next = heading.id;
         } else {
           break;
         }
       }
+      const doc = document.documentElement;
+      const pageHeight = Math.max(doc.scrollHeight, document.body.scrollHeight);
+      const nearBottom = window.scrollY + window.innerHeight >= pageHeight - 8;
+      if (nearBottom) next = headings[headings.length - 1].id;
 
       setActiveId((current) => (current === next ? current : next));
     };
 
     const scheduleUpdate = () => {
       if (raf) window.cancelAnimationFrame(raf);
-      raf = window.requestAnimationFrame(updateActiveFromLayout);
+      raf = window.requestAnimationFrame(updateActiveFromScroll);
     };
 
     const observer = new IntersectionObserver(
       () => scheduleUpdate(),
       {
-        rootMargin: `-${BLOG_FIXED_TOP_PX + 20}px 0px -58% 0px`,
+        rootMargin: `-${BLOG_TOC_TOP_PX + 24}px 0px -58% 0px`,
         threshold: [0, 0.01, 0.1, 0.5, 1],
       }
     );
+    const headings = getHeadings();
+    if (!headings.length) return;
     headings.forEach((h) => observer.observe(h));
+    const interval = window.setInterval(scheduleUpdate, 300);
     window.addEventListener("scroll", scheduleUpdate, { passive: true });
     window.addEventListener("resize", scheduleUpdate);
     scheduleUpdate();
@@ -130,29 +145,55 @@ export const BlogPost = ({ blog }: { blog: Blog }) => {
       if (raf) window.cancelAnimationFrame(raf);
       window.removeEventListener("scroll", scheduleUpdate);
       window.removeEventListener("resize", scheduleUpdate);
+      window.clearInterval(interval);
       observer.disconnect();
     };
   }, [toc]);
 
-  // Animated TOC rail: measure the active list item and drive a
-  // motion thumb to follow it as the reader scrolls. Recomputes on
-  // active-id change AND on resize so the indicator stays glued even
-  // when long titles wrap across breakpoints.
+  // Animated TOC rail: measure the active list item, move the thumb,
+  // and keep long TOCs auto-scrolled to the active section.
   useEffect(() => {
     if (typeof window === "undefined") return;
     if (!activeId) return;
 
     const measure = () => {
       const list = tocListRef.current;
+      const viewport = tocViewportRef.current;
       const li = liRefs.current[activeId];
       if (!list || !li) return;
       setIndicator({ top: li.offsetTop, height: li.offsetHeight });
+
+      if (!viewport) return;
+      const padding = 12;
+      const itemTop = li.offsetTop;
+      const itemBottom = itemTop + li.offsetHeight;
+      const visibleTop = viewport.scrollTop;
+      const visibleBottom = visibleTop + viewport.clientHeight;
+      if (itemTop < visibleTop + padding) {
+        viewport.scrollTo({ top: Math.max(0, itemTop - padding), behavior: "smooth" });
+      } else if (itemBottom > visibleBottom - padding) {
+        viewport.scrollTo({
+          top: itemBottom - viewport.clientHeight + padding,
+          behavior: "smooth",
+        });
+      }
     };
 
     measure();
     window.addEventListener("resize", measure);
     return () => window.removeEventListener("resize", measure);
   }, [activeId, toc]);
+
+  const scrollToHeading = (id: string, event: MouseEvent<HTMLAnchorElement>) => {
+    event.preventDefault();
+    const root = contentRef.current;
+    const heading = root?.querySelector<HTMLElement>(`#${CSS.escape(id)}`);
+    if (!heading) return;
+    const top = heading.getBoundingClientRect().top + window.scrollY - BLOG_TOC_TOP_PX - 16;
+    window.history.replaceState(null, "", `#${id}`);
+    window.scrollTo({ top, behavior: "smooth" });
+    setActiveId(id);
+  };
 
   return (
     <article className="hm-section pt-12 md:pt-16">
@@ -225,35 +266,20 @@ export const BlogPost = ({ blog }: { blog: Blog }) => {
           dangerouslySetInnerHTML={{ __html: html }}
         />
 
-        <aside ref={sidebarRef} className="relative hidden md:block md:min-h-[520px] md:self-start">
+        <aside className="relative hidden md:block">
           <div
-            className={`space-y-6 ${
-              sidebarFixed.stuck
-                ? "md:fixed md:z-30 md:max-h-[calc(100vh-var(--m-nav-h)-40px)] md:overflow-y-auto md:pr-1"
-                : sidebarFixed.stopped
-                  ? "md:absolute md:left-0"
-                : ""
-            }`}
-            style={
-              sidebarFixed.stuck
-                ? {
-                    top: BLOG_FIXED_TOP_PX,
-                    width: sidebarFixed.width,
-                  }
-                : sidebarFixed.stopped
-                  ? {
-                      top: sidebarFixed.stopTop,
-                      width: sidebarFixed.width,
-                    }
-                : undefined
-            }
+            className="sticky z-20 space-y-6"
+            style={{ top: BLOG_TOC_TOP_PX }}
           >
             {toc.length > 0 && (
               <div className="rounded-[var(--m-r-lg)] border border-[var(--m-border)] bg-[var(--m-surface)] p-4">
                 <div className="text-[12.5px] font-semibold uppercase tracking-[0.12em] text-[var(--m-ink-3)]">
                   Table of Contents
                 </div>
-                <div className="relative mt-3 pl-3">
+                <div
+                  ref={tocViewportRef}
+                  className="relative mt-3 max-h-[min(46vh,430px)] overflow-y-auto pl-3 pr-1"
+                >
                   {/* Faint full-height guide line — the static rail. */}
                   <span
                     aria-hidden
@@ -283,6 +309,7 @@ export const BlogPost = ({ blog }: { blog: Blog }) => {
                         >
                           <a
                             href={`#${t.id}`}
+                            onClick={(event) => scrollToHeading(t.id, event)}
                             className={`block rounded-[6px] px-2 py-1 text-[12.5px] leading-[1.35] transition ${
                               active
                                 ? "font-semibold text-[var(--m-ink-1)]"
@@ -331,7 +358,6 @@ export const BlogPost = ({ blog }: { blog: Blog }) => {
       </div>
 
       <div
-        ref={authorRef}
         className="relative mt-16 overflow-hidden rounded-[var(--m-r-xl)] border border-[var(--m-border)] bg-[var(--m-surface)] p-8 md:p-10"
       >
         {/* eslint-disable-next-line @next/next/no-img-element */}

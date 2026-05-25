@@ -7,19 +7,47 @@ import { Beliefs } from "@/components/marketing/sections/Beliefs";
 import { FinalCTA } from "@/components/marketing/sections/FinalCTA";
 import { FounderCard } from "@/components/marketing/sections/FounderCard";
 import { Playbooks } from "@/components/marketing/sections/Playbooks";
+import {
+  BreadcrumbJsonLd,
+  JsonLdScript,
+} from "@/components/marketing/seo/SchemaJsonLd";
+
+const SITE_URL = "https://business.hoizr.com";
 
 export const metadata: Metadata = {
   title:
     "Resources — Playbooks & blogs for Indian event organizers · Hoizr",
   description:
     "Operator playbooks, migration guides, and field notes for Indian event organizers, venues, and promoters. Short, opinionated, written for India's live nights.",
-  alternates: { canonical: "/resources" },
+  keywords: [
+    "event organizer playbooks India",
+    "ticketing platform migration guide India",
+    "fan CRM playbook",
+    "on-sale day playbook",
+    "event marketing field notes India",
+    "flyer stickers download",
+    "Hoizr resources",
+  ],
+  alternates: {
+    canonical: "/resources",
+    languages: { "en-IN": "/resources", "x-default": "/resources" },
+  },
   openGraph: {
     title: "Resources — Playbooks & blogs for Indian event organizers · Hoizr",
     description:
       "Operator playbooks, migration guides, and field notes for India's clubs, festivals, comedy promoters, and live music venues.",
     url: "/resources",
     type: "website",
+    siteName: "Hoizr",
+    locale: "en_IN",
+    images: [
+      {
+        url: "/opengraph-image.webp",
+        width: 1200,
+        height: 630,
+        alt: "Hoizr resources — playbooks, blogs, and operator field notes for Indian event organizers",
+      },
+    ],
   },
 };
 
@@ -58,9 +86,40 @@ const FLYER_STICKERS = [
   },
 ] as const;
 
+const resourcesJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "CollectionPage",
+  "@id": `${SITE_URL}/resources`,
+  url: `${SITE_URL}/resources`,
+  name: "Hoizr Resources — Playbooks & blogs for Indian event organizers",
+  description:
+    "Operator playbooks, migration guides, and field notes for Indian event organizers, venues, and promoters.",
+  inLanguage: "en-IN",
+  isPartOf: { "@type": "WebSite", name: "Hoizr", url: SITE_URL },
+  mainEntity: {
+    "@type": "ItemList",
+    name: "Featured Hoizr blog posts",
+    itemListOrder: "https://schema.org/ItemListOrderDescending",
+    numberOfItems: FEATURED_BLOGS.length,
+    itemListElement: FEATURED_BLOGS.map((b, i) => ({
+      "@type": "ListItem",
+      position: i + 1,
+      url: `${SITE_URL}/blog/${b.id}`,
+      name: b.title,
+    })),
+  },
+};
+
 export default function ResourcesPage() {
   return (
     <MarketingShell>
+      <JsonLdScript id="hoizr-resources-jsonld" data={resourcesJsonLd} />
+      <BreadcrumbJsonLd
+        items={[
+          { name: "Hoizr", href: "/" },
+          { name: "Resources", href: "/resources" },
+        ]}
+      />
       <section className="hm-section pt-12 md:pt-16">
         <div className="max-w-[820px]">
           <div className="hm-eyebrow inline-flex items-center gap-2">

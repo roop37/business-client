@@ -120,14 +120,6 @@ export function generateMetadata({ params }: PageParams): Metadata {
           ]
         : undefined,
     },
-    twitter: {
-      card: "summary_large_image",
-      site: "@hoizr",
-      creator: "@hoizr",
-      title: blog.title,
-      description: blog.excerpt,
-      images: blog.image ? [blog.image] : undefined,
-    },
     other: {
       "article:published_time": blog.date,
       "article:section": blog.category,

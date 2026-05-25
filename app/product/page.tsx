@@ -2,13 +2,28 @@ import type { Metadata } from "next";
 import { ArrowRight } from "lucide-react";
 import Link from "next/link";
 import { MarketingShell } from "@/components/marketing/MarketingShell";
-import { MARKETING_PILLARS } from "@/components/marketing/data/nav-products";
-import { BreadcrumbJsonLd } from "@/components/marketing/seo/SchemaJsonLd";
+import { ALL_PRODUCTS, MARKETING_PILLARS } from "@/components/marketing/data/nav-products";
+import {
+  BreadcrumbJsonLd,
+  JsonLdScript,
+} from "@/components/marketing/seo/SchemaJsonLd";
+
+const SITE_URL = "https://business.hoizr.com";
 
 export const metadata: Metadata = {
   title: "Hoizr products for event organizers, venues & promoters",
   description:
     "Explore Hoizr products for Indian event organizers, venues, and promoters: ticketing, event SEO, fan CRM, marketing campaigns, door scanning, guestlist management, analytics, and AI event evaluation.",
+  keywords: [
+    "Hoizr products",
+    "event ticketing platform India",
+    "event marketing platform India",
+    "fan CRM for events",
+    "door scanning India",
+    "guestlist management India",
+    "AI event evaluation",
+    "event analytics India",
+  ],
   alternates: {
     canonical: "/product",
     languages: { "en-IN": "/product", "x-default": "/product" },
@@ -19,6 +34,8 @@ export const metadata: Metadata = {
       "Ticketing, fan CRM, marketing, discovery, door ops, and analytics for India's live-event operators.",
     url: "/product",
     type: "website",
+    siteName: "Hoizr",
+    locale: "en_IN",
     images: [
       {
         url: "/opengraph-image.webp",
@@ -28,18 +45,36 @@ export const metadata: Metadata = {
       },
     ],
   },
-  twitter: {
-    card: "summary_large_image",
-    title: "Hoizr products for event organizers, venues & promoters",
-    description:
-      "Ticketing, fan CRM, marketing, discovery, door ops, and analytics for India's live-event operators.",
-    images: ["/opengraph-image.webp"],
+};
+
+const productHubJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "CollectionPage",
+  "@id": `${SITE_URL}/product`,
+  url: `${SITE_URL}/product`,
+  name: "Hoizr products for event organizers, venues & promoters",
+  description:
+    "Every Hoizr product, grouped by Discovery, Sales, Repeat, and Ops — for Indian event organizers, venues, and promoters.",
+  inLanguage: "en-IN",
+  isPartOf: { "@type": "WebSite", name: "Hoizr", url: SITE_URL },
+  mainEntity: {
+    "@type": "ItemList",
+    name: "All Hoizr products",
+    numberOfItems: ALL_PRODUCTS.length,
+    itemListElement: ALL_PRODUCTS.map((p, i) => ({
+      "@type": "ListItem",
+      position: i + 1,
+      url: `${SITE_URL}/product/${p.slug}`,
+      name: p.label,
+      description: p.blurb,
+    })),
   },
 };
 
 export default function ProductIndexPage() {
   return (
     <MarketingShell>
+      <JsonLdScript id="hoizr-products-hub-jsonld" data={productHubJsonLd} />
       <BreadcrumbJsonLd
         items={[
           { name: "Hoizr", href: "/" },
