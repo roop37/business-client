@@ -48,7 +48,7 @@ export const BlogIndex = () => {
           Resources and insights
         </h1>
         <p className="mt-5 max-w-[620px] text-[17px] leading-relaxed text-[var(--m-ink-3)]">
-          Fresh insights and practical playbooks for modern event hosts, venues,
+          Fresh insights and practical playbooks for modern event organizers, venues,
           and nightlife operators in India.
         </p>
       </div>

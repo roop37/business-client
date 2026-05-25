@@ -10,13 +10,13 @@ import {
 export const metadata: Metadata = {
   title: "Blog — for Indian event organizers, venues & promoters · Hoizr",
   description:
-    "Insights and playbooks for Indian event organizers, venues, comedy promoters, nightlife hosts, and party crews. Migration guides, AI pricing studies, fan-CRM tactics, and door-ops field notes.",
+    "Insights and playbooks for Indian event organizers, venues, comedy promoters, nightlife organizers, and party crews. Migration guides, AI event strategy, fan-CRM tactics, and door-ops field notes.",
   keywords: [
     "event organizer blog India",
     "venue marketing tips India",
     "ticketing platform comparison India",
     "fan CRM for live events",
-    "AI event pricing India",
+    "AI event evaluation India",
     "comedy promoter playbook",
     "festival operations India",
     "nightclub marketing India",
@@ -30,7 +30,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: "Hoizr Blog — insights for India's event organizers & venues",
     description:
-      "Migration playbooks, AI pricing studies, fan-CRM tactics, and operator field notes — written for Indian event hosts, venues, and promoters.",
+      "Migration playbooks, AI event strategy, fan-CRM tactics, and operator field notes — written for Indian event organizers, venues, and promoters.",
     type: "website",
     url: "/blog",
     locale: "en_IN",
@@ -50,7 +50,7 @@ export const metadata: Metadata = {
     creator: "@hoizr",
     title: "Hoizr Blog — for Indian event organizers & venues",
     description:
-      "Migration playbooks, AI pricing studies, fan-CRM tactics, and operator field notes.",
+      "Migration playbooks, AI event strategy, fan-CRM tactics, and operator field notes.",
     images: ["/opengraph-image.webp"],
   },
 };
@@ -68,7 +68,7 @@ export default function BlogPage() {
     "@id": `${SITE_URL}/blog`,
     name: "Hoizr Blog",
     description:
-      "Insights and playbooks for Indian event organizers, venues, comedy promoters, nightlife hosts, and party crews.",
+      "Insights and playbooks for Indian event organizers, venues, comedy promoters, nightlife organizers, and party crews.",
     url: `${SITE_URL}/blog`,
     inLanguage: "en-IN",
     publisher: {
@@ -79,7 +79,7 @@ export default function BlogPage() {
     audience: {
       "@type": "BusinessAudience",
       audienceType:
-        "Indian event organizers, venues, promoters, festival hosts, comedy promoters, nightclub operators",
+        "Indian event organizers, venues, promoters, festival organizers, comedy promoters, nightclub operators",
       geographicArea: { "@type": "Country", name: "India" },
     },
     blogPost: blogs.map((b) => ({

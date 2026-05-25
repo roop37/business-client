@@ -62,9 +62,9 @@ const PLAYBOOKS: Playbook[] = [
     tone: "ink",
   },
   {
-    kicker: "Pricing",
-    title: "Genre-aware ticket pricing in India.",
-    body: "What Mumbai techno, Bangalore comedy, and Delhi rooftops actually charge — and how to bracket your own tiers without leaving money on the floor.",
+    kicker: "Ticket tiers",
+    title: "Genre-aware ticket tiers in India.",
+    body: "What Mumbai techno, Bangalore comedy, and Delhi rooftops actually need — and how to bracket your own tiers without leaving money on the floor.",
     href: "/blog/genre-aware-ticket-pricing-playbook-india",
     image: "/images/playbooks/Nightclub-vibes-DJ-in-the-mix .png",
     tone: "forest",

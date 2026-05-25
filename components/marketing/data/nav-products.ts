@@ -131,7 +131,17 @@ export const MARKETING_PILLARS: MarketingPillar[] = [
       {
         slug: "ai-event-assistant",
         label: "AI Event Assistant",
-        blurb: "Pricing, copywriting, and audience picks tuned by AI.",
+        blurb: "Event evaluation, offer context, and audience picks tuned by AI.",
+      },
+      {
+        slug: "ai-marketing-intelligence",
+        label: "AI Marketing Intelligence",
+        blurb: "AI splits your marketing budget across SMS, push, email, and WhatsApp — with reasoning.",
+      },
+      {
+        slug: "competitive-analysis",
+        label: "Competitive Analysis",
+        blurb: "See how peer event organizers perform in your city, format, and price band — and what the top quartile does differently.",
       },
       {
         slug: "guestlist-management",

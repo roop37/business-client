@@ -7,20 +7,20 @@ import { FinalCTA } from "@/components/marketing/sections/FinalCTA";
 export const metadata: Metadata = {
   title: "Help — Hoizr",
   description:
-    "Reach the Hoizr team for setup, payout, scanner, and platform support. Same-day reply for hosts running shows.",
+    "Reach the Hoizr team for setup, payout, scanner, and platform support. Same-day reply for event organizers running shows.",
 };
 
 const HELP_LANES = [
   {
     icon: MessagesSquare,
     title: "Talk to the team",
-    body: "Hoizr's support team is staffed across IST hours and replies same-day for active hosts.",
+    body: "Hoizr's support team is staffed across IST hours and replies same-day for active event organizers.",
     cta: { label: "Email support", href: "mailto:contact@hoizr.com" },
   },
   {
     icon: MailQuestion,
-    title: "Pre-launch questions",
-    body: "Considering Hoizr but haven't onboarded yet? The sales team will quote your event-specific rate and walk you through the platform.",
+    title: "New organizer questions",
+    body: "Considering Hoizr but haven't onboarded yet? The team will help you bring your event onto the platform, publish directly, and understand the AI event offer.",
     cta: { label: "Talk to sales", href: "/contact" },
   },
   {
@@ -33,7 +33,7 @@ const HELP_LANES = [
 
 const COMMON_QUERIES = [
   {
-    q: "I'm a host. How do I reach support during my event?",
+    q: "I'm an event organizer. How do I reach support during my event?",
     a: "Email contact@hoizr.com or use the in-dashboard help button. The team monitors both channels across IST hours and during weekend show windows.",
   },
   {
@@ -73,7 +73,7 @@ export default function HelpPage() {
           </h1>
           <p className="hm-lead mt-7 max-w-[600px]">
             Pick the lane that matches your role. Hoizr&apos;s support team
-            replies same-day for active hosts and within one working day for
+            replies same-day for active event organizers and within one working day for
             everyone else.
           </p>
         </div>

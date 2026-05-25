@@ -13,6 +13,7 @@ import { Hero } from "@/components/marketing/sections/Hero";
 import { OperationsBento } from "@/components/marketing/sections/OperationsBento";
 import { PillarGrid } from "@/components/marketing/sections/PillarGrid";
 import { Playbooks } from "@/components/marketing/sections/Playbooks";
+import { PricingTeaserCards } from "@/components/marketing/sections/PricingTeaserCards";
 import { ProductStoryGallery } from "@/components/marketing/sections/ProductStoryGallery";
 import { RepeatFansBento } from "@/components/marketing/sections/RepeatFansBento";
 // ValueMarquee retired in favour of the founder quote banner.
@@ -22,13 +23,13 @@ export const metadata: Metadata = {
   title:
     "Hoizr — Ticketing & marketing for Indian event organizers, venues, and promoters",
   description:
-    "Hoizr is built for Indian event organizers, venues, and promoters. Lowest commission in India, owned fan CRM, AI event-specific pricing, and marketing tools tuned for clubs, festivals, comedy shows, and live music nights.",
+    "Hoizr is built for Indian event organizers, venues, and promoters. Direct publishing, owned fan CRM, AI event evaluation, and marketing tools tuned for clubs, festivals, comedy shows, and live music nights.",
   alternates: { canonical: "/" },
   openGraph: {
     title:
       "Hoizr — Ticketing & marketing for Indian event organizers, venues, and promoters",
     description:
-      "The platform for India's clubs, festivals, comedy promoters, and live music venues. Direct ticketing, owned fan CRM, AI commission pricing.",
+      "The operating stack for India's clubs, festivals, comedy promoters, and live music venues. Direct ticketing, owned fan CRM, and AI event evaluation.",
     url: "/",
     type: "website",
   },
@@ -51,6 +52,7 @@ export default function Home() {
     <MarketingShell>
       <Hero />
       <FounderQuoteBanner />
+      <PricingTeaserCards />
       <PillarGrid />
       <ProductStoryGallery />
       <AiSeoPanel />

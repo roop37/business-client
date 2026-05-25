@@ -36,7 +36,7 @@ export const ProductFAQ = ({ content }: { content: ProductContent }) => {
               fontSize: "clamp(30px, 3.6vw, 44px)",
             }}
           >
-            Things hosts ask about {content.label.toLowerCase()}.
+            Things event organizers ask about {content.label.toLowerCase()}.
           </h2>
           <p className="mt-4 text-[15px] leading-relaxed text-[var(--m-ink-3)]">
             If we missed yours, every onboarding call covers the rest live —

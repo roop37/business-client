@@ -337,7 +337,7 @@ const GlobalTopUpModal = () => {
                 </div>
                 {platformFeePercent > 0 ? (
                   <div className="mt-1 flex items-center justify-between text-[var(--owner-fg-3)]">
-                    <span>Platform fee ({platformFeePercent}%)</span>
+                    <span>Payment adjustment ({platformFeePercent}%)</span>
                     <span className="tabular-nums">
                       {inrFormat(platformFeeAmount)}
                     </span>

@@ -1,8 +1,9 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { ArrowUpRight, Coins, Users } from "lucide-react";
+import { ArrowUpRight, BadgeCheck, Sparkles, Users, type LucideIcon } from "lucide-react";
 import Link from "next/link";
+import { WaitlistButton } from "../waitlist/WaitlistButton";
 
 const EASE = [0.2, 0.6, 0.2, 1] as const;
 
@@ -12,32 +13,40 @@ type PromiseCard = {
   body: string;
   ctaLabel: string;
   ctaHref: string;
-  Icon: typeof Coins;
+  Icon: LucideIcon;
 };
 
 const CARDS: PromiseCard[] = [
   {
-    eyebrow: "Lowest commission",
-    title: "The lowest ticket commission in India.",
-    body: "Hoizr quotes a single per-event commission with no convenience fees. Compare us — we'll match or beat any rate from a verified Indian competitor.",
-    ctaLabel: "See your event commission",
+    eyebrow: "No gatekeeping",
+    title: "The full stack from day one.",
+    body: "Event organizers can publish directly and use the full platform without a subscription wall, starter tier, or gated plan.",
+    ctaLabel: "Join the waitlist",
     ctaHref: "/signup",
-    Icon: Coins,
+    Icon: BadgeCheck,
+  },
+  {
+    eyebrow: "AI event evaluation",
+    title: "The offer is studied event by event.",
+    body: "Hoizr AI evaluates format, city, scale, ticket mix, and listing quality, then surfaces the best possible offer and lowered commission where the event qualifies.",
+    ctaLabel: "See how AI helps",
+    ctaHref: "/product/ai-event-assistant",
+    Icon: Sparkles,
   },
   {
     eyebrow: "Collaborators",
     title: "Pool audiences. Boost sales.",
-    body: "Add another host as a collaborator — they get the event on their dashboard and you both run campaigns against the combined customer base.",
+    body: "Add another event organizer as a collaborator — they get the event on their dashboard and you both run campaigns against the combined customer base.",
     ctaLabel: "How collaborators work",
     ctaHref: "/how-it-works#collaborators",
     Icon: Users,
   },
 ];
 
-export const PricingPromise = () => {
+export const AboutPromise = () => {
   return (
     <section className="hm-section pt-6 md:pt-10">
-      <div className="grid gap-5 md:grid-cols-2 md:gap-6">
+      <div className="grid gap-5 lg:grid-cols-3 md:gap-6">
         {CARDS.map((card, i) => (
           <motion.article
             key={card.title}
@@ -85,13 +94,23 @@ export const PricingPromise = () => {
               </p>
 
               <div className="mt-auto pt-6">
-                <Link
-                  href={card.ctaHref}
-                  className="inline-flex items-center gap-2 rounded-full bg-[var(--m-acid)] px-5 py-2.5 text-[14px] font-semibold text-[var(--m-forest-900)] transition hover:opacity-90"
-                >
-                  {card.ctaLabel}
-                  <ArrowUpRight size={16} strokeWidth={2.2} />
-                </Link>
+                {card.ctaHref === "/signup" ? (
+                  <WaitlistButton
+                    source="about-promise"
+                    className="inline-flex items-center gap-2 rounded-full bg-[var(--m-acid)] px-5 py-2.5 text-[14px] font-semibold text-[var(--m-forest-900)] transition hover:opacity-90"
+                  >
+                    {card.ctaLabel}
+                    <ArrowUpRight size={16} strokeWidth={2.2} />
+                  </WaitlistButton>
+                ) : (
+                  <Link
+                    href={card.ctaHref}
+                    className="inline-flex items-center gap-2 rounded-full bg-[var(--m-acid)] px-5 py-2.5 text-[14px] font-semibold text-[var(--m-forest-900)] transition hover:opacity-90"
+                  >
+                    {card.ctaLabel}
+                    <ArrowUpRight size={16} strokeWidth={2.2} />
+                  </Link>
+                )}
               </div>
             </div>
 

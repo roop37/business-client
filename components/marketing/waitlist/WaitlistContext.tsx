@@ -11,13 +11,8 @@ import {
 import { WaitlistModal } from "./WaitlistModal";
 
 /**
- * Global "Join the waitlist" controller. Pre-launch the marketing
- * site shows a single waitlist CTA in place of login/signup; every
- * CTA on every page opens the same modal via useWaitlist().open().
- *
- * When the main API server comes online and the dashboard reopens to
- * the public, remove the provider mount in AppGlobals and restore the
- * commented login/signup links across the marketing components.
+ * Public marketing modal controller. Account creation stays hidden
+ * while Hoizr is in waitlist mode.
  */
 
 type WaitlistCtx = {

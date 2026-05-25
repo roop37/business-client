@@ -1,9 +1,9 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { ArrowRight, Brain, FileSearch, Gauge, Gift, Radar, Sparkles } from "lucide-react";
+import { ArrowRight, Brain, FileSearch, Gauge, Radar, Sparkles } from "lucide-react";
 import Link from "next/link";
-import { useWaitlist } from "../waitlist/WaitlistContext";
+import { WaitlistButton } from "../waitlist/WaitlistButton";
 
 const EASE = [0.2, 0.6, 0.2, 1] as const;
 
@@ -11,34 +11,31 @@ const STEPS = [
   {
     icon: FileSearch,
     label: "01 · Tell us about the event",
-    body: "Format, city, capacity, ticket mix, commercial type. That's what Hoizr starts from.",
+    body: "Format, city, capacity, ticket mix, venue context, and listing quality. That's what Hoizr starts from.",
   },
   {
     icon: Brain,
-    label: "02 · AI Boost scores your event",
-    body: "Hoizr studies comparable nights, sell-through history, reach signals, organiser size, and risk to position your show inside our commission band.",
+    label: "02 · AI studies the event",
+    body: "Hoizr evaluates comparable nights, demand signals, ticket structure, event completeness, and operational readiness.",
   },
   {
     icon: Gauge,
-    label: "03 · You get a quote sized to the night",
-    body: "Small night or first-time organiser? AI Boost can quote a low commission with no upfront fee at all. Larger shows scale up — the fee and the rate move together. Either way it's one quote, locked at signup.",
+    label: "03 · You get the best possible offer",
+    body: "The result is an event-specific recommendation that explains what Hoizr can offer for the night, including lowered commission where the event qualifies.",
   },
   {
-    icon: Gift,
-    label: "04 · First event? Marketing on us",
-    body: "If AI Boost reads your first event as one Hoizr should help launch, it can throw in free marketing credits on the house — used inside Hoizr to reach the right fans before doors open.",
+    icon: Sparkles,
+    label: "04 · Publish with clearer context",
+    body: "You can publish directly with the full operating stack: ticketing, CRM, campaigns, guestlist, door scanning, and reporting.",
   },
 ];
 
 /**
- * AI Offer spotlight. Positions Hoizr's AI as a commission-lowering
- * mechanic — per the finance source of truth, the AI looks at each
- * event and proposes the best (lowest) commission Hoizr can offer
- * for that night, not a ticket-price ladder. Studio-feel visual on
- * the right uses the metallic-black surface to mirror the hero.
+ * AI Offer spotlight. Positions Hoizr's AI as event evaluation: it
+ * studies the night and explains the best possible offer, including
+ * lowered commission where the event qualifies.
  */
 export const AiOfferSpotlight = () => {
-  const { open: openWaitlist } = useWaitlist();
   return (
     <section className="hm-section">
       <div className="relative overflow-hidden rounded-[var(--m-r-2xl)] border border-[var(--m-border)] bg-[var(--m-surface)]">
@@ -53,20 +50,17 @@ export const AiOfferSpotlight = () => {
           >
             <span className="hm-chip max-w-full flex-wrap self-start leading-snug">
               <Sparkles size={13} className="shrink-0 text-[var(--m-forest-700)]" />
-              <span className="font-semibold">AI Boost · Commission</span>
+              <span className="font-semibold">AI event evaluation</span>
             </span>
             <h2 className="hm-h2 mt-5">
-              AI Boost reads your event and picks your commission.
+              AI studies your event and returns the best possible offer.
             </h2>
             <p className="hm-lead mt-5 max-w-[520px]">
-              Every Hoizr event starts on a standard rate based on its
-              commercial type. Turn on AI Boost and Hoizr&apos;s model reads
-              the night, then quotes one lower commission from inside our
-              band. Tiny show or first-time organiser? Often a low rate with
-              no upfront fee at all — and free marketing credits from Hoizr
-              to help launch. Bigger shows scale up. Locked at signup. No
-              public rate cards, no long contracts — the exact numbers are
-              shared with you directly.
+              Hoizr puts the full operating stack in your workspace from day
+              one. For event economics, the AI evaluates your format, city,
+              scale, ticket mix, demand signals, and listing quality, then
+              provides the best possible offer and lowered commission where
+              the event qualifies.
             </p>
 
             <ol className="mt-10 space-y-6">
@@ -95,20 +89,10 @@ export const AiOfferSpotlight = () => {
             </ol>
 
             <div className="mt-10">
-              {/* Pre-launch: signup CTA hidden; waitlist trigger in its place.
-              <Link href="/signup" className="hm-btn hm-btn-primary">
-                Get my AI Boost rate
-                <ArrowRight size={16} />
-              </Link>
-              */}
-              <button
-                type="button"
-                onClick={() => openWaitlist("ai-boost")}
-                className="hm-btn hm-btn-primary"
-              >
+              <WaitlistButton source="ai-offer-spotlight" className="hm-btn hm-btn-primary">
                 Join the waitlist
                 <ArrowRight size={16} />
-              </button>
+              </WaitlistButton>
             </div>
 
             {/* Roadmap teaser — clearly labelled as upcoming, not live. */}
@@ -126,7 +110,7 @@ export const AiOfferSpotlight = () => {
             </div>
           </motion.div>
 
-          {/* Right — studio-feel "rate card" mock on metallic black */}
+          {/* Right — studio-feel offer mock on metallic black */}
           <motion.div
             initial={{ opacity: 0, y: 32 }}
             whileInView={{ opacity: 1, y: 0 }}
@@ -158,7 +142,7 @@ const RateStudioMock = () => {
           <div className="flex items-center justify-between">
             <div>
               <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-white/55">
-                Hoizr · AI Boost rate
+                Hoizr · AI event evaluation
               </div>
               <div
                 className="hoizr-mark on-dark mt-3 text-white"
@@ -188,7 +172,7 @@ const RateStudioMock = () => {
             </div>
           </div>
 
-          {/* Reasoning ribbon — mirrors the inputs the AI Boost model uses */}
+          {/* Reasoning ribbon — mirrors the inputs the AI model uses */}
           <div className="mt-3 space-y-1.5">
             {[
               { label: "Event type", value: "Exclusive" },
@@ -208,50 +192,41 @@ const RateStudioMock = () => {
             ))}
           </div>
 
-          {/* The result card — shows the AI Boost mechanic without exposing
-              actual rates. Exact % and fee are quoted to the host at signup
-              per pricing policy (no public rate cards). */}
+          {/* The result card shows the event-specific offer without public
+              pricing templates or subscription language. */}
           <div className="mt-5 rounded-2xl border border-[var(--m-acid)]/40 bg-[#143821] p-4">
             <div className="text-[11px] font-semibold uppercase tracking-[0.14em] text-[var(--m-acid)]">
-              AI Boost quote
+              AI offer
             </div>
             <div className="mt-1.5 text-[16px] font-bold leading-tight text-white">
-              Sized to the night — small or large.
+              Best possible offer for this night.
             </div>
             <div className="mt-3 grid grid-cols-2 gap-2 text-[11px] text-white/70">
               <div className="rounded-lg bg-white/[0.04] px-2.5 py-2">
                 <div className="font-semibold uppercase tracking-[0.08em] text-white/45">
-                  Commission
+                  Platform access
                 </div>
                 <div className="mt-0.5 font-medium text-white">
-                  Lower than your standard rate
+                  No subscription wall
                 </div>
               </div>
               <div className="rounded-lg bg-white/[0.04] px-2.5 py-2">
                 <div className="font-semibold uppercase tracking-[0.08em] text-white/45">
-                  Upfront fee
+                  Commission direction
                 </div>
                 <div className="mt-0.5 font-medium text-white">
-                  From zero · scales with size
+                  Lowered where eligible
                 </div>
               </div>
             </div>
-            <div className="mt-3 flex items-start gap-2 rounded-lg bg-[var(--m-acid)]/[0.10] px-2.5 py-2 text-[11.5px] text-white/85">
-              <Gift size={13} className="mt-[2px] shrink-0 text-[var(--m-acid)]" />
-              <span>
-                <span className="font-semibold text-white">First event?</span>{" "}
-                AI Boost can add free marketing credits on us to help launch
-                the night.
-              </span>
-            </div>
             <div className="mt-3 text-[11.5px] text-white/65">
-              Locked at signup. Skip the Boost and you stay on the standard
-              rate for your event type.
+              No card details required to create your account or publish your
+              event.
             </div>
           </div>
 
           <div className="mt-5 flex items-center justify-between text-[11.5px] text-white/55">
-            <span>Exact figures shared with you at signup</span>
+            <span>Offer context shown before publish</span>
             <span className="font-semibold text-[var(--m-acid)]">View →</span>
           </div>
         </div>
@@ -275,7 +250,7 @@ const RateStudioMock = () => {
         transition={{ duration: 0.6, ease: EASE, delay: 0.8 }}
         className="absolute -right-3 bottom-32 z-10 hidden items-center gap-2 rounded-full bg-[var(--m-forest-800)] px-3 py-1.5 text-[11px] font-semibold text-white shadow-lg md:flex"
       >
-        Locked at signup
+        Publish directly
       </motion.div>
     </div>
   );

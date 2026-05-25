@@ -3,27 +3,25 @@
 import { useWaitlist } from "./WaitlistContext";
 
 /**
- * Drop-in pre-launch CTA. Same classNames as the underlying anchor so
- * existing hm-btn variants flow through. When the dashboard reopens,
- * swap WaitlistButton back to <Link href="/signup">.
+ * Shared waitlist CTA. Public marketing surfaces stay in waitlist mode
+ * while account creation remains hidden.
  */
 export const WaitlistButton = ({
   source,
   className,
   children,
-  type = "button",
 }: {
   source?: string;
   className?: string;
   children: React.ReactNode;
-  type?: "button" | "submit";
 }) => {
-  const { open } = useWaitlist();
+  const waitlist = useWaitlist();
+
   return (
     <button
-      type={type}
-      onClick={() => open(source)}
+      type="button"
       className={className}
+      onClick={() => waitlist.open(source)}
     >
       {children}
     </button>

@@ -42,23 +42,24 @@ export const AiSeoPanel = () => {
               AI does the SEO. You do the show.
             </h2>
             <p className="mt-5 text-[17px] leading-relaxed text-white/75 max-w-[480px]">
-              Schema, city pages, meta tags, and search-ready listings — written
-              and continuously tuned the moment you publish. Hoizr keeps your
-              shows on page one while you focus on the night itself.
+              Hoizr audits every show like a search engine would: venue, city,
+              category, date, tickets, canonical URL, structured data, and share
+              previews. Then it builds the signals that help your event climb
+              across search, Maps, social cards, and discovery integrations.
             </p>
 
             <ul className="mt-7 space-y-3 text-[14.5px] text-white/85">
               <li className="flex items-start gap-2.5">
                 <span className="mt-1.5 inline-block h-1.5 w-1.5 shrink-0 rounded-full bg-[var(--m-acid)]" />
-                Auto-generated Event + Organisation JSON-LD per show.
+                Validates venue, geo, category, date, ticket, and organizer data before publish.
               </li>
               <li className="flex items-start gap-2.5">
                 <span className="mt-1.5 inline-block h-1.5 w-1.5 shrink-0 rounded-full bg-[var(--m-acid)]" />
-                City + genre landing pages tuned for local intent searches.
+                Generates Event + Organization JSON-LD, canonical meta, link cards, and sitemap entries.
               </li>
               <li className="flex items-start gap-2.5">
                 <span className="mt-1.5 inline-block h-1.5 w-1.5 shrink-0 rounded-full bg-[var(--m-acid)]" />
-                Meta, OpenGraph, and Twitter cards refreshed on every edit.
+                Keeps search pages, Maps fields, social previews, and integrations fresh after every edit.
               </li>
             </ul>
 

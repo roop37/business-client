@@ -6,7 +6,7 @@ import { MARKETING_PILLARS } from "../data/nav-products";
 
 const EASE = [0.2, 0.6, 0.2, 1] as const;
 
-export const PricingIncluded = () => {
+export const AboutIncluded = () => {
   return (
     <section className="hm-section">
       <div className="max-w-[760px]">
@@ -17,7 +17,7 @@ export const PricingIncluded = () => {
         <p className="hm-lead mt-5 max-w-[600px]">
           Every Hoizr account gets the full platform — event pages, fan CRM,
           campaigns, AI recommendations, door tools, reporting, and settlement
-          workflows. No feature gates by tier, because there are no tiers.
+          workflows. No subscription tiers, no card details, and no feature gates.
         </p>
       </div>
 

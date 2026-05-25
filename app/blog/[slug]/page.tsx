@@ -202,7 +202,7 @@ export default function BlogPostPage({ params }: PageParams) {
     audience: {
       "@type": "BusinessAudience",
       audienceType:
-        "Indian event organizers, venues, promoters, festival hosts, comedy promoters, nightclub operators",
+        "Indian event organizers, venues, promoters, festival organizers, comedy promoters, nightclub operators",
       geographicArea: { "@type": "Country", name: "India" },
     },
     // Cluster signal — related posts in the same category boost

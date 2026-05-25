@@ -1,12 +1,30 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { ArrowRight } from "lucide-react";
+import {
+  ArrowRight,
+  BadgeCheck,
+  BarChart3,
+  ScanLine,
+  Sparkles,
+  Ticket,
+  Users,
+  type LucideIcon,
+} from "lucide-react";
 import Link from "next/link";
 import { BlurImage } from "../visuals/BlurImage";
-import { MagneticButton } from "../visuals/MagneticButton";
 import { useWaitlist } from "../waitlist/WaitlistContext";
 const EASE = [0.2, 0.6, 0.2, 1] as const;
+const HERO_VERTICALS = ["comedy", "clubbing", "dining", "festivals", "concerts"];
+
+const HERO_BADGES: { icon: LucideIcon; label: string }[] = [
+  { icon: BadgeCheck, label: "No gatekeeping" },
+  { icon: Ticket, label: "Direct ticketing" },
+  { icon: Sparkles, label: "AI rate quote" },
+  { icon: Users, label: "Your fan CRM" },
+  { icon: ScanLine, label: "Door + scanners" },
+  { icon: BarChart3, label: "Settlement-ready" },
+];
 
 /**
  * Landing hero. Composition:
@@ -22,7 +40,7 @@ const EASE = [0.2, 0.6, 0.2, 1] as const;
  *   - /images/playbooks/Event-management-dashboard-overview.png (1586×992)
  */
 export const Hero = () => {
-  const { open: openWaitlist } = useWaitlist();
+  const waitlist = useWaitlist();
   return (
     <section className="relative overflow-hidden">
       {/* Hero background intentionally empty — the marketing canvas
@@ -38,10 +56,10 @@ export const Hero = () => {
           <span className="hm-chip max-w-full flex-wrap justify-center text-center leading-snug">
             <span className="hm-chip-dot shrink-0" />
             <span className="font-semibold text-[var(--m-ink-1)]">
-              For India&apos;s nightlife hosts
+              For India&apos;s Top Organizers &amp; Venues
             </span>
             <span className="hidden text-[var(--m-ink-4)] sm:inline">
-              : comedy · clubbing · parties · venues
+              : {HERO_VERTICALS.join(" · ")}
             </span>
           </span>
         </motion.div>
@@ -82,8 +100,8 @@ export const Hero = () => {
           className="hm-lead mx-auto mt-6 max-w-[640px]"
         >
           Hoizr is the ticketing, marketing, and ops stack built for the way
-          India actually goes out. Direct sales, an owned fan CRM, and AI that
-          quotes your best event-specific commission rate.
+          India actually goes out. Publish events directly, keep your fan CRM,
+          and let AI study each event for the best possible offer.
         </motion.p>
 
         <motion.div
@@ -92,39 +110,125 @@ export const Hero = () => {
           transition={{ duration: 0.7, ease: EASE, delay: 0.45 }}
           className="mt-9 flex flex-wrap items-center justify-center gap-3"
         >
-          {/* Pre-launch: signup CTA hidden until dashboard reopens.
-          <MagneticButton href="/signup" className="hm-btn hm-btn-primary" pull={10}>
-            Get my event rate
-            <ArrowRight size={16} />
-          </MagneticButton>
-          */}
           <button
             type="button"
-            onClick={() => openWaitlist("hero")}
+            onClick={() => waitlist.open("hero")}
             className="hm-btn hm-btn-primary"
           >
-            Join the Hoizr waitlist
+            Join the waitlist
             <ArrowRight size={16} />
           </button>
-          <Link href="/pricing" className="hm-btn hm-btn-ghost border border-[var(--m-border)]">
+          <Link href="/how-it-works" className="hm-btn hm-btn-ghost border border-[var(--m-border)]">
             See how it works
           </Link>
         </motion.div>
-
-        <motion.p
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 0.7, delay: 0.7 }}
-          className="mt-4 text-[13px] text-[var(--m-ink-4)]"
-        >
-          Lowest commission in India · Event-specific AI rate · No long contracts.
-        </motion.p>
 
         <HeroStage />
       </div>
     </section>
   );
 };
+
+/**
+ * Floating badges positioned on the dark metallic card around the
+ * laptop. The laptop body roughly occupies the centre 18%–82% of the
+ * stage horizontally, so badges are placed in the left/right strips
+ * only — never on top of the laptop chrome or screen. Each badge
+ * floats independently with a slow sine-wave y oscillation so the
+ * cluster reads as "alive" without distracting from the dashboard.
+ *
+ * The desktop layout uses the absolute positions defined here. On
+ * mobile (<md), the floating layer is hidden and a centered wrap-row
+ * appears below the CTAs instead — cramped corners aren't worth the
+ * positional gymnastics on small screens.
+ */
+type FloatPos = {
+  top: string;
+  left?: string;
+  right?: string;
+  delay: number;
+  duration: number;
+  offset: number;
+};
+
+const HERO_BADGE_POSITIONS: FloatPos[] = [
+  { top: "38%", left: "1%",  delay: 0.65, duration: 5.2, offset: 10 },
+  { top: "56%", left: "5%",  delay: 0.80, duration: 6.4, offset: 12 },
+  { top: "76%", left: "2%",  delay: 0.95, duration: 5.8, offset: 9  },
+  { top: "40%", right: "2%", delay: 0.70, duration: 6.0, offset: 11 },
+  { top: "58%", right: "0%", delay: 0.85, duration: 5.4, offset: 13 },
+  { top: "78%", right: "4%", delay: 1.00, duration: 6.6, offset: 10 },
+];
+
+const FloatingHeroBadges = () => (
+  <>
+    {/* Desktop: absolute floating layer pinned to the HeroStage bounds. */}
+    <div
+      aria-label="What Hoizr ships with"
+      className="pointer-events-none absolute inset-0 z-20 hidden md:block"
+    >
+      {HERO_BADGES.map((b, i) => {
+        const pos = HERO_BADGE_POSITIONS[i] ?? HERO_BADGE_POSITIONS[0];
+        return (
+          <motion.span
+            key={b.label}
+            initial={{ opacity: 0, y: pos.offset + 6, scale: 0.9 }}
+            animate={{
+              opacity: 1,
+              scale: 1,
+              y: [pos.offset * -0.5, pos.offset * 0.5, pos.offset * -0.5],
+            }}
+            transition={{
+              opacity: { duration: 0.55, ease: EASE, delay: pos.delay },
+              scale: { duration: 0.55, ease: EASE, delay: pos.delay },
+              y: {
+                duration: pos.duration,
+                ease: "easeInOut",
+                repeat: Infinity,
+                delay: pos.delay,
+              },
+            }}
+            className="hm-hero-badge hm-hero-badge--floating pointer-events-auto"
+            style={{ position: "absolute", top: pos.top, left: pos.left, right: pos.right }}
+          >
+            <span className="hm-hero-badge__icon" aria-hidden>
+              <b.icon size={13} strokeWidth={2.1} />
+            </span>
+            {b.label}
+          </motion.span>
+        );
+      })}
+    </div>
+
+    {/* Mobile: compact wrap-row below the laptop. */}
+    <motion.div
+      initial="hidden"
+      animate="visible"
+      variants={{
+        hidden: {},
+        visible: { transition: { staggerChildren: 0.06, delayChildren: 0.6 } },
+      }}
+      className="mt-6 flex flex-wrap items-center justify-center gap-2 md:hidden"
+      aria-hidden
+    >
+      {HERO_BADGES.map((b) => (
+        <motion.span
+          key={b.label}
+          variants={{
+            hidden: { opacity: 0, y: 6 },
+            visible: { opacity: 1, y: 0, transition: { duration: 0.4, ease: EASE } },
+          }}
+          className="hm-hero-badge"
+        >
+          <span className="hm-hero-badge__icon" aria-hidden>
+            <b.icon size={12} strokeWidth={2.1} />
+          </span>
+          {b.label}
+        </motion.span>
+      ))}
+    </motion.div>
+  </>
+);
 
 const HeroStage = () => {
   return (
@@ -165,6 +269,9 @@ const HeroStage = () => {
 
       <div className="relative z-10 mx-auto aspect-[1920/1080] w-full">
         <MonitorWithDashboard />
+        {/* Floating badges live inside the aspect-ratio box so their
+            percentage positions track the laptop frame exactly. */}
+        <FloatingHeroBadges />
       </div>
     </motion.div>
   );

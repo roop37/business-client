@@ -8,12 +8,12 @@ import {
 export const metadata: Metadata = {
   title: "Contact Hoizr — for Indian event organizers, venues & promoters",
   description:
-    "Talk to the Hoizr team about your next event in Mumbai, Bangalore, Delhi, Pune, Hyderabad, Chennai, or Goa. We'll quote your event-specific commission and get you live in days.",
+    "Talk to the Hoizr team about your next event. Publish directly, keep your fan CRM, and run the night from one operating stack.",
   alternates: { canonical: "/contact" },
   openGraph: {
     title: "Contact Hoizr — Indian event ticketing & marketing platform",
     description:
-      "Get your event-specific commission quote. Quick onboarding and same-day verification. Email contact@hoizr.com or fill the form.",
+      "Bring your next event onto Hoizr, publish directly, and get help from the team. Email contact@hoizr.com or fill the form.",
     url: "/contact",
     type: "website",
   },
@@ -38,8 +38,8 @@ export default function ContactPage() {
           </h1>
           <p className="mt-6 text-[17px] leading-relaxed text-[var(--m-ink-3)] max-w-[560px]">
             A real human from the Hoizr team will follow up within one working
-            day with your event-specific commission rate and the fastest path
-            to going live.
+            day with the fastest path to bringing your event onto Hoizr and
+            publishing directly.
           </p>
         </div>
 

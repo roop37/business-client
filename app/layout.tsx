@@ -68,7 +68,7 @@ export const metadata: Metadata = {
     template: "%s · Hoizr",
   },
   description:
-    "Hoizr is the ticketing, marketing, and ops platform built for Indian event organizers, venues, and promoters. Lowest commission in India, owned fan CRM, AI event-specific pricing.",
+    "Hoizr is the ticketing, marketing, and ops platform built for Indian event organizers, venues, and promoters. Publish directly, keep your fan CRM, and run the night from one operating stack.",
   applicationName: "Hoizr",
   keywords: [
     // Audience-targeted
@@ -89,8 +89,8 @@ export const metadata: Metadata = {
     "event marketing platform India",
     "venue management software India",
     "fan CRM for events",
-    "lowest commission ticketing India",
-    "AI event pricing",
+    "event platform India",
+    "AI event evaluation",
     // City-targeted (top metros for live nights)
     "event organizers Mumbai",
     "event organizers Bangalore",
@@ -128,7 +128,7 @@ export const metadata: Metadata = {
     title:
       "Hoizr — Ticketing & marketing for Indian event organizers, venues, and promoters",
     description:
-      "Direct ticketing, owned fan CRM, and event-specific AI pricing. Built for India's clubs, festivals, comedy promoters, and live music venues.",
+      "Direct ticketing, owned fan CRM, and AI event evaluation. Built for India's clubs, festivals, comedy promoters, and live music venues.",
     images: [
       {
         url: "/opengraph-image.webp",
@@ -146,7 +146,7 @@ export const metadata: Metadata = {
     title:
       "Hoizr — Ticketing & marketing for Indian event organizers, venues, and promoters",
     description:
-      "Direct ticketing, owned fan CRM, AI commission pricing. Built for India's live music, comedy, and festival circuit.",
+      "Direct ticketing, owned fan CRM, and AI event evaluation. Built for India's live music, comedy, and festival circuit.",
     images: ["/opengraph-image.webp"],
   },
   robots: {
@@ -170,7 +170,7 @@ export const metadata: Metadata = {
     ICBM: "20.5937, 78.9629",
     "DC.coverage": "India",
     "DC.audience":
-      "Event organizers, venues, promoters, festival hosts, comedy promoters, nightclub operators",
+      "Event organizers, venues, promoters, festival organizers, comedy promoters, nightclub operators",
     "DC.language": "en-IN",
   },
   formatDetection: {
