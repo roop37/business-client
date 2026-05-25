@@ -3,24 +3,58 @@ import { ArrowRight, BookOpenText, MailQuestion, MessagesSquare } from "lucide-r
 import Link from "next/link";
 import { MarketingShell } from "@/components/marketing/MarketingShell";
 import { FinalCTA } from "@/components/marketing/sections/FinalCTA";
+import {
+  BreadcrumbJsonLd,
+  FaqJsonLd,
+} from "@/components/marketing/seo/SchemaJsonLd";
 
 export const metadata: Metadata = {
-  title: "Help — Hoizr",
+  title: "Help & support for Indian event organizers — Hoizr",
   description:
-    "Reach the Hoizr team for setup, payout, scanner, and platform support. Same-day reply for event organizers running shows.",
+    "Reach Hoizr for setup, payout, scanner, AI event evaluation, and platform support. Same-day reply for event organizers, venues, and promoters running shows in India.",
+  keywords: [
+    "Hoizr help",
+    "Hoizr support",
+    "event organizer support India",
+    "ticketing platform support India",
+    "Hoizr contact",
+    "event scanner help",
+    "Hoizr payout support",
+  ],
+  alternates: {
+    canonical: "/help",
+    languages: { "en-IN": "/help", "x-default": "/help" },
+  },
+  openGraph: {
+    title: "Help & support — Hoizr for Indian event organizers",
+    description:
+      "Same-day support for event organizers, venues, and promoters publishing on Hoizr. Email, dashboard help, and operator playbooks.",
+    url: "/help",
+    type: "website",
+    siteName: "Hoizr",
+    locale: "en_IN",
+    images: [
+      {
+        url: "/opengraph-image.webp",
+        width: 1200,
+        height: 630,
+        alt: "Hoizr help & support for Indian event organizers, venues, and promoters",
+      },
+    ],
+  },
 };
 
 const HELP_LANES = [
   {
     icon: MessagesSquare,
-    title: "Talk to the team",
-    body: "Hoizr's support team is staffed across IST hours and replies same-day for active event organizers.",
+    title: "Talk to Hoizr",
+    body: "Support is available across IST hours with same-day replies for active event organizers.",
     cta: { label: "Email support", href: "mailto:contact@hoizr.com" },
   },
   {
     icon: MailQuestion,
     title: "New organizer questions",
-    body: "Considering Hoizr but haven't onboarded yet? The team will help you bring your event onto the platform, publish directly, and understand the AI event offer.",
+    body: "Considering Hoizr but haven't onboarded yet? Get help bringing your event onto the platform, publishing directly, and understanding the AI event offer.",
     cta: { label: "Talk to sales", href: "/contact" },
   },
   {
@@ -34,7 +68,7 @@ const HELP_LANES = [
 const COMMON_QUERIES = [
   {
     q: "I'm an event organizer. How do I reach support during my event?",
-    a: "Email contact@hoizr.com or use the in-dashboard help button. The team monitors both channels across IST hours and during weekend show windows.",
+    a: "Email contact@hoizr.com or use the in-dashboard help button. Support monitors both channels across IST hours and during weekend show windows.",
   },
   {
     q: "I'm a customer who bought a ticket. Who do I contact?",
@@ -42,7 +76,7 @@ const COMMON_QUERIES = [
   },
   {
     q: "I'm a journalist or press contact.",
-    a: "Write to contact@hoizr.com and the team will share the press kit and interview path.",
+    a: "Write to contact@hoizr.com for the press kit and interview path.",
   },
   {
     q: "I'm thinking of partnering with Hoizr.",
@@ -50,13 +84,20 @@ const COMMON_QUERIES = [
   },
   {
     q: "Something looks broken on this website.",
-    a: "Send a quick note to tech@hoizr.com with the URL and a screenshot if possible. The engineering team triages these the same day.",
+    a: "Send a quick note to tech@hoizr.com with the URL and a screenshot if possible. Technical issues are triaged the same day.",
   },
 ];
 
 export default function HelpPage() {
   return (
     <MarketingShell>
+      <BreadcrumbJsonLd
+        items={[
+          { name: "Hoizr", href: "/" },
+          { name: "Help", href: "/help" },
+        ]}
+      />
+      <FaqJsonLd items={COMMON_QUERIES.map((q) => ({ q: q.q, a: q.a }))} />
       <section className="hm-section pt-12 md:pt-16">
         <div className="max-w-[720px]">
           <div className="hm-eyebrow">Help centre</div>
@@ -72,9 +113,8 @@ export default function HelpPage() {
             <span className="text-[var(--m-forest-600)]">help you out?</span>
           </h1>
           <p className="hm-lead mt-7 max-w-[600px]">
-            Pick the lane that matches your role. Hoizr&apos;s support team
-            replies same-day for active event organizers and within one working day for
-            everyone else.
+            Pick the lane that matches your role. Active event organizers get
+            same-day support; everyone else gets a reply within one working day.
           </p>
         </div>
       </section>

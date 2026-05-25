@@ -6,54 +6,126 @@ import { MarketingShell } from "@/components/marketing/MarketingShell";
 import { AiOfferSpotlight } from "@/components/marketing/sections/AiOfferSpotlight";
 import { Beliefs } from "@/components/marketing/sections/Beliefs";
 import { FinalCTA } from "@/components/marketing/sections/FinalCTA";
+import {
+  BreadcrumbJsonLd,
+  JsonLdScript,
+} from "@/components/marketing/seo/SchemaJsonLd";
+
+const SITE_URL = "https://business.hoizr.com";
+const FOUNDER_IMAGE =
+  "https://res.cloudinary.com/duhefgqh4/image/upload/v1748974724/IMG_0652_slotkd__1_ehtwxq.jpg";
 
 export const metadata: Metadata = {
-  title: "About Hoizr — operating system for Indian event organizers & venues",
+  title: "About Hoizr — building India's live-night operating system",
   description:
-    "Hoizr Technologies Pvt. Ltd. is the operating system for India's live-event ecosystem — built for event organizers, venues, festival organizers, comedy promoters, and nightclub operators across Mumbai, Bangalore, Delhi, Pune, Hyderabad, Chennai, and Goa.",
-  alternates: { canonical: "/about" },
+    "Hoizr Technologies Pvt. Ltd. is building the operating system for India's live-event industry — powering clubs, venues, festivals, comedy promoters, and live music nights with ticketing, marketing, and operations in one stack.",
+  keywords: [
+    "About Hoizr",
+    "Hoizr Technologies",
+    "Sanbedan Paul",
+    "Indian live event company",
+    "live-night operating system India",
+    "event ticketing platform India",
+    "event marketing platform India",
+    "Hoizr founder",
+  ],
+  alternates: {
+    canonical: "/about",
+    languages: { "en-IN": "/about", "x-default": "/about" },
+  },
   openGraph: {
-    title: "About Hoizr — built for Indian event organizers & venues",
+    title: "About Hoizr — built for India's live-night industry",
     description:
-      "Hoizr is building an India-first operating stack for organizers and venues: direct publishing, owned fan CRM, AI event evaluation, and event-night operations.",
+      "Hoizr is building the infrastructure for a stronger Indian live-event industry: direct publishing, owned fan CRM, AI event evaluation, peer benchmarks, and event-night operations.",
     url: "/about",
     type: "website",
+    siteName: "Hoizr",
+    locale: "en_IN",
+    images: [
+      {
+        url: "/opengraph-image.webp",
+        width: 1200,
+        height: 630,
+        alt: "About Hoizr — India's live-night operating system",
+      },
+    ],
   },
 };
 
 const VALUES_STRIP = [
-  { value: "India-first", note: "Built for the way Indian fans book, pay, and show up — not retrofitted from abroad." },
-  { value: "No gatekeeping", note: "The full operating stack is available from day one — no subscription wall, no stripped-down starter tier." },
-  { value: "Organiser-owned", note: "Your fan list, your data, your brand. We're a platform, not a marketplace that hoards." },
-  { value: "AI as leverage", note: "AI studies the event and helps surface the best possible offer and operating guidance." },
+  { value: "Competition", note: "A better market needs real benchmarks, sharper operators, and cleaner incentives." },
+  { value: "India-first", note: "Built for how Indian fans discover, pay, coordinate, and show up — not retrofitted from abroad." },
+  { value: "Operator-owned", note: "Your fan list, your data, your brand. Hoizr should compound your leverage, not rent it back to you." },
+  { value: "AI as leverage", note: "AI studies the event and turns platform signal into practical decisions before and after publish." },
 ];
 
 const OPERATING_LAYERS = [
   {
-    title: "Publish with less guesswork",
+    title: "Make every event measurable",
     body:
-      "One listing becomes your event page, SEO source, ticket setup, collaborator access, campaign base, and door setup. You are not rebuilding the same event in five tools.",
+      "One listing becomes the public page, ticket setup, campaign source, collaborator map, door plan, and reporting base. The night stops being scattered across five tools.",
   },
   {
-    title: "Turn buyers into owned leverage",
+    title: "Turn fans into owned momentum",
     body:
       "Ticket buyers, saves, scans, reviews, and campaign responses feed the fan profile you own. Every event leaves a warmer audience for the next one.",
   },
   {
-    title: "Run the room from one truth",
+    title: "Give operators a real mirror",
     body:
-      "Door staff see clean scan and guestlist states, marketing sees source attribution, and finance sees settlement-ready totals from the same operating record.",
+      "Competitive Analysis turns anonymous market signal into honest benchmarks, so operators can see where they stand and what stronger rooms do differently.",
   },
   {
-    title: "Get sharper after every night",
+    title: "Push India higher",
     body:
-      "AI offer evaluation and reporting help you understand which formats, channels, ticket ladders, and launch timings are actually moving sales.",
+      "The long game is a more professional, more ambitious live-night ecosystem — the kind of market that makes India impossible to ignore.",
   },
 ];
+
+const aboutPageJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "AboutPage",
+  "@id": `${SITE_URL}/about`,
+  url: `${SITE_URL}/about`,
+  inLanguage: "en-IN",
+  name: "About Hoizr — building India's live-night operating system",
+  description:
+    "Hoizr Technologies Pvt. Ltd. is building the operating system for India's live-event industry: direct ticketing, owned fan CRM, AI event evaluation, peer benchmarks, and event-night operations.",
+  isPartOf: { "@type": "WebSite", name: "Hoizr", url: SITE_URL },
+  mainEntity: {
+    "@type": "Organization",
+    name: "Hoizr Business",
+    legalName: "Hoizr Technologies Pvt. Ltd.",
+    url: SITE_URL,
+    foundingDate: "2024",
+    founder: {
+      "@type": "Person",
+      "@id": `${SITE_URL}/about#sanbedan-paul`,
+      name: "Sanbedan Paul",
+      jobTitle: "Founder & CEO",
+      image: FOUNDER_IMAGE,
+      worksFor: {
+        "@type": "Organization",
+        name: "Hoizr Technologies Pvt. Ltd.",
+        url: SITE_URL,
+      },
+      description:
+        "Founder of Hoizr and a full-stack engineer by training, Sanbedan Paul is building the operating system for India's live-event industry — smart ticketing, AI event evaluation, owned fan CRM, peer benchmarks, and event-night operations for venues, festivals, and clubs.",
+    },
+    areaServed: { "@type": "Country", name: "India" },
+  },
+};
 
 export default function AboutPage() {
   return (
     <MarketingShell>
+      <JsonLdScript id="hoizr-about-jsonld" data={aboutPageJsonLd} />
+      <BreadcrumbJsonLd
+        items={[
+          { name: "Hoizr", href: "/" },
+          { name: "About", href: "/about" },
+        ]}
+      />
       <section className="hm-section pt-12 md:pt-16">
         <div className="max-w-[720px]">
           <div className="hm-eyebrow">About Hoizr</div>
@@ -64,15 +136,14 @@ export default function AboutPage() {
               fontSize: "clamp(44px, 6.4vw, 88px)",
             }}
           >
-            The operating system
+            A sharper market
             <br />
             <span className="text-[var(--m-forest-600)]">for India&apos;s live nights.</span>
           </h1>
           <p className="hm-lead mt-7 max-w-[600px]">
-            Hoizr exists to make Indian event operations direct, owned, and
-            compounding. Create the event once, launch it everywhere it needs
-            to live, run the room with clean data, and leave with an audience
-            you can actually bring back.
+            Hoizr exists to raise the floor and the ceiling of Indian live
+            events. Better tools, better data, better competition, and a market
+            where every serious room can learn, improve, and grow.
           </p>
         </div>
       </section>
@@ -100,27 +171,28 @@ export default function AboutPage() {
           <div className="grid gap-10 md:grid-cols-[1fr,1.4fr] md:gap-16">
             <div>
               <div className="hm-eyebrow">Why we exist</div>
-              <h2 className="hm-h2 mt-3">A platform organisers actually own.</h2>
+              <h2 className="hm-h2 mt-3">India should compete like a global live-night capital.</h2>
             </div>
             <div className="space-y-5 text-[17px] leading-[1.65] text-[var(--m-ink-2)]">
               <p>
-                India&apos;s nightlife and live-event economy runs on operators who book the
-                lineup, manage the door, run promo, and balance the books —
-                often the same person. They need one operating system, not a
-                chain of tabs and follow-up calls.
+                India already has the energy: clubs, comedy rooms, college
+                crowds, festivals, live music, party crews, micro-scenes, and
+                cities that move differently after dark. What the market has
+                lacked is shared operating infrastructure.
               </p>
               <p>
-                Marketplaces can capture the fan relationship. Generic tools
-                make organizers stitch ticketing, CRM, guestlist, campaigns,
-                and scanner operations together by hand. Spreadsheets eat the
-                weekend before the event even starts.
+                Hoizr is built on one belief: when operators can see cleaner
+                data, keep their fan relationships, compare against anonymous
+                peer benchmarks, and run the night from one system, the whole
+                ecosystem gets sharper. Venues improve. Promoters improve.
+                Fans get better nights.
               </p>
               <p>
-                Hoizr is the alternative: one workspace for everything from
-                onboarding to settlement, an owned fan CRM, direct publishing,
-                AI that studies the event and surfaces the best possible offer,
-                and the operational rigour of a larger event team without the
-                headcount.
+                The goal is not just software that sells tickets. The goal is a
+                stronger, more ambitious Indian live-event industry — one where
+                small rooms can operate with discipline, large festivals can
+                scale with clarity, and India becomes one of the places the
+                world watches for what happens next at night.
               </p>
             </div>
           </div>
@@ -132,12 +204,12 @@ export default function AboutPage() {
           <div>
             <div className="hm-eyebrow">What changes</div>
             <h2 className="hm-h2 mt-3">
-              The event stops being a one-night transaction.
+              The event stops being isolated.
             </h2>
             <p className="mt-5 text-[16px] leading-relaxed text-[var(--m-ink-3)]">
-              Hoizr is built so every show strengthens the next one: better
-              discovery, cleaner door operations, owned fan data, clearer
-              attribution, and decisions backed by what actually happened.
+              Every show should make the next show smarter: sharper discovery,
+              cleaner door operations, owned fan data, peer benchmarks, and
+              decisions backed by what actually happened.
             </p>
           </div>
 
@@ -177,45 +249,49 @@ export default function AboutPage() {
         <div className="rounded-[var(--m-r-2xl)] border border-[var(--m-border)] bg-[var(--m-surface)] p-7 md:p-12">
           <div className="grid gap-10 md:grid-cols-[1fr,1.4fr] md:gap-16">
             <div>
-              <div className="hm-eyebrow">Founder</div>
+              <div className="hm-eyebrow">Builder note</div>
               <h2 className="hm-h2 mt-3">
-                Founder-led, India-first, product-heavy.
+                Product-first, market-first.
               </h2>
               <div className="mt-7 flex items-center gap-4">
-                <div className="h-14 w-14 shrink-0 rounded-full bg-[var(--m-forest-700)] text-[var(--m-acid)] text-[18px] font-bold flex items-center justify-center">
-                  SP
-                </div>
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src="https://res.cloudinary.com/duhefgqh4/image/upload/v1748974724/IMG_0652_slotkd__1_ehtwxq.jpg"
+                  alt="Sanbedan"
+                  className="h-14 w-14 shrink-0 rounded-full object-cover"
+                  draggable={false}
+                />
                 <div>
                   <div className="text-[16px] font-semibold text-[var(--m-ink-1)]">
-                    Sanbedan Paul
+                    Sanbedan
                   </div>
                   <div className="text-[13.5px] text-[var(--m-ink-3)]">
-                    Founder &amp; CEO, Hoizr
+                    Founder, Hoizr
                   </div>
                 </div>
               </div>
             </div>
             <div className="space-y-5 text-[17px] leading-[1.65] text-[var(--m-ink-2)]">
               <p>
-                Hoizr is led by Sanbedan Paul and built around a simple
-                operating belief: Indian organizers should not need a subscription
-                or card details before they can publish a serious event.
+                Hoizr is built around a simple operating belief: Indian
+                organizers should not need a subscription wall, a generic rate
+                card, or a maze of disconnected tools before they can publish a
+                serious event.
               </p>
               <p>
-                The product is opinionated because event work is operational:
-                promoter links need attribution, guestlists need caps, door
-                staff need clean scan states, finance needs settlement-ready
-                numbers, and the next campaign should learn from the last
-                night.
+                The product is opinionated because event work is operational.
+                Promoter links need attribution. Guestlists need caps. Door
+                staff need clean scan states. Finance needs settlement-ready
+                numbers. Every campaign should learn from the last night.
               </p>
               <p>
-                The team behind it is small, India-based, AI-first in its
-                daily workflow, and focused on making the organizer workspace
-                direct, powerful, and practical for PAN-India events.
+                The direction is clear: build the infrastructure that lets
+                Indian operators compete better, benchmark honestly, and turn
+                every night into momentum for the next one.
               </p>
               <div className="flex flex-wrap items-center gap-3 pt-4">
                 <Link href="/contact" className="hm-btn hm-btn-primary">
-                  Talk to the team
+                  Talk to Hoizr
                 </Link>
               </div>
             </div>

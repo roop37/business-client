@@ -112,8 +112,8 @@ export const ContactClient = () => {
           Got it — we&apos;ll be in touch.
         </h2>
         <p className="mt-3 text-[15px] leading-relaxed text-[var(--m-ink-3)] max-w-[460px]">
-          A real human from the Hoizr team will follow up within one working
-          day. If you need us sooner, email{" "}
+          A real human will follow up within one working day. If you need us
+          sooner, email{" "}
           <a
             href="mailto:contact@hoizr.com"
             className="font-semibold text-[var(--m-forest-700)] hover:underline"

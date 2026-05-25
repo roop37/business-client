@@ -131,7 +131,7 @@ export async function POST(req: Request) {
       {
         ok: false,
         error:
-          "We saved your details but couldn't send the confirmation. The team will reach out shortly.",
+          "We saved your details but couldn't send the confirmation. Hoizr will reach out shortly.",
       },
       { status: 502 },
     );

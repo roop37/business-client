@@ -8,16 +8,16 @@ type Belief = {
   n: string;
   title: string;
   body: string;
-  /** When present, render as a personal-voice note instead of team-voice. */
+  /** When present, render as a personal-voice note. */
   signoff?: { name: string; role: string };
 };
 
 const BELIEFS: Belief[] = [
   {
     n: "01",
-    title: "Operational clarity beats infinite knobs.",
+    title: "Better competition makes everyone sharper.",
     body:
-      "Hoizr is opinionated. We won't let you ship a checkout that bleeds conversion or a marketing flow that confuses your fans. In return, every event organizer on the platform inherits the rigour of a stadium-grade ops team — without the headcount.",
+      "Hoizr is built to create a stronger event market, not just another ticketing surface. When operators can see clean benchmarks, own their audience, and study what actually worked, the whole ecosystem levels up.",
   },
   {
     n: "02",
@@ -33,10 +33,10 @@ const BELIEFS: Belief[] = [
   },
   {
     n: "04",
-    title: "AI belongs in every operator's daily routine.",
+    title: "India can become the live-night market everyone watches.",
     body:
-      "I'm building Hoizr because I genuinely believe every operator — venue owner, festival promoter, independent club organizer — should wake up with AI inside their day-to-day workflow. Not buried as a feature flag, but as the default way to study what worked last night, optimise this weekend's drop, and excel at the night after that. The big chains already use these tools. Hoizr puts the same leverage in your hands.",
-    signoff: { name: "Sanbedan Paul", role: "Founder & CEO, Hoizr" },
+      "The ambition is bigger than software. Hoizr should help Indian venues, festivals, comedy rooms, party crews, and promoters operate with the discipline of the best global circuits — while keeping the local chaos, taste, and energy that make Indian nights different.",
+    signoff: { name: "Sanbedan", role: "Founder, Hoizr" },
   },
 ];
 
@@ -51,7 +51,7 @@ export const Beliefs = () => {
           transition={{ duration: 0.6, ease: EASE }}
           className="md:sticky md:top-32 md:self-start"
         >
-          <div className="hm-eyebrow">From the Hoizr team</div>
+          <div className="hm-eyebrow">Hoizr beliefs</div>
           <h2
             className="mt-3 font-bold leading-[1.04] tracking-[-0.025em] text-[var(--m-ink-1)]"
             style={{
@@ -62,9 +62,9 @@ export const Beliefs = () => {
             What we believe.
           </h2>
           <p className="mt-4 text-[15px] leading-relaxed text-[var(--m-ink-3)]">
-            Four positions we hold. Three from the team, one from our founder.
-            They show up in every product decision we make — for better,
-            occasionally for worse.
+            Four positions behind the product. They show up in how Hoizr
+            handles pricing, discovery, fan data, benchmarks, and event-night
+            operations.
           </p>
         </motion.div>
 

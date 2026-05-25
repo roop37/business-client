@@ -377,7 +377,7 @@ export const blogs: Blog[] = [
 <p>These are the questions Hoizr Business is being built to answer.</p>
 
 <h3>The Future Belongs to Event Organizers Who Own Their Audience</h3>
-<p>India's live-event ecosystem is becoming more competitive. The organizers who win will not only be the ones with better posters or bigger artists. They will be the ones who understand their audience deeply and can bring them back repeatedly.</p>
+<p>India's live-event industry is scaling fast. The organizers who win will not only be the ones with better posters or bigger artists. They will be the ones who understand their audience deeply and can bring them back repeatedly.</p>
 
 <blockquote>Your fans are yours. Your brand is yours. Your event history should be yours too.</blockquote>
 

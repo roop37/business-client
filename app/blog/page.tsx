@@ -44,15 +44,6 @@ export const metadata: Metadata = {
       },
     ],
   },
-  twitter: {
-    card: "summary_large_image",
-    site: "@hoizr",
-    creator: "@hoizr",
-    title: "Hoizr Blog — for Indian event organizers & venues",
-    description:
-      "Migration playbooks, AI event strategy, fan-CRM tactics, and operator field notes.",
-    images: ["/opengraph-image.webp"],
-  },
 };
 
 const SITE_URL = "https://business.hoizr.com";

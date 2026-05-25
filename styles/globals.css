@@ -5,6 +5,14 @@
 @tailwind components;
 @tailwind utilities;
 
+:root {
+  --hoizr-scrollbar-size: 8px;
+  --hoizr-scrollbar-radius: 999px;
+  --hoizr-scrollbar-thumb: rgba(15, 23, 42, 0.26);
+  --hoizr-scrollbar-thumb-hover: rgba(15, 23, 42, 0.4);
+  --hoizr-scrollbar-thumb-active: rgba(15, 23, 42, 0.54);
+}
+
 html {
   width: 100%;
   max-width: 100vw;
@@ -18,6 +26,11 @@ body {
   background: var(--owner-bg-sidebar);
   font-family: var(--owner-font-sans);
   overflow-x: hidden;
+}
+
+html:has(.hoizr-marketing),
+body:has(.hoizr-marketing) {
+  overflow-x: visible;
 }
 
 @layer utilities {
@@ -169,42 +182,53 @@ input::-webkit-inner-spin-button {
   z-index: 50;
 }
 
-::-webkit-scrollbar {
-  width: 6.5px;
-  height: 6.5px;
+html,
+body,
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--hoizr-scrollbar-thumb) transparent;
 }
 
-/* Specifically target iOS devices */
-@media only screen and (-webkit-min-device-pixel-ratio: 2) {
-  ::-webkit-scrollbar {
-    height: 3px; /* Much thinner horizontal scrollbar for iOS */
-  }
+*::-webkit-scrollbar {
+  width: var(--hoizr-scrollbar-size);
+  height: var(--hoizr-scrollbar-size);
 }
 
-::-webkit-scrollbar-track {
-  background-color: transparent;
+*::-webkit-scrollbar-track,
+*::-webkit-scrollbar-corner {
+  background: transparent;
 }
 
-::-webkit-scrollbar-track:hover {
-  background-color: transparent;
+*::-webkit-scrollbar-thumb {
+  border: 2px solid transparent;
+  border-radius: var(--hoizr-scrollbar-radius);
+  background-color: var(--hoizr-scrollbar-thumb);
+  background-clip: padding-box;
 }
 
-::-webkit-scrollbar-thumb {
-  background-color: var(--owner-border-strong);
-  border-radius: 16px;
-  border: 5px solid transparent;
+*::-webkit-scrollbar-thumb:hover {
+  background-color: var(--hoizr-scrollbar-thumb-hover);
 }
 
-::-webkit-scrollbar-thumb:hover {
-  background-color: var(--owner-fg-5);
+*::-webkit-scrollbar-thumb:active {
+  background-color: var(--hoizr-scrollbar-thumb-active);
 }
 
-::-webkit-scrollbar-thumb:active {
-  background-color: var(--owner-blue-500);
-}
-
-::-webkit-scrollbar-button {
+*::-webkit-scrollbar-button {
   display: none;
+  width: 0;
+  height: 0;
+}
+
+@media (pointer: coarse) {
+  *::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+
+  *::-webkit-scrollbar-thumb {
+    border-width: 1px;
+  }
 }
 
 /* Add these styles to your globals.css file for proper printing */

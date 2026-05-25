@@ -16,6 +16,7 @@ import { ProductRelated } from "@/components/marketing/product/ProductRelated";
 import { Beliefs } from "@/components/marketing/sections/Beliefs";
 import {
   BreadcrumbJsonLd,
+  FaqJsonLd,
   ProductJsonLd,
 } from "@/components/marketing/seo/SchemaJsonLd";
 import { FinalCTA } from "@/components/marketing/sections/FinalCTA";
@@ -52,12 +53,6 @@ export function generateMetadata({ params }: PageParams): Metadata {
         },
       ],
     },
-    twitter: {
-      card: "summary_large_image",
-      title: `${content.label} — Hoizr`,
-      description: content.hero.body,
-      images: ["/opengraph-image.webp"],
-    },
   };
 }
 
@@ -72,10 +67,12 @@ export default function ProductPage({ params }: PageParams) {
       <BreadcrumbJsonLd
         items={[
           { name: "Hoizr", href: "/" },
-          { name: content.pillarLabel, href: "/#products" },
+          { name: "Products", href: "/product" },
+          { name: content.pillarLabel, href: "/product" },
           { name: content.label, href: `/product/${content.slug}` },
         ]}
       />
+      {content.faq?.length ? <FaqJsonLd items={content.faq} /> : null}
       <ProductHero content={content} />
       <ProductBenefits content={content} />
       <ProductNarrative content={content} />

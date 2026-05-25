@@ -34,20 +34,45 @@ import { WaitlistButton } from "@/components/marketing/waitlist/WaitlistButton";
 import {
   BreadcrumbJsonLd,
   FaqJsonLd,
+  JsonLdScript,
 } from "@/components/marketing/seo/SchemaJsonLd";
+
+const SITE_URL = "https://business.hoizr.com";
 
 export const metadata: Metadata = {
   title:
     "How Hoizr works for Indian event organizers, venues & promoters",
   description:
     "A detailed walkthrough of how Hoizr takes Indian event organizers from workspace setup to direct event publishing, AI event evaluation, ticket sales, campaigns, door scanning, reporting, and settlement-ready operations.",
-  alternates: { canonical: "/how-it-works" },
+  keywords: [
+    "how Hoizr works",
+    "event ticketing workflow India",
+    "AI event evaluation",
+    "event organizer onboarding India",
+    "door scanning operations",
+    "fan CRM for events",
+    "event marketing automation India",
+  ],
+  alternates: {
+    canonical: "/how-it-works",
+    languages: { "en-IN": "/how-it-works", "x-default": "/how-it-works" },
+  },
   openGraph: {
     title: "How Hoizr works for Indian event organizers & venues",
     description:
       "One workspace for event setup, direct ticket sales, owned fan CRM, AI event evaluation, campaigns, guestlist, door scanning, reporting, and settlement-ready event ops.",
     url: "/how-it-works",
     type: "website",
+    siteName: "Hoizr",
+    locale: "en_IN",
+    images: [
+      {
+        url: "/opengraph-image.webp",
+        width: 1200,
+        height: 630,
+        alt: "How Hoizr works — workflow for Indian event organizers, venues, and promoters",
+      },
+    ],
   },
 };
 
@@ -220,45 +245,6 @@ const TEAM_VIEWS: TeamView[] = [
   },
 ];
 
-const RUN_OF_SHOW = [
-  {
-    when: "T-21 days",
-    title: "On-sale launch",
-    body:
-      "Publish the event, send warm-list campaigns, share tracked links with collaborators, and watch first-day source movement.",
-  },
-  {
-    when: "T-14 days",
-    title: "Audience shaping",
-    body:
-      "Segment by past attendance, genre interest, and source response. Adjust ticket phases and creative based on actual buyer behavior.",
-  },
-  {
-    when: "T-7 days",
-    title: "Promoter and guestlist control",
-    body:
-      "Lock guestlist caps, review promoter movement, prepare door roles, and confirm refund/cancellation policy is clear.",
-  },
-  {
-    when: "T-1 day",
-    title: "Operational rehearsal",
-    body:
-      "Test scanner access, confirm wristband or stamp rules, send last-call campaigns, and share the final door runbook.",
-  },
-  {
-    when: "Event night",
-    title: "Live entry and arrival tracking",
-    body:
-      "Door staff scan tickets and invites while the event organizer watches live arrivals, exceptions, guestlist usage, and capacity signals.",
-  },
-  {
-    when: "Morning after",
-    title: "Reporting and next event prep",
-    body:
-      "Review sell-through, source performance, attendance, refunds, and settlement-ready numbers. Rebuild segments for the next drop.",
-  },
-];
-
 const AI_CAPABILITIES: { icon: LucideIcon; title: string; body: string; tag: string }[] = [
   {
     icon: Sparkles,
@@ -352,11 +338,11 @@ const PLATFORM_MODULES = [
 const FAQS = [
   {
     q: "Can I publish an event before the full organisation setup is complete?",
-    a: "You can draft the event early, but Hoizr expects the host workspace, payout details, policies, and public organisation profile to be ready before the event is pushed live.",
+    a: "You can draft the event early, but Hoizr expects the organizer workspace, payout details, policies, and public organisation profile to be ready before the event is pushed live.",
   },
   {
     q: "Does Hoizr replace my marketing tools?",
-    a: "Hoizr gives event hosts one campaign workspace tied to buyer and attendance data. It is designed for on-sale, reminder, last-call, and post-event flows that directly connect to ticketing and CRM.",
+    a: "Hoizr gives event organizers one campaign workspace tied to buyer and attendance data. It is designed for on-sale, reminder, last-call, and post-event flows that directly connect to ticketing and CRM.",
   },
   {
     q: "How does AI event evaluation work?",
@@ -368,16 +354,39 @@ const FAQS = [
   },
   {
     q: "What happens after the event ends?",
-    a: "The host gets sell-through, source, attendance, refund, and settlement-ready reporting. The fan CRM also updates so the next campaign can target buyers and attendees with better context.",
+    a: "The event organizer gets sell-through, source, attendance, refund, and settlement-ready reporting. The fan CRM also updates so the next campaign can target buyers and attendees with better context.",
   },
 ];
+
+const howToJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "HowTo",
+  name: "How Hoizr works for Indian event organizers, venues & promoters",
+  description:
+    "From organizer workspace setup to event publishing, AI event evaluation, ticket sales, campaigns, door scanning, and settlement-ready reporting on Hoizr.",
+  inLanguage: "en-IN",
+  totalTime: "PT15M",
+  url: `${SITE_URL}/how-it-works`,
+  image: `${SITE_URL}/opengraph-image.webp`,
+  step: OPERATING_FLOW.map((step, index) => ({
+    "@type": "HowToStep",
+    position: index + 1,
+    name: step.title,
+    text: step.body,
+    itemListElement: step.details.map((detail) => ({
+      "@type": "HowToTip",
+      text: detail,
+    })),
+  })),
+};
 
 export default function HowItWorksPage() {
   return (
     <MarketingShell>
+      <JsonLdScript id="hoizr-howto-jsonld" data={howToJsonLd} />
       <BreadcrumbJsonLd
         items={[
-          { name: "Home", href: "/" },
+          { name: "Hoizr", href: "/" },
           { name: "How it works", href: "/how-it-works" },
         ]}
       />
@@ -388,7 +397,6 @@ export default function HowItWorksPage() {
       <AiCoPilot />
       <QuickOnboarding />
       <TeamViews />
-      <RunOfShow />
       <PlatformModules />
       <HowItWorksFAQ />
       <AiOfferSpotlight />
@@ -679,7 +687,7 @@ const QuickOnboarding = () => (
           </h2>
           <p className="mt-5 text-[15.5px] leading-relaxed text-[var(--m-ink-3)]">
             Hoizr opens your account fast and clears verification in parallel
-            — no long forms, no week-long waiting on documents. Most hosts
+            — no long forms, no week-long waiting on documents. Most event organizers
             move from signup to publish-ready in under a day.
           </p>
         </div>
@@ -763,48 +771,6 @@ const TeamViews = () => (
   </section>
 );
 
-const RunOfShow = () => (
-  <section className="hm-section">
-    <div className="hm-forest-panel p-6 md:p-9">
-      <div className="grid gap-10 lg:grid-cols-[360px,1fr]">
-        <div>
-          <div className="text-[12px] font-bold uppercase tracking-[0.12em] text-white/55">
-            Run of show
-          </div>
-          <h2 className="mt-3 font-bold leading-[1.05] tracking-[-0.025em] text-white" style={{ fontFamily: "var(--m-font-display)", fontSize: "clamp(34px, 4.8vw, 58px)" }}>
-            One event, from announcement to teardown.
-          </h2>
-          <p className="mt-5 text-[15.5px] leading-relaxed text-white/72">
-            This is how the platform behaves around a real club night,
-            concert, comedy show, or festival pre-party.
-          </p>
-        </div>
-
-        <div className="grid gap-3">
-          {RUN_OF_SHOW.map((item) => (
-            <article
-              key={item.when}
-              className="grid gap-4 rounded-[20px] border border-white/12 bg-white/8 p-5 md:grid-cols-[110px,1fr]"
-            >
-              <div className="text-[12px] font-bold uppercase tracking-[0.13em] text-[var(--m-acid)]">
-                {item.when}
-              </div>
-              <div>
-                <h3 className="text-[18px] font-semibold text-white">
-                  {item.title}
-                </h3>
-                <p className="mt-2 text-[14px] leading-relaxed text-white/70">
-                  {item.body}
-                </p>
-              </div>
-            </article>
-          ))}
-        </div>
-      </div>
-    </div>
-  </section>
-);
-
 const PlatformModules = () => (
   <section className="hm-section">
     <div className="flex flex-col gap-5 md:flex-row md:items-end md:justify-between">
@@ -859,7 +825,7 @@ const HowItWorksFAQ = () => (
     <div className="grid gap-10 lg:grid-cols-[320px,1fr]">
       <div>
         <div className="hm-eyebrow">Common questions</div>
-        <h2 className="hm-h2 mt-3">What hosts usually ask before switching.</h2>
+        <h2 className="hm-h2 mt-3">What event organizers usually ask before switching.</h2>
       </div>
       <div className="overflow-hidden rounded-[26px] border border-[var(--m-border)] bg-[var(--m-surface)]">
         {FAQS.map((item) => (

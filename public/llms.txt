@@ -1,38 +1,43 @@
 # Hoizr Business — Ticketing, marketing & ops for India's live nights
 
-> Hoizr Business is the organizer-side product in the Hoizr family. Venues and event organizers can publish events directly and use direct ticketing, owned fan CRM, AI event evaluation, and built-in marketing and ops without a subscription wall. Built by Hoizr Technologies Pvt. Ltd. for clubs, festivals, comedy, and live music organisers.
+> Hoizr Business is the organizer-side product in the Hoizr family. Venues and event organizers can publish directly, keep owned fan CRM, use AI event evaluation, run campaigns, scan doors, settle payouts, and compare against anonymous peer benchmarks. Hoizr is built to make India's live-event ecosystem more competitive, better measured, and easier to scale.
+
+## Brand position
+Hoizr is building infrastructure for India's live-night market: clubs, comedy rooms, festivals, party crews, live music venues, and promoters. The product belief is simple: better data and fairer tools make every serious operator sharper, and a sharper ecosystem helps India become one of the live-night markets the world watches.
 
 ## The Hoizr family
 Operated by Hoizr Technologies Pvt. Ltd.
 
 - **Hoizr** — Consumer ticketing surface. https://hoizr.com
-- **Hoizr Business** — This site. Host tools. https://business.hoizr.com
+- **Hoizr Business** — This site. Organizer and venue tools. https://business.hoizr.com
 - **Hoizr Artist** — Performing-artist profiles, fan CRM, merch. https://artist.hoizr.com
 - **Hoizr Promoters** — Coming soon. Tools for tour promoters and agencies.
 
-## Core values
-- Owned audience, not rented. Hosts keep their own customer relationships and full data ownership.
-- No gatekeeping. Event organizers can publish directly without a subscription wall or stripped-down starter tier.
-- AI event evaluation. Hoizr studies the event and provides the best possible offer, including lowered commission where the event qualifies.
-- India-first. UPI, GST invoices, Section 24 compliance, regional language support, host payouts in INR.
+## Core beliefs
+- Better competition makes everyone sharper. Operators need clean benchmarks, owned audience data, and real post-show learning loops.
+- Owned audience, not rented. Event organizers keep their customer relationships and full data ownership.
+- AI event evaluation. Hoizr studies event format, city, scale, ticket mix, listing quality, and market context to provide the strongest possible offer where the event qualifies.
+- India-first. UPI, GST invoices, Section 24 compliance, regional language support, event organizer payouts in INR, and workflows built for Indian live nights.
 
 ## Key surfaces
 
-- [Home](https://business.hoizr.com/): Platform overview and primary CTAs.
-- [Platform access](https://business.hoizr.com/pricing): Direct event publishing without a subscription wall.
-- [How it works](https://business.hoizr.com/how-it-works): End-to-end host journey from onboarding to settlement.
-- [Products](https://business.hoizr.com/product): Ticketing, fan CRM, scanner, marketing tools, AI offers, host payouts.
+- [Home](https://business.hoizr.com/): Platform overview, waitlist, and primary product story.
+- [About](https://business.hoizr.com/about): Company belief, market thesis, and founder note.
+- [How it works](https://business.hoizr.com/how-it-works): End-to-end organizer journey from onboarding to settlement.
+- [Products](https://business.hoizr.com/product): Ticketing, fan CRM, scanner, marketing tools, AI offers, payouts, and competitive analysis.
+- [Resources](https://business.hoizr.com/resources): Guides, playbooks, and operating references.
 - [Blog](https://business.hoizr.com/blog): Stories on live entertainment, ticketing, and India's nightlife economy.
+- [Help](https://business.hoizr.com/help): Setup, payout, scanner, and platform support paths.
 - [RSS](https://business.hoizr.com/rss.xml): Blog feed for crawlers, readers, and AI agents.
 - [Sitemap](https://business.hoizr.com/sitemap.xml): Canonical URL inventory for public marketing pages.
 - [Legal](https://business.hoizr.com/legal/terms): Terms, privacy, cookies, GST, and company disclosures.
-- [Contact](https://business.hoizr.com/contact): Sales and support inbound.
+- [Contact](https://business.hoizr.com/contact): Sales, partnership, support, and event onboarding inbound.
 
 ## Audience
-Event hosts, club owners, festival promoters, comedy producers, and venue operators across India.
+Event organizers, venue operators, club owners, festival promoters, comedy producers, party crews, and live music operators across India.
 
 ## Counterpart
-Customer-facing ticket buying lives at https://hoizr.com — that's where attendees discover events, book tickets, follow artists, and check in.
+Customer-facing ticket buying lives at https://hoizr.com — attendees discover events, book tickets, follow artists, and check in there.
 
 ## Contact
 contact@hoizr.com · +91 83695 72945 · WhatsApp: https://wa.me/918369572945 · India

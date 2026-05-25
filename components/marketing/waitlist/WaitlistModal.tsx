@@ -14,7 +14,7 @@ const ROLE_OPTIONS: { value: Role; label: string; blurb: string }[] = [
   },
   {
     value: "event-org",
-    label: "Event organiser",
+    label: "Event organizer",
     blurb:
       "I curate and produce shows, festivals, or tours — venue varies night-to-night.",
   },
@@ -27,7 +27,7 @@ const ROLE_OPTIONS: { value: Role; label: string; blurb: string }[] = [
   {
     value: "other",
     label: "Other",
-    blurb: "Artist team, agency, vendor, or something the categories miss.",
+    blurb: "Artist crew, agency, vendor, school, or something the categories miss.",
   },
 ];
 
@@ -179,12 +179,12 @@ export const WaitlistModal = ({
               src="/marketing/hero/hero-lines-star.svg"
               alt=""
               aria-hidden
-              className="pointer-events-none absolute inset-0 h-full w-full object-cover"
+              className="pointer-events-none absolute inset-0 h-full w-full object-cover opacity-70"
               draggable={false}
             />
             <div
               aria-hidden
-              className="pointer-events-none absolute inset-0 bg-black/48"
+              className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_30%_0%,rgba(214,255,63,0.08),transparent_34%),linear-gradient(180deg,rgba(0,0,0,0.82)_0%,rgba(0,0,0,0.9)_52%,rgba(0,0,0,0.94)_100%)]"
             />
 
             <div className="relative z-10 flex items-start justify-between gap-4 px-7 pt-7 pb-2">
@@ -220,8 +220,8 @@ export const WaitlistModal = ({
               ) : (
                 <>
                   <p className="mt-2 text-[14px] leading-relaxed text-white/72">
-                    Share your details and the Hoizr team will help you bring
-                    your first event onto the platform.
+                    Share your details and Hoizr will help you bring your first
+                    event onto the platform.
                   </p>
 
                   <form onSubmit={submit} className="mt-6 space-y-5">
@@ -293,7 +293,7 @@ export const WaitlistModal = ({
                     </div>
 
                     {/* Optional note — surfaces an explanatory textarea
-                        always (so hosts can leave context like the
+                        always (so organizers can leave context like the
                         venue name or upcoming event). Slightly more
                         prominent when "Other" is selected. */}
                     <div>
@@ -317,7 +317,7 @@ export const WaitlistModal = ({
                         rows={3}
                         placeholder={
                           role === "other"
-                            ? "Tell us about your team — artist crew, agency, vendor, school, anything we missed."
+                            ? "Tell us where you fit — artist crew, agency, vendor, school, anything we missed."
                             : "Upcoming event, venue name, scale, or a question. Anything that helps us prioritise."
                         }
                         className="mt-2 block w-full resize-y rounded-xl border border-white/10 bg-white/[0.05] px-4 py-3 text-[14px] leading-[1.5] text-white placeholder-white/35 outline-none transition focus:border-[var(--m-acid)] focus:bg-white/[0.08]"
@@ -333,16 +333,16 @@ export const WaitlistModal = ({
                     <button
                       type="submit"
                       disabled={status === "submitting"}
-                      className="hm-btn hm-btn-acid w-full justify-center !py-3.5 text-[15px] disabled:cursor-not-allowed disabled:opacity-70"
+                      className="hm-btn hm-btn-acid inline-flex w-full flex-nowrap items-center justify-center gap-2 whitespace-nowrap !py-3.5 text-[15px] disabled:cursor-not-allowed disabled:opacity-70"
                     >
                       {status === "submitting" ? (
                         <>
                           <Loader2 size={17} className="animate-spin" />
-                          Sending your details…
+                          <span>Sending your details…</span>
                         </>
                       ) : (
                         <>
-                          Join the waitlist
+                          <span>Join the waitlist</span>
                           <ArrowRight size={17} className="mt-[1px] shrink-0" />
                         </>
                       )}
@@ -460,8 +460,8 @@ const SuccessState = ({ onClose }: { onClose: () => void }) => (
       We&rsquo;ve got your details.
     </h3>
     <p className="mx-auto mt-3 max-w-[380px] text-[14px] leading-relaxed text-white/70">
-      Confirmation is on its way to your inbox. The team will help you bring
-      your first event onto Hoizr.
+      Confirmation is on its way to your inbox. Hoizr will help you bring your
+      first event onto the platform.
     </p>
     <button
       type="button"
