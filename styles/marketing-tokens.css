@@ -103,7 +103,7 @@
   color: var(--m-ink-1);
   width: 100%;
   max-width: 100vw;
-  overflow-x: visible;
+  overflow-x: clip;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   text-rendering: optimizeLegibility;
