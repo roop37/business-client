@@ -5,7 +5,6 @@ import { ArrowRight, Check, PlayCircle, Sparkles } from "lucide-react";
 import Link from "next/link";
 import { useRef } from "react";
 import { ProductContent } from "../data/product-content";
-import { WaitlistButton } from "../waitlist/WaitlistButton";
 import { ProductVisual } from "./ProductVisual";
 
 const EASE = [0.2, 0.6, 0.2, 1] as const;
@@ -123,13 +122,10 @@ export const ProductHero = ({ content }: { content: ProductContent }) => {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.7, ease: EASE, delay: 0.45 }}
           >
-            <WaitlistButton
-              source={`product-${content.slug}`}
-              className="hm-btn hm-btn-primary"
-            >
-              <span>Join the waitlist</span>
+            <Link href="/signup" className="hm-btn hm-btn-primary">
+              <span>Get started</span>
               <ArrowRight size={16} />
-            </WaitlistButton>
+            </Link>
             <Link
               href="/about"
               className="hm-btn hm-btn-ghost border border-[var(--m-border)]"

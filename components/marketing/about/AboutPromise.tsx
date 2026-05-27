@@ -3,7 +3,6 @@
 import { motion } from "framer-motion";
 import { ArrowUpRight, BadgeCheck, Sparkles, Users, type LucideIcon } from "lucide-react";
 import Link from "next/link";
-import { WaitlistButton } from "../waitlist/WaitlistButton";
 
 const EASE = [0.2, 0.6, 0.2, 1] as const;
 
@@ -21,7 +20,7 @@ const CARDS: PromiseCard[] = [
     eyebrow: "No gatekeeping",
     title: "The full stack from day one.",
     body: "Event organizers can publish directly and use the full platform without a subscription wall, starter tier, or gated plan.",
-    ctaLabel: "Join the waitlist",
+    ctaLabel: "Get started",
     ctaHref: "/signup",
     Icon: BadgeCheck,
   },
@@ -94,23 +93,13 @@ export const AboutPromise = () => {
               </p>
 
               <div className="mt-auto pt-6">
-                {card.ctaHref === "/signup" ? (
-                  <WaitlistButton
-                    source="about-promise"
-                    className="inline-flex items-center gap-2 rounded-full bg-[var(--m-acid)] px-5 py-2.5 text-[14px] font-semibold text-[var(--m-forest-900)] transition hover:opacity-90"
-                  >
-                    {card.ctaLabel}
-                    <ArrowUpRight size={16} strokeWidth={2.2} />
-                  </WaitlistButton>
-                ) : (
-                  <Link
-                    href={card.ctaHref}
-                    className="inline-flex items-center gap-2 rounded-full bg-[var(--m-acid)] px-5 py-2.5 text-[14px] font-semibold text-[var(--m-forest-900)] transition hover:opacity-90"
-                  >
-                    {card.ctaLabel}
-                    <ArrowUpRight size={16} strokeWidth={2.2} />
-                  </Link>
-                )}
+                <Link
+                  href={card.ctaHref}
+                  className="inline-flex items-center gap-2 rounded-full bg-[var(--m-acid)] px-5 py-2.5 text-[14px] font-semibold text-[var(--m-forest-900)] transition hover:opacity-90"
+                >
+                  {card.ctaLabel}
+                  <ArrowUpRight size={16} strokeWidth={2.2} />
+                </Link>
               </div>
             </div>
 

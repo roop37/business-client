@@ -30,7 +30,6 @@ import {
 import { MarketingShell } from "@/components/marketing/MarketingShell";
 import { AiOfferSpotlight } from "@/components/marketing/sections/AiOfferSpotlight";
 import { FinalCTA } from "@/components/marketing/sections/FinalCTA";
-import { WaitlistButton } from "@/components/marketing/waitlist/WaitlistButton";
 import {
   BreadcrumbJsonLd,
   FaqJsonLd,
@@ -439,10 +438,10 @@ const HowItWorksHero = () => (
           )}
         </div>
         <div className="mt-9 flex flex-wrap gap-3">
-          <WaitlistButton source="how-it-works-hero" className="hm-btn hm-btn-primary">
-            Join the waitlist
+          <Link href="/signup" className="hm-btn hm-btn-primary">
+            Get started
             <ArrowRight size={16} />
-          </WaitlistButton>
+          </Link>
           <Link
             href="#operating-flow"
             className="hm-btn hm-btn-ghost border border-[var(--m-border)]"

@@ -3,7 +3,6 @@
 import { motion } from "framer-motion";
 import { ArrowRight, PlayCircle } from "lucide-react";
 import Link from "next/link";
-import { WaitlistButton } from "../waitlist/WaitlistButton";
 
 const EASE = [0.2, 0.6, 0.2, 1] as const;
 
@@ -50,10 +49,10 @@ export const FinalCTA = () => {
         </p>
 
         <div className="mt-10 flex items-center justify-center gap-3 flex-wrap">
-          <WaitlistButton source="final-cta" className="hm-btn hm-btn-acid">
-            Join the waitlist
+          <Link href="/signup" className="hm-btn hm-btn-acid">
+            Get started
             <ArrowRight size={16} />
-          </WaitlistButton>
+          </Link>
           <Link
             href="/how-it-works"
             className="hm-btn hm-btn-on-dark border border-white/15"

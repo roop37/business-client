@@ -7,7 +7,6 @@ import { usePathname } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { MARKETING_PILLARS } from "./data/nav-products";
-import { useWaitlist } from "./waitlist/WaitlistContext";
 
 type OpenMenu = "products" | "company" | "resources" | null;
 
@@ -64,7 +63,6 @@ export const MarketingNav = () => {
   const lastHoverOpenAt = useRef(0);
   const navRef = useRef<HTMLElement | null>(null);
   const pathname = usePathname();
-  const waitlist = useWaitlist();
 
   const clearCloseTimer = useCallback(() => {
     if (closeTimer.current) {
@@ -240,21 +238,23 @@ export const MarketingNav = () => {
           </div>
         </nav>
 
-        {/* Pre-launch: login is hidden — accounts open once we leave
-            the waitlist phase. The only auth-adjacent CTA on the
-            marketing surface is "Join the waitlist". */}
         <div className="hidden lg:flex items-center gap-2">
-          <button
-            type="button"
-            onClick={() => {
-              closeNow();
-              waitlist.open("nav");
-            }}
+          <Link
+            href="/login"
+            onClick={closeNow}
+            onMouseEnter={closeNow}
+            className="rounded-full px-3.5 py-2 text-[14px] font-medium text-[var(--m-ink-2)] hover:bg-[rgba(0,0,0,0.05)]"
+          >
+            Login
+          </Link>
+          <Link
+            href="/signup"
+            onClick={closeNow}
             onMouseEnter={closeNow}
             className="hm-btn hm-btn-primary text-[14px] py-2.5 px-4"
           >
-            Join the waitlist
-          </button>
+            Get started
+          </Link>
         </div>
 
         <button
@@ -367,16 +367,13 @@ export const MarketingNav = () => {
                 </div>
                 <div className="mt-5 border-t border-[var(--m-border)] pt-4 flex items-center justify-between text-[13px] text-[var(--m-ink-3)]">
                   <span>Built for India. Engineered for live nights.</span>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      closeNow();
-                      waitlist.open("nav-products-menu");
-                    }}
+                  <Link
+                    href="/signup"
+                    onClick={closeNow}
                     className="font-semibold text-[var(--m-forest-700)] hover:underline"
                   >
-                    Join the waitlist →
-                  </button>
+                    Get started →
+                  </Link>
                 </div>
               </div>
             </div>
@@ -576,16 +573,22 @@ export const MarketingNav = () => {
                   Blog
                 </Link>
               </div>
-              <button
-                type="button"
-                onClick={() => {
-                  setMobileOpen(false);
-                  waitlist.open("nav-mobile");
-                }}
-                className="hm-btn hm-btn-primary w-full"
-              >
-                Join the waitlist
-              </button>
+              <div className="flex flex-col gap-2">
+                <Link
+                  href="/login"
+                  onClick={() => setMobileOpen(false)}
+                  className="hm-btn hm-btn-ghost w-full border border-[var(--m-border)]"
+                >
+                  Login
+                </Link>
+                <Link
+                  href="/signup"
+                  onClick={() => setMobileOpen(false)}
+                  className="hm-btn hm-btn-primary w-full"
+                >
+                  Get started
+                </Link>
+              </div>
             </div>
           </motion.div>
         )}

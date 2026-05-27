@@ -4,7 +4,6 @@ import { motion } from "framer-motion";
 import { ArrowRight, CheckCircle2, Loader2, Mail, MessageCircle, PhoneCall, Sparkles } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
-import { WaitlistButton } from "../waitlist/WaitlistButton";
 
 const EASE = [0.2, 0.6, 0.2, 1] as const;
 const CONTACT_PHONE_DISPLAY = "+91 83695 72945";
@@ -300,12 +299,9 @@ export const ContactSidePanel = () => {
             Publish directly, keep every fan relationship, and run the night
             from one operating stack.
           </p>
-          <WaitlistButton
-            source="contact-page"
-            className="hm-btn hm-btn-acid mt-4"
-          >
-            Join the waitlist <ArrowRight size={16} />
-          </WaitlistButton>
+          <Link href="/signup" className="hm-btn hm-btn-acid mt-4">
+            Get started <ArrowRight size={16} />
+          </Link>
         </div>
       </div>
     </div>

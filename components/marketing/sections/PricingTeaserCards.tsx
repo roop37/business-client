@@ -3,7 +3,6 @@
 import { motion } from "framer-motion";
 import { ArrowUpRight, Handshake, PercentCircle } from "lucide-react";
 import Link from "next/link";
-import { WaitlistButton } from "../waitlist/WaitlistButton";
 
 const EASE = [0.2, 0.6, 0.2, 1] as const;
 
@@ -15,7 +14,8 @@ const CARDS = [
       "Hoizr quotes a single per-event commission with no convenience-fee games. Share your event context and we will give you the strongest offer we can make for that night.",
     cta: "See your event commission",
     Icon: PercentCircle,
-    action: "waitlist",
+    action: "link",
+    href: "/signup",
   },
   {
     eyebrow: "Collaborators",
@@ -93,23 +93,13 @@ export const PricingTeaserCards = () => {
               </p>
 
               <div className="mt-auto pt-8">
-                {card.action === "waitlist" ? (
-                  <WaitlistButton
-                    source="pricing-teaser-commission"
-                    className="inline-flex items-center gap-2 rounded-full bg-[var(--m-acid)] px-5 py-3 text-[14px] font-bold text-[var(--m-forest-900)] transition hover:opacity-90"
-                  >
-                    {card.cta}
-                    <ArrowUpRight size={16} strokeWidth={2.2} />
-                  </WaitlistButton>
-                ) : (
-                  <Link
-                    href={card.href}
-                    className="inline-flex items-center gap-2 rounded-full bg-[var(--m-acid)] px-5 py-3 text-[14px] font-bold text-[var(--m-forest-900)] transition hover:opacity-90"
-                  >
-                    {card.cta}
-                    <ArrowUpRight size={16} strokeWidth={2.2} />
-                  </Link>
-                )}
+                <Link
+                  href={card.href}
+                  className="inline-flex items-center gap-2 rounded-full bg-[var(--m-acid)] px-5 py-3 text-[14px] font-bold text-[var(--m-forest-900)] transition hover:opacity-90"
+                >
+                  {card.cta}
+                  <ArrowUpRight size={16} strokeWidth={2.2} />
+                </Link>
               </div>
             </div>
           </motion.article>
