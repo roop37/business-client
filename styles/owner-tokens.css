@@ -19,17 +19,17 @@
      class and inline lookup that already reads them resolves to the
      new green automatically. Treat anything that still talks about
      "blue" as a historical alias — the swatch is forest green. */
-  --owner-blue-500: #1B5C3A;   /* deep forest green — primary */
-  --owner-blue-600: #144A2D;   /* deeper green hover */
-  --owner-blue-400: #2D7E54;   /* lifted green for hover-on-primary */
-  --owner-blue-200: #B5D4C2;   /* mint border for focus rings */
-  --owner-blue-100: #DCEDE3;   /* mint cream for subtle fills */
-  --owner-blue-050: #EBF5F0;   /* very pale mint for subtle fills */
+  --owner-blue-500: #0F8842;   /* vibrant deep green — primary */
+  --owner-blue-600: #0B6B33;   /* deeper hover (still vibrant) */
+  --owner-blue-400: #16A150;   /* lifted hover-on-primary */
+  --owner-blue-200: #A0D8B5;   /* mint border for focus rings */
+  --owner-blue-100: #D4EFDD;   /* mint fill */
+  --owner-blue-050: #E9F7EF;   /* very pale mint subtle fill */
 
-  --owner-cyan-500: #1B5C3A;   /* alias — kept for legacy consumers */
-  --owner-cyan-300: #4D8B6E;
+  --owner-cyan-500: #0F8842;   /* alias — kept for legacy consumers */
+  --owner-cyan-300: #5BB37A;
 
-  --owner-money: #1B5C3A;      /* currency reads in primary green */
+  --owner-money: #0F8842;      /* currency reads in primary green */
 
   /* Secondary — graphite black. Use for headings, body emphasis,
      and the secondary tier of CTAs (e.g. EventJourney's current-
@@ -55,8 +55,8 @@
   --owner-danger-text: #C0382B;
   --owner-danger-bg: #FDE2DE;
 
-  --owner-info-text: #1B5C3A;  /* deep forest green — replaces blue */
-  --owner-info-bg: #EBF5F0;
+  --owner-info-text: #0F8842;  /* vibrant deep green — replaces blue */
+  --owner-info-bg: #E9F7EF;
 
   --owner-neutral-pill-bg: #F1F1EF;
   --owner-neutral-pill-text: #6B6B6B;
@@ -522,10 +522,10 @@
 :root {
   --sidebar-background: 40 30% 92%;        /* warm cream, owner-bg-sidebar (#F4EFE3) */
   --sidebar-foreground: 0 0% 4%;           /* owner-fg-1 */
-  --sidebar-primary: 149 55% 23%;          /* deep forest green, owner-blue-500 (#1B5C3A) */
+  --sidebar-primary: 142 80% 30%;          /* vibrant deep green, owner-blue-500 (#0F8842) */
   --sidebar-primary-foreground: 0 0% 100%;
-  --sidebar-accent: 149 30% 93%;           /* pale mint, owner-blue-050 (#EBF5F0) */
+  --sidebar-accent: 142 47% 94%;           /* pale mint, owner-blue-050 (#E9F7EF) */
   --sidebar-accent-foreground: 0 0% 4%;
   --sidebar-border: 40 28% 85%;            /* warm divider, owner-border (#E5DFCF) */
-  --sidebar-ring: 149 55% 23%;
+  --sidebar-ring: 142 80% 30%;
 }

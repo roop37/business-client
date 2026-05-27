@@ -59,8 +59,8 @@
      bright-blue bleed. Mapped to forest tones. The `--m-blue-050`
      subtle-fill token mirrors the admin's `--owner-blue-050`. */
   --m-blue-700: #151412;
-  --m-blue-500: #1B5C3A;
-  --m-blue-050: #EBF5F0;
+  --m-blue-500: #0F8842;
+  --m-blue-050: #E9F7EF;
 
   /* ---------- Typography ----------
      `--font-bodoni-moda` and `--font-manrope` are exposed by the

@@ -26,16 +26,16 @@ const config: Config = {
         // runtime CSS variables stay in sync with the build-time theme.
         owner: {
           blue: {
-            500: "#1B5C3A", // primary — deep forest green
-            600: "#144A2D",
-            400: "#2D7E54",
-            200: "#B5D4C2",
-            100: "#DCEDE3",
-            "050": "#EBF5F0",
+            500: "#0F8842", // primary — vibrant deep green
+            600: "#0B6B33",
+            400: "#16A150",
+            200: "#A0D8B5",
+            100: "#D4EFDD",
+            "050": "#E9F7EF",
           },
           cyan: {
-            500: "#1B5C3A",
-            300: "#4D8B6E",
+            500: "#0F8842",
+            300: "#5BB37A",
           },
           // Secondary tier — graphite. Use beside the green primary
           // for headings and second-priority CTAs.
@@ -53,7 +53,7 @@ const config: Config = {
           success: { text: "#0E8345", bg: "#DCFCE7", border: "#BBF7D0" },
           warning: { text: "#B45309", bg: "#FEF3C7" },
           danger: { text: "#C0382B", bg: "#FDE2DE" },
-          info: { text: "#1B5C3A", bg: "#EBF5F0" },
+          info: { text: "#0F8842", bg: "#E9F7EF" },
           neutralPill: { bg: "#F1F1EF", text: "#6B6B6B" },
           bg: {
             DEFAULT: "#FFFFFF",
@@ -84,7 +84,7 @@ const config: Config = {
         blueNew: "#7d6f5b",
         blackBg: "#24150f",
         secondaryBg: "#f2e2cf",
-        primary: "#1B5C3A",          // Owner blue-500 — deep forest green
+        primary: "#0F8842",          // Owner blue-500 — vibrant deep green
         secondary: "#E5DFCF",        // Owner border — warm cream
         success: "#0E8345",          // Owner success-text
         warning: "#B45309",          // Owner warning-text
@@ -174,7 +174,7 @@ const config: Config = {
             backgroundColor: colors.primary,
             color: colors.white,
             "&:hover": {
-              backgroundColor: "#2D7E54", /* Owner blue-400 — green lift */
+              backgroundColor: "#16A150", /* Owner blue-400 — green lift */
             },
           },
           "&.btn-secondary": {

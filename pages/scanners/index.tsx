@@ -227,7 +227,7 @@ const ScannersIndex: React.FC & {
                       className="grid h-9 w-9 shrink-0 place-items-center rounded-owner-md text-white"
                       style={{
                         background:
-                          "linear-gradient(135deg, #1B5C3A 0%, #2D7E54 100%)",
+                          "linear-gradient(135deg, #0F8842 0%, #16A150 100%)",
                       }}
                     >
                       <ScanLine size={15} />

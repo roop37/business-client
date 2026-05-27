@@ -6,6 +6,7 @@ import { AnimatePresence } from "framer-motion";
 import {
   ClipboardList,
   DoorOpenIcon,
+  MessageCircle,
   PinIcon,
   SparklesIcon,
   UserRound,
@@ -88,9 +89,16 @@ const steps: OnboardingStep[] = [
   },
 ];
 
+// Numeric-only fallback; matches the +91 line printed beside Hoizr's
+// other support touchpoints. Override via NEXT_PUBLIC_HOIZR_WHATSAPP.
+const DEFAULT_HOIZR_WHATSAPP = "8369572945";
+
 const OnboardingJourneyLayout = ({ children, includeTimezones }: Props) => {
   const router = useRouter();
   const activeSlug = router.query.onBoardingRoute?.toString() ?? "";
+  const whatsappNumber =
+    process.env.NEXT_PUBLIC_HOIZR_WHATSAPP || DEFAULT_HOIZR_WHATSAPP;
+  const whatsappHref = `https://wa.me/${whatsappNumber.replace(/[^0-9]/g, "")}`;
   const { setToastData } = useGlobalStore();
   const { setMasterStates, setMasterTimezones } = useMasterStore();
 
@@ -201,7 +209,7 @@ const OnboardingJourneyLayout = ({ children, includeTimezones }: Props) => {
                   aria-current={active ? "step" : undefined}
                   className={`flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left text-sm transition ${
                     active
-                      ? "bg-[var(--owner-fg-1)] text-[var(--owner-bg)]"
+                      ? "bg-[var(--owner-fg-1)] text-[var(--owner-accent-acid)]"
                       : complete
                       ? "text-[var(--owner-fg-1)] hover:bg-[var(--owner-bg-subtle)]"
                       : "text-[var(--owner-fg-3)] hover:bg-[var(--owner-bg-subtle)]"
@@ -210,7 +218,7 @@ const OnboardingJourneyLayout = ({ children, includeTimezones }: Props) => {
                   <span
                     className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-md text-xs font-semibold ${
                       active
-                        ? "bg-white/20"
+                        ? "bg-[var(--owner-accent-acid)] text-[var(--owner-fg-1)]"
                         : "bg-[var(--owner-bg)] text-[var(--owner-fg-2)] ring-1 ring-[var(--owner-border)]"
                     }`}
                   >
@@ -242,6 +250,15 @@ const OnboardingJourneyLayout = ({ children, includeTimezones }: Props) => {
             >
               support@hoizr.com →
             </Link>
+            <Link
+              href={whatsappHref}
+              target="_blank"
+              rel="noreferrer"
+              className="mt-2 inline-flex items-center gap-1.5 font-semibold text-[var(--owner-blue-500)] underline-offset-4 hover:underline"
+            >
+              <MessageCircle size={13} strokeWidth={2.2} />
+              Start a chat on WhatsApp
+            </Link>
           </div>
         </aside>
 
@@ -258,7 +275,7 @@ const OnboardingJourneyLayout = ({ children, includeTimezones }: Props) => {
                   onClick={() => router.push(step.route)}
                   className={`shrink-0 rounded-full px-3 py-1.5 text-xs font-semibold transition ${
                     active
-                      ? "bg-[var(--owner-fg-1)] text-[var(--owner-bg)]"
+                      ? "bg-[var(--owner-fg-1)] text-[var(--owner-accent-acid)]"
                       : "bg-[var(--owner-bg-subtle)] text-[var(--owner-fg-3)]"
                   }`}
                 >

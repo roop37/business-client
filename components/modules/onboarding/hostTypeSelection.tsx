@@ -395,6 +395,14 @@ const HostTypeSelection = () => {
                       classNamePrefix="react-select"
                       className="text-left text-sm"
                       placeholder="Select venue type"
+                      menuPosition="fixed"
+                      menuPortalTarget={
+                        typeof document !== "undefined" ? document.body : null
+                      }
+                      menuPlacement="auto"
+                      styles={{
+                        menuPortal: (base) => ({ ...base, zIndex: 60 }),
+                      }}
                     />
                   )}
                 />

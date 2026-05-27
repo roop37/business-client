@@ -166,8 +166,13 @@ export const getServerSideProps: GetServerSideProps<HomePageProps> = async (
       { cookie: context.req.headers.cookie?.toString() ?? "" }
     );
 
-    if (response && response.hostOnboardingData) {
-      const data = response.hostOnboardingData as any;
+    // The GraphQL query is *named* `hostOnboardingData` but the response
+    // field on the schema is `getCurrentHostOnboarding` (see schema +
+    // generated SDK at HostOnboardingDataQuery). Reading the query name
+    // returned `undefined` and the form rendered empty after every back-
+    // navigation. Resolve against the real response field.
+    if (response && response.getCurrentHostOnboarding) {
+      const data = response.getCurrentHostOnboarding as any;
       return {
         props: {
           repo: {
