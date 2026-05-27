@@ -2716,12 +2716,18 @@ const EventJourney = ({
                             value={startDate}
                             onChange={setStartDate}
                             disabled={eventStarted}
+                            minDate={new Date()}
                           />
                           <DateTimeInput
                             label="Event End *"
                             value={endDate}
                             onChange={setEndDate}
                             disabled={eventStarted}
+                            minDate={
+                              startDate
+                                ? new Date(startDate)
+                                : new Date()
+                            }
                           />
                         </>
                       ) : null}
@@ -3087,11 +3093,19 @@ const EventJourney = ({
                             label="Ticket Sales Start Date (optional)"
                             value={ticketSalesStartDate}
                             onChange={setTicketSalesStartDate}
+                            minDate={new Date()}
+                            maxDate={endDate ? new Date(endDate) : undefined}
                           />
                           <DateTimeInput
                             label="Ticket Sales End Date (optional)"
                             value={ticketSalesEndDate}
                             onChange={setTicketSalesEndDate}
+                            minDate={
+                              ticketSalesStartDate
+                                ? new Date(ticketSalesStartDate)
+                                : new Date()
+                            }
+                            maxDate={endDate ? new Date(endDate) : undefined}
                           />
                           <ToggleSettingRow
                             title="Allow Walk-ins"
@@ -4364,15 +4378,17 @@ const EventJourney = ({
 
         {publishModalOpen ? (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-            <div className="max-h-[90vh] w-full max-w-3xl overflow-y-auto rounded-2xl bg-white p-6 shadow-2xl">
+            <div className="max-h-[90vh] w-full max-w-5xl overflow-y-auto rounded-2xl bg-white p-6 shadow-2xl">
               <div className="flex items-start justify-between gap-4">
                 <div>
                   <h2 className="text-xl font-semibold text-[var(--owner-fg-1)]">
                     Pick an offer to publish
                   </h2>
-                  <p className="mt-1 text-sm text-[var(--owner-fg-3)]">
-                    Choose the offer context you want Hoizr to apply, or
-                    publish with the basic no-offer option.
+                  <p className="mt-1 text-sm leading-relaxed text-[var(--owner-fg-3)]">
+                    Hoizr studied this event and prepared a few offers.
+                    Each one cuts your commission in exchange for a small
+                    upfront fee. Pick the one that fits, or publish at
+                    your basic rate below.
                   </p>
                 </div>
                 <button
@@ -4437,77 +4453,246 @@ const EventJourney = ({
                 );
               })()}
 
-              <div className="mt-5 space-y-3">
-                {pricingOptions.map((option) => {
-                  const selected = selectedPricingOptionId === option.optionId;
-                  const insight = getPricingOptionInsight(option);
+              {(() => {
+                // Derive the basic ("no-offer") commission rate from any AI
+                // offer in the generation. Each offer carries `commissionPct`
+                // plus `howMuchDifferentFromBasicOffer.deltaPct` — adding
+                // them recovers the baseline the AI used. This avoids a
+                // hoizr-shared schema change to expose the
+                // generationContext field separately.
+                const baselineFromAi = (() => {
+                  const o = aiBoostGeneration?.offers?.[0];
+                  if (!o) return null;
                   return (
-                    <button
-                      key={option.optionId}
-                      type="button"
-                      onClick={() => requestPricingOptionChange(option)}
-                      className={`w-full rounded-2xl border p-4 text-left transition ${
-                        selected
-                          ? "border-[var(--owner-blue-500)] bg-[var(--owner-blue-050)] shadow-sm"
-                          : "border-[var(--owner-border)] bg-white hover:border-[var(--owner-blue-500)]"
-                      }`}
-                    >
-                      <div className="flex items-start justify-between gap-3">
-                        <div className="flex min-w-0 gap-3">
-                          <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white text-[var(--owner-blue-500)] shadow-sm">
+                    o.commissionPct +
+                    (o.howMuchDifferentFromBasicOffer?.deltaPct ?? 0)
+                  );
+                })();
+
+                const aiOptionIds = new Set(
+                  (aiBoostGeneration?.offers ?? []).map(
+                    (o) => `${AI_OFFER_PREFIX}${o.offerCode}`
+                  )
+                );
+                const legacyOptions = pricingOptions.filter(
+                  (p) => !aiOptionIds.has(p.optionId)
+                );
+
+                return (
+                  <div className="mt-5 space-y-5">
+                    {baselineFromAi != null ? (
+                      <div className="rounded-xl border border-[var(--owner-border)] bg-[var(--owner-bg-subtle)] p-4">
+                        <div className="flex items-start gap-3">
+                          <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[var(--owner-bg)] text-[var(--owner-fg-2)] shadow-sm">
                             <BadgeIndianRupeeIcon size={18} />
                           </span>
                           <div className="min-w-0">
-                            <div className="flex flex-wrap items-center gap-2">
-                              <h3 className="text-sm font-semibold text-[var(--owner-fg-1)]">
-                                {option.label}
-                              </h3>
-                              <span className="rounded-md bg-[var(--owner-blue-500)] px-2 py-0.5 text-[11px] font-semibold text-white">
-                                {option.badge}
+                            <p className="text-[11px] font-semibold uppercase tracking-[0.1em] text-[var(--owner-fg-3)]">
+                              Your basic Hoizr commission
+                            </p>
+                            <p className="mt-0.5 text-2xl font-bold tabular-nums text-[var(--owner-fg-1)]">
+                              {baselineFromAi.toFixed(2)}
+                              <span className="ml-1 text-sm font-medium text-[var(--owner-fg-3)]">
+                                % per ticket
                               </span>
-                            </div>
-                            <p className="mt-1 text-xs font-semibold text-[var(--owner-blue-500)]">
-                              {insight.savings}
+                            </p>
+                            <p className="mt-1 text-xs leading-relaxed text-[var(--owner-fg-3)]">
+                              This is what you pay if you publish without picking an offer below.
                             </p>
                           </div>
                         </div>
-                        {selected ? (
-                          <CheckCircle2Icon
-                            size={18}
-                            className="shrink-0 text-[var(--owner-blue-500)]"
-                          />
-                        ) : null}
                       </div>
-                      <div className="mt-4 grid gap-2 text-xs text-[var(--owner-fg-3)] sm:grid-cols-3">
-                        <span className="rounded-lg bg-white px-3 py-2">
-                          Offer: event-specific
-                        </span>
-                        <span className="rounded-lg bg-white px-3 py-2">
-                          Access: no subscription wall
-                        </span>
-                        <span className="rounded-lg bg-white px-3 py-2">
-                          Sales estimate: {option.expectedPaidTickets} tickets
-                        </span>
-                      </div>
-                      <div className="mt-3 rounded-xl border border-[var(--owner-border)] bg-white p-3 text-xs text-[var(--owner-fg-3)]">
-                        <div className="mb-1 flex items-center gap-1.5 font-semibold text-[var(--owner-fg-1)]">
-                          <SparklesIcon size={13} className="text-[var(--owner-blue-500)]" />
-                          AI recommendation
-                        </div>
-                        <p>{insight.hostRecommendation}</p>
-                        <p className="mt-1">{insight.customerRecommendation}</p>
-                      </div>
-                    </button>
-                  );
-                })}
+                    ) : null}
 
-                {!pricingOptions.length ? (
-                  <div className="rounded-lg border border-[var(--owner-border)] bg-[var(--owner-bg)] p-4 text-sm text-[var(--owner-fg-3)]">
-                    No offers calculated yet — close this modal and reopen it
-                    after saving the last step.
+                    {aiBoostGeneration?.offers?.length ? (
+                      <div>
+                        <div className="mb-3 flex flex-wrap items-center gap-x-2 gap-y-1">
+                          <span className="inline-flex items-center gap-1.5 text-sm font-semibold text-[var(--owner-fg-1)]">
+                            <SparklesIcon
+                              size={14}
+                              className="text-[var(--owner-blue-500)]"
+                            />
+                            AI offers
+                          </span>
+                          <span className="text-xs text-[var(--owner-fg-3)]">
+                            — each one lowers your commission for a small upfront fee.
+                          </span>
+                        </div>
+                        <div className="grid gap-3 md:grid-cols-3">
+                          {aiBoostGeneration.offers.map((boost) => {
+                            const optionId = `${AI_OFFER_PREFIX}${boost.offerCode}`;
+                            const option = pricingOptions.find(
+                              (o) => o.optionId === optionId
+                            );
+                            if (!option) return null;
+                            const selected =
+                              selectedPricingOptionId === optionId;
+                            const recommended =
+                              aiBoostGeneration.recommendedOfferCode ===
+                              boost.offerCode;
+                            const delta =
+                              boost.howMuchDifferentFromBasicOffer?.deltaPct ??
+                              0;
+                            const savings =
+                              boost.totalSavingsForHosts?.value ?? 0;
+                            return (
+                              <button
+                                key={optionId}
+                                type="button"
+                                onClick={() =>
+                                  requestPricingOptionChange(option)
+                                }
+                                className={`flex h-full flex-col gap-3 rounded-2xl border p-4 text-left transition ${
+                                  selected
+                                    ? "border-[var(--owner-blue-500)] bg-[var(--owner-blue-050)] shadow-sm"
+                                    : "border-[var(--owner-border)] bg-[var(--owner-bg)] hover:border-[var(--owner-blue-400)]"
+                                }`}
+                              >
+                                <div className="flex items-start justify-between gap-2">
+                                  <div className="min-w-0">
+                                    <h3 className="text-sm font-semibold text-[var(--owner-fg-1)]">
+                                      {boost.label}
+                                    </h3>
+                                    {recommended ? (
+                                      <span className="mt-1.5 inline-flex items-center gap-1 rounded-full bg-[var(--owner-accent-acid)] px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-[var(--owner-fg-1)]">
+                                        <SparklesIcon size={10} />
+                                        Recommended
+                                      </span>
+                                    ) : null}
+                                  </div>
+                                  {selected ? (
+                                    <CheckCircle2Icon
+                                      size={18}
+                                      className="shrink-0 text-[var(--owner-blue-500)]"
+                                    />
+                                  ) : null}
+                                </div>
+
+                                <div>
+                                  <div className="text-[10px] font-semibold uppercase tracking-[0.1em] text-[var(--owner-fg-4)]">
+                                    Commission
+                                  </div>
+                                  <div className="mt-0.5 flex items-baseline gap-2">
+                                    <span className="text-3xl font-bold tabular-nums text-[var(--owner-blue-500)]">
+                                      {boost.commissionPct.toFixed(2)}%
+                                    </span>
+                                  </div>
+                                  {delta > 0 ? (
+                                    <div className="mt-1 inline-flex items-center gap-1 rounded-full bg-[var(--owner-blue-050)] px-2 py-0.5 text-[11px] font-semibold text-[var(--owner-blue-500)]">
+                                      ↓ {delta.toFixed(2)}% below basic
+                                    </div>
+                                  ) : null}
+                                </div>
+
+                                <div className="grid grid-cols-2 gap-2 rounded-xl border border-[var(--owner-border-soft)] bg-[var(--owner-bg-subtle)] p-3">
+                                  <div>
+                                    <div className="text-[10px] font-semibold uppercase tracking-[0.1em] text-[var(--owner-fg-4)]">
+                                      Upfront fee
+                                    </div>
+                                    <div className="mt-0.5 text-sm font-semibold tabular-nums text-[var(--owner-fg-1)]">
+                                      {boost.extraAmount > 0
+                                        ? formatIndianRupees(boost.extraAmount)
+                                        : "—"}
+                                    </div>
+                                  </div>
+                                  <div>
+                                    <div className="text-[10px] font-semibold uppercase tracking-[0.1em] text-[var(--owner-fg-4)]">
+                                      Net for you
+                                    </div>
+                                    <div
+                                      className={`mt-0.5 text-sm font-semibold tabular-nums ${
+                                        savings > 0
+                                          ? "text-[var(--owner-success-text)]"
+                                          : savings < 0
+                                          ? "text-[var(--owner-fg-1)]"
+                                          : "text-[var(--owner-fg-3)]"
+                                      }`}
+                                    >
+                                      {savings > 0
+                                        ? `You save ${formatIndianRupees(savings)}`
+                                        : savings < 0
+                                        ? `${formatIndianRupees(-savings)} extra`
+                                        : "Break-even"}
+                                    </div>
+                                  </div>
+                                </div>
+
+                                {boost.shortReason ? (
+                                  <p className="text-xs leading-relaxed text-[var(--owner-fg-3)]">
+                                    {boost.shortReason}
+                                  </p>
+                                ) : null}
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    ) : null}
+
+                    {legacyOptions.length > 0 ? (
+                      <div>
+                        <div className="mb-3 text-sm font-semibold text-[var(--owner-fg-1)]">
+                          Or publish at your basic rate
+                        </div>
+                        <div className="space-y-2">
+                          {legacyOptions.map((option) => {
+                            const selected =
+                              selectedPricingOptionId === option.optionId;
+                            return (
+                              <button
+                                key={option.optionId}
+                                type="button"
+                                onClick={() =>
+                                  requestPricingOptionChange(option)
+                                }
+                                className={`w-full rounded-2xl border p-4 text-left transition ${
+                                  selected
+                                    ? "border-[var(--owner-blue-500)] bg-[var(--owner-blue-050)]"
+                                    : "border-[var(--owner-border)] bg-[var(--owner-bg)] hover:border-[var(--owner-blue-400)]"
+                                }`}
+                              >
+                                <div className="flex items-center justify-between gap-3">
+                                  <div className="min-w-0">
+                                    <h3 className="text-sm font-semibold text-[var(--owner-fg-1)]">
+                                      {option.label}
+                                    </h3>
+                                    <p className="mt-0.5 text-xs text-[var(--owner-fg-3)]">
+                                      Commission:{" "}
+                                      <strong className="text-[var(--owner-fg-1)] tabular-nums">
+                                        {option.commissionRate}%
+                                      </strong>
+                                      {option.upfrontFee > 0 ? (
+                                        <>
+                                          {" · "}Upfront:{" "}
+                                          <strong className="text-[var(--owner-fg-1)] tabular-nums">
+                                            {formatIndianRupees(option.upfrontFee)}
+                                          </strong>
+                                        </>
+                                      ) : null}
+                                    </p>
+                                  </div>
+                                  {selected ? (
+                                    <CheckCircle2Icon
+                                      size={18}
+                                      className="shrink-0 text-[var(--owner-blue-500)]"
+                                    />
+                                  ) : null}
+                                </div>
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    ) : null}
+
+                    {!pricingOptions.length ? (
+                      <div className="rounded-lg border border-[var(--owner-border)] bg-[var(--owner-bg)] p-4 text-sm text-[var(--owner-fg-3)]">
+                        No offers calculated yet — close this modal and reopen it after saving the last step.
+                      </div>
+                    ) : null}
                   </div>
-                ) : null}
-              </div>
+                );
+              })()}
 
               <div className="mt-6 flex flex-col gap-2 sm:flex-row sm:justify-end">
                 <button
@@ -4597,11 +4782,19 @@ const DateTimeInput = ({
   value,
   onChange,
   disabled = false,
+  minDate,
+  maxDate,
 }: {
   label: string;
   value: string;
   onChange: (value: string) => void;
   disabled?: boolean;
+  // Inclusive bounds for the date portion. Used to gray out past dates
+  // for the event start/end pickers and to clamp ticket-sale windows
+  // to the selected event timing. Time-of-day is ignored on both ends
+  // so the bounds compare day-vs-day, not minute-vs-minute.
+  minDate?: Date;
+  maxDate?: Date;
 }) => {
   const [date = "", time = ""] = value ? value.split("T") : ["", ""];
   const [pendingTime, setPendingTime] = useState(time);
@@ -4667,6 +4860,19 @@ const DateTimeInput = ({
               <Calendar
                 mode="single"
                 selected={dateAsDate}
+                disabled={(d) => {
+                  if (minDate) {
+                    const min = new Date(minDate);
+                    min.setHours(0, 0, 0, 0);
+                    if (d < min) return true;
+                  }
+                  if (maxDate) {
+                    const max = new Date(maxDate);
+                    max.setHours(23, 59, 59, 999);
+                    if (d > max) return true;
+                  }
+                  return false;
+                }}
                 onSelect={(d) => {
                   if (!d) return;
                   const iso = `${d.getFullYear()}-${String(
