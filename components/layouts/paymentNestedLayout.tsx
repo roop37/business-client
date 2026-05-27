@@ -75,9 +75,14 @@ const PaymentLayout = ({ children }: Props) => {
       : "Tax invoices issued for payout settlements.";
 
   return (
+    // PaymentLayout intentionally does NOT carry h-full / overflow-hidden
+    // any more — the outer mainBodyLayout already provides the scrollable
+    // content container. Nesting another scroll inside an auto-height
+    // wrapper let the inner scroll collapse to 0 height, which is why the
+    // payout-profile list couldn't scroll past the first card.
     <div
       id="payment"
-      className="flex h-full min-h-0 min-w-0 flex-col gap-6 overflow-hidden font-owner"
+      className="flex min-w-0 flex-col gap-6 font-owner"
     >
       <Joyride
         steps={[
@@ -120,9 +125,7 @@ const PaymentLayout = ({ children }: Props) => {
         className="!mb-0"
       />
 
-      <div className="min-h-0 min-w-0 flex-1 overflow-y-auto overflow-x-hidden pb-2 pr-1">
-        {children}
-      </div>
+      <div className="min-w-0">{children}</div>
     </div>
   );
 };

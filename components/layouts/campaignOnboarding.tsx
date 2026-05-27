@@ -453,6 +453,14 @@ const OnboardingCampaignLayout = ({ children }: Props) => {
           customFilterConditions: conditionGroup,
           emailStatus:
             campaign.emailStatus ?? EmailCampaignPublicationStatus.Drafted,
+          // Without seeding csvUrl, the save path at the publish step
+          // hits the "CSV rows unchanged" branch and writes
+          // `input.csvDataUrl = currentState.csvUrl` — which is "" by
+          // default — clearing the stored URL on the backend and
+          // failing activation with "CSV URL is required for CSV
+          // target type." Seed it from the loaded campaign so the
+          // duplicate-then-publish flow keeps the original CSV.
+          csvUrl: campaign.csvDataUrl ?? "",
         });
         useOriginalCampaignStore.getState().setOriginalCampaign({
           ...campaign,
