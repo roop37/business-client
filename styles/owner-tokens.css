@@ -10,18 +10,27 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
 
 :root {
-  /* Brand / primary */
-  --owner-blue-500: #1F62E8;
-  --owner-blue-600: #1853CC;
-  --owner-blue-400: #3F7CF2;
-  --owner-blue-200: #B7CFFB;
-  --owner-blue-100: #DCE7FD;
-  --owner-blue-050: #EFF4FE;
+  /* Brand / primary — bridged from the marketing palette.
+     The original `--owner-blue-*` names are preserved so existing
+     class lookups still resolve, but the swatches now route to the
+     graphite-forest scale that drives the public marketing site.
+     Marketing source: --m-forest-* in marketing-tokens.css. */
+  --owner-blue-500: #151412;   /* graphite primary (was bright blue) */
+  --owner-blue-600: #0C0C0B;   /* graphite hover (deeper) */
+  --owner-blue-400: #2B2925;   /* graphite-lift for hover-on-primary */
+  --owner-blue-200: #D2CBB7;   /* warm border for focus rings */
+  --owner-blue-100: #EFE9DA;   /* warm cream for subtle fills */
+  --owner-blue-050: #F4EFE3;   /* warm cream canvas for very subtle fills */
 
-  --owner-cyan-500: #3FC0CC;
-  --owner-cyan-300: #8BD9E0;
+  --owner-cyan-500: #1B5C3A;   /* deep forest green (was cyan) */
+  --owner-cyan-300: #4D8B6E;   /* lighter forest green */
 
-  --owner-money: #1F62E8;
+  --owner-money: #151412;      /* currency reads in graphite */
+
+  /* Accent — neon chartreuse from the marketing site, available
+     for highlight surfaces (active pills, AI badges, focus pops). */
+  --owner-accent-acid: #D6FF3F;
+  --owner-accent-acid-deep: #B8E02F;
 
   /* Semantic */
   --owner-success-text: #0E8345;
@@ -34,27 +43,27 @@
   --owner-danger-text: #C0382B;
   --owner-danger-bg: #FDE2DE;
 
-  --owner-info-text: #1F62E8;
-  --owner-info-bg: #EFF4FE;
+  --owner-info-text: #151412;  /* graphite on cream — replaces blue */
+  --owner-info-bg: #EFE9DA;
 
   --owner-neutral-pill-bg: #F1F1EF;
   --owner-neutral-pill-text: #6B6B6B;
 
-  /* Neutrals (warm-tinted) */
-  --owner-bg: #FFFFFF;
-  --owner-bg-sidebar: #FAFAF7;
-  --owner-bg-subtle: #F7F7F4;
+  /* Neutrals — bridged to the warm-cream marketing palette */
+  --owner-bg: #FFFFFF;             /* cards stay white for contrast */
+  --owner-bg-sidebar: #F4EFE3;     /* m-canvas — warm cream shell */
+  --owner-bg-subtle: #EFE9DA;      /* m-canvas-2 */
   --owner-bg-input: #FFFFFF;
 
-  --owner-border: #E7E7E3;
-  --owner-border-strong: #D7D7D2;
-  --owner-border-soft: #EFEFEB;
+  --owner-border: #E5DFCF;         /* m-border */
+  --owner-border-strong: #D2CBB7;  /* m-border-strong */
+  --owner-border-soft: #EFE9DA;
 
   --owner-fg-1: #0A0A0A;
-  --owner-fg-2: #2A2A28;
-  --owner-fg-3: #5A5A57;
-  --owner-fg-4: #8A8A86;
-  --owner-fg-5: #B8B8B3;
+  --owner-fg-2: #2E2B24;           /* m-ink-2 — warm graphite */
+  --owner-fg-3: #5A554A;           /* m-ink-3 */
+  --owner-fg-4: #9C968A;           /* m-ink-4 */
+  --owner-fg-5: #C2BCAD;           /* m-ink-5 */
 
   /* Radii */
   --owner-radius-sm: 8px;
@@ -499,12 +508,12 @@
    neutral tone instead of pure black.
    ───────────────────────────────────────────────────────────── */
 :root {
-  --sidebar-background: 60 22% 96%;        /* near-cream, owner-bg-sidebar */
+  --sidebar-background: 40 30% 92%;        /* warm cream, owner-bg-sidebar (#F4EFE3) */
   --sidebar-foreground: 0 0% 4%;           /* owner-fg-1 */
-  --sidebar-primary: 220 84% 51%;          /* owner-blue-500 */
+  --sidebar-primary: 40 8% 8%;             /* graphite, owner-blue-500 (#151412) */
   --sidebar-primary-foreground: 0 0% 100%;
-  --sidebar-accent: 220 90% 95%;           /* owner-blue-050 */
+  --sidebar-accent: 40 24% 89%;            /* cream-2, owner-blue-050 (#EFE9DA) */
   --sidebar-accent-foreground: 0 0% 4%;
-  --sidebar-border: 40 15% 88%;            /* soft warm divider — owner-border-soft */
-  --sidebar-ring: 220 84% 51%;
+  --sidebar-border: 40 28% 85%;            /* warm divider, owner-border (#E5DFCF) */
+  --sidebar-ring: 40 8% 8%;
 }
