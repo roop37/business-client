@@ -269,7 +269,7 @@ const OnboardingJourneyLayout = ({ children, includeTimezones }: Props) => {
           </div>
 
           <section className="min-h-0 min-w-0 flex-1 overflow-hidden p-4 md:p-6">
-            <div className="mx-auto flex h-full w-full max-w-4xl flex-col">
+            <div className="mx-auto flex h-full w-full max-w-4xl flex-col items-center">
               <AnimatePresence mode="wait">{children}</AnimatePresence>
             </div>
           </section>
