@@ -56,9 +56,11 @@
   /* ---------- Legacy "blue" tokens, now neutralised ----------
      Kept by name so any older `bg-[var(--m-blue-500)]` /
      `text-[var(--m-blue-500)]` references resolve without the
-     bright-blue bleed. Mapped to forest tones. */
+     bright-blue bleed. Mapped to forest tones. The `--m-blue-050`
+     subtle-fill token mirrors the admin's `--owner-blue-050`. */
   --m-blue-700: #151412;
   --m-blue-500: #1B5C3A;
+  --m-blue-050: #EBF5F0;
 
   /* ---------- Typography ----------
      `--font-bodoni-moda` and `--font-manrope` are exposed by the

@@ -16,41 +16,61 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        // Owner design system tokens (source: design_handoff_hoizr_admin)
+        // Owner design system tokens — bridged to the marketing
+        // palette (see business-client/styles/owner-tokens.css). The
+        // `owner.blue.*` namespace is historical: the swatches are now
+        // the Hoizr deep-forest-green primary. Keep names unchanged so
+        // utility classes (`bg-owner-blue-500`, `text-owner-fg-3`, …)
+        // resolve everywhere without JSX edits. When updating colours,
+        // mirror the hex into styles/owner-tokens.css too so the
+        // runtime CSS variables stay in sync with the build-time theme.
         owner: {
           blue: {
-            500: "#1F62E8",
-            600: "#1853CC",
-            400: "#3F7CF2",
-            200: "#B7CFFB",
-            100: "#DCE7FD",
-            "050": "#EFF4FE",
+            500: "#1B5C3A", // primary — deep forest green
+            600: "#144A2D",
+            400: "#2D7E54",
+            200: "#B5D4C2",
+            100: "#DCEDE3",
+            "050": "#EBF5F0",
           },
           cyan: {
-            500: "#3FC0CC",
-            300: "#8BD9E0",
+            500: "#1B5C3A",
+            300: "#4D8B6E",
+          },
+          // Secondary tier — graphite. Use beside the green primary
+          // for headings and second-priority CTAs.
+          secondary: {
+            500: "#151412",
+            600: "#0C0C0B",
+            400: "#2B2925",
+          },
+          // Accent — neon chartreuse from the marketing site. Apply
+          // sparingly: AI badges, "live" pulses, focus pops.
+          accent: {
+            acid: "#D6FF3F",
+            acidDeep: "#B8E02F",
           },
           success: { text: "#0E8345", bg: "#DCFCE7", border: "#BBF7D0" },
           warning: { text: "#B45309", bg: "#FEF3C7" },
           danger: { text: "#C0382B", bg: "#FDE2DE" },
-          info: { text: "#1F62E8", bg: "#EFF4FE" },
+          info: { text: "#1B5C3A", bg: "#EBF5F0" },
           neutralPill: { bg: "#F1F1EF", text: "#6B6B6B" },
           bg: {
             DEFAULT: "#FFFFFF",
-            sidebar: "#FAFAF7",
-            subtle: "#F7F7F4",
+            sidebar: "#F4EFE3", // m-canvas warm cream
+            subtle: "#EFE9DA",  // m-canvas-2
           },
           border: {
-            DEFAULT: "#E7E7E3",
-            strong: "#D7D7D2",
-            soft: "#EFEFEB",
+            DEFAULT: "#E5DFCF", // m-border
+            strong: "#D2CBB7",  // m-border-strong
+            soft: "#EFE9DA",
           },
           fg: {
             1: "#0A0A0A",
-            2: "#2A2A28",
-            3: "#5A5A57",
-            4: "#8A8A86",
-            5: "#B8B8B3",
+            2: "#2E2B24",  // m-ink-2 — warm graphite
+            3: "#5A554A",  // m-ink-3
+            4: "#9C968A",  // m-ink-4
+            5: "#C2BCAD",  // m-ink-5
           },
         },
         // Legacy color names — REMAPPED to the Owner palette so any
@@ -64,15 +84,15 @@ const config: Config = {
         blueNew: "#7d6f5b",
         blackBg: "#24150f",
         secondaryBg: "#f2e2cf",
-        primary: "#1F62E8",          // Owner blue-500
-        secondary: "#E7E7E3",        // Owner border
+        primary: "#1B5C3A",          // Owner blue-500 — deep forest green
+        secondary: "#E5DFCF",        // Owner border — warm cream
         success: "#0E8345",          // Owner success-text
         warning: "#B45309",          // Owner warning-text
         error: "#C0382B",            // Owner danger-text
         inputColor: "#FFFFFF",       // Owner bg-input
         confirmation: "#0E8345",     // alias of success
         background: "#FFFFFF",       // Owner bg
-        sidebarBg: "#FAFAF7",        // Owner bg-sidebar (new alias)
+        sidebarBg: "#F4EFE3",        // Owner bg-sidebar — warm cream
         sidebar: {
           DEFAULT: "hsl(var(--sidebar-background))",
           foreground: "hsl(var(--sidebar-foreground))",
@@ -87,7 +107,7 @@ const config: Config = {
         input: "#FFFFFF",
         dropdown: "#FFFFFF",
         switch: "#E5E7EB",
-        toggle: "#D7D7D2",           // Owner border-strong
+        toggle: "#D2CBB7",           // Owner border-strong — warm cream
         modal: "#FFFFFF",
       },
       keyframes: {
@@ -154,7 +174,7 @@ const config: Config = {
             backgroundColor: colors.primary,
             color: colors.white,
             "&:hover": {
-              backgroundColor: "#3F7CF2", /* Owner blue-400 */
+              backgroundColor: "#2D7E54", /* Owner blue-400 — green lift */
             },
           },
           "&.btn-secondary": {
@@ -162,7 +182,7 @@ const config: Config = {
             color: "#0A0A0A", /* Owner fg-1 */
             border: `1px solid ${colors.secondary}`,
             "&:hover": {
-              backgroundColor: "#F7F7F4", /* Owner bg-subtle */
+              backgroundColor: "#EFE9DA", /* Owner bg-subtle — warm cream */
             },
           },
           "&.btn-warning": {
