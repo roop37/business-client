@@ -11,7 +11,15 @@ import HostOnboardingStore from "@/store/hostOnboarding";
 import { sdk } from "@/utils/graphqlClient";
 import { extractErrorMessage, sanitizeText } from "@/utils/utilFUncs";
 import { motion } from "framer-motion";
-import { ImagePlus, Sparkles, UploadCloud } from "lucide-react";
+import {
+  Building2,
+  Check,
+  ImagePlus,
+  Megaphone,
+  Sparkles,
+  UploadCloud,
+  type LucideIcon,
+} from "lucide-react";
 import Image from "next/image";
 import dynamic from "next/dynamic";
 import { useRouter } from "next/router";
@@ -124,6 +132,30 @@ const HostTypeSelection = () => {
     value,
     label: formatHoizrHostType(value),
   }));
+
+  // Side-by-side card descriptors for the Business Type picker.
+  // Order is intentional: Venue first (most common), Event Organizer second.
+  const hostTypeCards: {
+    value: HoizrHostType;
+    label: string;
+    description: string;
+    Icon: LucideIcon;
+  }[] = [
+    {
+      value: HoizrHostType.Venue,
+      label: "Venue",
+      description:
+        "Bar, club, restaurant, hotel, or any fixed venue running events on site.",
+      Icon: Building2,
+    },
+    {
+      value: HoizrHostType.EventOrg,
+      label: "Event Organizer",
+      description:
+        "Independent organizer running events across one or more partner venues.",
+      Icon: Megaphone,
+    },
+  ];
 
   const venueTypeOptions = Object.values(HoizrVenueType).map((value) => ({
     value,
@@ -252,8 +284,8 @@ const HostTypeSelection = () => {
         >
           <div className="min-h-0 flex-1 space-y-3.5 overflow-y-auto px-4 py-4 md:px-5">
           <div className="grid gap-3.5 md:grid-cols-2">
-            <div className={isVenue ? "" : "md:col-span-2"}>
-              <label className="mb-1.5 block text-left text-sm font-medium text-gray-700">
+            <div className="md:col-span-2">
+              <label className="mb-2 block text-left text-sm font-medium text-gray-700">
                 Business Type
               </label>
               <Controller
@@ -261,30 +293,83 @@ const HostTypeSelection = () => {
                 control={control}
                 rules={{ required: "Please select a host type" }}
                 render={({ field }) => (
-                  <Select
-                    {...field}
-                    options={hostTypeOptions}
-                  value={hostTypeOptions.find((option) => option.value === watchedHostType)}
-                    onChange={(option: any) => {
-                      const value = option?.value ?? "";
-                      setValue("hostType", value);
-                      setHostType(value);
-                    }}
-                    classNamePrefix="react-select"
-                    className="text-left text-sm"
-                    placeholder="Select business type"
-                  />
+                  <div
+                    role="radiogroup"
+                    aria-label="Business Type"
+                    className="grid grid-cols-1 gap-3 sm:grid-cols-2"
+                  >
+                    {hostTypeCards.map((card) => {
+                      const selected = field.value === card.value;
+                      return (
+                        <button
+                          type="button"
+                          key={card.value}
+                          role="radio"
+                          aria-checked={selected}
+                          onClick={() => {
+                            field.onChange(card.value);
+                            setHostType(card.value);
+                            if (card.value !== HoizrHostType.Venue) {
+                              setValue("venueType", "");
+                              setVenueType("");
+                            }
+                          }}
+                          className={`group flex items-start gap-3 rounded-xl border p-4 text-left transition focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--owner-blue-500)] focus-visible:ring-offset-2 ${
+                            selected
+                              ? "border-[var(--owner-blue-500)] bg-[var(--owner-blue-050)]"
+                              : "border-[var(--owner-border)] bg-[var(--owner-bg)] hover:border-[var(--owner-blue-400)] hover:bg-[var(--owner-bg-subtle)]"
+                          }`}
+                        >
+                          <span
+                            className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-lg transition ${
+                              selected
+                                ? "bg-[var(--owner-blue-500)] text-white"
+                                : "bg-[var(--owner-bg-subtle)] text-[var(--owner-fg-2)]"
+                            }`}
+                          >
+                            <card.Icon size={18} strokeWidth={2} />
+                          </span>
+                          <div className="min-w-0 flex-1">
+                            <div className="flex items-center justify-between gap-2">
+                              <p className="text-[15px] font-semibold text-[var(--owner-fg-1)]">
+                                {card.label}
+                              </p>
+                              <span
+                                className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-full border-2 transition ${
+                                  selected
+                                    ? "border-[var(--owner-blue-500)] bg-[var(--owner-blue-500)]"
+                                    : "border-[var(--owner-border-strong)] bg-transparent"
+                                }`}
+                                aria-hidden
+                              >
+                                {selected ? (
+                                  <Check
+                                    size={12}
+                                    strokeWidth={3}
+                                    className="text-white"
+                                  />
+                                ) : null}
+                              </span>
+                            </div>
+                            <p className="mt-1 text-[12.5px] leading-5 text-[var(--owner-fg-3)]">
+                              {card.description}
+                            </p>
+                          </div>
+                        </button>
+                      );
+                    })}
+                  </div>
                 )}
               />
               {errors.hostType && (
-                <p className="text-red-500 text-sm text-start">
+                <p className="mt-1.5 text-sm text-red-500 text-start">
                   {errors.hostType.message}
                 </p>
               )}
             </div>
 
             {isVenue && (
-              <div>
+              <div className="md:col-span-2">
                 <label className="mb-1.5 block text-left text-sm font-medium text-gray-700">
                   Venue Type
                 </label>
