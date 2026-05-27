@@ -230,6 +230,25 @@ const CampaignSetup = () => {
   };
 
   const handleSelectTemplate = (template: ITemplate) => {
+    // Switching to a different template after the user has already
+    // picked one will discard any edits they made in the email
+    // builder (step 2). Always confirm before doing that — the
+    // builder reloads from the new template's designJson, so the
+    // previous edits are unrecoverable.
+    if (
+      selectedTemplate &&
+      selectedTemplate.trim().length > 0 &&
+      selectedTemplate !== template.name
+    ) {
+      const ok =
+        typeof window !== "undefined"
+          ? window.confirm(
+              "Switching to this template will discard the edits you made in the email builder. Continue?"
+            )
+          : true;
+      if (!ok) return;
+    }
+
     const { name, template: templ } = template;
     const { content, designJson, html } = templ;
 
@@ -282,6 +301,43 @@ const CampaignSetup = () => {
         .replace(/{{eventFlyer}}/g, eventFlyerUrl)
         .replace(/{{eventUrl}}/g, eventLinkUrl)
         .replace(/{{eventTitle}}/g, selectedEventTitle || "");
+    }
+
+    // Inject the host's logo into the first image slot of the
+    // template when that slot is still the placeholder `src.url: ""`
+    // baked into defaultTemplates. The Unlayer designJson keeps the
+    // image at body.rows[0] → columns[0] → contents[0] for every
+    // template we ship, so this drops the host's brand mark at the
+    // top of the email without needing a {{hostLogo}} merge tag on
+    // each individual template.
+    try {
+      const parsedJson = JSON.parse(processedJson);
+      const firstRow = parsedJson?.body?.rows?.[0];
+      const firstColumn = firstRow?.columns?.[0];
+      const firstContent = firstColumn?.contents?.[0];
+      if (
+        firstContent &&
+        firstContent.type === "image" &&
+        hostLogo &&
+        (!firstContent.values?.src?.url ||
+          firstContent.values.src.url.trim() === "")
+      ) {
+        firstContent.values = {
+          ...(firstContent.values ?? {}),
+          src: {
+            ...(firstContent.values?.src ?? {}),
+            url: hostLogo,
+          },
+          altText:
+            firstContent.values?.altText && firstContent.values.altText.trim()
+              ? firstContent.values.altText
+              : selectedHost || "Host logo",
+        };
+        processedJson = JSON.stringify(parsedJson);
+      }
+    } catch {
+      // If the designJson can't be parsed for any reason, fall
+      // through with whatever the template + merge-tag pass produced.
     }
 
     // Call setTemplate with processed HTML
