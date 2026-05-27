@@ -1,5 +1,6 @@
 import CButton from "@/components/common/button/button";
 import { ButtonType } from "@/components/common/button/interface";
+import { RichTextEditor } from "@/components/common/RichTextEditor";
 import {
   HoizrHostType,
   HoizrVenueType,
@@ -501,17 +502,31 @@ const HostTypeSelection = () => {
           </div>
 
           <div>
-            <label className="mb-1.5 block text-left text-sm font-medium text-gray-700">
-              Description
-            </label>
-            <textarea
-              {...register("description", {
+            <Controller
+              name="description"
+              control={control}
+              rules={{
                 required: "Description is required",
-              })}
-              rows={2}
-              className="input input-primary"
-              placeholder={hostCopy.descriptionPlaceholder}
-              onChange={(event) => setDescription(event.target.value)}
+                validate: (value) => {
+                  // The editor reports HTML; require some plain-text content.
+                  const text = (value ?? "")
+                    .replace(/<[^>]+>/g, " ")
+                    .replace(/&nbsp;/gi, " ")
+                    .trim();
+                  return text.length > 0 || "Description is required";
+                },
+              }}
+              render={({ field }) => (
+                <RichTextEditor
+                  label="Description"
+                  value={field.value || ""}
+                  onChange={(html) => {
+                    field.onChange(html);
+                    setDescription(html);
+                  }}
+                  minHeight={96}
+                />
+              )}
             />
             {errors.description && (
               <p className="text-red-500 text-sm text-start">

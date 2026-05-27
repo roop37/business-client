@@ -1,4 +1,5 @@
 import ConfirmModal from "@/components/common/confirm-modal";
+import { RichTextEditor } from "@/components/common/RichTextEditor";
 import ToggleSettingRow from "@/components/modules/events/ToggleSettingRow";
 import { Calendar } from "@/components/ui/calendar";
 import {
@@ -44,7 +45,6 @@ const formatIndianRupees = (n: number): string => {
 };
 import {
   BadgeIndianRupeeIcon,
-  BoldIcon,
   CalendarDaysIcon,
   ChevronDownIcon,
   CheckCircle2Icon,
@@ -56,8 +56,6 @@ import {
   EyeOffIcon,
   ImageIcon,
   ImagePlusIcon,
-  ItalicIcon,
-  ListIcon,
   type LucideIcon,
   MapPinIcon,
   Music2Icon,
@@ -3409,40 +3407,57 @@ const EventJourney = ({
                       Promotional assets — all optional
                     </div>
                     <p className="mt-1 text-xs text-[var(--owner-fg-3)]">
-                      Drop a public URL (Cloudinary, Drive, S3) for the formats you have. A{" "}
-                      <strong>horizontal flyer</strong> is a strong plus — we use it on the event
-                      page hero and OG/share previews, which lifts click-through on social.
+                      Drop an image into any slot — Hoizr uploads it straight
+                      to Cloudinary under your event folder. A{" "}
+                      <strong>horizontal flyer</strong> is a strong plus — we
+                      use it on the event page hero and OG/share previews,
+                      which lifts click-through on social. Video uploads are
+                      coming soon.
                     </p>
                     <div className="mt-3 grid gap-4 md:grid-cols-2">
-                      <Input
+                      <ImageUrlInput
                         label="Horizontal flyer (16:9, optional)"
                         value={horizontalFlyer}
                         onChange={setHorizontalFlyer}
+                        uploadKind="event-extra"
+                        hostId={selectedHostId}
+                        eventId={eventId}
                       />
                       <Input
-                        label="Vertical video (optional)"
+                        label="Vertical video (coming soon)"
                         value={verticalVideo}
                         onChange={setVerticalVideo}
+                        disabled
                       />
                       <Input
-                        label="Horizontal video (optional)"
+                        label="Horizontal video (coming soon)"
                         value={horizontalVideo}
                         onChange={setHorizontalVideo}
+                        disabled
                       />
-                      <Input
+                      <ImageUrlInput
                         label="Promotional Instagram Post (optional)"
                         value={instagramPost}
                         onChange={setInstagramPost}
+                        uploadKind="event-instagram"
+                        hostId={selectedHostId}
+                        eventId={eventId}
                       />
-                      <Input
+                      <ImageUrlInput
                         label="Instagram Story (optional)"
                         value={instagramStory}
                         onChange={setInstagramStory}
+                        uploadKind="event-instagram"
+                        hostId={selectedHostId}
+                        eventId={eventId}
                       />
-                      <Input
+                      <ImageUrlInput
                         label="Venue Table Arrangement (optional)"
                         value={tableLayoutImage}
                         onChange={setTableLayoutImage}
+                        uploadKind="event-table-layout"
+                        hostId={selectedHostId}
+                        eventId={eventId}
                       />
                     </div>
                   </div>
@@ -3625,7 +3640,7 @@ const EventJourney = ({
                     />
                   )}
                   <div className="md:col-span-2">
-                    <Input
+                    <RichTextEditor
                       label="Ticket Description (optional)"
                       value={ticketDescription}
                       onChange={setTicketDescription}
@@ -3831,7 +3846,7 @@ const EventJourney = ({
                     }
                   />
                   <div className="md:col-span-2">
-                    <Textarea
+                    <RichTextEditor
                       label="Description (optional)"
                       value={extraDescription}
                       onChange={setExtraDescription}
@@ -5160,73 +5175,6 @@ const Select = ({
     </select>
   </label>
 );
-
-const RichTextEditor = ({
-  label,
-  value,
-  onChange,
-}: {
-  label: string;
-  value: string;
-  onChange: (value: string) => void;
-}) => {
-  const editorRef = useRef<HTMLDivElement | null>(null);
-
-  useEffect(() => {
-    if (editorRef.current && editorRef.current.innerHTML !== value) {
-      editorRef.current.innerHTML = value;
-    }
-  }, [value]);
-
-  const runCommand = (command: "bold" | "italic" | "insertUnorderedList") => {
-    editorRef.current?.focus();
-    document.execCommand(command);
-    onChange(editorRef.current?.innerHTML ?? "");
-  };
-
-  return (
-    <div className="block min-w-0 text-sm font-medium md:col-span-2">
-      <div className="mb-1 flex items-center justify-between gap-3">
-        <span>{label}</span>
-        <div className="flex items-center gap-1 rounded-md border border-[var(--owner-border)] bg-white p-1">
-          <button
-            type="button"
-            onClick={() => runCommand("bold")}
-            className="inline-flex h-7 w-7 items-center justify-center rounded text-[var(--owner-fg-2)] hover:bg-[var(--owner-bg-subtle)]"
-            title="Bold"
-          >
-            <BoldIcon size={14} />
-          </button>
-          <button
-            type="button"
-            onClick={() => runCommand("italic")}
-            className="inline-flex h-7 w-7 items-center justify-center rounded text-[var(--owner-fg-2)] hover:bg-[var(--owner-bg-subtle)]"
-            title="Italic"
-          >
-            <ItalicIcon size={14} />
-          </button>
-          <button
-            type="button"
-            onClick={() => runCommand("insertUnorderedList")}
-            className="inline-flex h-7 w-7 items-center justify-center rounded text-[var(--owner-fg-2)] hover:bg-[var(--owner-bg-subtle)]"
-            title="Bullet list"
-          >
-            <ListIcon size={14} />
-          </button>
-        </div>
-      </div>
-      <div
-        ref={editorRef}
-        role="textbox"
-        aria-multiline="true"
-        contentEditable
-        suppressContentEditableWarning
-        onInput={(event) => onChange(event.currentTarget.innerHTML)}
-        className="min-h-[132px] w-full rounded-lg border border-[var(--owner-border)] bg-white px-3 py-2 text-sm leading-6 outline-none transition focus:border-[var(--owner-blue-500)] focus:ring-2 focus:ring-[var(--owner-blue-050)] [&_ul]:ml-5 [&_ul]:list-disc"
-      />
-    </div>
-  );
-};
 
 const Textarea = ({
   label,
