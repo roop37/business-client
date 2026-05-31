@@ -51,6 +51,8 @@ export type AiBoostCard = {
   confidenceScore: number;
   commissionPct: number;
   extraAmount: number;
+  marketingCreditAmount?: number;
+  marketingCreditDiscountPct?: number;
   customerViewingMessage?: string;
   hoizrAdminSummary?: string;
   totalSavingsForHosts?: { value?: number };
@@ -105,6 +107,8 @@ fragment AiBoostFields on AiBoost {
   confidenceScore
   commissionPct
   extraAmount
+  marketingCreditAmount
+  marketingCreditDiscountPct
   customerViewingMessage
   hoizrAdminSummary
   totalSavingsForHosts { value }

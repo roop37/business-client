@@ -3,7 +3,6 @@
 import { motion } from "framer-motion";
 import { ArrowRight, Brain, FileSearch, Gauge, Radar, Sparkles } from "lucide-react";
 import Link from "next/link";
-import { WaitlistButton } from "../waitlist/WaitlistButton";
 
 const EASE = [0.2, 0.6, 0.2, 1] as const;
 
@@ -89,10 +88,10 @@ export const AiOfferSpotlight = () => {
             </ol>
 
             <div className="mt-10">
-              <WaitlistButton source="ai-offer-spotlight" className="hm-btn hm-btn-primary">
-                Join the waitlist
+              <Link href="/signup" className="hm-btn hm-btn-primary">
+                Get started
                 <ArrowRight size={16} />
-              </WaitlistButton>
+              </Link>
             </div>
 
             {/* Roadmap teaser — clearly labelled as upcoming, not live. */}

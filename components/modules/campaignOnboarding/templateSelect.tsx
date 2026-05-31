@@ -1,11 +1,58 @@
 import useCampaignStore from "@/store/customCampaignStore";
 import useGlobalStore from "@/store/global";
 import useHostsStore from "@/store/host";
+import ReusableModal from "@/components/common/modal/modal";
 import { sdk } from "@/utils/graphqlClient";
 import { extractErrorMessage } from "@/utils/utilFUncs";
-import { CircleCheckIcon } from "lucide-react";
+import {
+  Calendar,
+  CircleCheckIcon,
+  Clock,
+  FileEdit,
+  Mail,
+  Music,
+  RefreshCw,
+  Sparkles,
+  Tag,
+  Ticket,
+  Trophy,
+  Users,
+  type LucideIcon,
+} from "lucide-react";
 import React, { useEffect, useState } from "react";
 import { defaultTemplates } from "./defaultTemplates/defaultTemplate";
+
+type TemplateVisual = {
+  Icon: LucideIcon;
+  // Solid hex stops for a linear-gradient header. Each pair is picked
+  // to match the template's mood — pink/magenta for Bollywood, urgent
+  // red for last-call, etc. — so the card grid reads varied without
+  // pulling external imagery.
+  from: string;
+  to: string;
+};
+
+const FALLBACK_VISUAL: TemplateVisual = {
+  Icon: Mail,
+  from: "#1B5C3A",
+  to: "#0F8842",
+};
+
+const TEMPLATE_VISUALS: Record<string, TemplateVisual> = {
+  "clean slate": { Icon: FileEdit, from: "#5A554A", to: "#2E2B24" },
+  "reward top spender": { Icon: Trophy, from: "#B89236", to: "#E2B266" },
+  "offer promo code": { Icon: Tag, from: "#0F8842", to: "#16A150" },
+  "last-call ticket drop": { Icon: Clock, from: "#C0382B", to: "#EA5949" },
+  "weekend ticket rush": { Icon: Ticket, from: "#5B2EA8", to: "#8A4FE0" },
+  "bollywood night drop": { Icon: Music, from: "#9A2A6F", to: "#E08AB2" },
+  "campus crew guestlist": { Icon: Users, from: "#0E7A3D", to: "#16A150" },
+  "event promotion": { Icon: Sparkles, from: "#151412", to: "#3F3A2E" },
+  "engage active customers": { Icon: RefreshCw, from: "#1F5C8A", to: "#3F8AD0" },
+  "send event invitation": { Icon: Calendar, from: "#0F8842", to: "#0B6B33" },
+};
+
+const visualFor = (name: string): TemplateVisual =>
+  TEMPLATE_VISUALS[name.toLowerCase()] ?? FALLBACK_VISUAL;
 
 type EventOption = {
   _id: string;
@@ -34,26 +81,46 @@ const TemplateCard = ({
   handleSelect: (template: ITemplate) => void;
   selectedTemplateName: string;
 }) => {
+  const visual = visualFor(template.name);
+  const selected = selectedTemplateName === template.name;
   return (
     <button
       key={template.name}
+      type="button"
       onClick={() => handleSelect(template)}
-      className={`p-4 border border-gray-300 shadow-sm col-span-1 h-22 rounded-xl text-left transition-all duration-300 hover:bg-black/5 relative ${
-        selectedTemplateName === template.name ? "!bg-black/5 text-black" : ""
+      className={`group relative flex flex-col overflow-hidden rounded-xl border bg-white text-left shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md ${
+        selected
+          ? "border-owner-blue-500 ring-2 ring-owner-blue-200"
+          : "border-gray-200"
       }`}
     >
       <div
-        className={`absolute top-2 right-3 rounded-full w-5 h-5 transition-all ${
-          selectedTemplateName === template.name ? "opacity-100" : "opacity-0"
-        }`}
+        aria-hidden
+        className="relative flex h-32 items-end justify-between overflow-hidden px-4 py-3 text-white"
+        style={{
+          background: `linear-gradient(135deg, ${visual.from} 0%, ${visual.to} 100%)`,
+        }}
       >
-        <CircleCheckIcon className="text-primary" />
+        <span className="rounded-full bg-white/15 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.12em] backdrop-blur-sm">
+          {template.name === "Clean Slate" ? "Start blank" : "Template"}
+        </span>
+        <span className="flex h-12 w-12 items-center justify-center rounded-full bg-white/15 backdrop-blur-sm">
+          <visual.Icon size={22} strokeWidth={1.8} />
+        </span>
+        {selected ? (
+          <span className="absolute right-3 top-3 flex h-6 w-6 items-center justify-center rounded-full bg-white text-owner-blue-500 shadow-md">
+            <CircleCheckIcon size={16} />
+          </span>
+        ) : null}
       </div>
-
-      <h3 className="font-medium mb-2 line-clamp-1">{template.name}</h3>
-      <p className="text-xs text-gray-400 line-clamp-2">
-        {template.description}
-      </p>
+      <div className="flex flex-col gap-1 px-4 py-3">
+        <h3 className="text-[14.5px] font-semibold text-owner-fg-1">
+          {template.name}
+        </h3>
+        <p className="text-xs leading-5 text-owner-fg-3">
+          {template.description}
+        </p>
+      </div>
     </button>
   );
 };
@@ -70,6 +137,7 @@ const CampaignSetup = () => {
     hostBackgroundColor,
     selectedEventId,
     selectedEventFlyer,
+    selectedEventSlug,
     selectedEventTitle,
     setSelectedEvent,
     clearSelectedEvent,
@@ -82,6 +150,8 @@ const CampaignSetup = () => {
 
   const [eventOptions, setEventOptions] = useState<EventOption[]>([]);
   const [eventsLoading, setEventsLoading] = useState(false);
+  const [pendingTemplateSwitch, setPendingTemplateSwitch] =
+    useState<ITemplate | null>(null);
   const templatePreviewFallbackImage =
     "https://images.unsplash.com/photo-1492684223066-81342ee5ff30?auto=format&fit=crop&w=1200&q=80";
 
@@ -163,7 +233,7 @@ const CampaignSetup = () => {
     setCampaignDetails({ description: e.target.value });
   };
 
-  const handleSelectTemplate = (template: ITemplate) => {
+  const applyTemplate = (template: ITemplate) => {
     const { name, template: templ } = template;
     const { content, designJson, html } = templ;
 
@@ -176,8 +246,9 @@ const CampaignSetup = () => {
     // attached an event so the preview never renders a broken image.
     const eventFlyerUrl =
       selectedEventFlyer || hostLogo || templatePreviewFallbackImage;
-    const eventLinkUrl = selectedEventId
-      ? `${hostOnlineOrderingLink || ""}/events/${selectedEventId}`
+    const eventPathId = selectedEventSlug || selectedEventId;
+    const eventLinkUrl = eventPathId
+      ? `${hostOnlineOrderingLink || "https://hoizr.com"}/events/${eventPathId}`
       : hostOnlineOrderingLink || "";
 
     // Check if templateHtml is a string and not empty
@@ -218,12 +289,70 @@ const CampaignSetup = () => {
         .replace(/{{eventTitle}}/g, selectedEventTitle || "");
     }
 
+    // Inject the host's logo into the first image slot of the
+    // template when that slot is still the placeholder `src.url: ""`
+    // baked into defaultTemplates. The Unlayer designJson keeps the
+    // image at body.rows[0] → columns[0] → contents[0] for every
+    // template we ship, so this drops the host's brand mark at the
+    // top of the email without needing a {{hostLogo}} merge tag on
+    // each individual template.
+    try {
+      const parsedJson = JSON.parse(processedJson);
+      const firstRow = parsedJson?.body?.rows?.[0];
+      const firstColumn = firstRow?.columns?.[0];
+      const firstContent = firstColumn?.contents?.[0];
+      if (
+        firstContent &&
+        firstContent.type === "image" &&
+        hostLogo &&
+        (!firstContent.values?.src?.url ||
+          firstContent.values.src.url.trim() === "")
+      ) {
+        firstContent.values = {
+          ...(firstContent.values ?? {}),
+          src: {
+            ...(firstContent.values?.src ?? {}),
+            url: hostLogo,
+          },
+          altText:
+            firstContent.values?.altText && firstContent.values.altText.trim()
+              ? firstContent.values.altText
+              : selectedHost || "Host logo",
+        };
+        processedJson = JSON.stringify(parsedJson);
+      }
+    } catch {
+      // If the designJson can't be parsed for any reason, fall
+      // through with whatever the template + merge-tag pass produced.
+    }
+
     // Call setTemplate with processed HTML
     setTemplate(name, JSON.parse(processedJson), processedHtml, content);
   };
 
+  const handleSelectTemplate = (template: ITemplate) => {
+    const hasSavedCampaign =
+      typeof window !== "undefined" &&
+      new URLSearchParams(window.location.search).has("editId");
+    if (
+      hasSavedCampaign &&
+      selectedTemplate &&
+      selectedTemplate.trim().length > 0 &&
+      selectedTemplate !== template.name
+    ) {
+      setPendingTemplateSwitch(template);
+      return;
+    }
+
+    applyTemplate(template);
+  };
+
   return (
-    <div className="w-full max-w-4xl mx-auto space-y-6 h-full overflow-y-hidden">
+    // Let the parent column (campaign onboarding's overflow-y-auto
+    // children pane) handle scroll. The earlier `h-full
+    // overflow-y-hidden` + an inner `max-h + overflow-y-scroll` was a
+    // double-scroll trap that hid templates past the visible band.
+    <div className="w-full max-w-4xl mx-auto space-y-6 pb-6">
       <div>
         <h1 className="text-2xl font-medium">Set Up Your Campaign</h1>
         <p className="text-gray-600 mb-4 pt-1 text-sm">
@@ -312,7 +441,7 @@ const CampaignSetup = () => {
             }
           </p>
 
-          <div className="grid grid-cols-1 gap-4 sm:max-h-[calc(100vh-28rem)] xl:max-h-[calc(100vh-27rem)] overflow-y-scroll pr-2">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3">
             {defaultTemplates.map((template) => (
               <TemplateCard
                 key={template.name}
@@ -324,6 +453,37 @@ const CampaignSetup = () => {
           </div>
         </div>
       </div>
+      <ReusableModal
+        isOpen={Boolean(pendingTemplateSwitch)}
+        onClose={() => setPendingTemplateSwitch(null)}
+        title="Switch template?"
+      >
+        <div className="mt-2 space-y-4">
+          <p className="text-sm text-gray-600">
+            Switching templates will discard edits already made in the email
+            builder.
+          </p>
+          <div className="flex justify-end gap-2">
+            <button
+              type="button"
+              onClick={() => setPendingTemplateSwitch(null)}
+              className="rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-semibold text-gray-700"
+            >
+              Cancel
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                if (pendingTemplateSwitch) applyTemplate(pendingTemplateSwitch);
+                setPendingTemplateSwitch(null);
+              }}
+              className="rounded-lg bg-[var(--owner-blue-500,#2947c2)] px-4 py-2 text-sm font-semibold text-white"
+            >
+              Switch template
+            </button>
+          </div>
+        </div>
+      </ReusableModal>
     </div>
   );
 };

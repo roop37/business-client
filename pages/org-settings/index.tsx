@@ -244,7 +244,7 @@ const HostSettings: React.FC & {
     if (!form._id) {
       setToastData({
         type: "error",
-        message: "Host context is still loading, retry in a moment.",
+        message: "Organizer context is still loading, retry in a moment.",
       });
       return;
     }
@@ -269,7 +269,7 @@ const HostSettings: React.FC & {
     if (!form.name.trim() || !form.email.trim() || !form.phone.trim()) {
       setToastData({
         type: "error",
-        message: "Host name, email, and phone are required.",
+        message: "Organizer name, email, and phone are required.",
       });
       return;
     }
@@ -307,7 +307,7 @@ const HostSettings: React.FC & {
         },
       });
 
-      setToastData({ type: "success", message: "Host settings updated." });
+      setToastData({ type: "success", message: "Organizer settings updated." });
       await loadHost();
     } catch (error) {
       setToastData({ type: "error", message: extractErrorMessage(error) });
@@ -507,7 +507,7 @@ const HostSettings: React.FC & {
           {activeTab === "location" ? (
             <SettingsPanel
               title="Venue & location"
-              subtitle="Where fans find this host, and which space powers ticketing."
+              subtitle="Where fans find this organizer or venue, and which space powers ticketing."
               footer={saveFooter}
             >
               <div className="grid gap-4 md:grid-cols-2">

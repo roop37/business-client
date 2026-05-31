@@ -32,13 +32,15 @@ const PayoutModals = () => {
       <ReusableModal
         isOpen={payoutPromptModal}
         onClose={() => showPayoutPromptModal(false)}
-        title="Add payout details"
+        title="Add payout details to receive earnings"
         width="md"
       >
         <div className="space-y-4 text-[#171614]">
           <p className="text-sm leading-6 text-[#6f6255]">
-            Add payout details to create paid events. You can submit the payout
-            profile now and continue once it is saved.
+            Your event can go live without payout details — but earnings stay
+            on hold until you add and admin verifies a primary payout account.
+            Add it now to avoid any delay in receiving your funds after the
+            event ends.
           </p>
           <div className="flex justify-end gap-2">
             <CButton

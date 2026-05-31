@@ -10,18 +10,39 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
 
 :root {
-  /* Brand / primary */
-  --owner-blue-500: #1F62E8;
-  --owner-blue-600: #1853CC;
-  --owner-blue-400: #3F7CF2;
-  --owner-blue-200: #B7CFFB;
-  --owner-blue-100: #DCE7FD;
-  --owner-blue-050: #EFF4FE;
+  /* Brand / primary — deep forest green is the Hoizr primary action
+     colour. It pairs against the marketing site's neon chartreuse
+     accent and reads as "Hoizr brand" rather than the generic SaaS
+     blue this file used to ship.
 
-  --owner-cyan-500: #3FC0CC;
-  --owner-cyan-300: #8BD9E0;
+     The original `--owner-blue-*` names are preserved so every CSS
+     class and inline lookup that already reads them resolves to the
+     new green automatically. Treat anything that still talks about
+     "blue" as a historical alias — the swatch is forest green. */
+  --owner-blue-500: #0F8842;   /* vibrant deep green — primary */
+  --owner-blue-600: #0B6B33;   /* deeper hover (still vibrant) */
+  --owner-blue-400: #16A150;   /* lifted hover-on-primary */
+  --owner-blue-200: #A0D8B5;   /* mint border for focus rings */
+  --owner-blue-100: #D4EFDD;   /* mint fill */
+  --owner-blue-050: #E9F7EF;   /* very pale mint subtle fill */
 
-  --owner-money: #1F62E8;
+  --owner-cyan-500: #0F8842;   /* alias — kept for legacy consumers */
+  --owner-cyan-300: #5BB37A;
+
+  --owner-money: #0F8842;      /* currency reads in primary green */
+
+  /* Secondary — graphite black. Use for headings, body emphasis,
+     and the secondary tier of CTAs (e.g. EventJourney's current-
+     step indicator, Exit / Save draft pills). Plays against the
+     primary green without competing for the eye. */
+  --owner-secondary-500: #151412;
+  --owner-secondary-600: #0C0C0B;
+  --owner-secondary-400: #2B2925;
+
+  /* Accent — neon chartreuse from the marketing site, available
+     for highlight surfaces (active pills, AI badges, focus pops). */
+  --owner-accent-acid: #D6FF3F;
+  --owner-accent-acid-deep: #B8E02F;
 
   /* Semantic */
   --owner-success-text: #0E8345;
@@ -34,27 +55,27 @@
   --owner-danger-text: #C0382B;
   --owner-danger-bg: #FDE2DE;
 
-  --owner-info-text: #1F62E8;
-  --owner-info-bg: #EFF4FE;
+  --owner-info-text: #0F8842;  /* vibrant deep green — replaces blue */
+  --owner-info-bg: #E9F7EF;
 
   --owner-neutral-pill-bg: #F1F1EF;
   --owner-neutral-pill-text: #6B6B6B;
 
-  /* Neutrals (warm-tinted) */
-  --owner-bg: #FFFFFF;
-  --owner-bg-sidebar: #FAFAF7;
-  --owner-bg-subtle: #F7F7F4;
+  /* Neutrals — bridged to the warm-cream marketing palette */
+  --owner-bg: #FFFFFF;             /* cards stay white for contrast */
+  --owner-bg-sidebar: #F4EFE3;     /* m-canvas — warm cream shell */
+  --owner-bg-subtle: #EFE9DA;      /* m-canvas-2 */
   --owner-bg-input: #FFFFFF;
 
-  --owner-border: #E7E7E3;
-  --owner-border-strong: #D7D7D2;
-  --owner-border-soft: #EFEFEB;
+  --owner-border: #E5DFCF;         /* m-border */
+  --owner-border-strong: #D2CBB7;  /* m-border-strong */
+  --owner-border-soft: #EFE9DA;
 
   --owner-fg-1: #0A0A0A;
-  --owner-fg-2: #2A2A28;
-  --owner-fg-3: #5A5A57;
-  --owner-fg-4: #8A8A86;
-  --owner-fg-5: #B8B8B3;
+  --owner-fg-2: #2E2B24;           /* m-ink-2 — warm graphite */
+  --owner-fg-3: #5A554A;           /* m-ink-3 */
+  --owner-fg-4: #9C968A;           /* m-ink-4 */
+  --owner-fg-5: #C2BCAD;           /* m-ink-5 */
 
   /* Radii */
   --owner-radius-sm: 8px;
@@ -499,12 +520,12 @@
    neutral tone instead of pure black.
    ───────────────────────────────────────────────────────────── */
 :root {
-  --sidebar-background: 60 22% 96%;        /* near-cream, owner-bg-sidebar */
+  --sidebar-background: 40 30% 92%;        /* warm cream, owner-bg-sidebar (#F4EFE3) */
   --sidebar-foreground: 0 0% 4%;           /* owner-fg-1 */
-  --sidebar-primary: 220 84% 51%;          /* owner-blue-500 */
+  --sidebar-primary: 142 80% 30%;          /* vibrant deep green, owner-blue-500 (#0F8842) */
   --sidebar-primary-foreground: 0 0% 100%;
-  --sidebar-accent: 220 90% 95%;           /* owner-blue-050 */
+  --sidebar-accent: 142 47% 94%;           /* pale mint, owner-blue-050 (#E9F7EF) */
   --sidebar-accent-foreground: 0 0% 4%;
-  --sidebar-border: 40 15% 88%;            /* soft warm divider — owner-border-soft */
-  --sidebar-ring: 220 84% 51%;
+  --sidebar-border: 40 28% 85%;            /* warm divider, owner-border (#E5DFCF) */
+  --sidebar-ring: 142 80% 30%;
 }

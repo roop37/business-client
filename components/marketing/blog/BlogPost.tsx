@@ -5,7 +5,6 @@ import { ArrowLeft, ArrowUpRight, Linkedin } from "lucide-react";
 import Link from "next/link";
 import type { MouseEvent } from "react";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { WaitlistButton } from "../waitlist/WaitlistButton";
 import { getRelatedBlogs, type Blog } from "./blog-data";
 
 const EASE = [0.2, 0.6, 0.2, 1] as const;
@@ -345,13 +344,13 @@ export const BlogPost = ({ blog }: { blog: Blog }) => {
                   Owned fan CRM, exportable
                 </li>
               </ul>
-              <WaitlistButton
-                source="blog-post-sidebar"
+              <Link
+                href="/signup"
                 className="mt-5 inline-flex w-full items-center justify-center gap-1.5 rounded-full bg-[var(--m-forest-700)] px-4 py-2.5 text-[13.5px] font-semibold text-white transition hover:bg-[var(--m-forest-800)]"
               >
-                Join the waitlist
+                Get started
                 <ArrowUpRight size={14} />
-              </WaitlistButton>
+              </Link>
             </div>
           </div>
         </aside>

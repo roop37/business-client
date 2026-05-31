@@ -3,7 +3,7 @@
 import AuthLogo from "@/components/common/auth/AuthLogo";
 import { sdk } from "@/utils/graphqlClient";
 import { extractErrorMessage } from "@/utils/utilFUncs";
-import { ArrowRight, Store } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 import { FaSpinner } from "react-icons/fa";
@@ -58,70 +58,89 @@ export const SelectHostClient = () => {
     fetchHosts();
   }, [handleSelect]);
 
+  const initial = (name?: string | null) =>
+    (name?.trim()?.[0] || "?").toUpperCase();
+
+  const isActive = (status?: string | null) =>
+    (status || "").toLowerCase() === "active";
+
   return (
-    <main className="min-h-screen bg-[#f8efe4] px-6 py-8 text-[#171614]">
-      <div className="mx-auto flex min-h-[calc(100vh-4rem)] w-full max-w-[720px] flex-col justify-center">
-        <AuthLogo width={156} />
-        <div className="mt-10">
-          <h1 className="text-2xl font-semibold">Select a business</h1>
-          <p className="mt-2 text-sm text-[#6f675f]">
+    <main className="min-h-screen bg-[#f8efe4] px-6 py-10 text-[#171614]">
+      <div className="mx-auto flex min-h-[calc(100vh-5rem)] w-full max-w-[480px] flex-col justify-center">
+        <AuthLogo width={88} className="opacity-90" />
+
+        <div className="mt-12">
+          <h1 className="text-[22px] font-medium leading-tight tracking-tight">
+            Select a business
+          </h1>
+          <p className="mt-1.5 text-[13px] text-[#8a7f74]">
             Choose the business you want to manage in this session.
           </p>
         </div>
 
-        <section className="mt-8 overflow-hidden rounded-lg border border-[#e2d4c3] bg-white">
+        <section className="mt-8 flex flex-col gap-1">
           {loading ? (
-            <div className="flex h-48 items-center justify-center">
-              <FaSpinner className="animate-spin text-primary" size={32} />
+            <div className="flex h-32 items-center justify-center">
+              <FaSpinner className="animate-spin text-[#8a7f74]" size={20} />
             </div>
           ) : hosts.length ? (
-            hosts.map((host) => (
-              <button
-                key={host._id}
-                type="button"
-                onClick={() => handleSelect(host._id)}
-                className="flex w-full items-center justify-between border-b border-[#eee3d6] px-5 py-4 text-left last:border-b-0 hover:bg-[#fbf5ee]"
-              >
-                <span className="flex min-w-0 items-center gap-3">
-                  {host.logo ? (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img
-                      src={host.logo}
-                      alt=""
-                      className="h-10 w-10 rounded-md object-cover"
-                    />
-                  ) : (
-                    <span className="flex h-10 w-10 items-center justify-center rounded-md bg-[#f1e5d6] text-[#6f675f]">
-                      <Store size={20} />
-                    </span>
-                  )}
-                  <span className="min-w-0">
-                    <span className="block truncate text-sm font-semibold">
-                      {host.name || "Untitled business"}
-                    </span>
-                    <span className="block text-xs text-[#7a7066]">
-                      {host.status || "Business account"}
+            hosts.map((host) => {
+              const active = isActive(host.status);
+              const selecting = selectingId === host._id;
+              const logo = host.logo?.trim();
+              return (
+                <button
+                  key={host._id}
+                  type="button"
+                  onClick={() => handleSelect(host._id)}
+                  disabled={Boolean(selectingId)}
+                  className="group flex w-full items-center justify-between rounded-md px-3 py-3 text-left transition hover:bg-[#efe3d2] disabled:cursor-not-allowed disabled:opacity-60"
+                >
+                  <span className="flex min-w-0 items-center gap-3">
+                    {logo ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img
+                        src={logo}
+                        alt={host.name ? `${host.name} logo` : "Business logo"}
+                        className="h-9 w-9 shrink-0 rounded-md bg-[#efe3d2] object-cover"
+                      />
+                    ) : (
+                      <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#171614] text-[12px] font-medium text-[#f8efe4]">
+                        {initial(host.name)}
+                      </span>
+                    )}
+                    <span className="flex min-w-0 items-center gap-2">
+                      <span className="truncate text-[14px] font-medium text-[#171614]">
+                        {host.name || "Untitled business"}
+                      </span>
+                      {active ? (
+                        <span
+                          aria-label="Active"
+                          className="h-1.5 w-1.5 shrink-0 rounded-full bg-[#1f9d55]"
+                        />
+                      ) : null}
                     </span>
                   </span>
-                </span>
-                {selectingId === host._id ? (
-                  <FaSpinner className="animate-spin text-primary" />
-                ) : (
-                  <ArrowRight size={18} className="text-[#7a7066]" />
-                )}
-              </button>
-            ))
+                  {selecting ? (
+                    <FaSpinner className="animate-spin text-[#8a7f74]" size={14} />
+                  ) : (
+                    <ArrowRight
+                      size={16}
+                      className="text-[#bcae9c] transition group-hover:translate-x-0.5 group-hover:text-[#171614]"
+                    />
+                  )}
+                </button>
+              );
+            })
           ) : (
-            <div className="px-5 py-10 text-sm text-[#7a7066]">
+            <div className="rounded-md px-3 py-8 text-center text-[13px] text-[#8a7f74]">
               No business accounts are available for this user.
             </div>
           )}
         </section>
 
         {error ? (
-          <p className="mt-4 rounded-md border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
-            {error}
-          </p>
+          <p className="mt-6 text-[13px] text-[#b3261e]">{error}</p>
         ) : null}
       </div>
     </main>

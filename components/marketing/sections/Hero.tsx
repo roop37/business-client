@@ -13,7 +13,6 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { BlurImage } from "../visuals/BlurImage";
-import { useWaitlist } from "../waitlist/WaitlistContext";
 const EASE = [0.2, 0.6, 0.2, 1] as const;
 const HERO_VERTICALS = ["comedy", "clubbing", "dining", "festivals", "concerts"];
 
@@ -40,7 +39,6 @@ const HERO_BADGES: { icon: LucideIcon; label: string }[] = [
  *   - /images/playbooks/Event-management-dashboard-overview.png (1586×992)
  */
 export const Hero = () => {
-  const waitlist = useWaitlist();
   return (
     <section className="relative overflow-hidden">
       {/* Hero background intentionally empty — the marketing canvas
@@ -110,14 +108,10 @@ export const Hero = () => {
           transition={{ duration: 0.7, ease: EASE, delay: 0.45 }}
           className="mt-9 flex flex-wrap items-center justify-center gap-3"
         >
-          <button
-            type="button"
-            onClick={() => waitlist.open("hero")}
-            className="hm-btn hm-btn-primary"
-          >
-            Join the waitlist
+          <Link href="/signup" className="hm-btn hm-btn-primary">
+            Get started
             <ArrowRight size={16} />
-          </button>
+          </Link>
           <Link href="/how-it-works" className="hm-btn hm-btn-ghost border border-[var(--m-border)]">
             See how it works
           </Link>
