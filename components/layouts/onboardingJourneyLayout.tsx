@@ -6,6 +6,7 @@ import { AnimatePresence } from "framer-motion";
 import {
   ClipboardList,
   DoorOpenIcon,
+  LayoutDashboardIcon,
   MessageCircle,
   PinIcon,
   SparklesIcon,
@@ -38,14 +39,14 @@ type OnboardingStep = {
 const steps: OnboardingStep[] = [
   {
     slug: "host-type",
-    title: "Host details",
-    shortLabel: "Host details",
+    title: "Organizer details",
+    shortLabel: "Organizer details",
     route: "/onboarding-host/host-type",
     Icon: UserRound,
     helper: {
       eyebrow: "Step 1 of 3",
-      headline: "Tell Hoizr who is hosting.",
-      body: "Pick a host type, set the public name, logo, and contact line so customers and Hoizr support can reach the right team.",
+      headline: "Tell Hoizr who is organizing.",
+      body: "Pick an organizer or venue type, set the public name, logo, and contact line so customers and Hoizr support can reach the right team.",
       tips: [
         "The name and logo will show on every event listing.",
         "Use a contact phone the day-of-event team can answer.",
@@ -65,7 +66,7 @@ const steps: OnboardingStep[] = [
       body: "Hoizr uses the location to surface events to nearby fans, calculate GST jurisdiction, and pre-fill venue details on new events.",
       tips: [
         "Search the place once — Hoizr prefills city and pincode.",
-        "Service-area hosts can pick a representative address.",
+        "Service-area organizers can pick a representative address.",
         "Coordinates stay private and are only used for discovery.",
       ],
     },
@@ -79,11 +80,11 @@ const steps: OnboardingStep[] = [
     helper: {
       eyebrow: "Step 3 of 3",
       headline: "Last step before launch.",
-      body: "Add registration and GST details so Hoizr can run settlements, generate compliant invoices, and unlock the host dashboard.",
+      body: "Add registration and GST details so Hoizr can run settlements, generate compliant invoices, and unlock the organizer dashboard.",
       tips: [
         "GST is optional today — required only when payouts kick in.",
         "Website is optional but boosts trust on listings.",
-        "All details can be updated later from Host Settings.",
+        "All details can be updated later from Organizer Settings.",
       ],
     },
   },
@@ -96,6 +97,7 @@ const DEFAULT_HOIZR_WHATSAPP = "8369572945";
 const OnboardingJourneyLayout = ({ children, includeTimezones }: Props) => {
   const router = useRouter();
   const activeSlug = router.query.onBoardingRoute?.toString() ?? "";
+  const isAddingNewOrganizer = router.query.create?.toString() === "1";
   const whatsappNumber =
     process.env.NEXT_PUBLIC_HOIZR_WHATSAPP || DEFAULT_HOIZR_WHATSAPP;
   const whatsappHref = `https://wa.me/${whatsappNumber.replace(/[^0-9]/g, "")}`;
@@ -174,7 +176,7 @@ const OnboardingJourneyLayout = ({ children, includeTimezones }: Props) => {
       <header className="flex min-h-[64px] shrink-0 items-center justify-between border-b border-[var(--owner-border)] bg-[var(--owner-bg-sidebar)] px-4 md:px-6">
         <div className="min-w-0">
           <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[var(--owner-fg-4)]">
-            Host onboarding
+            Organizer onboarding
           </p>
           <h1 className="truncate text-lg font-semibold tracking-tight">
             {activeStep?.title ?? "Welcome to Hoizr"}
@@ -184,6 +186,16 @@ const OnboardingJourneyLayout = ({ children, includeTimezones }: Props) => {
           <span className="hidden rounded-md border border-[var(--owner-border)] bg-[var(--owner-bg)] px-3 py-1.5 text-xs font-semibold sm:inline-flex">
             Step {activeIndex + 1} / {steps.length}
           </span>
+          {isAddingNewOrganizer ? (
+            <button
+              type="button"
+              onClick={() => router.push("/dashboard")}
+              className="inline-flex items-center gap-2 rounded-lg border border-[var(--owner-border-strong)] bg-[var(--owner-bg)] px-3 py-2 text-sm font-semibold text-[var(--owner-fg-1)]"
+            >
+              <LayoutDashboardIcon size={16} />
+              Leave
+            </button>
+          ) : null}
           <button
             type="button"
             onClick={handleLogout}

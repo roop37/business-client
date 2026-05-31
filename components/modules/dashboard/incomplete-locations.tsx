@@ -83,10 +83,10 @@ const IncompleteLocations = ({ restaurants }: IIncompleteLocationsProps) => {
           <AccordionTrigger className="px-4 hover:no-underline">
             <div className="flex flex-col justify-start items-start w-full">
               <h3 className="font-medium text-lg">
-                {`Host onboarding pending (${pendingRestaurants.length})`}
+                {`Organizer onboarding pending (${pendingRestaurants.length})`}
               </h3>
               <p className="text-xs font-normal mt-1 text-blackBg/60">
-                Click to view pending hosts and continue the onboarding process
+                Click to view pending organizers and continue the onboarding process
               </p>
             </div>
           </AccordionTrigger>
@@ -112,7 +112,7 @@ const IncompleteLocations = ({ restaurants }: IIncompleteLocationsProps) => {
                         {restaurant.name}
                       </h4>
                       <p className="font-light text-xs text-blackBg/60">
-                        Host details are incomplete
+                        Organizer details are incomplete
                       </p>
                     </div>
                   </div>
@@ -148,7 +148,7 @@ const IncompleteLocations = ({ restaurants }: IIncompleteLocationsProps) => {
           setConfirmationModalOpen(false);
         }}
         title="Are you sure?"
-        comments="By clicking yes the selected host will be discarded and you may not be able to recover the data."
+        comments="By clicking yes the selected organizer will be discarded and you may not be able to recover the data."
       >
         <div className="flex justify-end space-x-4">
           <CButton

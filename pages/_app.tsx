@@ -20,20 +20,20 @@ import { ReactNode, useEffect } from "react";
 import "../styles/globals.css";
 
 const seo = {
-  title: "Hoizr - Event Operations for Hosts and Venues",
+  title: "Hoizr - Event Operations for Organizers and Venues",
   description:
-    "Hoizr helps hosts, venues, and event teams manage onboarding, operations, payments, and growth.",
+    "Hoizr helps organizers, venues, and event teams manage onboarding, operations, payments, and growth.",
   openGraph: {
     type: "website",
     locale: "en_US",
     url: "https://business.hoizr.com",
-    site_name: "Hoizr - Event Operations for Hosts and Venues",
+    site_name: "Hoizr - Event Operations for Organizers and Venues",
     images: [
       {
         url: "https://business.hoizr.com/opengraph-image.webp",
         width: 1200,
         height: 630,
-        alt: "Hoizr - Event Operations for Hosts and Venues",
+        alt: "Hoizr - Event Operations for Organizers and Venues",
       },
     ],
     canonical: "./",

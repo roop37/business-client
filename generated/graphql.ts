@@ -594,6 +594,8 @@ export type AiBoost = {
   howMuchDifferentFromBasicOffer?: Maybe<AiBoostDelta>;
   howMuchDifferentFromCompetitors?: Maybe<AiBoostDelta>;
   label: Scalars['String']['output'];
+  marketingCreditAmount?: Maybe<Scalars['Float']['output']>;
+  marketingCreditDiscountPct?: Maybe<Scalars['Float']['output']>;
   offerCode: Scalars['String']['output'];
   shortReason?: Maybe<Scalars['String']['output']>;
   totalSavingsForHosts?: Maybe<AiBoostSavings>;
@@ -899,6 +901,10 @@ export type Config = {
 export enum ConfigTypeEnum {
   /** Comma-separated email addresses that receive internal payout / reconciliation alerts. */
   AdminAlertEmails = 'adminAlertEmails',
+  /** Sell-through % of paid-ticket capacity required for an AI-Boost upfront fee to be charged on EXCLUSIVE events. Below this, the upfront is waived (or refunded if already paid). Locked: 60. */
+  AiBoostUpfrontTriggerSellThroughPctExcl = 'aiBoostUpfrontTriggerSellThroughPctExcl',
+  /** Sell-through % of paid-ticket capacity required for an AI-Boost upfront fee to be charged on NON-EXCLUSIVE events. Lower than the exclusive bar because the host cannot control sales on rival platforms. Locked: 40. */
+  AiBoostUpfrontTriggerSellThroughPctNonExcl = 'aiBoostUpfrontTriggerSellThroughPctNonExcl',
   /** Credits debited per outbound email (1 credit = ₹1). Locked: 1. */
   EmailMarketingCost = 'emailMarketingCost',
   /** Basic commission percent for exclusive paid events. Locked: 4.49. */
@@ -937,15 +943,15 @@ export enum ConfigTypeEnum {
   MarketingCreditMinimumPerPurchase = 'marketingCreditMinimumPerPurchase',
   /** Paise per marketing credit (1 credit = ₹1 = 100 paise). Locked: 100. */
   MarketingCreditValuePaise = 'marketingCreditValuePaise',
-  /** Cap on AI-offer commission rate for exclusive paid events. Locked: 7.49. */
+  /** FLOOR on AI-offer commission rate for exclusive paid events (the lowest commission the AI may propose). Despite the historical 'max' in the name, it represents the most aggressive cut. Locked: 1.89. */
   MaxAiBoostComissionForExclEvent = 'maxAiBoostComissionForExclEvent',
   /** Cap on AI-offer commission rate for free events. Locked: 0. */
   MaxAiBoostComissionForFreeEvent = 'maxAiBoostComissionForFreeEvent',
-  /** Cap on AI-offer commission rate for non-exclusive paid events. Locked: 7.49. */
+  /** FLOOR on AI-offer commission rate for non-exclusive paid events. Locked: 3.89. */
   MaxAiBoostComissionForNonExclEvent = 'maxAiBoostComissionForNonExclEvent',
-  /** Ceiling on AI Boost fee in rupees. Locked: 249999. */
+  /** Ceiling on AI Boost fee in rupees. Locked: 500000 (₹5L max — applied at the EXCLUSIVE/NON-EXCL outer corridor). Per-template bands scale to event GTV inside this cap. */
   MaxOfferChargeAmount = 'maxOfferChargeAmount',
-  /** Floor on AI Boost fee in rupees. Locked: 2000. */
+  /** Floor on AI Boost fee in rupees. Locked: 0 (offer may legitimately propose zero upfront). */
   MinOfferChargeAmount = 'minOfferChargeAmount',
   /** Customer-facing platform fee percent on ticket taxable value. Locked: 5. */
   PlatformFeeOnEvent = 'platformFeeOnEvent',
@@ -1096,6 +1102,9 @@ export type Event = {
   aiPricingOptions?: Maybe<Array<EventPricingSnapshot>>;
   aiSelectedCommissionPct?: Maybe<Scalars['Float']['output']>;
   aiSelectedExtraAmount?: Maybe<Scalars['Float']['output']>;
+  aiSelectedMarketingCreditAmount?: Maybe<Scalars['Float']['output']>;
+  aiSelectedMarketingCreditDiscountPct?: Maybe<Scalars['Float']['output']>;
+  aiSelectedUpfrontTriggerSellThroughPct?: Maybe<Scalars['Float']['output']>;
   aiShortSummary?: Maybe<Scalars['String']['output']>;
   allowWalkIns?: Maybe<Scalars['Boolean']['output']>;
   artistRequirements?: Maybe<ArtistRequirements>;
@@ -1153,7 +1162,6 @@ export type Event = {
   pricingSnapshot?: Maybe<EventPricingSnapshot>;
   publishedAt?: Maybe<Scalars['DateTimeISO']['output']>;
   refundPolicy?: Maybe<Scalars['String']['output']>;
-  repeatEveryWeek?: Maybe<Scalars['Boolean']['output']>;
   requiresIDVerification?: Maybe<Scalars['Boolean']['output']>;
   selectedAiBoostCode?: Maybe<Scalars['String']['output']>;
   selectedAiBoostGenerationId?: Maybe<Scalars['String']['output']>;
@@ -1165,7 +1173,6 @@ export type Event = {
   startDate?: Maybe<Scalars['DateTimeISO']['output']>;
   status: EventStatus;
   tableLayoutImage?: Maybe<Scalars['String']['output']>;
-  termsAndCondition?: Maybe<Scalars['String']['output']>;
   ticketSalesEndDate?: Maybe<Scalars['DateTimeISO']['output']>;
   ticketSalesStartDate?: Maybe<Scalars['DateTimeISO']['output']>;
   ticketingEnabled?: Maybe<Scalars['Boolean']['output']>;
@@ -1203,6 +1210,7 @@ export type EventBusinessPartner = {
   customerListShared?: Maybe<Scalars['Boolean']['output']>;
   hideOnEventPage?: Maybe<Scalars['Boolean']['output']>;
   invitedAt?: Maybe<Scalars['DateTimeISO']['output']>;
+  logo?: Maybe<Scalars['String']['output']>;
   name: Scalars['String']['output'];
   requestCustomerListAccess?: Maybe<Scalars['Boolean']['output']>;
   respondedAt?: Maybe<Scalars['DateTimeISO']['output']>;
@@ -1218,6 +1226,7 @@ export type EventBusinessPartnerInput = {
   canSeeMetrics?: InputMaybe<Scalars['Boolean']['input']>;
   customerListShared?: InputMaybe<Scalars['Boolean']['input']>;
   hideOnEventPage?: InputMaybe<Scalars['Boolean']['input']>;
+  logo?: InputMaybe<Scalars['String']['input']>;
   name: Scalars['String']['input'];
   requestCustomerListAccess?: InputMaybe<Scalars['Boolean']['input']>;
   sendTransactionalMails?: InputMaybe<Scalars['Boolean']['input']>;
@@ -1296,13 +1305,11 @@ export type EventInput = {
   payoutProfile?: InputMaybe<Scalars['String']['input']>;
   payoutProfileId?: InputMaybe<Scalars['String']['input']>;
   refundPolicy?: InputMaybe<Scalars['String']['input']>;
-  repeatEveryWeek?: InputMaybe<Scalars['Boolean']['input']>;
   requiresIDVerification?: InputMaybe<Scalars['Boolean']['input']>;
   showOffer?: InputMaybe<Scalars['Boolean']['input']>;
   startDate?: InputMaybe<Scalars['DateTimeISO']['input']>;
   status?: InputMaybe<EventStatus>;
   tableLayoutImage?: InputMaybe<Scalars['String']['input']>;
-  termsAndCondition?: InputMaybe<Scalars['String']['input']>;
   ticketSalesEndDate?: InputMaybe<Scalars['DateTimeISO']['input']>;
   ticketSalesStartDate?: InputMaybe<Scalars['DateTimeISO']['input']>;
   ticketingEnabled?: InputMaybe<Scalars['Boolean']['input']>;
@@ -1373,7 +1380,10 @@ export type EventOfferGeneration = {
   adminFeedback?: Maybe<AiBoostAdminFeedback>;
   completionTokens?: Maybe<Scalars['Int']['output']>;
   createdAt?: Maybe<Scalars['DateTimeISO']['output']>;
+  event?: Maybe<OfferGenerationEventSummary>;
   eventId: Scalars['String']['output'];
+  generationContextJson?: Maybe<Scalars['String']['output']>;
+  host?: Maybe<OfferGenerationHostSummary>;
   hostId: Scalars['String']['output'];
   isDeleted: Scalars['Boolean']['output'];
   modelName?: Maybe<Scalars['String']['output']>;
@@ -2373,6 +2383,10 @@ export type MarkOfferGenerationNegativeInput = {
   reason: Scalars['String']['input'];
 };
 
+export type MarkWalkthroughDoneInput = {
+  walkthrough: WalkthroughKey;
+};
+
 export type MarketingCreditLedgerEntry = {
   __typename?: 'MarketingCreditLedgerEntry';
   _id: Scalars['ID']['output'];
@@ -3091,6 +3105,33 @@ export type MutationVerifyTeamEmailArgs = {
   token: Scalars['String']['input'];
 };
 
+export type OfferGenerationEventSummary = {
+  __typename?: 'OfferGenerationEventSummary';
+  _id: Scalars['String']['output'];
+  city?: Maybe<Scalars['String']['output']>;
+  endDate?: Maybe<Scalars['DateTimeISO']['output']>;
+  eventType?: Maybe<Scalars['String']['output']>;
+  flyerUrl?: Maybe<Scalars['String']['output']>;
+  maxTicketPrice?: Maybe<Scalars['Float']['output']>;
+  minTicketPrice?: Maybe<Scalars['Float']['output']>;
+  slug?: Maybe<Scalars['String']['output']>;
+  startDate?: Maybe<Scalars['DateTimeISO']['output']>;
+  status?: Maybe<Scalars['String']['output']>;
+  ticketCount?: Maybe<Scalars['Int']['output']>;
+  title?: Maybe<Scalars['String']['output']>;
+  totalTicketCapacity?: Maybe<Scalars['Int']['output']>;
+  venueName?: Maybe<Scalars['String']['output']>;
+};
+
+export type OfferGenerationHostSummary = {
+  __typename?: 'OfferGenerationHostSummary';
+  _id: Scalars['String']['output'];
+  city?: Maybe<Scalars['String']['output']>;
+  email?: Maybe<Scalars['String']['output']>;
+  hostType?: Maybe<Scalars['String']['output']>;
+  name?: Maybe<Scalars['String']['output']>;
+};
+
 export type PaginationInput = {
   pageNumber?: InputMaybe<Scalars['Float']['input']>;
   rowsPerPage?: InputMaybe<RowsPerPageEnum>;
@@ -3176,6 +3217,12 @@ export type PayoutReleaseReadiness = {
 export type PayoutSettlement = {
   __typename?: 'PayoutSettlement';
   _id: Scalars['ID']['output'];
+  actualSellThroughPct?: Maybe<Scalars['Float']['output']>;
+  aiBoostUpfrontOriginalAmount?: Maybe<Scalars['Float']['output']>;
+  aiBoostUpfrontRefundDue?: Maybe<Scalars['Float']['output']>;
+  aiBoostUpfrontTriggerSellThroughPct?: Maybe<Scalars['Float']['output']>;
+  aiBoostUpfrontWaived?: Maybe<Scalars['Boolean']['output']>;
+  aiBoostUpfrontWaivedReason?: Maybe<Scalars['String']['output']>;
   chargebacksTotal?: Maybe<Scalars['Float']['output']>;
   createdAt?: Maybe<Scalars['DateTimeISO']['output']>;
   errorMessage?: Maybe<Scalars['String']['output']>;
@@ -3429,6 +3476,7 @@ export type Query = {
   hostPayoutAccounts: Array<HostPayoutAccount>;
   isMultiAccountUser: Scalars['Boolean']['output'];
   listScannersForEvent: Array<ScannerUser>;
+  markWalkthroughDone: Scalars['Boolean']['output'];
   meAdmin: Admin;
   meContactDetails?: Maybe<User>;
   meUser?: Maybe<User>;
@@ -3782,6 +3830,11 @@ export type QueryHostListPayoutSettlementsArgs = {
 
 export type QueryListScannersForEventArgs = {
   eventId: Scalars['String']['input'];
+};
+
+
+export type QueryMarkWalkthroughDoneArgs = {
+  input: MarkWalkthroughDoneInput;
 };
 
 
@@ -4228,6 +4281,7 @@ export type User = {
   accessHistory?: Maybe<Array<AccessHistory>>;
   accountPreferences?: Maybe<AccountPreference>;
   additionalEmails?: Maybe<Array<Scalars['String']['output']>>;
+  completedWalkthroughs: Array<WalkthroughKey>;
   createdAt?: Maybe<Scalars['DateTimeISO']['output']>;
   creatorUser?: Maybe<Scalars['String']['output']>;
   email: Scalars['String']['output'];
@@ -4337,6 +4391,13 @@ export type WaitListUser = {
   website: Scalars['String']['output'];
 };
 
+export enum WalkthroughKey {
+  Campaign = 'CAMPAIGN',
+  Main = 'MAIN',
+  Payments = 'PAYMENTS',
+  Teams = 'TEAMS'
+}
+
 export type UserLogoutQueryVariables = Exact<{ [key: string]: never; }>;
 
 
@@ -4357,7 +4418,14 @@ export type UserLoginQuery = { __typename?: 'Query', userLogin: string };
 export type MeUserQueryVariables = Exact<{ [key: string]: never; }>;
 
 
-export type MeUserQuery = { __typename?: 'Query', meUser?: { __typename?: 'User', _id: string, firstName: string, lastName: string, status: UserStatus, email: string, phone: string, creatorUser?: string | null, role: UserRole, permissions?: Array<{ __typename?: 'UserPermission', status: boolean, type: string }> | null } | null };
+export type MeUserQuery = { __typename?: 'Query', meUser?: { __typename?: 'User', _id: string, firstName: string, lastName: string, status: UserStatus, email: string, phone: string, creatorUser?: string | null, role: UserRole, completedWalkthroughs: Array<WalkthroughKey>, permissions?: Array<{ __typename?: 'UserPermission', status: boolean, type: string }> | null } | null };
+
+export type MarkWalkthroughDoneQueryVariables = Exact<{
+  input: MarkWalkthroughDoneInput;
+}>;
+
+
+export type MarkWalkthroughDoneQuery = { __typename?: 'Query', markWalkthroughDone: boolean };
 
 export type MeContactDetailsQueryVariables = Exact<{ [key: string]: never; }>;
 
@@ -4997,7 +5065,13 @@ export const MeUserDocument = gql`
       type
     }
     role
+    completedWalkthroughs
   }
+}
+    `;
+export const MarkWalkthroughDoneDocument = gql`
+    query MarkWalkthroughDone($input: MarkWalkthroughDoneInput!) {
+  markWalkthroughDone(input: $input)
 }
     `;
 export const MeContactDetailsDocument = gql`
@@ -6028,6 +6102,9 @@ export function getSdk(client: GraphQLClient, withWrapper: SdkFunctionWrapper = 
     },
     MeUser(variables?: MeUserQueryVariables, requestHeaders?: GraphQLClientRequestHeaders): Promise<MeUserQuery> {
       return withWrapper((wrappedRequestHeaders) => client.request<MeUserQuery>(MeUserDocument, variables, {...requestHeaders, ...wrappedRequestHeaders}), 'MeUser', 'query', variables);
+    },
+    MarkWalkthroughDone(variables: MarkWalkthroughDoneQueryVariables, requestHeaders?: GraphQLClientRequestHeaders): Promise<MarkWalkthroughDoneQuery> {
+      return withWrapper((wrappedRequestHeaders) => client.request<MarkWalkthroughDoneQuery>(MarkWalkthroughDoneDocument, variables, {...requestHeaders, ...wrappedRequestHeaders}), 'MarkWalkthroughDone', 'query', variables);
     },
     MeContactDetails(variables?: MeContactDetailsQueryVariables, requestHeaders?: GraphQLClientRequestHeaders): Promise<MeContactDetailsQuery> {
       return withWrapper((wrappedRequestHeaders) => client.request<MeContactDetailsQuery>(MeContactDetailsDocument, variables, {...requestHeaders, ...wrappedRequestHeaders}), 'MeContactDetails', 'query', variables);

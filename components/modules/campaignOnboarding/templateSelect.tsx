@@ -1,6 +1,7 @@
 import useCampaignStore from "@/store/customCampaignStore";
 import useGlobalStore from "@/store/global";
 import useHostsStore from "@/store/host";
+import ReusableModal from "@/components/common/modal/modal";
 import { sdk } from "@/utils/graphqlClient";
 import { extractErrorMessage } from "@/utils/utilFUncs";
 import {
@@ -136,6 +137,7 @@ const CampaignSetup = () => {
     hostBackgroundColor,
     selectedEventId,
     selectedEventFlyer,
+    selectedEventSlug,
     selectedEventTitle,
     setSelectedEvent,
     clearSelectedEvent,
@@ -148,6 +150,8 @@ const CampaignSetup = () => {
 
   const [eventOptions, setEventOptions] = useState<EventOption[]>([]);
   const [eventsLoading, setEventsLoading] = useState(false);
+  const [pendingTemplateSwitch, setPendingTemplateSwitch] =
+    useState<ITemplate | null>(null);
   const templatePreviewFallbackImage =
     "https://images.unsplash.com/photo-1492684223066-81342ee5ff30?auto=format&fit=crop&w=1200&q=80";
 
@@ -229,26 +233,7 @@ const CampaignSetup = () => {
     setCampaignDetails({ description: e.target.value });
   };
 
-  const handleSelectTemplate = (template: ITemplate) => {
-    // Switching to a different template after the user has already
-    // picked one will discard any edits they made in the email
-    // builder (step 2). Always confirm before doing that — the
-    // builder reloads from the new template's designJson, so the
-    // previous edits are unrecoverable.
-    if (
-      selectedTemplate &&
-      selectedTemplate.trim().length > 0 &&
-      selectedTemplate !== template.name
-    ) {
-      const ok =
-        typeof window !== "undefined"
-          ? window.confirm(
-              "Switching to this template will discard the edits you made in the email builder. Continue?"
-            )
-          : true;
-      if (!ok) return;
-    }
-
+  const applyTemplate = (template: ITemplate) => {
     const { name, template: templ } = template;
     const { content, designJson, html } = templ;
 
@@ -261,8 +246,9 @@ const CampaignSetup = () => {
     // attached an event so the preview never renders a broken image.
     const eventFlyerUrl =
       selectedEventFlyer || hostLogo || templatePreviewFallbackImage;
-    const eventLinkUrl = selectedEventId
-      ? `${hostOnlineOrderingLink || ""}/events/${selectedEventId}`
+    const eventPathId = selectedEventSlug || selectedEventId;
+    const eventLinkUrl = eventPathId
+      ? `${hostOnlineOrderingLink || "https://hoizr.com"}/events/${eventPathId}`
       : hostOnlineOrderingLink || "";
 
     // Check if templateHtml is a string and not empty
@@ -342,6 +328,23 @@ const CampaignSetup = () => {
 
     // Call setTemplate with processed HTML
     setTemplate(name, JSON.parse(processedJson), processedHtml, content);
+  };
+
+  const handleSelectTemplate = (template: ITemplate) => {
+    const hasSavedCampaign =
+      typeof window !== "undefined" &&
+      new URLSearchParams(window.location.search).has("editId");
+    if (
+      hasSavedCampaign &&
+      selectedTemplate &&
+      selectedTemplate.trim().length > 0 &&
+      selectedTemplate !== template.name
+    ) {
+      setPendingTemplateSwitch(template);
+      return;
+    }
+
+    applyTemplate(template);
   };
 
   return (
@@ -450,6 +453,37 @@ const CampaignSetup = () => {
           </div>
         </div>
       </div>
+      <ReusableModal
+        isOpen={Boolean(pendingTemplateSwitch)}
+        onClose={() => setPendingTemplateSwitch(null)}
+        title="Switch template?"
+      >
+        <div className="mt-2 space-y-4">
+          <p className="text-sm text-gray-600">
+            Switching templates will discard edits already made in the email
+            builder.
+          </p>
+          <div className="flex justify-end gap-2">
+            <button
+              type="button"
+              onClick={() => setPendingTemplateSwitch(null)}
+              className="rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-semibold text-gray-700"
+            >
+              Cancel
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                if (pendingTemplateSwitch) applyTemplate(pendingTemplateSwitch);
+                setPendingTemplateSwitch(null);
+              }}
+              className="rounded-lg bg-[var(--owner-blue-500,#2947c2)] px-4 py-2 text-sm font-semibold text-white"
+            >
+              Switch template
+            </button>
+          </div>
+        </div>
+      </ReusableModal>
     </div>
   );
 };

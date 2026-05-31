@@ -15,7 +15,7 @@ import AddTeamMemberForm from "@/components/modules/userManagement/forms/addTeam
 import EditTeamMemberPermissionForm from "@/components/modules/userManagement/forms/editTeamMemberPermissionForm";
 import EditTeamMemberRoleForm from "@/components/modules/userManagement/forms/editTeamMemberRoleForm";
 import { TeamsRowType } from "@/components/modules/userManagement/interface";
-import { PermissionTypeEnum, UserStatus } from "@/generated/graphql";
+import { PermissionTypeEnum, UserStatus, WalkthroughKey } from "@/generated/graphql";
 import useGlobalStore from "@/store/global";
 import useUserStore from "@/store/user";
 import useUserManagementStore from "@/store/userManagement";
@@ -85,16 +85,6 @@ const roleCards = [
     tone: "neutral" as BadgeTone,
   },
 ];
-
-const walkthroughDone = (userId?: string, tour = "teams") => {
-  if (typeof window === "undefined" || !userId) return true;
-  return localStorage.getItem(`hoizr.walkthrough.${userId}.${tour}`) === "done";
-};
-
-const markWalkthroughDone = (userId?: string, tour = "teams") => {
-  if (typeof window === "undefined" || !userId) return;
-  localStorage.setItem(`hoizr.walkthrough.${userId}.${tour}`, "done");
-};
 
 const memberName = (member: TeamsRowType) =>
   [member.firstName, member.lastName].filter(Boolean).join(" ") ||
@@ -198,23 +188,15 @@ const Teams: NextPageWithLayout = () => {
   }, [isAddTeamMemberModalOpen, isEditTeamMember, setToastData]);
 
   useEffect(() => {
-    const fetchData = async () => {
+    if (!meUser?._id) {
       setLoadingMeUser(true);
-      try {
-        const response = await sdk.MeUser();
-        if (response?.meUser) {
-          useUserStore.getState().setMeUser(response.meUser);
-          setShowWalkthrough(!walkthroughDone(response.meUser._id, "teams"));
-        }
-      } catch (error) {
-        setToastData({ message: extractErrorMessage(error), type: "error" });
-      } finally {
-        setLoadingMeUser(false);
-      }
-    };
-
-    fetchData();
-  }, [setToastData]);
+      return;
+    }
+    setShowWalkthrough(
+      !(meUser.completedWalkthroughs ?? []).includes(WalkthroughKey.Teams)
+    );
+    setLoadingMeUser(false);
+  }, [meUser]);
 
   const onEditRole = (id: string) => {
     setIsEditTeamMember(true);
@@ -335,8 +317,20 @@ const Teams: NextPageWithLayout = () => {
         callback={async (joyrideData) => {
           const finishedStatuses: string[] = [STATUS.FINISHED, STATUS.SKIPPED];
           if (finishedStatuses.includes(joyrideData.status) && meUser) {
-            markWalkthroughDone(meUser._id, "teams");
             setShowWalkthrough(false);
+            useUserStore
+              .getState()
+              .markWalkthroughCompleteLocal(WalkthroughKey.Teams);
+            try {
+              await sdk.MarkWalkthroughDone({
+                input: { walkthrough: WalkthroughKey.Teams },
+              });
+            } catch (error) {
+              setToastData({
+                message: extractErrorMessage(error),
+                type: "error",
+              });
+            }
           }
         }}
         tooltipComponent={CustomJoyrideTooltip}

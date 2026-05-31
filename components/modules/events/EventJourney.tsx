@@ -18,6 +18,7 @@ import {
 } from "@/utils/eventOfferOps";
 import { sdk } from "@/utils/graphqlClient";
 import { extractErrorMessage } from "@/utils/utilFUncs";
+import { VerificationStatus } from "@/generated/graphql";
 
 const AI_OFFER_PREFIX = "ai:";
 
@@ -35,7 +36,9 @@ const aiBoostToPricingOption = (boost: AiBoostCard): PricingOption => ({
   payoutCycleDaysMin: 0,
   payoutCycleDaysMax: 0,
   badge:
-    boost.confidenceScore >= 0.85 ? "AI Recommended" : boost.label.toUpperCase(),
+    boost.confidenceScore >= 0.85
+      ? "AI Recommended"
+      : boost.label.toUpperCase(),
 });
 
 const formatIndianRupees = (n: number): string => {
@@ -44,7 +47,6 @@ const formatIndianRupees = (n: number): string => {
   return `₹${Math.round(n).toLocaleString("en-IN")}`;
 };
 import {
-  BadgeIndianRupeeIcon,
   CalendarDaysIcon,
   ChevronDownIcon,
   CheckCircle2Icon,
@@ -99,10 +101,7 @@ const richTextToPlainText = (value: string) =>
 
 const shouldReplaceRichDefault = (current: string, fallback: string) => {
   const currentText = richTextToPlainText(current);
-  return (
-    !currentText ||
-    currentText === richTextToPlainText(fallback)
-  );
+  return !currentText || currentText === richTextToPlainText(fallback);
 };
 
 type PricingOption = {
@@ -193,6 +192,7 @@ type CollaboratorSearchResult = {
 type CollaboratorEntry = {
   name: string;
   businessLinkId: string;
+  logo?: string | null;
   requestCustomerListAccess: boolean;
   hideOnEventPage: boolean;
   allowIssuingOfflineTickets: boolean;
@@ -383,7 +383,9 @@ const EventJourney = ({
   } = useGlobalStore();
   const { selectedHostId } = useHostsStore();
   const [step, setStep] = useState(0);
-  const [maxStep, setMaxStep] = useState(mode === "update" ? steps.length - 1 : 0);
+  const [maxStep, setMaxStep] = useState(
+    mode === "update" ? steps.length - 1 : 0,
+  );
   const [loading, setLoading] = useState(false);
   const [fetching, setFetching] = useState(true);
   const [status, setStatus] = useState("DRAFT");
@@ -394,7 +396,9 @@ const EventJourney = ({
   const [description, setDescription] = useState("");
   // TASK-043 sub-item 10: genre chips (e.g. Comedy, Bollywood, EDM).
   // Drives discoverability filters on the customer site.
-  const [allGenres, setAllGenres] = useState<{ _id: string; value: string }[]>([]);
+  const [allGenres, setAllGenres] = useState<{ _id: string; value: string }[]>(
+    [],
+  );
   const [selectedGenreIds, setSelectedGenreIds] = useState<string[]>([]);
   const [eventFlyer, setEventFlyer] = useState("");
   const [flyerPreview, setFlyerPreview] = useState("");
@@ -406,11 +410,11 @@ const EventJourney = ({
   const [uploadingFlyer, setUploadingFlyer] = useState(false);
   const flyerImgRef = useRef<HTMLImageElement | null>(null);
   const [flyerNaturalRatio, setFlyerNaturalRatio] = useState<number | null>(
-    null
+    null,
   );
   const flyerCropScale = useMemo(
     () => flyerCropScaleFromPercent(cropZoom),
-    [cropZoom]
+    [cropZoom],
   );
   // Largest 4:5 crop window that fits inside the displayed source image,
   // expressed as a % of the displayed image's own dimensions. Multiplied by
@@ -487,7 +491,10 @@ const EventJourney = ({
   const [ticketingTerms, setTicketingTerms] = useState(DEFAULT_TICKETING_TERMS);
   const [refundPolicy, setRefundPolicy] = useState(DEFAULT_REFUND_POLICY);
   const [hostDefaultsLoaded, setHostDefaultsLoaded] = useState(false);
-  const hostDefaultsRef = useRef<{ ticketingTerms: string; refundPolicy: string }>({
+  const hostDefaultsRef = useRef<{
+    ticketingTerms: string;
+    refundPolicy: string;
+  }>({
     ticketingTerms: "",
     refundPolicy: "",
   });
@@ -503,12 +510,14 @@ const EventJourney = ({
   const [extraType, setExtraType] = useState<HoizrExtraTypeValue>("OTHER");
 
   const [peopleTab, setPeopleTab] = useState<"collaborators" | "artists">(
-    "collaborators"
+    "collaborators",
   );
   const [lineupEnabled, setLineupEnabled] = useState(true);
   const [lineUpToBeAnnounced, setLineUpToBeAnnounced] = useState(false);
   const [artistQuery, setArtistQuery] = useState("");
-  const [artistSearchResults, setArtistSearchResults] = useState<ArtistSearchResult[]>([]);
+  const [artistSearchResults, setArtistSearchResults] = useState<
+    ArtistSearchResult[]
+  >([]);
   const [artistSearchAttempted, setArtistSearchAttempted] = useState(false);
   const [artistLinkId, setArtistLinkId] = useState("");
   const [tempArtistId, setTempArtistId] = useState("");
@@ -519,7 +528,9 @@ const EventJourney = ({
   const [artistSpotify, setArtistSpotify] = useState("");
   const [artistYoutube, setArtistYoutube] = useState("");
   const [collaboratorQuery, setCollaboratorQuery] = useState("");
-  const [collaboratorSearchResults, setCollaboratorSearchResults] = useState<CollaboratorSearchResult[]>([]);
+  const [collaboratorSearchResults, setCollaboratorSearchResults] = useState<
+    CollaboratorSearchResult[]
+  >([]);
   const [collaboratorLinkId, setCollaboratorLinkId] = useState("");
   const [collaboratorName, setCollaboratorName] = useState("");
   const [requestCustomerListAccess, setRequestCustomerListAccess] =
@@ -552,7 +563,9 @@ const EventJourney = ({
   const [referralHostName, setReferralHostName] = useState("");
   const [referralHostContact, setReferralHostContact] = useState("");
 
-  const [confirmAction, setConfirmAction] = useState<ConfirmAction | null>(null);
+  const [confirmAction, setConfirmAction] = useState<ConfirmAction | null>(
+    null,
+  );
 
   const [instagramPost, setInstagramPost] = useState("");
   const [instagramStory, setInstagramStory] = useState("");
@@ -560,7 +573,6 @@ const EventJourney = ({
   const [horizontalFlyer, setHorizontalFlyer] = useState("");
   const [verticalVideo, setVerticalVideo] = useState("");
   const [horizontalVideo, setHorizontalVideo] = useState("");
-  const [repeatEveryWeek, setRepeatEveryWeek] = useState(false);
   const [contactForQueriesTables, setContactForQueriesTables] = useState("");
   // expectedEventsDoneTillNow input was removed per Roop — the server still
   // accepts the field for backwards compat (pricing calc + AI Boost
@@ -594,9 +606,10 @@ const EventJourney = ({
   const visibleSteps = steps;
   const isPublished = status === "PUBLISHED" || status === "Published";
   const eventStarted = Boolean(
-    isPublished && startDate && new Date(startDate) <= new Date()
+    isPublished && startDate && new Date(startDate) <= new Date(),
   );
-  const canEditEventCategory = mode === "create" && !isPublished && !firstStepCompleted;
+  const canEditEventCategory =
+    mode === "create" && !isPublished && !firstStepCompleted;
   const multiDayEligible = useMemo(() => {
     if (!startDate || !endDate) return false;
     return (
@@ -608,21 +621,23 @@ const EventJourney = ({
   const stateOptions = useMemo(
     () =>
       Array.from(
-        new Set(cityOptions.map((option) => option.state).filter(Boolean))
+        new Set(cityOptions.map((option) => option.state).filter(Boolean)),
       ).sort() as string[],
-    [cityOptions]
+    [cityOptions],
   );
 
-  const loadPlaceOptions = async (inputValue: string): Promise<PlacesType[]> => {
+  const loadPlaceOptions = async (
+    inputValue: string,
+  ): Promise<PlacesType[]> => {
     if (!inputValue || inputValue.trim().length < 2) {
       return [];
     }
     try {
       const response = await sdk.AllPlaces({ input: inputValue });
       return (response.getPlacesList ?? []).map((place: any) => ({
-          label: place.displayName,
-          value: place.placeId,
-        }));
+        label: place.displayName,
+        value: place.placeId,
+      }));
     } catch {
       return [];
     }
@@ -656,7 +671,7 @@ const EventJourney = ({
   const selectCity = (value: string) => {
     setCity(value);
     const selected = cityOptions.find(
-      (option) => option.value.toLowerCase() === value.toLowerCase()
+      (option) => option.value.toLowerCase() === value.toLowerCase(),
     );
     if (selected?.state) {
       setStateName(selected.state);
@@ -749,11 +764,17 @@ const EventJourney = ({
       return;
     }
     if (draft.ticketCapacity <= 0) {
-      setToastData({ type: "error", message: "Ticket capacity must be greater than 0." });
+      setToastData({
+        type: "error",
+        message: "Ticket capacity must be greater than 0.",
+      });
       return;
     }
     if (draft.ticketCategory !== "GUESTLIST" && draft.ticketPrice <= 0) {
-      setToastData({ type: "error", message: "Paid tickets need a ticket price." });
+      setToastData({
+        type: "error",
+        message: "Paid tickets need a ticket price.",
+      });
       return;
     }
     setTickets((current) => {
@@ -763,7 +784,7 @@ const EventJourney = ({
       return current.map((ticket, index) =>
         index === ticketEditIndex
           ? { ...draft, _id: ticket._id, ticketSold: ticket.ticketSold }
-          : ticket
+          : ticket,
       );
     });
     closeTicketModal();
@@ -774,8 +795,8 @@ const EventJourney = ({
       current.map((ticket, itemIndex) =>
         itemIndex === index
           ? { ...ticket, ticketVisible: !ticket.ticketVisible }
-          : ticket
-      )
+          : ticket,
+      ),
     );
   };
 
@@ -787,9 +808,9 @@ const EventJourney = ({
       title: nextVisible ? "Show ticket?" : "Hide ticket?",
       description: (
         <>
-          {nextVisible ? "Show" : "Hide"} <strong>{ticket.ticketName}</strong> on
-          the event page. This only changes availability in the draft; you can
-          switch it back before saving.
+          {nextVisible ? "Show" : "Hide"} <strong>{ticket.ticketName}</strong>{" "}
+          on the event page. This only changes availability in the draft; you
+          can switch it back before saving.
         </>
       ),
       confirmLabel: nextVisible ? "Show ticket" : "Hide ticket",
@@ -851,7 +872,9 @@ const EventJourney = ({
       confirmLabel: "Remove ticket",
       tone: "danger",
       onConfirm: () =>
-        setTickets((current) => current.filter((_, itemIndex) => itemIndex !== index)),
+        setTickets((current) =>
+          current.filter((_, itemIndex) => itemIndex !== index),
+        ),
     });
   };
 
@@ -894,11 +917,17 @@ const EventJourney = ({
       return;
     }
     if (extraPrice < 0) {
-      setToastData({ type: "error", message: "Extra price cannot be negative." });
+      setToastData({
+        type: "error",
+        message: "Extra price cannot be negative.",
+      });
       return;
     }
     if (extraQuantity <= 0) {
-      setToastData({ type: "error", message: "Extra quantity must be greater than 0." });
+      setToastData({
+        type: "error",
+        message: "Extra quantity must be greater than 0.",
+      });
       return;
     }
     const draft: ExtraDraft = {
@@ -916,7 +945,7 @@ const EventJourney = ({
       return current.map((extra, index) =>
         index === extraEditIndex
           ? { ...draft, _id: extra._id, sold: extra.sold }
-          : extra
+          : extra,
       );
     });
     closeExtraModal();
@@ -935,7 +964,8 @@ const EventJourney = ({
       ),
       confirmLabel: "Remove add-on",
       tone: "danger",
-      onConfirm: () => setExtras((current) => current.filter((_, i) => i !== index)),
+      onConfirm: () =>
+        setExtras((current) => current.filter((_, i) => i !== index)),
     });
   };
 
@@ -967,7 +997,7 @@ const EventJourney = ({
         return "Add at least one artist or enable “Lineup to be announced.”";
       }
       const incomplete = artists.find(
-        (artist) => !artist.name.trim() || !artist.picture.trim()
+        (artist) => !artist.name.trim() || !artist.picture.trim(),
       );
       if (incomplete) {
         return "Every artist needs a stage name and a picture.";
@@ -1043,7 +1073,7 @@ const EventJourney = ({
       setToastData({
         type: "error",
         message:
-          "Pick a host from search. If they aren’t on Hoizr yet, use “Refer this host” instead.",
+          "Pick an organizer from search. If they aren’t on Hoizr yet, use “Refer this organizer” instead.",
       });
       return;
     }
@@ -1074,6 +1104,13 @@ const EventJourney = ({
     const draft: CollaboratorEntry = {
       name: collaboratorName.trim(),
       businessLinkId: collaboratorLinkId,
+      logo:
+        collaboratorSearchResults.find(
+          (host) => host._id === collaboratorLinkId,
+        )?.logo ??
+        (collabEditIndex !== null
+          ? (collaborators[collabEditIndex]?.logo ?? null)
+          : null),
       requestCustomerListAccess,
       hideOnEventPage,
       allowIssuingOfflineTickets,
@@ -1085,7 +1122,7 @@ const EventJourney = ({
     setCollaborators((current) => {
       if (collabEditIndex === null) return [...current, draft];
       return current.map((existing, index) =>
-        index === collabEditIndex ? draft : existing
+        index === collabEditIndex ? draft : existing,
       );
     });
     closeCollabModal();
@@ -1106,7 +1143,7 @@ const EventJourney = ({
       tone: "danger",
       onConfirm: () =>
         setCollaborators((current) =>
-          current.filter((_, itemIndex) => itemIndex !== index)
+          current.filter((_, itemIndex) => itemIndex !== index),
         ),
     });
   };
@@ -1125,13 +1162,13 @@ const EventJourney = ({
 
   const submitReferral = () => {
     if (!referralHostName.trim()) {
-      setToastData({ type: "error", message: "Host name is required." });
+      setToastData({ type: "error", message: "Organizer name is required." });
       return;
     }
     if (!referralHostContact.trim()) {
       setToastData({
         type: "error",
-        message: "Add an email or phone so the team can reach this host.",
+        message: "Add an email or phone so the team can reach this organizer.",
       });
       return;
     }
@@ -1208,15 +1245,15 @@ const EventJourney = ({
     const artistKey = artistLinkId
       ? `artist:${artistLinkId}`
       : tempArtistId
-      ? `temp:${tempArtistId}`
-      : `name:${artistName.trim().toLowerCase()}`;
+        ? `temp:${tempArtistId}`
+        : `name:${artistName.trim().toLowerCase()}`;
     const duplicate = artists.some((entry, index) => {
       if (index === artistEditIndex) return false;
       const entryKey = entry.artistLinkId
         ? `artist:${entry.artistLinkId}`
         : entry.tempArtistId
-        ? `temp:${entry.tempArtistId}`
-        : `name:${entry.name.trim().toLowerCase()}`;
+          ? `temp:${entry.tempArtistId}`
+          : `name:${entry.name.trim().toLowerCase()}`;
       return entryKey === artistKey;
     });
     if (duplicate) {
@@ -1239,7 +1276,7 @@ const EventJourney = ({
     setArtists((current) => {
       if (artistEditIndex === null) return [...current, draft];
       return current.map((existing, index) =>
-        index === artistEditIndex ? draft : existing
+        index === artistEditIndex ? draft : existing,
       );
     });
     closeArtistModal();
@@ -1252,14 +1289,17 @@ const EventJourney = ({
       title: "Remove artist?",
       description: (
         <>
-          Remove <strong>{target.name || "this artist"}</strong> from the lineup.
-          You can add them back later if they should appear on the event page.
+          Remove <strong>{target.name || "this artist"}</strong> from the
+          lineup. You can add them back later if they should appear on the event
+          page.
         </>
       ),
       confirmLabel: "Remove artist",
       tone: "danger",
       onConfirm: () =>
-        setArtists((current) => current.filter((_, itemIndex) => itemIndex !== index)),
+        setArtists((current) =>
+          current.filter((_, itemIndex) => itemIndex !== index),
+        ),
     });
   };
 
@@ -1270,7 +1310,9 @@ const EventJourney = ({
       return;
     }
     try {
-      const response = await sdk.searchEventArtists({ search: artistQuery.trim() });
+      const response = await sdk.searchEventArtists({
+        search: artistQuery.trim(),
+      });
       setArtistSearchResults(response.searchEventArtists ?? []);
       setArtistSearchAttempted(true);
     } catch (error) {
@@ -1284,7 +1326,7 @@ const EventJourney = ({
     setArtistActualName(
       [artist.firstName, artist.lastName].filter(Boolean).join(" ") ||
         artist.name ||
-        ""
+        "",
     );
     setArtistPicture(artist.picture ?? "");
     setArtistInstagram(artist.instagramLink ?? "");
@@ -1338,7 +1380,7 @@ const EventJourney = ({
             res.getActiveGenreTags.map((g: any) => ({
               _id: String(g._id),
               value: String(g.value),
-            }))
+            })),
           );
         }
       } catch {
@@ -1460,13 +1502,11 @@ const EventJourney = ({
     const targetRatio = flyerTargetWidth / flyerTargetHeight;
     const cropScale = flyerCropScaleFromPercent(cropZoom);
     const widthPctOfImg =
-      (naturalRatio >= targetRatio
-        ? (targetRatio / naturalRatio) * 100
-        : 100) / cropScale;
+      (naturalRatio >= targetRatio ? (targetRatio / naturalRatio) * 100 : 100) /
+      cropScale;
     const heightPctOfImg =
-      (naturalRatio >= targetRatio
-        ? 100
-        : (naturalRatio / targetRatio) * 100) / cropScale;
+      (naturalRatio >= targetRatio ? 100 : (naturalRatio / targetRatio) * 100) /
+      cropScale;
     const sourceWidth = image.width * (widthPctOfImg / 100);
     const sourceHeight = image.height * (heightPctOfImg / 100);
     const maxX = Math.max(0, image.width - sourceWidth);
@@ -1487,16 +1527,18 @@ const EventJourney = ({
       0,
       0,
       flyerTargetWidth,
-      flyerTargetHeight
+      flyerTargetHeight,
     );
     URL.revokeObjectURL(imageUrl);
 
     return await new Promise((resolve, reject) => {
       canvas.toBlob(
         (blob) =>
-          blob ? resolve(blob) : reject(new Error("Unable to crop event flyer")),
+          blob
+            ? resolve(blob)
+            : reject(new Error("Unable to crop event flyer")),
         "image/jpeg",
-        0.9
+        0.9,
       );
     });
   };
@@ -1545,16 +1587,22 @@ const EventJourney = ({
       const response = await sdk.restaurantDetails();
       const host = response.restaurantDetails;
       if (!host?.address) {
-        setToastData({ type: "error", message: "Host address is not available" });
+        setToastData({
+          type: "error",
+          message: "Host address is not available",
+        });
         return;
       }
       setSelectedPlace(
         host.address.place?.placeId
           ? {
-              label: host.address.place.displayName ?? host.address.addressLine1 ?? "",
+              label:
+                host.address.place.displayName ??
+                host.address.addressLine1 ??
+                "",
               value: host.address.place.placeId,
             }
-          : null
+          : null,
       );
       setAddressLine1(host.address.addressLine1 ?? "");
       setAddressLine2(host.address.addressLine2 ?? "");
@@ -1587,13 +1635,11 @@ const EventJourney = ({
         setTitle(event.title ?? "");
         setDescription(event.description ?? "");
         setSelectedGenreIds(
-          Array.isArray(event.genreTagIds)
-            ? event.genreTagIds.map(String)
-            : []
+          Array.isArray(event.genreTagIds) ? event.genreTagIds.map(String) : [],
         );
         setEventFlyer(event.eventFlyer ?? "");
         setEventType(
-          normalizeEnum<EventTypeValue>(event.eventType?.[0], "FREE")
+          normalizeEnum<EventTypeValue>(event.eventType?.[0], "FREE"),
         );
         setIsComingSoon(Boolean(event.isComingSoon));
         setStartDate(toDateTimeInput(event.startDate));
@@ -1610,9 +1656,9 @@ const EventJourney = ({
         setManualLocationOpen(
           Boolean(
             event.location?.place?.placeId ||
-              event.location?.addressLine1 ||
-              event.city
-          )
+            event.location?.addressLine1 ||
+            event.city,
+          ),
         );
         setSelectedPlace(
           event.location?.place?.placeId
@@ -1623,7 +1669,7 @@ const EventJourney = ({
                   "",
                 value: event.location.place.placeId,
               }
-            : null
+            : null,
         );
         setTicketingEnabled(event.ticketingEnabled !== false);
         setAllowWalkIns(Boolean(event.allowWalkIns));
@@ -1632,24 +1678,23 @@ const EventJourney = ({
         setTicketSalesEndDate(toDateTimeInput(event.ticketSalesEndDate));
         setTicketingTerms(
           richTextToPlainText(event.ticketingTerms ?? "")
-            ? event.ticketingTerms ?? DEFAULT_TICKETING_TERMS
-            : DEFAULT_TICKETING_TERMS
+            ? (event.ticketingTerms ?? DEFAULT_TICKETING_TERMS)
+            : DEFAULT_TICKETING_TERMS,
         );
         setRefundPolicy(
           richTextToPlainText(event.refundPolicy ?? "")
-            ? event.refundPolicy ?? DEFAULT_REFUND_POLICY
-            : DEFAULT_REFUND_POLICY
+            ? (event.refundPolicy ?? DEFAULT_REFUND_POLICY)
+            : DEFAULT_REFUND_POLICY,
         );
         setSelectedPricingOptionId(event.pricingSnapshot?.optionId ?? "");
         if (event.feeSettlementMode) {
           setFeeSettlementMode(
             normalizeEnum<"DEDUCT_FROM_PAYOUT" | "PAY_AFTER_EVENT">(
               event.feeSettlementMode,
-              "DEDUCT_FROM_PAYOUT"
-            )
+              "DEDUCT_FROM_PAYOUT",
+            ),
           );
         }
-        setRepeatEveryWeek(Boolean(event.repeatEveryWeek));
         setContactForQueriesTables(event.contactForQueriesTables ?? "");
         setInstagramPost(event.instagramPost ?? "");
         setInstagramStory(event.instagramStory ?? "");
@@ -1663,14 +1708,20 @@ const EventJourney = ({
             _id: ticket._id,
             ticketCategory: normalizeEnum<TicketCategoryValue>(
               ticket.ticketCategory,
-              "GUESTLIST"
+              "GUESTLIST",
             ),
             ticketName: ticket.ticketName ?? "General Entry",
-            ticketType: normalizeEnum<TicketTypeValue>(ticket.ticketType, "SINGLE"),
+            ticketType: normalizeEnum<TicketTypeValue>(
+              ticket.ticketType,
+              "SINGLE",
+            ),
             ticketCapacity: Number(ticket.ticketCapacity ?? 100),
             ticketPrice: Number(ticket.ticketPrice ?? 0),
             ticketInfo: ticket.ticketInfo ?? "",
-            coverType: normalizeEnum<CoverTypeValue>(ticket.coverType, "NO_COVER"),
+            coverType: normalizeEnum<CoverTypeValue>(
+              ticket.coverType,
+              "NO_COVER",
+            ),
             ticketGST: normalizeEnum<GstValue>(ticket.ticketGST, "NONE"),
             gstRate: Number(ticket.gstRate ?? 0),
             groupCapacity: Number(ticket.groupCapacity ?? 4),
@@ -1712,7 +1763,7 @@ const EventJourney = ({
             instagramLink: artist?.instagramLink ?? "",
             spotifyLink: artist?.spotifyLink ?? "",
             youtubeLink: artist?.youtubeLink ?? "",
-          })
+          }),
         );
         setArtists(loadedArtists);
         if (loadedArtists.length > 0) setLineupEnabled(true);
@@ -1727,10 +1778,12 @@ const EventJourney = ({
         ).map((collab: any) => ({
           name: collab?.name ?? "",
           businessLinkId: collab?.businessLinkId ?? "",
-          requestCustomerListAccess: collab?.requestCustomerListAccess !== false,
+          logo: collab?.logo ?? null,
+          requestCustomerListAccess:
+            collab?.requestCustomerListAccess !== false,
           hideOnEventPage: Boolean(collab?.hideOnEventPage),
           allowIssuingOfflineTickets: Boolean(
-            collab?.allowIssuingOfflineTickets
+            collab?.allowIssuingOfflineTickets,
           ),
           sendTransactionalMails: Boolean(collab?.sendTransactionalMails),
           canSeeMetrics: collab?.canSeeMetrics !== false,
@@ -1752,8 +1805,8 @@ const EventJourney = ({
             Boolean(event.lineUpToBeAnnounced);
           const hasLocation = Boolean(
             event.city ||
-              event.location?.addressLine1 ||
-              event.location?.place?.placeId
+            event.location?.addressLine1 ||
+            event.location?.place?.placeId,
           );
           // Only treat Basic Details as done when the server-managed
           // firstStepCompleted flag is true. Previously a pre-filled
@@ -1805,12 +1858,12 @@ const EventJourney = ({
         setTicketingTerms((current) =>
           shouldReplaceRichDefault(current, DEFAULT_TICKETING_TERMS)
             ? defaults.ticketingTerms || DEFAULT_TICKETING_TERMS
-            : current
+            : current,
         );
         setRefundPolicy((current) =>
           shouldReplaceRichDefault(current, DEFAULT_REFUND_POLICY)
             ? defaults.refundPolicy || DEFAULT_REFUND_POLICY
-            : current
+            : current,
         );
         setHostDefaultsLoaded(true);
       } catch {
@@ -1874,7 +1927,6 @@ const EventJourney = ({
       : undefined,
     ticketingTerms: ticketingTerms || undefined,
     refundPolicy: refundPolicy || undefined,
-    repeatEveryWeek,
     instagramPost: instagramPost || undefined,
     instagramStory: instagramStory || undefined,
     tableLayoutImage: tableLayoutImage || undefined,
@@ -1892,21 +1944,30 @@ const EventJourney = ({
           ticketType: ticket.ticketType,
           ticketCapacity: Number(ticket.ticketCapacity),
           ticketPrice:
-            ticket.ticketCategory === "GUESTLIST" ? 0 : Number(ticket.ticketPrice),
+            ticket.ticketCategory === "GUESTLIST"
+              ? 0
+              : Number(ticket.ticketPrice),
           ticketInfo: ticket.ticketInfo || undefined,
           maxTicketPerUser: Number(ticket.maxTicketPerUser) || 10,
           ticketExpiryDateTime: ticket.ticketExpiryDateTime
             ? new Date(ticket.ticketExpiryDateTime)
             : undefined,
           coverType:
-            ticket.ticketCategory === "GUESTLIST" ? undefined : ticket.coverType,
+            ticket.ticketCategory === "GUESTLIST"
+              ? undefined
+              : ticket.coverType,
           ticketGST:
-            ticket.ticketCategory === "GUESTLIST" ? undefined : ticket.ticketGST,
-          gstRate: ticket.ticketGST === "OTHER" ? Number(ticket.gstRate) : undefined,
+            ticket.ticketCategory === "GUESTLIST"
+              ? undefined
+              : ticket.ticketGST,
+          gstRate:
+            ticket.ticketGST === "OTHER" ? Number(ticket.gstRate) : undefined,
           markAsComingSoon: ticket.markAsComingSoon,
           markAsOnGroundOnly: ticket.markAsOnGroundOnly,
           groupCapacity:
-            ticket.ticketCategory === "GROUP" ? Number(ticket.groupCapacity) : undefined,
+            ticket.ticketCategory === "GROUP"
+              ? Number(ticket.groupCapacity)
+              : undefined,
           ticketVisible: ticket.ticketVisible,
           description: ticket.description?.trim() || undefined,
         }))
@@ -1929,6 +1990,7 @@ const EventJourney = ({
         ? collaborators.map((collab) => ({
             name: collab.name,
             businessLinkId: collab.businessLinkId || undefined,
+            logo: collab.logo || undefined,
             requestCustomerListAccess: collab.requestCustomerListAccess,
             hideOnEventPage: collab.hideOnEventPage,
             allowIssuingOfflineTickets: collab.allowIssuingOfflineTickets,
@@ -2054,7 +2116,9 @@ const EventJourney = ({
           expectedEventsDoneTillNow: 0,
           tickets: ticketInputs().map((ticket) => ({
             ticketPrice:
-              ticket.ticketCategory === "GUESTLIST" ? 0 : Number(ticket.ticketPrice),
+              ticket.ticketCategory === "GUESTLIST"
+                ? 0
+                : Number(ticket.ticketPrice),
             ticketCapacity: Number(ticket.ticketCapacity),
           })),
         },
@@ -2072,22 +2136,32 @@ const EventJourney = ({
         const generation = await generateAiBoostsForEvent(eventId);
         setAiBoostGeneration(generation);
         aiOptions = generation.offers
-          .filter((boost) => (boost.confidenceScore ?? 0) >= 0.78)
+          .filter(
+            (boost) =>
+              (boost.confidenceScore ?? 0) >= 0.78 &&
+              Number(boost.totalSavingsForHosts?.value ?? 0) > 0,
+          )
           .map(aiBoostToPricingOption);
       } catch (err) {
         // AI pipeline down / not configured → silently fall back to the
         // legacy pricing plans. Log but never block the publish flow.
         console.warn(
           "AI offer generation unavailable; falling back to legacy plans",
-          err
+          err,
         );
         setAiBoostGeneration(null);
       }
 
       const options = [...aiOptions, ...legacyOptions];
       setPricingOptions(options);
-      if (!selectedPricingOptionId && options.length) {
-        setSelectedPricingOptionId(options[0].optionId);
+      if (options.length) {
+        // Always default to the basic (zero-upfront) legacy option so the
+        // host can publish immediately even when AI offers don't return.
+        const basicOption =
+          legacyOptions.find((o) => (o.upfrontFee ?? 0) === 0) ??
+          legacyOptions[0] ??
+          options[0];
+        setSelectedPricingOptionId(basicOption.optionId);
       }
       setPublishModalOpen(true);
     } catch (error) {
@@ -2140,7 +2214,9 @@ const EventJourney = ({
       if (isPaid && selectedPricingOptionId) {
         const isAiOffer = selectedPricingOptionId.startsWith(AI_OFFER_PREFIX);
         if (isAiOffer && aiBoostGeneration?._id) {
-          const offerCode = selectedPricingOptionId.slice(AI_OFFER_PREFIX.length);
+          const offerCode = selectedPricingOptionId.slice(
+            AI_OFFER_PREFIX.length,
+          );
           await selectAiBoost({
             generationId: aiBoostGeneration._id,
             offerCode,
@@ -2177,26 +2253,46 @@ const EventJourney = ({
       } catch {
         // ignore — host defaults will retry next publish
       }
+
+      // 2026-05-31: payout is no longer a publish gate. If the host is a
+      // paid event but doesn't yet have a verified primary payout, nudge
+      // them to add one as a post-publish step. The settlement service
+      // auto-pauses payout release until a verified Payout exists, so
+      // this prompt is a courtesy — funds are never released without
+      // it, but tickets can already sell. Best-effort — a query failure
+      // shouldn't break the publish-success path.
+      if (isPaid) {
+        try {
+          const payoutRes = await sdk.hostPayoutAccounts();
+          const hasVerifiedPrimary = (payoutRes.hostPayoutAccounts ?? []).some(
+            (a) =>
+              a.isPrimary &&
+              a.isActive &&
+              a.verificationStatus === VerificationStatus.Verified,
+          );
+          const hasPendingPrimary = (payoutRes.hostPayoutAccounts ?? []).some(
+            (a) =>
+              a.isPrimary &&
+              a.isActive &&
+              a.verificationStatus !== VerificationStatus.Verified,
+          );
+          if (!hasVerifiedPrimary) {
+            if (hasPendingPrimary) {
+              showPayoutPendingVerificationModal(true);
+            } else {
+              showPayoutPromptModal(true);
+            }
+          }
+        } catch {
+          // Silent — admin will see the paused settlement if anything
+          // slips through. Don't block the success-path UX.
+        }
+      }
+
       router.push(`/events/${eventId}/manage`);
     } catch (error) {
       const message = extractErrorMessage(error);
-      const lower = message.toLowerCase();
-      // No payout at all → prompt to add one.
-      if (lower.includes("payout profile")) {
-        showPayoutPromptModal(true);
-      } else if (
-        lower.includes("active verified payout") ||
-        lower.includes("verify a primary payout")
-      ) {
-        // Payout added but admin has not yet verified — soft modal
-        // explains the host can exit and explore marketing while the
-        // draft sits waiting for verification.
-        showPayoutPendingVerificationModal(true);
-        // Also close the publish modal so they can navigate away.
-        setPublishModalOpen(false);
-      } else {
-        setToastData({ type: "error", message });
-      }
+      setToastData({ type: "error", message });
     } finally {
       setPublishing(false);
     }
@@ -2211,7 +2307,7 @@ const EventJourney = ({
       return;
     }
     const selectedOption = pricingOptions.find(
-      (option) => option.optionId === selectedPricingOptionId
+      (option) => option.optionId === selectedPricingOptionId,
     );
     setConfirmAction({
       title: "Publish event?",
@@ -2228,24 +2324,8 @@ const EventJourney = ({
     });
   };
 
-  const requestPricingOptionChange = (option: PricingOption) => {
-    if (option.optionId === selectedPricingOptionId) return;
-    setConfirmAction({
-      title: "Switch publish offer?",
-      description: (
-        <>
-          Switch the publish offer to <strong>{option.label}</strong>. This changes
-          the offer context used when the event is published.
-        </>
-      ),
-      confirmLabel: "Switch plan",
-      tone: "warning",
-      onConfirm: () => setSelectedPricingOptionId(option.optionId),
-    });
-  };
-
   const requestFeeSettlementModeChange = (
-    mode: "DEDUCT_FROM_PAYOUT" | "PAY_AFTER_EVENT"
+    mode: "DEDUCT_FROM_PAYOUT" | "PAY_AFTER_EVENT",
   ) => {
     if (mode === feeSettlementMode) return;
     setConfirmAction({
@@ -2269,7 +2349,7 @@ const EventJourney = ({
     // relative-percent-points hint we use for legacy plans.
     if (option.optionId.startsWith(AI_OFFER_PREFIX)) {
       const boost = aiBoostOffersByCode.get(
-        option.optionId.slice(AI_OFFER_PREFIX.length)
+        option.optionId.slice(AI_OFFER_PREFIX.length),
       );
       const savingsValue = boost?.totalSavingsForHosts?.value;
       const customerMessage = boost?.customerViewingMessage;
@@ -2287,16 +2367,16 @@ const EventJourney = ({
     const highestCommission = pricingOptions.reduce(
       (highest, current) =>
         Math.max(highest, Number(current.commissionRate) || 0),
-      commission
+      commission,
     );
     const lowestUpfront = pricingOptions.reduce(
       (lowest, current) => Math.min(lowest, Number(current.upfrontFee) || 0),
-      upfrontFee
+      upfrontFee,
     );
     const fastestSettlement = pricingOptions.reduce(
       (fastest, current) =>
         Math.min(fastest, Number(current.payoutCycleDaysMax) || fastest),
-      Number(option.payoutCycleDaysMax) || 0
+      Number(option.payoutCycleDaysMax) || 0,
     );
     const commissionSavings = Math.max(0, highestCommission - commission);
     const isLowestUpfront = upfrontFee <= lowestUpfront;
@@ -2311,8 +2391,8 @@ const EventJourney = ({
       hostRecommendation: upfrontFee
         ? "AI read: choose this when the offer is strong enough to lift conversion and you are comfortable reconciling it through settlement or after the event."
         : isLowestUpfront
-        ? "AI read: lowest-friction option for publishing quickly."
-        : "AI read: balanced plan for hosts who want a stronger offer without overcomplicating settlement.",
+          ? "AI read: lowest-friction option for publishing quickly."
+          : "AI read: balanced plan for hosts who want a stronger offer without overcomplicating settlement.",
       customerRecommendation: isFastestSettlement
         ? "Customer angle: simple ticket decision, clear offer, and fast event momentum."
         : "Customer angle: clear value message in the host publish flow.",
@@ -2381,24 +2461,24 @@ const EventJourney = ({
               const index = steps.indexOf(label);
               const stepLocked = mode === "create" && index > maxStep;
               return (
-              <button
-                key={label}
-                type="button"
-                disabled={stepLocked}
-                onClick={() => setStep(index)}
-                className={`flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left text-sm transition ${
-                  step === index
-                    ? "bg-[var(--owner-fg-1)] text-[var(--owner-bg)]"
-                    : stepLocked
-                    ? "cursor-not-allowed text-[var(--owner-fg-4)] opacity-50"
-                    : "text-[var(--owner-fg-3)] hover:bg-[var(--owner-bg-subtle)]"
-                }`}
-              >
-                <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-white/20 text-xs font-semibold">
-                  {index + 1}
-                </span>
-                {label}
-              </button>
+                <button
+                  key={label}
+                  type="button"
+                  disabled={stepLocked}
+                  onClick={() => setStep(index)}
+                  className={`flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left text-sm transition ${
+                    step === index
+                      ? "bg-[var(--owner-fg-1)] text-[var(--owner-bg)]"
+                      : stepLocked
+                        ? "cursor-not-allowed text-[var(--owner-fg-4)] opacity-50"
+                        : "text-[var(--owner-fg-3)] hover:bg-[var(--owner-bg-subtle)]"
+                  }`}
+                >
+                  <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-white/20 text-xs font-semibold">
+                    {index + 1}
+                  </span>
+                  {label}
+                </button>
               );
             })}
           </nav>
@@ -2410,1117 +2490,1256 @@ const EventJourney = ({
             regardless of section padding — previous sticky-inside-padded-
             scroll-container placed the bar 24px above the viewport bottom. */}
         <div className="flex min-h-0 min-w-0 flex-col overflow-hidden">
-        <section
-          ref={formScrollRef}
-          className="min-h-0 min-w-0 flex-1 overflow-y-auto overflow-x-hidden p-4 md:p-6"
-        >
-          <div className="mx-auto flex max-w-5xl flex-col gap-5">
-            <div className="flex gap-2 overflow-x-auto pb-1 lg:hidden">
-              {visibleSteps.map((label) => {
-                const index = steps.indexOf(label);
-                const stepLocked = mode === "create" && index > maxStep;
-                return (
-                <button
-                  key={label}
-                  type="button"
-                  disabled={stepLocked}
-                  onClick={() => setStep(index)}
-                  className={`shrink-0 rounded-full px-3 py-1.5 text-xs font-semibold ${
-                    step === index
-                      ? "bg-[var(--owner-fg-1)] text-[var(--owner-bg)]"
-                      : stepLocked
-                      ? "cursor-not-allowed bg-[var(--owner-bg-subtle)] text-[var(--owner-fg-4)] opacity-50"
-                      : "bg-[var(--owner-bg-subtle)] text-[var(--owner-fg-3)]"
-                  }`}
-                >
-                  {index + 1}. {label}
-                </button>
-                );
-              })}
-            </div>
+          <section
+            ref={formScrollRef}
+            className="min-h-0 min-w-0 flex-1 overflow-y-auto overflow-x-hidden p-4 pb-3 md:p-6 md:pb-4"
+          >
+            <div className="mx-auto flex max-w-5xl flex-col gap-5">
+              <div className="flex gap-2 overflow-x-auto pb-1 lg:hidden">
+                {visibleSteps.map((label) => {
+                  const index = steps.indexOf(label);
+                  const stepLocked = mode === "create" && index > maxStep;
+                  return (
+                    <button
+                      key={label}
+                      type="button"
+                      disabled={stepLocked}
+                      onClick={() => setStep(index)}
+                      className={`shrink-0 rounded-full px-3 py-1.5 text-xs font-semibold ${
+                        step === index
+                          ? "bg-[var(--owner-fg-1)] text-[var(--owner-bg)]"
+                          : stepLocked
+                            ? "cursor-not-allowed bg-[var(--owner-bg-subtle)] text-[var(--owner-fg-4)] opacity-50"
+                            : "bg-[var(--owner-bg-subtle)] text-[var(--owner-fg-3)]"
+                      }`}
+                    >
+                      {index + 1}. {label}
+                    </button>
+                  );
+                })}
+              </div>
 
-            <div className="rounded-lg border border-[var(--owner-border)] bg-[var(--owner-bg)] p-4 md:p-5">
-              {step === 0 ? (
-                <StepSection
-                  title="Choose event category"
-                  subtitle="This controls ticketing rules, payout cycle, and whether Hoizr can offer smart event context."
-                >
-                  {/* TASK-043 / TASK-011 sub-item: hover blocker overlay
+              <div className="rounded-lg border border-[var(--owner-border)] bg-[var(--owner-bg)] p-4 md:p-5">
+                {step === 0 ? (
+                  <StepSection
+                    title="Choose event category"
+                    subtitle="This controls ticketing rules, payout cycle, and whether Hoizr can offer smart event context."
+                  >
+                    {/* TASK-043 / TASK-011 sub-item: hover blocker overlay
                       when the category cannot be changed (update mode +
                       first step already completed). Tells the user
                       *why* the cards are inert. */}
-                  <div className="relative">
-                    {!canEditEventCategory ? (
+                    <div className="relative">
+                      {!canEditEventCategory ? (
+                        <div
+                          className="absolute inset-0 z-10 flex cursor-not-allowed items-center justify-center rounded-lg bg-white/70 opacity-0 transition-opacity hover:opacity-100"
+                          title="Category cannot be changed after Basic Details are saved."
+                          aria-hidden="true"
+                        >
+                          <span className="rounded-full bg-[var(--owner-fg-1)] px-3 py-1 text-xs font-semibold text-white">
+                            Category locked — can&apos;t change after Basic
+                            Details
+                          </span>
+                        </div>
+                      ) : null}
                       <div
-                        className="absolute inset-0 z-10 flex cursor-not-allowed items-center justify-center rounded-lg bg-white/70 opacity-0 transition-opacity hover:opacity-100"
-                        title="Category cannot be changed after Basic Details are saved."
-                        aria-hidden="true"
+                        className={`grid gap-4 xl:grid-cols-3 ${!canEditEventCategory ? "pointer-events-none opacity-80" : ""}`}
                       >
-                        <span className="rounded-full bg-[var(--owner-fg-1)] px-3 py-1 text-xs font-semibold text-white">
-                          Category locked — can&apos;t change after Basic Details
-                        </span>
+                        {eventTypeCards.map((card) => (
+                          <button
+                            key={card.value}
+                            type="button"
+                            disabled={!canEditEventCategory}
+                            onClick={() => {
+                              if (!canEditEventCategory) return;
+                              if (eventType === card.value) return;
+
+                              // Switching paid ↔ free changes which ticket
+                              // categories are legal. Ask before nuking the
+                              // host's draft tickets — only when there's at
+                              // least one ticket configured.
+                              const wouldRequireClear =
+                                tickets.length > 0 &&
+                                ((eventType === "FREE" &&
+                                  card.value !== "FREE") ||
+                                  (eventType !== "FREE" &&
+                                    card.value === "FREE"));
+
+                              const applyChange = () => {
+                                setEventType(card.value);
+                                if (card.value === "FREE") {
+                                  setTicketCategory("GUESTLIST");
+                                  setTicketPrice(0);
+                                } else if (ticketCategory === "GUESTLIST") {
+                                  setTicketCategory("NORMAL");
+                                }
+                                if (wouldRequireClear) {
+                                  setTickets([]);
+                                  setToastData({
+                                    type: "warning",
+                                    message:
+                                      "Existing ticket variants were cleared to match the new event type. Add fresh tickets in step 4.",
+                                  });
+                                }
+                              };
+
+                              if (wouldRequireClear) {
+                                setConfirmAction({
+                                  title: "Switch event type and clear tickets?",
+                                  description: (
+                                    <>
+                                      You have <strong>{tickets.length}</strong>{" "}
+                                      ticket variant
+                                      {tickets.length === 1 ? "" : "s"}{" "}
+                                      configured. Switching to{" "}
+                                      <strong>{card.title}</strong> will remove
+                                      them — you&apos;ll need to add fresh
+                                      tickets that match the new event type.
+                                    </>
+                                  ),
+                                  confirmLabel: "Switch and clear",
+                                  tone: "danger",
+                                  onConfirm: () => {
+                                    applyChange();
+                                    setConfirmAction(null);
+                                  },
+                                });
+                                return;
+                              }
+                              applyChange();
+                            }}
+                            className={`rounded-lg border p-4 text-left transition ${
+                              eventType === card.value
+                                ? "border-[var(--owner-blue-500)] bg-white shadow-sm"
+                                : "border-[var(--owner-border)] bg-[var(--owner-bg)]"
+                            }`}
+                          >
+                            <div className="flex items-center justify-between gap-3">
+                              <h3 className="font-semibold">{card.title}</h3>
+                              {eventType === card.value ? (
+                                <CheckCircle2Icon className="text-[var(--owner-blue-500)]" />
+                              ) : (
+                                <CircleDashedIcon className="text-gray-400" />
+                              )}
+                            </div>
+                            <p className="mt-3 text-sm leading-6 text-[var(--owner-fg-3)]">
+                              {card.description}
+                            </p>
+                            <div className="mt-4 flex flex-wrap gap-2">
+                              {card.meta.map((item) => (
+                                <span
+                                  key={item}
+                                  className="rounded-md bg-[var(--owner-bg-subtle)] px-2.5 py-1 text-xs font-medium"
+                                >
+                                  {item}
+                                </span>
+                              ))}
+                            </div>
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                    {!canEditEventCategory ? (
+                      <div className="rounded-lg border border-[var(--owner-border)] bg-[var(--owner-bg)] p-4 text-sm text-[var(--owner-fg-3)]">
+                        Event category is locked after the event is created.
                       </div>
                     ) : null}
-                  <div className={`grid gap-4 xl:grid-cols-3 ${!canEditEventCategory ? "pointer-events-none opacity-80" : ""}`}>
-                    {eventTypeCards.map((card) => (
-                      <button
-                        key={card.value}
-                        type="button"
-                        disabled={!canEditEventCategory}
-                        onClick={() => {
-                          if (!canEditEventCategory) return;
-                          if (eventType === card.value) return;
-
-                          // Switching paid ↔ free changes which ticket
-                          // categories are legal. Ask before nuking the
-                          // host's draft tickets — only when there's at
-                          // least one ticket configured.
-                          const wouldRequireClear =
-                            tickets.length > 0 &&
-                            ((eventType === "FREE" && card.value !== "FREE") ||
-                              (eventType !== "FREE" && card.value === "FREE"));
-
-                          const applyChange = () => {
-                            setEventType(card.value);
-                            if (card.value === "FREE") {
-                              setTicketCategory("GUESTLIST");
-                              setTicketPrice(0);
-                            } else if (ticketCategory === "GUESTLIST") {
-                              setTicketCategory("NORMAL");
-                            }
-                            if (wouldRequireClear) {
-                              setTickets([]);
-                              setToastData({
-                                type: "warning",
-                                message:
-                                  "Existing ticket variants were cleared to match the new event type. Add fresh tickets in step 4.",
-                              });
-                            }
-                          };
-
-                          if (wouldRequireClear) {
-                            setConfirmAction({
-                              title: "Switch event type and clear tickets?",
-                              description: (
-                                <>
-                                  You have <strong>{tickets.length}</strong>{" "}
-                                  ticket variant
-                                  {tickets.length === 1 ? "" : "s"} configured.
-                                  Switching to{" "}
-                                  <strong>{card.title}</strong> will remove
-                                  them — you&apos;ll need to add fresh tickets
-                                  that match the new event type.
-                                </>
-                              ),
-                              confirmLabel: "Switch and clear",
-                              tone: "danger",
-                              onConfirm: () => {
-                                applyChange();
-                                setConfirmAction(null);
-                              },
-                            });
-                            return;
-                          }
-                          applyChange();
-                        }}
-                        className={`rounded-lg border p-4 text-left transition ${
-                          eventType === card.value
-                            ? "border-[var(--owner-blue-500)] bg-white shadow-sm"
-                            : "border-[var(--owner-border)] bg-[var(--owner-bg)]"
-                        }`}
-                      >
-                        <div className="flex items-center justify-between gap-3">
-                          <h3 className="font-semibold">{card.title}</h3>
-                          {eventType === card.value ? (
-                            <CheckCircle2Icon className="text-[var(--owner-blue-500)]" />
-                          ) : (
-                            <CircleDashedIcon className="text-gray-400" />
-                          )}
-                        </div>
-                        <p className="mt-3 text-sm leading-6 text-[var(--owner-fg-3)]">
-                          {card.description}
-                        </p>
-                        <div className="mt-4 flex flex-wrap gap-2">
-                          {card.meta.map((item) => (
-                            <span
-                              key={item}
-                              className="rounded-md bg-[var(--owner-bg-subtle)] px-2.5 py-1 text-xs font-medium"
-                            >
-                              {item}
-                            </span>
-                          ))}
-                        </div>
-                      </button>
-                    ))}
-                  </div>
-                  </div>
-                  {!canEditEventCategory ? (
-                    <div className="rounded-lg border border-[var(--owner-border)] bg-[var(--owner-bg)] p-4 text-sm text-[var(--owner-fg-3)]">
-                      Event category is locked after the event is created.
+                    <div className="rounded-lg border border-[var(--owner-border)] bg-white p-4 text-sm leading-6 text-[var(--owner-fg-3)]">
+                      Hoizr host accounts are free to create and publish from.
+                      No subscription, setup fee, listing fee, or card details
+                      are required before publishing. Incorrect category
+                      information can lead to review or listing restrictions.
                     </div>
-                  ) : null}
-                  <div className="rounded-lg border border-[var(--owner-border)] bg-white p-4 text-sm leading-6 text-[var(--owner-fg-3)]">
-                    Hoizr host accounts are free to create and publish from.
-                    No subscription, setup fee, listing fee, or card details
-                    are required before publishing. Incorrect category
-                    information can lead to review or listing restrictions.
-                  </div>
-                </StepSection>
-              ) : null}
+                  </StepSection>
+                ) : null}
 
-              {step === 1 ? (
-                <StepSection
-                  title="Basic details"
-                  subtitle="Keep this tight. The preview updates as details are saved."
-                >
-                  <div className="grid gap-5">
-                    <div className="rounded-lg border border-[var(--owner-border)] bg-white p-3 shadow-sm">
-                      <div className="flex flex-col gap-3 md:flex-row md:items-stretch">
-                        <label
-                          className="flex min-h-[118px] flex-1 cursor-pointer items-center gap-4 rounded-lg border border-dashed border-[var(--owner-border)] bg-[var(--owner-bg)] px-4 py-4 text-sm transition hover:border-[var(--owner-blue-500)] hover:bg-[var(--owner-bg-subtle)]"
-                          onDragOver={(event) => event.preventDefault()}
-                          onDrop={(event) => {
-                            event.preventDefault();
-                            handleFlyerFile(event.dataTransfer.files?.[0]);
-                          }}
-                        >
-                          {eventFlyer ? (
-                            <span
-                              className="h-24 w-20 shrink-0 rounded-lg bg-cover bg-center shadow-sm"
-                              style={{ backgroundImage: `url(${eventFlyer})` }}
-                            />
-                          ) : (
-                            <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-white text-[var(--owner-fg-3)] shadow-sm">
-                              <UploadCloudIcon size={22} />
-                            </span>
-                          )}
-                          <span className="min-w-0 text-left">
-                            <span className="block font-semibold text-[var(--owner-fg-1)]">
-                              Event Flyer *
-                            </span>
-                            <span className="mt-1 block text-xs leading-5 text-[var(--owner-fg-3)]">
-                              Drop an image or click to crop a 4:5 event poster.
-                              JPG, PNG, or WebP up to 5 MB.
-                            </span>
-                            {eventFlyer ? (
-                              <span className="mt-2 inline-flex items-center gap-1 text-xs font-semibold text-[var(--owner-blue-500)]">
-                                <ImagePlusIcon size={14} />
-                                Replace image
-                              </span>
-                            ) : null}
-                          </span>
-                          <input
-                            type="file"
-                            accept="image/*"
-                            className="sr-only"
-                            onChange={(event) => {
-                              handleFlyerFile(event.target.files?.[0]);
-                              event.currentTarget.value = "";
+                {step === 1 ? (
+                  <StepSection
+                    title="Basic details"
+                    subtitle="Keep this tight. The preview updates as details are saved."
+                  >
+                    <div className="grid gap-5">
+                      <div className="rounded-lg border border-[var(--owner-border)] bg-white p-3 shadow-sm">
+                        <div className="flex flex-col gap-3 md:flex-row md:items-stretch">
+                          <label
+                            className="flex min-h-[118px] flex-1 cursor-pointer items-center gap-4 rounded-lg border border-dashed border-[var(--owner-border)] bg-[var(--owner-bg)] px-4 py-4 text-sm transition hover:border-[var(--owner-blue-500)] hover:bg-[var(--owner-bg-subtle)]"
+                            onDragOver={(event) => event.preventDefault()}
+                            onDrop={(event) => {
+                              event.preventDefault();
+                              handleFlyerFile(event.dataTransfer.files?.[0]);
                             }}
-                          />
-                        </label>
-                        {eventFlyer ? (
-                          <div className="flex shrink-0 gap-2 md:w-36 md:flex-col">
-                            <label className="inline-flex flex-1 cursor-pointer items-center justify-center gap-2 rounded-lg border border-[var(--owner-border)] bg-white px-3 py-2 text-xs font-semibold text-[var(--owner-fg-1)] transition hover:border-[var(--owner-blue-500)] md:flex-none">
-                              <ImagePlusIcon size={15} />
-                              Replace
-                              <input
-                                type="file"
-                                accept="image/*"
-                                className="sr-only"
-                                onChange={(event) => {
-                                  handleFlyerFile(event.target.files?.[0]);
-                                  event.currentTarget.value = "";
+                          >
+                            {eventFlyer ? (
+                              <span
+                                className="h-24 w-20 shrink-0 rounded-lg bg-cover bg-center shadow-sm"
+                                style={{
+                                  backgroundImage: `url(${eventFlyer})`,
                                 }}
                               />
-                            </label>
-                            <button
-                              type="button"
-                              onClick={removeEventFlyer}
-                              className="inline-flex flex-1 items-center justify-center gap-2 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-xs font-semibold text-red-700 transition hover:bg-red-100 md:flex-none"
-                            >
-                              <XIcon size={15} />
-                              Delete
-                            </button>
+                            ) : (
+                              <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-white text-[var(--owner-fg-3)] shadow-sm">
+                                <UploadCloudIcon size={22} />
+                              </span>
+                            )}
+                            <span className="min-w-0 text-left">
+                              <span className="block font-semibold text-[var(--owner-fg-1)]">
+                                Event Flyer *
+                              </span>
+                              <span className="mt-1 block text-xs leading-5 text-[var(--owner-fg-3)]">
+                                Drop an image or click to crop a 4:5 event
+                                poster. JPG, PNG, or WebP up to 5 MB.
+                              </span>
+                              {eventFlyer ? (
+                                <span className="mt-2 inline-flex items-center gap-1 text-xs font-semibold text-[var(--owner-blue-500)]">
+                                  <ImagePlusIcon size={14} />
+                                  Replace image
+                                </span>
+                              ) : null}
+                            </span>
+                            <input
+                              type="file"
+                              accept="image/*"
+                              className="sr-only"
+                              onChange={(event) => {
+                                handleFlyerFile(event.target.files?.[0]);
+                                event.currentTarget.value = "";
+                              }}
+                            />
+                          </label>
+                          {eventFlyer ? (
+                            <div className="flex shrink-0 gap-2 md:w-36 md:flex-col">
+                              <label className="inline-flex flex-1 cursor-pointer items-center justify-center gap-2 rounded-lg border border-[var(--owner-border)] bg-white px-3 py-2 text-xs font-semibold text-[var(--owner-fg-1)] transition hover:border-[var(--owner-blue-500)] md:flex-none">
+                                <ImagePlusIcon size={15} />
+                                Replace
+                                <input
+                                  type="file"
+                                  accept="image/*"
+                                  className="sr-only"
+                                  onChange={(event) => {
+                                    handleFlyerFile(event.target.files?.[0]);
+                                    event.currentTarget.value = "";
+                                  }}
+                                />
+                              </label>
+                              <button
+                                type="button"
+                                onClick={removeEventFlyer}
+                                className="inline-flex flex-1 items-center justify-center gap-2 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-xs font-semibold text-red-700 transition hover:bg-red-100 md:flex-none"
+                              >
+                                <XIcon size={15} />
+                                Delete
+                              </button>
+                            </div>
+                          ) : null}
+                        </div>
+                      </div>
+
+                      <div className="grid gap-4 md:grid-cols-2">
+                        <div className="md:col-span-2">
+                          <Input
+                            label="Event Name *"
+                            value={title}
+                            onChange={setTitle}
+                          />
+                        </div>
+                        <div className="md:col-span-2">
+                          <RichTextEditor
+                            label="Event Description"
+                            value={description}
+                            onChange={setDescription}
+                          />
+                        </div>
+                        {/* Genres — multi-select chips. Tags drive
+                          discoverability filters on the customer site. */}
+                        {allGenres.length > 0 ? (
+                          <div className="md:col-span-2">
+                            <p className="mb-2 text-sm font-medium">
+                              Genres
+                              <span className="ml-2 text-xs font-normal text-[var(--owner-fg-3)]">
+                                (pick all that apply — Comedy, Bollywood, EDM,
+                                etc.)
+                              </span>
+                            </p>
+                            <div className="flex flex-wrap gap-2">
+                              {allGenres.map((g) => {
+                                const selected = selectedGenreIds.includes(
+                                  g._id,
+                                );
+                                return (
+                                  <button
+                                    key={g._id}
+                                    type="button"
+                                    onClick={() =>
+                                      setSelectedGenreIds((prev) =>
+                                        prev.includes(g._id)
+                                          ? prev.filter((id) => id !== g._id)
+                                          : [...prev, g._id],
+                                      )
+                                    }
+                                    className={`rounded-full border px-3 py-1 text-xs font-semibold transition ${
+                                      selected
+                                        ? "border-[var(--owner-blue-500)] bg-[var(--owner-blue-050)] text-[var(--owner-blue-500)]"
+                                        : "border-[var(--owner-border)] bg-white text-[var(--owner-fg-3)] hover:border-[var(--owner-blue-500)]"
+                                    }`}
+                                  >
+                                    {g.value}
+                                  </button>
+                                );
+                              })}
+                            </div>
+                          </div>
+                        ) : null}
+                        <ToggleSettingRow
+                          title="Coming Soon"
+                          subtitle="Start and end dates are not required while this is on."
+                          checked={isComingSoon}
+                          onCheckedChange={setIsComingSoon}
+                        />
+                        <ToggleSettingRow
+                          title="Make Event Visible"
+                          subtitle="Visible drafts still need publishing before customers can book."
+                          checked={isVisible}
+                          onCheckedChange={requestEventVisibilityChange}
+                        />
+                        {!isComingSoon ? (
+                          <>
+                            <DateTimeInput
+                              label="Event Start *"
+                              value={startDate}
+                              onChange={setStartDate}
+                              disabled={eventStarted}
+                              minDate={new Date()}
+                            />
+                            <DateTimeInput
+                              label="Event End *"
+                              value={endDate}
+                              onChange={setEndDate}
+                              disabled={eventStarted}
+                              minDate={
+                                startDate ? new Date(startDate) : new Date()
+                              }
+                            />
+                          </>
+                        ) : null}
+                        {multiDayEligible ? (
+                          <div className="md:col-span-2">
+                            <ToggleSettingRow
+                              title="Mark as separate dated events"
+                              subtitle="Customers must select which day they want to attend."
+                              checked={markSeparateDays}
+                              onCheckedChange={setMarkSeparateDays}
+                            />
                           </div>
                         ) : null}
                       </div>
                     </div>
-
+                  </StepSection>
+                ) : null}
+                {step === 2 ? (
+                  <StepSection
+                    title="Location"
+                    subtitle={
+                      eventStarted
+                        ? "Location is locked because this event has already started."
+                        : "Confirm whether the venue is finalized, then add the city or full address."
+                    }
+                  >
                     <div className="grid gap-4 md:grid-cols-2">
                       <div className="md:col-span-2">
-                        <Input label="Event Name *" value={title} onChange={setTitle} />
-                      </div>
-                      <div className="md:col-span-2">
-                        <RichTextEditor
-                          label="Event Description"
-                          value={description}
-                          onChange={setDescription}
+                        <ToggleSettingRow
+                          title="Event Location Decided"
+                          subtitle="Turn this on when the venue address is finalized. Turn it off if only the city is confirmed."
+                          checked={eventLocationDecided}
+                          onCheckedChange={setEventLocationDecided}
+                          disabled={eventStarted}
                         />
                       </div>
-                      {/* Genres — multi-select chips. Tags drive
-                          discoverability filters on the customer site. */}
-                      {allGenres.length > 0 ? (
-                        <div className="md:col-span-2">
-                          <p className="mb-2 text-sm font-medium">
-                            Genres
-                            <span className="ml-2 text-xs font-normal text-[var(--owner-fg-3)]">
-                              (pick all that apply — Comedy, Bollywood, EDM, etc.)
-                            </span>
-                          </p>
-                          <div className="flex flex-wrap gap-2">
-                            {allGenres.map((g) => {
-                              const selected = selectedGenreIds.includes(g._id);
-                              return (
-                                <button
-                                  key={g._id}
-                                  type="button"
-                                  onClick={() =>
-                                    setSelectedGenreIds((prev) =>
-                                      prev.includes(g._id)
-                                        ? prev.filter((id) => id !== g._id)
-                                        : [...prev, g._id]
-                                    )
-                                  }
-                                  className={`rounded-full border px-3 py-1 text-xs font-semibold transition ${
-                                    selected
-                                      ? "border-[var(--owner-blue-500)] bg-[var(--owner-blue-050)] text-[var(--owner-blue-500)]"
-                                      : "border-[var(--owner-border)] bg-white text-[var(--owner-fg-3)] hover:border-[var(--owner-blue-500)]"
-                                  }`}
-                                >
-                                  {g.value}
-                                </button>
-                              );
-                            })}
-                          </div>
-                        </div>
-                      ) : null}
-                      <ToggleSettingRow
-                        title="Coming Soon"
-                        subtitle="Start and end dates are not required while this is on."
-                        checked={isComingSoon}
-                        onCheckedChange={setIsComingSoon}
-                      />
-                      <ToggleSettingRow
-                        title="Make Event Visible"
-                        subtitle="Visible drafts still need publishing before customers can book."
-                        checked={isVisible}
-                        onCheckedChange={requestEventVisibilityChange}
-                      />
-                      {!isComingSoon ? (
+                      {eventLocationDecided ? (
                         <>
-                          <DateTimeInput
-                            label="Event Start *"
-                            value={startDate}
-                            onChange={setStartDate}
-                            disabled={eventStarted}
-                            minDate={new Date()}
-                          />
-                          <DateTimeInput
-                            label="Event End *"
-                            value={endDate}
-                            onChange={setEndDate}
-                            disabled={eventStarted}
-                            minDate={
-                              startDate
-                                ? new Date(startDate)
-                                : new Date()
-                            }
-                          />
+                          <div className="md:col-span-2">
+                            <div className="mb-2 flex items-center justify-between gap-3">
+                              <div className="text-sm font-semibold">
+                                Event address
+                              </div>
+                              <button
+                                type="button"
+                                disabled={eventStarted}
+                                onClick={copyHostAddress}
+                                className="text-xs font-semibold text-[var(--owner-blue-500)] hover:underline disabled:text-[var(--owner-fg-4)]"
+                              >
+                                Copy host address
+                              </button>
+                            </div>
+                            <label className="block min-w-0 text-sm font-medium">
+                              Search Address
+                              <AsyncSelect
+                                isDisabled={eventStarted}
+                                className="mt-1 text-sm text-left"
+                                classNamePrefix="react-select"
+                                placeholder="Search venue or area"
+                                value={selectedPlace}
+                                isClearable
+                                noOptionsMessage={() =>
+                                  "Search for the event location"
+                                }
+                                onChange={(option) =>
+                                  applyPlace(option as PlacesType | null)
+                                }
+                                loadOptions={loadPlaceOptions}
+                              />
+                              {searchLoading ? (
+                                <span className="mt-1 block text-xs text-[var(--owner-fg-3)]">
+                                  Fetching address details...
+                                </span>
+                              ) : null}
+                            </label>
+                            <div className="mt-2 flex flex-wrap items-center justify-between gap-2">
+                              <p className="text-xs text-[var(--owner-fg-3)]">
+                                Search first. If the venue is not listed, enter
+                                the address manually.
+                              </p>
+                              <button
+                                type="button"
+                                disabled={eventStarted}
+                                onClick={() => setManualLocationOpen(true)}
+                                className="rounded-md border border-[var(--owner-border)] bg-white px-3 py-1.5 text-xs font-semibold text-[var(--owner-fg-2)] hover:bg-[var(--owner-bg-subtle)] disabled:opacity-50"
+                              >
+                                Enter manually
+                              </button>
+                            </div>
+                          </div>
+                          {manualLocationOpen ? (
+                            <>
+                              <Input
+                                label="Address Line 1 *"
+                                value={addressLine1}
+                                onChange={setAddressLine1}
+                                disabled={eventStarted}
+                              />
+                              <Input
+                                label="Address Line 2 (optional)"
+                                value={addressLine2}
+                                onChange={setAddressLine2}
+                                disabled={eventStarted}
+                              />
+                              <CityInput
+                                label="City *"
+                                value={city}
+                                onChange={selectCity}
+                                options={cityOptions}
+                                disabled={eventStarted}
+                              />
+                              <StateInput
+                                label="State (optional)"
+                                value={stateName}
+                                onChange={setStateName}
+                                options={stateOptions}
+                                disabled={eventStarted}
+                              />
+                              <Input
+                                label="Pincode (optional)"
+                                value={pincode}
+                                onChange={setPincode}
+                                disabled={eventStarted}
+                              />
+                            </>
+                          ) : (
+                            <div className="md:col-span-2 rounded-lg border border-dashed border-[var(--owner-border)] bg-[var(--owner-bg-subtle)] px-4 py-5 text-sm text-[var(--owner-fg-3)]">
+                              Pick a search result to prefill the address, or
+                              use manual entry when the place is not found.
+                            </div>
+                          )}
                         </>
-                      ) : null}
-                      {multiDayEligible ? (
-                        <div className="md:col-span-2">
-                          <ToggleSettingRow
-                            title="Mark as separate dated events"
-                            subtitle="Customers must select which day they want to attend."
-                            checked={markSeparateDays}
-                            onCheckedChange={setMarkSeparateDays}
-                          />
-                        </div>
-                      ) : null}
-                    </div>
-                  </div>
-                </StepSection>
-              ) : null}
-              {step === 2 ? (
-                <StepSection
-                  title="Location"
-                  subtitle={
-                    eventStarted
-                      ? "Location is locked because this event has already started."
-                      : "Confirm whether the venue is finalized, then add the city or full address."
-                  }
-                >
-                  <div className="grid gap-4 md:grid-cols-2">
-                    <div className="md:col-span-2">
-                      <ToggleSettingRow
-                        title="Event Location Decided"
-                        subtitle="Turn this on when the venue address is finalized. Turn it off if only the city is confirmed."
-                        checked={eventLocationDecided}
-                        onCheckedChange={setEventLocationDecided}
-                        disabled={eventStarted}
-                      />
-                    </div>
-                    {eventLocationDecided ? (
-                      <>
-                        <div className="md:col-span-2">
-                          <div className="mb-2 flex items-center justify-between gap-3">
-                            <div className="text-sm font-semibold">Event address</div>
-                            <button
-                              type="button"
-                              disabled={eventStarted}
-                              onClick={copyHostAddress}
-                              className="text-xs font-semibold text-[var(--owner-blue-500)] hover:underline disabled:text-[var(--owner-fg-4)]"
-                            >
-                              Copy host address
-                            </button>
-                          </div>
-                          <label className="block min-w-0 text-sm font-medium">
-                            Search Address
-                            <AsyncSelect
-                              isDisabled={eventStarted}
-                              className="mt-1 text-sm text-left"
-                              classNamePrefix="react-select"
-                              placeholder="Search venue or area"
-                              value={selectedPlace}
-                              isClearable
-                              noOptionsMessage={() => "Search for the event location"}
-                              onChange={(option) => applyPlace(option as PlacesType | null)}
-                              loadOptions={loadPlaceOptions}
-                            />
-                            {searchLoading ? (
-                              <span className="mt-1 block text-xs text-[var(--owner-fg-3)]">
-                                Fetching address details...
-                              </span>
-                            ) : null}
-                          </label>
-                          <div className="mt-2 flex flex-wrap items-center justify-between gap-2">
-                            <p className="text-xs text-[var(--owner-fg-3)]">
-                              Search first. If the venue is not listed, enter the address manually.
-                            </p>
-                            <button
-                              type="button"
-                              disabled={eventStarted}
-                              onClick={() => setManualLocationOpen(true)}
-                              className="rounded-md border border-[var(--owner-border)] bg-white px-3 py-1.5 text-xs font-semibold text-[var(--owner-fg-2)] hover:bg-[var(--owner-bg-subtle)] disabled:opacity-50"
-                            >
-                              Enter manually
-                            </button>
-                          </div>
-                        </div>
-                        {manualLocationOpen ? (
-                          <>
-                            <Input
-                              label="Address Line 1 *"
-                              value={addressLine1}
-                              onChange={setAddressLine1}
-                              disabled={eventStarted}
-                            />
-                            <Input
-                              label="Address Line 2 (optional)"
-                              value={addressLine2}
-                              onChange={setAddressLine2}
-                              disabled={eventStarted}
-                            />
-                            <CityInput
-                              label="City *"
-                              value={city}
-                              onChange={selectCity}
-                              options={cityOptions}
-                              disabled={eventStarted}
-                            />
-                            <StateInput
-                              label="State (optional)"
-                              value={stateName}
-                              onChange={setStateName}
-                              options={stateOptions}
-                              disabled={eventStarted}
-                            />
-                            <Input
-                              label="Pincode (optional)"
-                              value={pincode}
-                              onChange={setPincode}
-                              disabled={eventStarted}
-                            />
-                          </>
-                        ) : (
-                          <div className="md:col-span-2 rounded-lg border border-dashed border-[var(--owner-border)] bg-[var(--owner-bg-subtle)] px-4 py-5 text-sm text-[var(--owner-fg-3)]">
-                            Pick a search result to prefill the address, or use
-                            manual entry when the place is not found.
-                          </div>
-                        )}
-                      </>
-                    ) : (
-                      <CityInput
-                        label="City *"
-                        value={city}
-                        onChange={selectCity}
-                        options={cityOptions}
-                        disabled={eventStarted}
-                      />
-                    )}
-                    {/* Map preview — shown once coords are set (host
+                      ) : (
+                        <CityInput
+                          label="City *"
+                          value={city}
+                          onChange={selectCity}
+                          options={cityOptions}
+                          disabled={eventStarted}
+                        />
+                      )}
+                      {/* Map preview — shown once coords are set (host
                         picked from Places autocomplete). Iframe avoids
                         loading the full Google Maps JS bundle just for
                         a static preview. */}
-                    {eventLocationDecided && coords.length === 2 ? (
-                      <div className="md:col-span-2 overflow-hidden rounded-lg border border-[var(--owner-border)]">
-                        <iframe
-                          title="Event location preview"
-                          src={`https://www.google.com/maps?q=${coords[0]},${coords[1]}&hl=en&z=16&output=embed`}
-                          className="h-56 w-full"
-                          loading="lazy"
-                          referrerPolicy="no-referrer-when-downgrade"
-                        />
-                      </div>
-                    ) : null}
-                  </div>
-                </StepSection>
-              ) : null}
-
-              {step === 3 ? (
-                <StepSection
-                  title="Tickets"
-                  subtitle="Create one clean ticket variation at a time. Master ticket settings are separate below."
-                >
-                  <ToggleSettingRow
-                    title="Enable Ticketing"
-                    subtitle="Allow attendees to purchase or claim tickets for this event."
-                    checked={ticketingEnabled}
-                    onCheckedChange={requestTicketingChange}
-                  />
-                  <div
-                    className={`space-y-5 ${
-                      ticketingEnabled ? "" : "pointer-events-none opacity-45"
-                    }`}
-                  >
-                    <div className="flex flex-wrap items-center justify-between gap-3">
-                      <div className="inline-flex rounded-lg border border-[var(--owner-border)] bg-[var(--owner-bg)] p-1">
-                        {[
-                          { id: "tickets", label: "Tickets" },
-                          { id: "advanced", label: "Advance Ticket Settings" },
-                        ].map((tab) => (
-                          <button
-                            key={tab.id}
-                            type="button"
-                            disabled={!ticketingEnabled}
-                            onClick={() =>
-                              setTicketTab(tab.id as "tickets" | "advanced")
-                            }
-                            className={`rounded-md px-3 py-2 text-sm font-semibold ${
-                              ticketTab === tab.id
-                                ? "bg-[var(--owner-fg-1)] text-[var(--owner-bg)]"
-                                : "text-[var(--owner-fg-3)]"
-                            }`}
-                          >
-                            {tab.label}
-                          </button>
-                        ))}
-                      </div>
-                      {ticketTab === "tickets" ? (
-                        <button
-                          type="button"
-                          disabled={!ticketingEnabled}
-                          onClick={() => openTicketModal()}
-                          className="inline-flex items-center justify-center gap-2 rounded-lg bg-[var(--owner-fg-1)] px-4 py-2 text-sm font-semibold text-[var(--owner-bg)] disabled:opacity-60"
-                        >
-                          <PlusIcon size={16} />
-                          Add Ticket
-                        </button>
+                      {eventLocationDecided && coords.length === 2 ? (
+                        <div className="md:col-span-2 overflow-hidden rounded-lg border border-[var(--owner-border)]">
+                          <iframe
+                            title="Event location preview"
+                            src={`https://www.google.com/maps?q=${coords[0]},${coords[1]}&hl=en&z=16&output=embed`}
+                            className="h-56 w-full"
+                            loading="lazy"
+                            referrerPolicy="no-referrer-when-downgrade"
+                          />
+                        </div>
                       ) : null}
                     </div>
+                  </StepSection>
+                ) : null}
 
-                    {ticketTab === "tickets" ? (
-                      <>
-                        <div className="rounded-lg border border-[var(--owner-border)] bg-white">
-                          <div className="grid grid-cols-[minmax(0,1.4fr)_120px_150px] gap-3 border-b border-[var(--owner-border)] px-4 py-3 text-xs font-semibold uppercase tracking-[0.08em] text-[var(--owner-fg-3)] max-md:hidden">
-                            <span>Ticket</span>
-                            <span>Status</span>
-                            <span className="text-right">Actions</span>
-                          </div>
-                          {tickets.length ? (
-                            tickets.map((ticket, index) => {
-                              const hasSales = Number(ticket.ticketSold ?? 0) > 0;
-                              return (
-                                <div
-                                  key={ticket._id ?? `${ticket.ticketName}-${index}`}
-                                  className="grid gap-3 border-b border-[var(--owner-bg-subtle)] px-4 py-3 text-sm last:border-b-0 md:grid-cols-[minmax(0,1.4fr)_120px_150px] md:items-center"
-                                >
-                                  <div className="min-w-0">
-                                    <div className="truncate font-semibold">
-                                      {ticket.ticketName}
-                                    </div>
-                                    <div className="mt-1 text-xs text-[var(--owner-fg-3)]">
-                                      {ticket.ticketCategory} · {ticket.ticketCapacity} capacity ·{" "}
-                                      {ticket.ticketCategory === "GUESTLIST"
-                                        ? "Free"
-                                        : rupee(ticket.ticketPrice)}
-                                    </div>
-                                  </div>
-                                  <span
-                                    className={`w-fit rounded-md px-2.5 py-1 text-xs font-semibold ${
-                                      ticket.ticketVisible
-                                        ? "bg-emerald-50 text-emerald-700"
-                                        : "bg-gray-100 text-gray-600"
-                                    }`}
-                                  >
-                                    {ticket.ticketVisible ? "Visible" : "Hidden"}
-                                  </span>
-                                  <div className="flex justify-start gap-2 md:justify-end">
-                                    <button
-                                      type="button"
-                                      onClick={() => requestTicketVisibilityToggle(index)}
-                                      className="inline-flex h-9 w-9 items-center justify-center rounded-md border border-[var(--owner-border)]"
-                                      title={
-                                        ticket.ticketVisible
-                                          ? "Hide ticket"
-                                          : "Show ticket"
-                                      }
-                                    >
-                                      {ticket.ticketVisible ? (
-                                        <EyeOffIcon size={15} />
-                                      ) : (
-                                        <EyeIcon size={15} />
-                                      )}
-                                    </button>
-                                    <button
-                                      type="button"
-                                      disabled={hasSales}
-                                      onClick={() => openTicketModal(index)}
-                                      className="inline-flex h-9 w-9 items-center justify-center rounded-md border border-[var(--owner-border)] disabled:cursor-not-allowed disabled:opacity-40"
-                                      title={
-                                        hasSales
-                                          ? "Tickets with sales cannot be edited"
-                                          : "Edit ticket"
-                                      }
-                                    >
-                                      <Edit3Icon size={15} />
-                                    </button>
-                                    <button
-                                      type="button"
-                                      disabled={hasSales}
-                                      onClick={() => requestRemoveTicket(index)}
-                                      className="inline-flex h-9 w-9 items-center justify-center rounded-md border border-red-200 text-red-700 disabled:cursor-not-allowed disabled:opacity-40"
-                                      title={
-                                        hasSales
-                                          ? "Tickets with sales cannot be removed"
-                                          : "Remove ticket"
-                                      }
-                                    >
-                                      <XIcon size={15} />
-                                    </button>
-                                  </div>
-                                </div>
-                              );
-                            })
-                          ) : (
-                            <div className="px-4 py-8 text-center text-sm text-[var(--owner-fg-3)]">
-                              No ticket variations added yet.
-                            </div>
-                          )}
-                        </div>
-
-                        <div className="space-y-3">
-                          <div className="flex flex-wrap items-center justify-between gap-3">
-                            <div>
-                              <div className="text-sm font-semibold">Event Add-ons (optional)</div>
-                              <p className="mt-0.5 text-xs text-[var(--owner-fg-3)]">
-                                Sell upgrades, merch, or food add-ons alongside tickets.
-                              </p>
-                            </div>
+                {step === 3 ? (
+                  <StepSection
+                    title="Tickets"
+                    subtitle="Create one clean ticket variation at a time. Master ticket settings are separate below."
+                  >
+                    <ToggleSettingRow
+                      title="Enable Ticketing"
+                      subtitle="Allow attendees to purchase or claim tickets for this event."
+                      checked={ticketingEnabled}
+                      onCheckedChange={requestTicketingChange}
+                    />
+                    <div
+                      className={`space-y-5 ${
+                        ticketingEnabled ? "" : "pointer-events-none opacity-45"
+                      }`}
+                    >
+                      <div className="flex flex-wrap items-center justify-between gap-3">
+                        <div className="inline-flex rounded-lg border border-[var(--owner-border)] bg-[var(--owner-bg)] p-1">
+                          {[
+                            { id: "tickets", label: "Tickets" },
+                            {
+                              id: "advanced",
+                              label: "Advance Ticket Settings",
+                            },
+                          ].map((tab) => (
                             <button
+                              key={tab.id}
                               type="button"
                               disabled={!ticketingEnabled}
-                              onClick={() => openExtraModal()}
-                              className="inline-flex items-center justify-center gap-2 rounded-lg border border-[var(--owner-border)] bg-[var(--owner-bg)] px-4 py-2 text-sm font-semibold disabled:opacity-60"
+                              onClick={() =>
+                                setTicketTab(tab.id as "tickets" | "advanced")
+                              }
+                              className={`rounded-md px-3 py-2 text-sm font-semibold ${
+                                ticketTab === tab.id
+                                  ? "bg-[var(--owner-fg-1)] text-[var(--owner-bg)]"
+                                  : "text-[var(--owner-fg-3)]"
+                              }`}
                             >
-                              <PlusIcon size={16} />
-                              Add Add-on
+                              {tab.label}
                             </button>
-                          </div>
-                          {extras.length ? (
-                            <div className="rounded-lg border border-[var(--owner-border)] bg-white">
-                              <div className="grid grid-cols-[minmax(0,1fr)_120px] gap-3 border-b border-[var(--owner-border)] px-4 py-3 text-xs font-semibold uppercase tracking-[0.08em] text-[var(--owner-fg-3)] max-md:hidden">
-                                <span>Add-on</span>
-                                <span className="text-right">Actions</span>
-                              </div>
-                              {extras.map((extra, index) => (
-                                <div
-                                  key={extra._id ?? `${extra.name}-${index}`}
-                                  className="grid gap-3 border-b border-[var(--owner-bg-subtle)] px-4 py-3 text-sm last:border-b-0 md:grid-cols-[minmax(0,1fr)_120px] md:items-center"
-                                >
-                                  <div className="min-w-0">
-                                    <div className="truncate font-semibold">{extra.name}</div>
-                                    <div className="mt-1 text-xs text-[var(--owner-fg-3)]">
-                                      {extra.type.replace(/_/g, " ")} · {extra.quantity} qty ·{" "}
-                                      {rupee(extra.price)}
-                                      {extra.sold ? ` · ${extra.sold} sold` : ""}
-                                    </div>
-                                  </div>
-                                  <div className="flex justify-start gap-2 md:justify-end">
-                                    <button
-                                      type="button"
-                                      onClick={() => openExtraModal(index)}
-                                      className="inline-flex h-9 w-9 items-center justify-center rounded-md border border-[var(--owner-border)]"
-                                      title="Edit add-on"
-                                    >
-                                      <Edit3Icon size={15} />
-                                    </button>
-                                    <button
-                                      type="button"
-                                      onClick={() => requestRemoveExtra(index)}
-                                      className="inline-flex h-9 w-9 items-center justify-center rounded-md border border-red-200 text-red-700"
-                                      title="Remove add-on"
-                                    >
-                                      <XIcon size={15} />
-                                    </button>
-                                  </div>
-                                </div>
-                              ))}
-                            </div>
-                          ) : null}
-                        </div>
-                      </>
-                    ) : null}
-
-                    {ticketTab === "advanced" ? (
-                      <div className="rounded-lg border border-[var(--owner-border)] bg-white p-4">
-                        <div className="grid gap-4 md:grid-cols-2">
-                          <DateTimeInput
-                            label="Ticket Sales Start Date (optional)"
-                            value={ticketSalesStartDate}
-                            onChange={setTicketSalesStartDate}
-                            minDate={new Date()}
-                            maxDate={endDate ? new Date(endDate) : undefined}
-                          />
-                          <DateTimeInput
-                            label="Ticket Sales End Date (optional)"
-                            value={ticketSalesEndDate}
-                            onChange={setTicketSalesEndDate}
-                            minDate={
-                              ticketSalesStartDate
-                                ? new Date(ticketSalesStartDate)
-                                : new Date()
-                            }
-                            maxDate={endDate ? new Date(endDate) : undefined}
-                          />
-                          <ToggleSettingRow
-                            title="Allow Walk-ins"
-                            checked={allowWalkIns}
-                            onCheckedChange={setAllowWalkIns}
-                          />
-                          <ToggleSettingRow
-                            title="ID Verification Required"
-                            checked={requiresIDVerification}
-                            onCheckedChange={setRequiresIDVerification}
-                          />
-                        </div>
-                        <p className="mt-3 text-xs text-[var(--owner-fg-3)]">
-                          Ticketing Terms &amp; Conditions and Refund Policy are
-                          now required — and live on the final{" "}
-                          <strong>Additional</strong> step.
-                        </p>
-                      </div>
-                    ) : null}
-                  </div>
-                </StepSection>
-              ) : null}
-
-              {step === 4 ? (
-                <StepSection
-                  title="Lineup and collaborators"
-                  subtitle="Manual artists are saved as phantom artists and can be reused from search later."
-                >
-                  <div className="inline-flex rounded-lg border border-[var(--owner-border)] bg-[var(--owner-bg)] p-1">
-                    {[
-                      {
-                        id: "collaborators",
-                        label: "Event Collaborators",
-                        Icon: UsersRoundIcon,
-                      },
-                      { id: "artists", label: "Artist Lineup", Icon: Music2Icon },
-                    ].map(({ id, label, Icon }) => (
-                      <button
-                        key={id}
-                        type="button"
-                        onClick={() =>
-                          setPeopleTab(id as "collaborators" | "artists")
-                        }
-                        className={`inline-flex items-center gap-2 rounded-md px-3 py-2 text-sm font-semibold ${
-                          peopleTab === id
-                            ? "bg-[var(--owner-fg-1)] text-[var(--owner-bg)]"
-                            : "text-[var(--owner-fg-3)]"
-                        }`}
-                      >
-                        <Icon size={15} />
-                        {label}
-                      </button>
-                    ))}
-                  </div>
-
-                  {peopleTab === "collaborators" ? (
-                    <div className="grid gap-3">
-                      {/* Collaborator promise card — sits at the top of the
-                          tab to explain the "why" before the host adds
-                          someone. Mirrors the dashboard PromoCard. */}
-                      <div className="relative overflow-hidden rounded-lg p-4 text-white shadow-owner-sm" style={{ background: "linear-gradient(135deg,#1B0B3D 0%,#3B1E73 60%,#7E2BD6 100%)" }}>
-                        <div
-                          aria-hidden
-                          className="pointer-events-none absolute inset-0 opacity-[0.10]"
-                          style={{
-                            backgroundImage:
-                              "url(\"data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='240' height='240'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.92' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 .9 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>\")",
-                            mixBlendMode: "overlay",
-                          }}
-                        />
-                        <div className="relative text-[10px] font-semibold uppercase tracking-[0.14em] text-white/80">
-                          Collaborate to grow
-                        </div>
-                        <div className="relative mt-2 text-[16px] font-semibold leading-tight">
-                          Pool audiences. Boost sales together.
-                        </div>
-                        <p className="relative mt-1.5 text-[12.5px] text-white/82">
-                          Add another host as a collaborator and you can both market this event to
-                          your combined customer base. They get the event on their dashboard, you
-                          choose exactly what they can see and do.
-                        </p>
-                      </div>
-
-                      <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-                        <p className="text-sm text-[var(--owner-fg-3)]">
-                          Collaborators must be Hoizr hosts. If they aren&apos;t on Hoizr yet, refer them — once they join you can add them as a collaborator.
-                        </p>
-                        <button
-                          type="button"
-                          onClick={openAddCollaboratorModal}
-                          className="inline-flex shrink-0 items-center justify-center gap-2 rounded-lg bg-[var(--owner-blue-500)] px-3 py-2 text-sm font-semibold text-[var(--owner-bg)]"
-                        >
-                          <PlusIcon size={14} />
-                          Add collaborator
-                        </button>
-                      </div>
-                      {collaborators.length === 0 ? (
-                        <div className="rounded-lg border border-dashed border-[var(--owner-border)] bg-white p-6 text-center text-sm text-[var(--owner-fg-3)]">
-                          No collaborators yet. Click <strong>Add collaborator</strong> to invite a business to co-run this event.
-                        </div>
-                      ) : (
-                        <ul className="grid gap-2">
-                          {collaborators.map((collab, index) => (
-                            <li
-                              key={`collab-${index}`}
-                              className="flex flex-col gap-3 rounded-lg border border-[var(--owner-border)] bg-white p-4 sm:flex-row sm:items-center sm:justify-between"
-                            >
-                              <div className="min-w-0">
-                                <p className="font-semibold">{collab.name || "Untitled business"}</p>
-                                <p className="mt-0.5 text-xs text-[var(--owner-fg-3)]">
-                                  {collab.businessLinkId
-                                    ? "On Hoizr"
-                                    : "Legacy entry — business not linked to Hoizr"}
-                                </p>
-                                <div className="mt-2 flex flex-wrap gap-1.5">
-                                  {collab.requestCustomerListAccess ? (
-                                    <span className="rounded-full bg-[var(--owner-bg-subtle)] px-2 py-0.5 text-[11px] font-semibold text-[var(--owner-fg-3)]">
-                                      Customer list
-                                    </span>
-                                  ) : null}
-                                  {collab.hideOnEventPage ? (
-                                    <span className="rounded-full bg-[var(--owner-bg-subtle)] px-2 py-0.5 text-[11px] font-semibold text-[var(--owner-fg-3)]">
-                                      Hidden on page
-                                    </span>
-                                  ) : null}
-                                  {collab.allowIssuingOfflineTickets ? (
-                                    <span className="rounded-full bg-[var(--owner-bg-subtle)] px-2 py-0.5 text-[11px] font-semibold text-[var(--owner-fg-3)]">
-                                      Offline tickets
-                                    </span>
-                                  ) : null}
-                                  {collab.sendTransactionalMails ? (
-                                    <span className="rounded-full bg-[var(--owner-bg-subtle)] px-2 py-0.5 text-[11px] font-semibold text-[var(--owner-fg-3)]">
-                                      Transactional emails
-                                    </span>
-                                  ) : null}
-                                </div>
-                              </div>
-                              <div className="flex gap-2 sm:shrink-0">
-                                <button
-                                  type="button"
-                                  onClick={() => openEditCollaboratorModal(index)}
-                                  className="rounded-md border border-[var(--owner-border-strong)] bg-white px-3 py-1.5 text-xs font-semibold"
-                                >
-                                  Edit
-                                </button>
-                                <button
-                                  type="button"
-                                  onClick={() => requestRemoveCollaborator(index)}
-                                  className="rounded-md border border-[var(--owner-border-strong)] bg-white px-3 py-1.5 text-xs font-semibold text-red-600"
-                                >
-                                  Remove
-                                </button>
-                              </div>
-                            </li>
                           ))}
-                        </ul>
-                      )}
-                    </div>
-                  ) : null}
-
-                  {peopleTab === "artists" ? (
-                    <div className="grid gap-3">
-                      <div className="grid gap-3 md:grid-cols-2">
-                        <ToggleSettingRow
-                          title="Enable Artist Lineup"
-                          subtitle="Display artist lineup on the event page."
-                          checked={lineupEnabled}
-                          onCheckedChange={setLineupEnabled}
-                        />
-                        <ToggleSettingRow
-                          title="Lineup to be announced"
-                          checked={lineUpToBeAnnounced}
-                          onCheckedChange={setLineUpToBeAnnounced}
-                        />
+                        </div>
+                        {ticketTab === "tickets" ? (
+                          <button
+                            type="button"
+                            disabled={!ticketingEnabled}
+                            onClick={() => openTicketModal()}
+                            className="inline-flex items-center justify-center gap-2 rounded-lg bg-[var(--owner-fg-1)] px-4 py-2 text-sm font-semibold text-[var(--owner-bg)] disabled:opacity-60"
+                          >
+                            <PlusIcon size={16} />
+                            Add Ticket
+                          </button>
+                        ) : null}
                       </div>
-                      {lineupEnabled && !lineUpToBeAnnounced ? (
+
+                      {ticketTab === "tickets" ? (
                         <>
-                          <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-                            <p className="text-sm text-[var(--owner-fg-3)]">
-                              Add every artist on the lineup. Each appears as a separate card on the event page.
-                            </p>
-                            <button
-                              type="button"
-                              onClick={openAddArtistModal}
-                              className="inline-flex shrink-0 items-center justify-center gap-2 rounded-lg bg-[var(--owner-blue-500)] px-3 py-2 text-sm font-semibold text-[var(--owner-bg)]"
-                            >
-                              <PlusIcon size={14} />
-                              Add artist
-                            </button>
-                          </div>
-                          {artists.length === 0 ? (
-                            <div className="rounded-lg border border-dashed border-[var(--owner-border)] bg-white p-6 text-center text-sm text-[var(--owner-fg-3)]">
-                              No artists yet. Click <strong>Add artist</strong> to start the lineup.
+                          <div className="rounded-lg border border-[var(--owner-border)] bg-white">
+                            <div className="grid grid-cols-[minmax(0,1.4fr)_120px_150px] gap-3 border-b border-[var(--owner-border)] px-4 py-3 text-xs font-semibold uppercase tracking-[0.08em] text-[var(--owner-fg-3)] max-md:hidden">
+                              <span>Ticket</span>
+                              <span>Status</span>
+                              <span className="text-right">Actions</span>
                             </div>
-                          ) : (
-                            <ul className="grid gap-2">
-                              {artists.map((artist, index) => (
-                                <li
-                                  key={`artist-${index}`}
-                                  className="flex flex-col gap-3 rounded-lg border border-[var(--owner-border)] bg-white p-4 sm:flex-row sm:items-center sm:justify-between"
-                                >
-                                  <div className="flex min-w-0 items-center gap-3">
-                                    <span
-                                      className="h-12 w-12 shrink-0 rounded-md bg-[var(--owner-bg-subtle)] bg-cover bg-center"
-                                      style={
-                                        artist.picture
-                                          ? { backgroundImage: `url(${artist.picture})` }
-                                          : undefined
-                                      }
-                                    />
+                            {tickets.length ? (
+                              tickets.map((ticket, index) => {
+                                const hasSales =
+                                  Number(ticket.ticketSold ?? 0) > 0;
+                                return (
+                                  <div
+                                    key={
+                                      ticket._id ??
+                                      `${ticket.ticketName}-${index}`
+                                    }
+                                    className="grid gap-3 border-b border-[var(--owner-bg-subtle)] px-4 py-3 text-sm last:border-b-0 md:grid-cols-[minmax(0,1.4fr)_120px_150px] md:items-center"
+                                  >
                                     <div className="min-w-0">
-                                      <p className="font-semibold">{artist.name}</p>
-                                      <p className="mt-0.5 text-xs text-[var(--owner-fg-3)]">
-                                        {artist.actualName || "Stage name only"}
-                                      </p>
-                                      <div className="mt-1 flex flex-wrap gap-1.5 text-[11px] text-[var(--owner-fg-3)]">
-                                        {artist.instagramLink ? <span>Instagram</span> : null}
-                                        {artist.spotifyLink ? <span>· Spotify</span> : null}
-                                        {artist.youtubeLink ? <span>· YouTube</span> : null}
+                                      <div className="truncate font-semibold">
+                                        {ticket.ticketName}
+                                      </div>
+                                      <div className="mt-1 text-xs text-[var(--owner-fg-3)]">
+                                        {ticket.ticketCategory} ·{" "}
+                                        {ticket.ticketCapacity} capacity ·{" "}
+                                        {ticket.ticketCategory === "GUESTLIST"
+                                          ? "Free"
+                                          : rupee(ticket.ticketPrice)}
                                       </div>
                                     </div>
-                                  </div>
-                                  <div className="flex gap-2 sm:shrink-0">
-                                    <button
-                                      type="button"
-                                      onClick={() => openEditArtistModal(index)}
-                                      className="rounded-md border border-[var(--owner-border-strong)] bg-white px-3 py-1.5 text-xs font-semibold"
+                                    <span
+                                      className={`w-fit rounded-md px-2.5 py-1 text-xs font-semibold ${
+                                        ticket.ticketVisible
+                                          ? "bg-emerald-50 text-emerald-700"
+                                          : "bg-gray-100 text-gray-600"
+                                      }`}
                                     >
-                                      Edit
-                                    </button>
-                                    <button
-                                      type="button"
-                                      onClick={() => requestRemoveArtist(index)}
-                                      className="rounded-md border border-[var(--owner-border-strong)] bg-white px-3 py-1.5 text-xs font-semibold text-red-600"
-                                    >
-                                      Remove
-                                    </button>
+                                      {ticket.ticketVisible
+                                        ? "Visible"
+                                        : "Hidden"}
+                                    </span>
+                                    <div className="flex justify-start gap-2 md:justify-end">
+                                      <button
+                                        type="button"
+                                        onClick={() =>
+                                          requestTicketVisibilityToggle(index)
+                                        }
+                                        className="inline-flex h-9 w-9 items-center justify-center rounded-md border border-[var(--owner-border)]"
+                                        title={
+                                          ticket.ticketVisible
+                                            ? "Hide ticket"
+                                            : "Show ticket"
+                                        }
+                                      >
+                                        {ticket.ticketVisible ? (
+                                          <EyeOffIcon size={15} />
+                                        ) : (
+                                          <EyeIcon size={15} />
+                                        )}
+                                      </button>
+                                      <button
+                                        type="button"
+                                        disabled={hasSales}
+                                        onClick={() => openTicketModal(index)}
+                                        className="inline-flex h-9 w-9 items-center justify-center rounded-md border border-[var(--owner-border)] disabled:cursor-not-allowed disabled:opacity-40"
+                                        title={
+                                          hasSales
+                                            ? "Tickets with sales cannot be edited"
+                                            : "Edit ticket"
+                                        }
+                                      >
+                                        <Edit3Icon size={15} />
+                                      </button>
+                                      <button
+                                        type="button"
+                                        disabled={hasSales}
+                                        onClick={() =>
+                                          requestRemoveTicket(index)
+                                        }
+                                        className="inline-flex h-9 w-9 items-center justify-center rounded-md border border-red-200 text-red-700 disabled:cursor-not-allowed disabled:opacity-40"
+                                        title={
+                                          hasSales
+                                            ? "Tickets with sales cannot be removed"
+                                            : "Remove ticket"
+                                        }
+                                      >
+                                        <XIcon size={15} />
+                                      </button>
+                                    </div>
                                   </div>
-                                </li>
-                              ))}
-                            </ul>
-                          )}
+                                );
+                              })
+                            ) : (
+                              <div className="px-4 py-8 text-center text-sm text-[var(--owner-fg-3)]">
+                                No ticket variations added yet.
+                              </div>
+                            )}
+                          </div>
+
+                          <div className="space-y-3">
+                            <div className="flex flex-wrap items-center justify-between gap-3">
+                              <div>
+                                <div className="text-sm font-semibold">
+                                  Event Add-ons (optional)
+                                </div>
+                                <p className="mt-0.5 text-xs text-[var(--owner-fg-3)]">
+                                  Sell upgrades, merch, or food add-ons
+                                  alongside tickets.
+                                </p>
+                              </div>
+                              <button
+                                type="button"
+                                disabled={!ticketingEnabled}
+                                onClick={() => openExtraModal()}
+                                className="inline-flex items-center justify-center gap-2 rounded-lg border border-[var(--owner-border)] bg-[var(--owner-bg)] px-4 py-2 text-sm font-semibold disabled:opacity-60"
+                              >
+                                <PlusIcon size={16} />
+                                Add Add-on
+                              </button>
+                            </div>
+                            {extras.length ? (
+                              <div className="rounded-lg border border-[var(--owner-border)] bg-white">
+                                <div className="grid grid-cols-[minmax(0,1fr)_120px] gap-3 border-b border-[var(--owner-border)] px-4 py-3 text-xs font-semibold uppercase tracking-[0.08em] text-[var(--owner-fg-3)] max-md:hidden">
+                                  <span>Add-on</span>
+                                  <span className="text-right">Actions</span>
+                                </div>
+                                {extras.map((extra, index) => (
+                                  <div
+                                    key={extra._id ?? `${extra.name}-${index}`}
+                                    className="grid gap-3 border-b border-[var(--owner-bg-subtle)] px-4 py-3 text-sm last:border-b-0 md:grid-cols-[minmax(0,1fr)_120px] md:items-center"
+                                  >
+                                    <div className="min-w-0">
+                                      <div className="truncate font-semibold">
+                                        {extra.name}
+                                      </div>
+                                      <div className="mt-1 text-xs text-[var(--owner-fg-3)]">
+                                        {extra.type.replace(/_/g, " ")} ·{" "}
+                                        {extra.quantity} qty ·{" "}
+                                        {rupee(extra.price)}
+                                        {extra.sold
+                                          ? ` · ${extra.sold} sold`
+                                          : ""}
+                                      </div>
+                                    </div>
+                                    <div className="flex justify-start gap-2 md:justify-end">
+                                      <button
+                                        type="button"
+                                        onClick={() => openExtraModal(index)}
+                                        className="inline-flex h-9 w-9 items-center justify-center rounded-md border border-[var(--owner-border)]"
+                                        title="Edit add-on"
+                                      >
+                                        <Edit3Icon size={15} />
+                                      </button>
+                                      <button
+                                        type="button"
+                                        onClick={() =>
+                                          requestRemoveExtra(index)
+                                        }
+                                        className="inline-flex h-9 w-9 items-center justify-center rounded-md border border-red-200 text-red-700"
+                                        title="Remove add-on"
+                                      >
+                                        <XIcon size={15} />
+                                      </button>
+                                    </div>
+                                  </div>
+                                ))}
+                              </div>
+                            ) : null}
+                          </div>
                         </>
                       ) : null}
-                    </div>
-                  ) : null}
-                </StepSection>
-              ) : null}
 
-              {step === 5 ? (
-                <StepSection
-                  title="Additional information"
-                  subtitle="Final details before publish. Ticketing Terms and Refund Policy are required and saved as your defaults for next time."
-                >
-                  <div className="rounded-lg border border-[var(--owner-border)] bg-white p-4">
-                    <div className="mb-3 flex items-start justify-between gap-3">
-                      <div>
-                        <div className="text-xs font-semibold uppercase tracking-[0.08em] text-[var(--owner-fg-3)]">
-                          Required for every event
+                      {ticketTab === "advanced" ? (
+                        <div className="rounded-lg border border-[var(--owner-border)] bg-white p-4">
+                          <div className="grid gap-4 md:grid-cols-2">
+                            <DateTimeInput
+                              label="Ticket Sales Start Date (optional)"
+                              value={ticketSalesStartDate}
+                              onChange={setTicketSalesStartDate}
+                              minDate={new Date()}
+                              maxDate={endDate ? new Date(endDate) : undefined}
+                            />
+                            <DateTimeInput
+                              label="Ticket Sales End Date (optional)"
+                              value={ticketSalesEndDate}
+                              onChange={setTicketSalesEndDate}
+                              minDate={
+                                ticketSalesStartDate
+                                  ? new Date(ticketSalesStartDate)
+                                  : new Date()
+                              }
+                              maxDate={endDate ? new Date(endDate) : undefined}
+                            />
+                            <ToggleSettingRow
+                              title="Allow Walk-ins"
+                              checked={allowWalkIns}
+                              onCheckedChange={setAllowWalkIns}
+                            />
+                            <ToggleSettingRow
+                              title="ID Verification Required"
+                              checked={requiresIDVerification}
+                              onCheckedChange={setRequiresIDVerification}
+                            />
+                          </div>
+                          <p className="mt-3 text-xs text-[var(--owner-fg-3)]">
+                            Ticketing Terms &amp; Conditions and Refund Policy
+                            are now required — and live on the final{" "}
+                            <strong>Additional</strong> step.
+                          </p>
                         </div>
-                        <div className="mt-1 text-sm font-semibold text-[var(--owner-fg-1)]">
-                          Ticketing Terms &amp; Refund Policy
-                        </div>
-                      </div>
-                      {hostDefaultsLoaded && (hostDefaultsRef.current.ticketingTerms || hostDefaultsRef.current.refundPolicy) ? (
-                        <button
-                          type="button"
-                          onClick={() => {
-                            if (hostDefaultsRef.current.ticketingTerms)
-                              setTicketingTerms(hostDefaultsRef.current.ticketingTerms);
-                            if (hostDefaultsRef.current.refundPolicy)
-                              setRefundPolicy(hostDefaultsRef.current.refundPolicy);
-                          }}
-                          className="rounded-md border border-[var(--owner-border)] px-3 py-1.5 text-xs font-semibold text-[var(--owner-fg-2)] hover:bg-[var(--owner-bg-subtle)]"
-                        >
-                          Reset to my defaults
-                        </button>
                       ) : null}
                     </div>
-                    <div className="grid gap-4 md:grid-cols-2">
-                      <RichTextEditor
-                        label="Ticketing Terms & Conditions *"
-                        value={ticketingTerms}
-                        onChange={setTicketingTerms}
-                      />
-                      <RichTextEditor
-                        label="Refund Policy *"
-                        value={refundPolicy}
-                        onChange={setRefundPolicy}
-                      />
-                    </div>
-                    <p className="mt-3 text-xs text-[var(--owner-fg-3)]">
-                      These appear on the customer ticket page and order
-                      confirmation. We save them as your defaults so the next
-                      event you create starts prefilled.
-                    </p>
-                  </div>
+                  </StepSection>
+                ) : null}
 
-                  <div className="mt-6">
-                    <div className="text-xs font-semibold uppercase tracking-[0.08em] text-[var(--owner-fg-3)]">
-                      Promotional assets — all optional
+                {step === 4 ? (
+                  <StepSection
+                    title="Lineup and collaborators"
+                    subtitle="Manual artists are saved as phantom artists and can be reused from search later."
+                  >
+                    <div className="inline-flex rounded-lg border border-[var(--owner-border)] bg-[var(--owner-bg)] p-1">
+                      {[
+                        {
+                          id: "collaborators",
+                          label: "Event Collaborators",
+                          Icon: UsersRoundIcon,
+                        },
+                        {
+                          id: "artists",
+                          label: "Artist Lineup",
+                          Icon: Music2Icon,
+                        },
+                      ].map(({ id, label, Icon }) => (
+                        <button
+                          key={id}
+                          type="button"
+                          onClick={() =>
+                            setPeopleTab(id as "collaborators" | "artists")
+                          }
+                          className={`inline-flex items-center gap-2 rounded-md px-3 py-2 text-sm font-semibold ${
+                            peopleTab === id
+                              ? "bg-[var(--owner-fg-1)] text-[var(--owner-bg)]"
+                              : "text-[var(--owner-fg-3)]"
+                          }`}
+                        >
+                          <Icon size={15} />
+                          {label}
+                        </button>
+                      ))}
                     </div>
-                    <p className="mt-1 text-xs text-[var(--owner-fg-3)]">
-                      Drop an image into any slot — Hoizr uploads it straight
-                      to Cloudinary under your event folder. A{" "}
-                      <strong>horizontal flyer</strong> is a strong plus — we
-                      use it on the event page hero and OG/share previews,
-                      which lifts click-through on social. Video uploads are
-                      coming soon.
-                    </p>
-                    <div className="mt-3 grid gap-4 md:grid-cols-2">
-                      <ImageUrlInput
-                        label="Horizontal flyer (16:9, optional)"
-                        value={horizontalFlyer}
-                        onChange={setHorizontalFlyer}
-                        uploadKind="event-extra"
-                        hostId={selectedHostId}
-                        eventId={eventId}
-                      />
-                      <Input
-                        label="Vertical video (coming soon)"
-                        value={verticalVideo}
-                        onChange={setVerticalVideo}
-                        disabled
-                      />
-                      <Input
-                        label="Horizontal video (coming soon)"
-                        value={horizontalVideo}
-                        onChange={setHorizontalVideo}
-                        disabled
-                      />
-                      <ImageUrlInput
-                        label="Promotional Instagram Post (optional)"
-                        value={instagramPost}
-                        onChange={setInstagramPost}
-                        uploadKind="event-instagram"
-                        hostId={selectedHostId}
-                        eventId={eventId}
-                      />
-                      <ImageUrlInput
-                        label="Instagram Story (optional)"
-                        value={instagramStory}
-                        onChange={setInstagramStory}
-                        uploadKind="event-instagram"
-                        hostId={selectedHostId}
-                        eventId={eventId}
-                      />
-                      <ImageUrlInput
-                        label="Venue Table Arrangement (optional)"
-                        value={tableLayoutImage}
-                        onChange={setTableLayoutImage}
-                        uploadKind="event-table-layout"
-                        hostId={selectedHostId}
-                        eventId={eventId}
-                      />
-                    </div>
-                  </div>
 
-                  <div className="mt-6 grid gap-4 md:grid-cols-2">
-                    <Input
-                      label="Contact for Table Queries (optional)"
-                      value={contactForQueriesTables}
-                      onChange={setContactForQueriesTables}
-                    />
-                    <ToggleSettingRow
-                      title="Weekly Recurrence"
-                      subtitle="Turn on only when the same event repeats every week."
-                      checked={repeatEveryWeek}
-                      onCheckedChange={setRepeatEveryWeek}
-                    />
-                    <ToggleSettingRow
-                      title="Event is visible to public"
-                      checked={isVisible}
-                      onCheckedChange={requestEventVisibilityChange}
-                    />
-                  </div>
-                </StepSection>
-              ) : null}
+                    {peopleTab === "collaborators" ? (
+                      <div className="grid gap-3">
+                        {/* Collaborator promise card — sits at the top of the
+                          tab to explain the "why" before the host adds
+                          someone. Mirrors the dashboard PromoCard. */}
+                        <div
+                          className="relative overflow-hidden rounded-lg p-4 text-white shadow-owner-sm"
+                          style={{
+                            background:
+                              "linear-gradient(135deg,#1B0B3D 0%,#3B1E73 60%,#7E2BD6 100%)",
+                          }}
+                        >
+                          <div
+                            aria-hidden
+                            className="pointer-events-none absolute inset-0 opacity-[0.10]"
+                            style={{
+                              backgroundImage:
+                                "url(\"data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='240' height='240'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.92' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 .9 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>\")",
+                              mixBlendMode: "overlay",
+                            }}
+                          />
+                          <div className="relative text-[10px] font-semibold uppercase tracking-[0.14em] text-white/80">
+                            Collaborate to grow
+                          </div>
+                          <div className="relative mt-2 text-[16px] font-semibold leading-tight">
+                            Pool audiences. Boost sales together.
+                          </div>
+                          <p className="relative mt-1.5 text-[12.5px] text-white/82">
+                            Add another organizer as a collaborator and you can
+                            both market this event to your combined customer
+                            base. They get the event on their dashboard, you
+                            choose exactly what they can see and do.
+                          </p>
+                        </div>
 
+                        <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                          <p className="text-sm text-[var(--owner-fg-3)]">
+                            Collaborators must be Hoizr organizers or venues. If
+                            they aren&apos;t on Hoizr yet, refer them — once
+                            they join you can add them as a collaborator.
+                          </p>
+                          <button
+                            type="button"
+                            onClick={openAddCollaboratorModal}
+                            className="inline-flex shrink-0 items-center justify-center gap-2 rounded-lg bg-[var(--owner-blue-500)] px-3 py-2 text-sm font-semibold text-[var(--owner-bg)]"
+                          >
+                            <PlusIcon size={14} />
+                            Add collaborator
+                          </button>
+                        </div>
+                        {collaborators.length === 0 ? (
+                          <div className="rounded-lg border border-dashed border-[var(--owner-border)] bg-white p-6 text-center text-sm text-[var(--owner-fg-3)]">
+                            No collaborators yet. Click{" "}
+                            <strong>Add collaborator</strong> to invite a
+                            business to co-run this event.
+                          </div>
+                        ) : (
+                          <ul className="grid gap-2">
+                            {collaborators.map((collab, index) => (
+                              <li
+                                key={`collab-${index}`}
+                                className="flex flex-col gap-3 rounded-lg border border-[var(--owner-border)] bg-white p-4 sm:flex-row sm:items-center sm:justify-between"
+                              >
+                                <div className="flex min-w-0 items-start gap-3">
+                                  <span
+                                    className="grid h-10 w-10 shrink-0 place-items-center rounded-lg bg-[var(--owner-bg-subtle)] bg-cover bg-center text-xs font-semibold uppercase text-[var(--owner-fg-3)]"
+                                    style={
+                                      collab.logo
+                                        ? {
+                                            backgroundImage: `url(${collab.logo})`,
+                                          }
+                                        : undefined
+                                    }
+                                  >
+                                    {!collab.logo
+                                      ? (collab.name || "?").slice(0, 1)
+                                      : null}
+                                  </span>
+                                  <div className="min-w-0">
+                                    <p className="font-semibold">
+                                      {collab.name || "Untitled business"}
+                                    </p>
+                                    <p className="mt-0.5 text-xs text-[var(--owner-fg-3)]">
+                                      {collab.businessLinkId
+                                        ? "On Hoizr"
+                                        : "Legacy entry — organizer not linked to Hoizr"}
+                                    </p>
+                                    <div className="mt-2 flex flex-wrap gap-1.5">
+                                      {collab.requestCustomerListAccess ? (
+                                        <span className="rounded-full bg-[var(--owner-bg-subtle)] px-2 py-0.5 text-[11px] font-semibold text-[var(--owner-fg-3)]">
+                                          Customer list
+                                        </span>
+                                      ) : null}
+                                      {collab.hideOnEventPage ? (
+                                        <span className="rounded-full bg-[var(--owner-bg-subtle)] px-2 py-0.5 text-[11px] font-semibold text-[var(--owner-fg-3)]">
+                                          Hidden on page
+                                        </span>
+                                      ) : null}
+                                      {collab.allowIssuingOfflineTickets ? (
+                                        <span className="rounded-full bg-[var(--owner-bg-subtle)] px-2 py-0.5 text-[11px] font-semibold text-[var(--owner-fg-3)]">
+                                          Offline tickets
+                                        </span>
+                                      ) : null}
+                                      {collab.sendTransactionalMails ? (
+                                        <span className="rounded-full bg-[var(--owner-bg-subtle)] px-2 py-0.5 text-[11px] font-semibold text-[var(--owner-fg-3)]">
+                                          Transactional emails
+                                        </span>
+                                      ) : null}
+                                    </div>
+                                  </div>
+                                </div>
+                                <div className="flex gap-2 sm:shrink-0">
+                                  <button
+                                    type="button"
+                                    onClick={() =>
+                                      openEditCollaboratorModal(index)
+                                    }
+                                    className="rounded-md border border-[var(--owner-border-strong)] bg-white px-3 py-1.5 text-xs font-semibold"
+                                  >
+                                    Edit
+                                  </button>
+                                  <button
+                                    type="button"
+                                    onClick={() =>
+                                      requestRemoveCollaborator(index)
+                                    }
+                                    className="rounded-md border border-[var(--owner-border-strong)] bg-white px-3 py-1.5 text-xs font-semibold text-red-600"
+                                  >
+                                    Remove
+                                  </button>
+                                </div>
+                              </li>
+                            ))}
+                          </ul>
+                        )}
+                      </div>
+                    ) : null}
+
+                    {peopleTab === "artists" ? (
+                      <div className="grid gap-3">
+                        <div className="grid gap-3 md:grid-cols-2">
+                          <ToggleSettingRow
+                            title="Enable Artist Lineup"
+                            subtitle="Display artist lineup on the event page."
+                            checked={lineupEnabled}
+                            onCheckedChange={setLineupEnabled}
+                          />
+                          <ToggleSettingRow
+                            title="Lineup to be announced"
+                            checked={lineUpToBeAnnounced}
+                            onCheckedChange={setLineUpToBeAnnounced}
+                          />
+                        </div>
+                        {lineupEnabled && !lineUpToBeAnnounced ? (
+                          <>
+                            <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                              <p className="text-sm text-[var(--owner-fg-3)]">
+                                Add every artist on the lineup. Each appears as
+                                a separate card on the event page.
+                              </p>
+                              <button
+                                type="button"
+                                onClick={openAddArtistModal}
+                                className="inline-flex shrink-0 items-center justify-center gap-2 rounded-lg bg-[var(--owner-blue-500)] px-3 py-2 text-sm font-semibold text-[var(--owner-bg)]"
+                              >
+                                <PlusIcon size={14} />
+                                Add artist
+                              </button>
+                            </div>
+                            {artists.length === 0 ? (
+                              <div className="rounded-lg border border-dashed border-[var(--owner-border)] bg-white p-6 text-center text-sm text-[var(--owner-fg-3)]">
+                                No artists yet. Click{" "}
+                                <strong>Add artist</strong> to start the lineup.
+                              </div>
+                            ) : (
+                              <ul className="grid gap-2">
+                                {artists.map((artist, index) => (
+                                  <li
+                                    key={`artist-${index}`}
+                                    className="flex flex-col gap-3 rounded-lg border border-[var(--owner-border)] bg-white p-4 sm:flex-row sm:items-center sm:justify-between"
+                                  >
+                                    <div className="flex min-w-0 items-center gap-3">
+                                      <span
+                                        className="h-12 w-12 shrink-0 rounded-md bg-[var(--owner-bg-subtle)] bg-cover bg-center"
+                                        style={
+                                          artist.picture
+                                            ? {
+                                                backgroundImage: `url(${artist.picture})`,
+                                              }
+                                            : undefined
+                                        }
+                                      />
+                                      <div className="min-w-0">
+                                        <p className="font-semibold">
+                                          {artist.name}
+                                        </p>
+                                        <p className="mt-0.5 text-xs text-[var(--owner-fg-3)]">
+                                          {artist.actualName ||
+                                            "Stage name only"}
+                                        </p>
+                                        <div className="mt-1 flex flex-wrap gap-1.5 text-[11px] text-[var(--owner-fg-3)]">
+                                          {artist.instagramLink ? (
+                                            <span>Instagram</span>
+                                          ) : null}
+                                          {artist.spotifyLink ? (
+                                            <span>· Spotify</span>
+                                          ) : null}
+                                          {artist.youtubeLink ? (
+                                            <span>· YouTube</span>
+                                          ) : null}
+                                        </div>
+                                      </div>
+                                    </div>
+                                    <div className="flex gap-2 sm:shrink-0">
+                                      <button
+                                        type="button"
+                                        onClick={() =>
+                                          openEditArtistModal(index)
+                                        }
+                                        className="rounded-md border border-[var(--owner-border-strong)] bg-white px-3 py-1.5 text-xs font-semibold"
+                                      >
+                                        Edit
+                                      </button>
+                                      <button
+                                        type="button"
+                                        onClick={() =>
+                                          requestRemoveArtist(index)
+                                        }
+                                        className="rounded-md border border-[var(--owner-border-strong)] bg-white px-3 py-1.5 text-xs font-semibold text-red-600"
+                                      >
+                                        Remove
+                                      </button>
+                                    </div>
+                                  </li>
+                                ))}
+                              </ul>
+                            )}
+                          </>
+                        ) : null}
+                      </div>
+                    ) : null}
+                  </StepSection>
+                ) : null}
+
+                {step === 5 ? (
+                  <StepSection
+                    title="Additional information"
+                    subtitle="Final details before publish. Required policies are saved as your defaults so the next event is prefilled."
+                  >
+                    {/* Group 1 — Required legal copy */}
+                    <section className="rounded-xl border border-[var(--owner-border)] bg-white p-5">
+                      <header className="mb-4 flex items-start justify-between gap-3">
+                        <div>
+                          <div className="inline-flex items-center gap-2 rounded-full bg-red-50 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.1em] text-red-700">
+                            <span className="h-1.5 w-1.5 rounded-full bg-red-600" />
+                            Required
+                          </div>
+                          <h3 className="mt-2 text-base font-semibold text-[var(--owner-fg-1)]">
+                            Ticket policies
+                          </h3>
+                          <p className="mt-1 text-xs text-[var(--owner-fg-3)]">
+                            Shown on the customer ticket page and the order
+                            confirmation email.
+                          </p>
+                        </div>
+                        {hostDefaultsLoaded &&
+                        (hostDefaultsRef.current.ticketingTerms ||
+                          hostDefaultsRef.current.refundPolicy) ? (
+                          <button
+                            type="button"
+                            onClick={() => {
+                              if (hostDefaultsRef.current.ticketingTerms)
+                                setTicketingTerms(
+                                  hostDefaultsRef.current.ticketingTerms,
+                                );
+                              if (hostDefaultsRef.current.refundPolicy)
+                                setRefundPolicy(
+                                  hostDefaultsRef.current.refundPolicy,
+                                );
+                            }}
+                            className="shrink-0 rounded-md border border-[var(--owner-border)] px-3 py-1.5 text-xs font-semibold text-[var(--owner-fg-2)] hover:bg-[var(--owner-bg-subtle)]"
+                          >
+                            Reset to my defaults
+                          </button>
+                        ) : null}
+                      </header>
+                      <div className="grid gap-5 lg:grid-cols-2">
+                        <RichTextEditor
+                          label="Ticketing terms & conditions *"
+                          value={ticketingTerms}
+                          onChange={setTicketingTerms}
+                        />
+                        <RichTextEditor
+                          label="Refund policy *"
+                          value={refundPolicy}
+                          onChange={setRefundPolicy}
+                        />
+                      </div>
+                    </section>
+
+                    {/* Group 2 — Promotional assets */}
+                    <section className="mt-5 rounded-xl border border-[var(--owner-border)] bg-white p-5">
+                      <header className="mb-4">
+                        <div className="text-[10px] font-semibold uppercase tracking-[0.1em] text-[var(--owner-fg-3)]">
+                          Optional
+                        </div>
+                        <h3 className="mt-1.5 text-base font-semibold text-[var(--owner-fg-1)]">
+                          Promotional assets
+                        </h3>
+                        <p className="mt-1 text-xs text-[var(--owner-fg-3)]">
+                          Drop an image into any slot — uploads go straight to
+                          Cloudinary under your event folder.
+                        </p>
+                      </header>
+
+                      {/* Featured: horizontal flyer */}
+                      <div className="rounded-lg border border-[var(--owner-blue-200)] bg-[var(--owner-blue-050)] p-4">
+                        <div className="mb-2 flex items-center gap-2">
+                          <span className="rounded-full bg-[var(--owner-blue-500)] px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-white">
+                            Recommended
+                          </span>
+                          <span className="text-xs font-medium text-[var(--owner-fg-2)]">
+                            Lifts social CTR — used on event hero + OG previews
+                          </span>
+                        </div>
+                        <ImageUrlInput
+                          label="Horizontal flyer (16:9)"
+                          value={horizontalFlyer}
+                          onChange={setHorizontalFlyer}
+                          uploadKind="event-extra"
+                          hostId={selectedHostId}
+                          eventId={eventId}
+                        />
+                      </div>
+
+                      {/* Social */}
+                      <div className="mt-5">
+                        <div className="mb-2 text-xs font-semibold text-[var(--owner-fg-2)]">
+                          Social previews
+                        </div>
+                        <div className="grid gap-4 md:grid-cols-2">
+                          <ImageUrlInput
+                            label="Instagram post"
+                            value={instagramPost}
+                            onChange={setInstagramPost}
+                            uploadKind="event-instagram"
+                            hostId={selectedHostId}
+                            eventId={eventId}
+                          />
+                          <ImageUrlInput
+                            label="Instagram story"
+                            value={instagramStory}
+                            onChange={setInstagramStory}
+                            uploadKind="event-instagram"
+                            hostId={selectedHostId}
+                            eventId={eventId}
+                          />
+                        </div>
+                      </div>
+
+                      {/* Venue */}
+                      <div className="mt-5">
+                        <div className="mb-2 text-xs font-semibold text-[var(--owner-fg-2)]">
+                          Venue
+                        </div>
+                        <ImageUrlInput
+                          label="Table arrangement image"
+                          value={tableLayoutImage}
+                          onChange={setTableLayoutImage}
+                          uploadKind="event-table-layout"
+                          hostId={selectedHostId}
+                          eventId={eventId}
+                        />
+                      </div>
+
+                      {/* Coming-soon note (collapsed into a single line) */}
+                      <p className="mt-5 rounded-md bg-[var(--owner-bg-subtle)] px-3 py-2 text-[11px] text-[var(--owner-fg-3)]">
+                        🎬 Video uploads (vertical & horizontal) — coming soon.
+                      </p>
+                    </section>
+
+                    {/* Group 3 — Event behaviour */}
+                    <section className="mt-5 rounded-xl border border-[var(--owner-border)] bg-white p-5">
+                      <header className="mb-4">
+                        <h3 className="text-base font-semibold text-[var(--owner-fg-1)]">
+                          Event settings
+                        </h3>
+                        <p className="mt-1 text-xs text-[var(--owner-fg-3)]">
+                          Visibility and contact settings — change these any
+                          time after publishing.
+                        </p>
+                      </header>
+                      <div className="space-y-3">
+                        <ToggleSettingRow
+                          title="Event is visible to public"
+                          subtitle="Off keeps the event off the public site and search results."
+                          checked={isVisible}
+                          onCheckedChange={requestEventVisibilityChange}
+                        />
+                        <div className="rounded-lg border border-[var(--owner-border)] bg-[var(--owner-bg-subtle)] p-3">
+                          <Input
+                            label="Contact for table queries (optional)"
+                            value={contactForQueriesTables}
+                            onChange={setContactForQueriesTables}
+                          />
+                          <p className="mt-1.5 text-[11px] text-[var(--owner-fg-3)]">
+                            Phone or email shown to guests asking about table
+                            bookings or seating.
+                          </p>
+                        </div>
+                      </div>
+                    </section>
+                  </StepSection>
+                ) : null}
+              </div>
             </div>
-          </div>
-        </section>
-        {/* Action bar sits OUTSIDE the scrolling section as a flex sibling
+          </section>
+          {/* Action bar sits OUTSIDE the scrolling section as a flex sibling
             so it naturally pins to the bottom of the middle column and
             touches the viewport bottom regardless of section padding. */}
-        <div className="shrink-0 border-t border-[var(--owner-border)] bg-[var(--owner-bg)]">
-          <div className="mx-auto flex max-w-5xl flex-col justify-between gap-3 px-4 py-3 sm:flex-row md:px-6">
-            <button
-              type="button"
-              disabled={step === 0 || loading}
-              onClick={() => setStep(step - 1)}
-              className="rounded-lg border border-[var(--owner-border)] px-4 py-2 text-sm font-semibold disabled:opacity-40"
-            >
-              Back
-            </button>
-            <div className="flex flex-col gap-3 sm:flex-row">
+          <div className="shrink-0 border-t border-[var(--owner-border)] bg-[var(--owner-bg)]">
+            <div className="mx-auto flex max-w-5xl flex-col justify-between gap-3 px-4 py-3 sm:flex-row md:px-6">
               <button
                 type="button"
-                disabled={loading}
-                onClick={
-                  step === lastStepIndex ? requestPublishFlow : () => saveCurrentStep()
-                }
-                className="rounded-lg bg-[var(--owner-blue-500)] px-5 py-2 text-sm font-semibold text-[var(--owner-bg)] disabled:opacity-60"
+                disabled={step === 0 || loading}
+                onClick={() => setStep(step - 1)}
+                className="rounded-lg border border-[var(--owner-border)] px-4 py-2 text-sm font-semibold disabled:opacity-40"
               >
-                {loading
-                  ? "Saving..."
-                  : step === lastStepIndex
-                  ? isPaid
-                    ? "Review & publish"
-                    : "Publish free event"
-                  : mode === "update"
-                  ? "Update"
-                  : "Save and continue"}
+                Back
               </button>
+              <div className="flex flex-col gap-3 sm:flex-row">
+                <button
+                  type="button"
+                  disabled={loading}
+                  onClick={
+                    step === lastStepIndex
+                      ? requestPublishFlow
+                      : () => saveCurrentStep()
+                  }
+                  className="rounded-lg bg-[var(--owner-blue-500)] px-5 py-2 text-sm font-semibold text-[var(--owner-bg)] disabled:opacity-60"
+                >
+                  {loading
+                    ? "Saving..."
+                    : step === lastStepIndex
+                      ? isPaid
+                        ? "Review & publish"
+                        : "Publish free event"
+                      : mode === "update"
+                        ? "Update"
+                        : "Save and continue"}
+                </button>
+              </div>
             </div>
           </div>
-        </div>
         </div>
 
         <aside className="hidden min-h-0 border-l border-[var(--owner-border)] bg-[var(--owner-fg-1)] p-5 text-[var(--owner-bg)] xl:block">
@@ -3538,7 +3757,10 @@ const EventJourney = ({
               }
             >
               {!eventFlyer ? (
-                <CalendarDaysIcon size={42} className="text-[var(--owner-blue-500)]" />
+                <CalendarDaysIcon
+                  size={42}
+                  className="text-[var(--owner-blue-500)]"
+                />
               ) : null}
             </div>
             <div className="space-y-2 px-2 pb-2 pt-4">
@@ -3562,7 +3784,7 @@ const EventJourney = ({
                       (t) =>
                         t.ticketCategory !== "GUESTLIST" &&
                         Number(t.ticketPrice ?? 0) > 0 &&
-                        (t.ticketVisible ?? true)
+                        (t.ticketVisible ?? true),
                     )
                     .map((t) => Number(t.ticketPrice ?? 0));
                   if (paid.length === 0) return "Guestlist";
@@ -3628,11 +3850,14 @@ const EventJourney = ({
                   {/* Single/Couple distinction is irrelevant for table
                       and group bookings — the capacity field already
                       describes the seating unit. */}
-                  {ticketCategory === "TABLE" || ticketCategory === "GROUP" ? null : (
+                  {ticketCategory === "TABLE" ||
+                  ticketCategory === "GROUP" ? null : (
                     <Select
                       label="Ticket Type *"
                       value={ticketType}
-                      onChange={(value) => setTicketType(value as TicketTypeValue)}
+                      onChange={(value) =>
+                        setTicketType(value as TicketTypeValue)
+                      }
                       options={[
                         { value: "SINGLE", label: "Single Entry" },
                         { value: "COUPLE", label: "Couple Entry" },
@@ -3651,7 +3876,9 @@ const EventJourney = ({
                     type="number"
                     value={ticketCapacity > 0 ? String(ticketCapacity) : ""}
                     onChange={(value) =>
-                      setTicketCapacity(value === "" ? 0 : Math.max(0, Number(value) || 0))
+                      setTicketCapacity(
+                        value === "" ? 0 : Math.max(0, Number(value) || 0),
+                      )
                     }
                   />
                   {ticketCategory !== "GUESTLIST" ? (
@@ -3660,7 +3887,9 @@ const EventJourney = ({
                       type="number"
                       value={ticketPrice > 0 ? String(ticketPrice) : ""}
                       onChange={(value) =>
-                        setTicketPrice(value === "" ? 0 : Math.max(0, Number(value) || 0))
+                        setTicketPrice(
+                          value === "" ? 0 : Math.max(0, Number(value) || 0),
+                        )
                       }
                     />
                   ) : null}
@@ -3669,7 +3898,9 @@ const EventJourney = ({
                       <Select
                         label="Cover Type"
                         value={coverType}
-                        onChange={(value) => setCoverType(value as CoverTypeValue)}
+                        onChange={(value) =>
+                          setCoverType(value as CoverTypeValue)
+                        }
                         options={[
                           { value: "FULL_COVER", label: "Full Cover" },
                           { value: "FOOD_COVER", label: "Food Cover" },
@@ -3689,12 +3920,16 @@ const EventJourney = ({
                           options={[
                             {
                               value: "CGST_SGST_18",
-                              label: "GST 18% — CGST 9% + SGST/UTGST 9% (recommended)",
+                              label:
+                                "GST 18% — CGST 9% + SGST/UTGST 9% (recommended)",
                             },
                             { value: "IGST_18", label: "IGST 18%" },
                             { value: "ZERO", label: "No GST (0%)" },
                             { value: "OTHER", label: "Custom rate" },
-                            { value: "NONE", label: "No GST line on customer invoice" },
+                            {
+                              value: "NONE",
+                              label: "No GST line on customer invoice",
+                            },
                           ]}
                         />
                       ) : (
@@ -3703,7 +3938,11 @@ const EventJourney = ({
                             Ticket GST not applicable
                           </div>
                           <div className="mt-1 leading-5">
-                            Hoizr collects ticket GST from customers only when your payout profile is GST-registered as <em>Regular</em> or <em>Casual Taxable Person</em>. Add or update your GST details under Settings → Payouts to enable this.
+                            Hoizr collects ticket GST from customers only when
+                            your payout profile is GST-registered as{" "}
+                            <em>Regular</em> or <em>Casual Taxable Person</em>.
+                            Add or update your GST details under Settings →
+                            Payouts to enable this.
                           </div>
                         </div>
                       )}
@@ -3715,7 +3954,9 @@ const EventJourney = ({
                       type="number"
                       value={gstRate > 0 ? String(gstRate) : ""}
                       onChange={(value) =>
-                        setGstRate(value === "" ? 0 : Math.max(0, Number(value) || 0))
+                        setGstRate(
+                          value === "" ? 0 : Math.max(0, Number(value) || 0),
+                        )
                       }
                     />
                   ) : null}
@@ -3725,7 +3966,9 @@ const EventJourney = ({
                       type="number"
                       value={groupCapacity > 0 ? String(groupCapacity) : ""}
                       onChange={(value) =>
-                        setGroupCapacity(value === "" ? 0 : Math.max(0, Number(value) || 0))
+                        setGroupCapacity(
+                          value === "" ? 0 : Math.max(0, Number(value) || 0),
+                        )
                       }
                     />
                   ) : null}
@@ -3749,9 +3992,13 @@ const EventJourney = ({
                     <Input
                       label="Max Tickets Per User (optional)"
                       type="number"
-                      value={maxTicketPerUser > 0 ? String(maxTicketPerUser) : ""}
+                      value={
+                        maxTicketPerUser > 0 ? String(maxTicketPerUser) : ""
+                      }
                       onChange={(value) =>
-                        setMaxTicketPerUser(value === "" ? 0 : Math.max(0, Number(value) || 0))
+                        setMaxTicketPerUser(
+                          value === "" ? 0 : Math.max(0, Number(value) || 0),
+                        )
                       }
                     />
                     <DateTimeInput
@@ -3816,11 +4063,17 @@ const EventJourney = ({
               </div>
               <div className="min-h-0 flex-1 overflow-y-auto p-5">
                 <div className="grid gap-4 md:grid-cols-2">
-                  <Input label="Add-on Name *" value={extraName} onChange={setExtraName} />
+                  <Input
+                    label="Add-on Name *"
+                    value={extraName}
+                    onChange={setExtraName}
+                  />
                   <Select
                     label="Type *"
                     value={extraType}
-                    onChange={(value) => setExtraType(value as HoizrExtraTypeValue)}
+                    onChange={(value) =>
+                      setExtraType(value as HoizrExtraTypeValue)
+                    }
                     options={[
                       { value: "VIP_UPGRADE", label: "VIP Upgrade" },
                       { value: "MEET_AND_GREET", label: "Meet & Greet" },
@@ -3834,7 +4087,9 @@ const EventJourney = ({
                     type="number"
                     value={extraPrice > 0 ? String(extraPrice) : ""}
                     onChange={(value) =>
-                      setExtraPrice(value === "" ? 0 : Math.max(0, Number(value) || 0))
+                      setExtraPrice(
+                        value === "" ? 0 : Math.max(0, Number(value) || 0),
+                      )
                     }
                   />
                   <Input
@@ -3842,7 +4097,9 @@ const EventJourney = ({
                     type="number"
                     value={extraQuantity > 0 ? String(extraQuantity) : ""}
                     onChange={(value) =>
-                      setExtraQuantity(value === "" ? 0 : Math.max(0, Number(value) || 0))
+                      setExtraQuantity(
+                        value === "" ? 0 : Math.max(0, Number(value) || 0),
+                      )
                     }
                   />
                   <div className="md:col-span-2">
@@ -3890,11 +4147,15 @@ const EventJourney = ({
               <div className="flex shrink-0 items-center justify-between gap-3 border-b border-[var(--owner-border)] px-5 py-4">
                 <div>
                   <div className="text-sm font-semibold">
-                    {collabEditIndex === null ? "Add Collaborator" : "Edit Collaborator"}
+                    {collabEditIndex === null
+                      ? "Add Collaborator"
+                      : "Edit Collaborator"}
                   </div>
                   <p className="mt-1 text-xs text-[var(--owner-fg-3)]">
-                    Collaborators must be on Hoizr. We&apos;ll email them when you add them — the event
-                    appears on their dashboard as <strong>Collaborator</strong> right away. They can leave anytime.
+                    Collaborators must be on Hoizr. We&apos;ll email them when
+                    you add them — the event appears on their dashboard as{" "}
+                    <strong>Collaborator</strong> right away. They can leave
+                    anytime.
                   </p>
                 </div>
                 <button
@@ -3909,13 +4170,15 @@ const EventJourney = ({
                 <div className="grid gap-4">
                   <div>
                     <label className="block text-sm font-medium">
-                      Search collaborator host
+                      Search collaborator organizer
                       <div className="mt-1">
                         <input
                           value={collaboratorQuery}
-                          onChange={(event) => setCollaboratorQuery(event.target.value)}
+                          onChange={(event) =>
+                            setCollaboratorQuery(event.target.value)
+                          }
                           className="input input-primary h-10 w-full px-3 text-sm"
-                          placeholder="Host name, email or phone"
+                          placeholder="Organizer name, email or phone"
                         />
                       </div>
                     </label>
@@ -3946,10 +4209,10 @@ const EventJourney = ({
                             </span>
                             <span className="min-w-0 flex-1">
                               <span className="block truncate font-semibold">
-                                {host.name ?? "Unnamed host"}
+                                {host.name ?? "Unnamed organizer"}
                               </span>
                               <span className="block truncate text-xs text-[var(--owner-fg-3)]">
-                                {host.email ?? host.phone ?? "Host"}
+                                {host.email ?? host.phone ?? "Organizer"}
                               </span>
                             </span>
                           </button>
@@ -3957,16 +4220,20 @@ const EventJourney = ({
                       </div>
                     ) : collaboratorQuery.trim().length >= 2 ? (
                       <div className="mt-3 rounded-md border border-dashed border-[var(--owner-border)] bg-[var(--owner-bg-subtle)] p-3 text-sm">
-                        <p className="font-semibold">No host on Hoizr matches “{collaboratorQuery.trim()}”.</p>
+                        <p className="font-semibold">
+                          No organizer on Hoizr matches “
+                          {collaboratorQuery.trim()}”.
+                        </p>
                         <p className="mt-1 text-xs text-[var(--owner-fg-3)]">
-                          Refer this host to bring them on board — you’ll be able to collaborate once they join.
+                          Refer this organizer to bring them on board — you’ll
+                          be able to collaborate once they join.
                         </p>
                         <button
                           type="button"
                           onClick={openReferralModalFromCollab}
                           className="mt-3 inline-flex items-center gap-2 rounded-lg border border-[var(--owner-blue-500)] bg-white px-3 py-1.5 text-xs font-semibold text-[var(--owner-blue-500)]"
                         >
-                          Refer this host to Hoizr
+                          Refer this organizer to Hoizr
                         </button>
                       </div>
                     ) : null}
@@ -4047,7 +4314,9 @@ const EventJourney = ({
                   onClick={saveCollaboratorDraft}
                   className="rounded-lg bg-[var(--owner-blue-500)] px-3 py-2 text-sm font-semibold text-[var(--owner-bg)]"
                 >
-                  {collabEditIndex === null ? "Add Collaborator" : "Save Collaborator"}
+                  {collabEditIndex === null
+                    ? "Add Collaborator"
+                    : "Save Collaborator"}
                 </button>
               </div>
             </div>
@@ -4063,7 +4332,8 @@ const EventJourney = ({
                     {artistEditIndex === null ? "Add Artist" : "Edit Artist"}
                   </div>
                   <p className="mt-1 text-xs text-[var(--owner-fg-3)]">
-                    Search by stage or real name first. If there is no match, add the artist manually.
+                    Search by stage or real name first. If there is no match,
+                    add the artist manually.
                   </p>
                 </div>
                 <button
@@ -4099,7 +4369,9 @@ const EventJourney = ({
                               className="h-10 w-10 shrink-0 rounded-md bg-[var(--owner-bg-subtle)] bg-cover bg-center"
                               style={
                                 artist.picture
-                                  ? { backgroundImage: `url(${artist.picture})` }
+                                  ? {
+                                      backgroundImage: `url(${artist.picture})`,
+                                    }
                                   : undefined
                               }
                             />
@@ -4108,7 +4380,9 @@ const EventJourney = ({
                                 {artist.name}
                               </span>
                               <span className="block truncate text-xs text-[var(--owner-fg-3)]">
-                                {[artist.firstName, artist.lastName].filter(Boolean).join(" ") ||
+                                {[artist.firstName, artist.lastName]
+                                  .filter(Boolean)
+                                  .join(" ") ||
                                   (artist.source === "ARTIST"
                                     ? "Verified artist"
                                     : "Suggested match")}
@@ -4117,7 +4391,8 @@ const EventJourney = ({
                           </button>
                         ))}
                       </div>
-                    ) : artistQuery.trim().length >= 2 && artistSearchAttempted ? (
+                    ) : artistQuery.trim().length >= 2 &&
+                      artistSearchAttempted ? (
                       <p className="mt-2 text-xs text-[var(--owner-fg-3)]">
                         No artist found. Continue with the manual fields below.
                       </p>
@@ -4169,7 +4444,8 @@ const EventJourney = ({
                     </>
                   ) : (
                     <div className="rounded-md border border-dashed border-[var(--owner-border)] bg-[var(--owner-bg-subtle)] px-4 py-5 text-sm text-[var(--owner-fg-3)]">
-                      Search for the artist first. Manual entry is available only when no existing artist is found.
+                      Search for the artist first. Manual entry is available
+                      only when no existing artist is found.
                     </div>
                   )}
                 </div>
@@ -4198,13 +4474,17 @@ const EventJourney = ({
         {referralModalOpen ? (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/55 px-4">
             <div className="w-full max-w-md rounded-lg bg-[var(--owner-bg)] p-5 shadow-2xl">
-              <div className="text-sm font-semibold">Refer a host to Hoizr</div>
+              <div className="text-sm font-semibold">
+                Refer an organizer to Hoizr
+              </div>
               <p className="mt-2 text-xs leading-5 text-[var(--owner-fg-3)]">
-                We’ll reach out and invite this host. Once they accept and onboard, you can add them as a collaborator on this and future events.
+                We’ll reach out and invite this organizer. Once they accept and
+                onboard, you can add them as a collaborator on this and future
+                events.
               </p>
               <div className="mt-4 grid gap-3">
                 <Input
-                  label="Host or business name *"
+                  label="Organizer or venue name *"
                   value={referralHostName}
                   onChange={setReferralHostName}
                 />
@@ -4253,7 +4533,10 @@ const EventJourney = ({
                     const target = event.currentTarget;
                     event.preventDefault();
                     target.setPointerCapture(event.pointerId);
-                    const updatePosition = (clientX: number, clientY: number) => {
+                    const updatePosition = (
+                      clientX: number,
+                      clientY: number,
+                    ) => {
                       const rect = target.getBoundingClientRect();
                       const pctX = ((clientX - rect.left) / rect.width) * 100;
                       const pctY = ((clientY - rect.top) / rect.height) * 100;
@@ -4267,10 +4550,10 @@ const EventJourney = ({
                                 100,
                                 ((pctX - flyerCropWindow.widthPct / 2) /
                                   wRange) *
-                                  100
-                              )
+                                  100,
+                              ),
                             )
-                          : 50
+                          : 50,
                       );
                       setCropY(
                         hRange > 0
@@ -4280,10 +4563,10 @@ const EventJourney = ({
                                 100,
                                 ((pctY - flyerCropWindow.heightPct / 2) /
                                   hRange) *
-                                  100
-                              )
+                                  100,
+                              ),
                             )
-                          : 50
+                          : 50,
                       );
                     };
                     updatePosition(event.clientX, event.clientY);
@@ -4309,7 +4592,7 @@ const EventJourney = ({
                         const img = event.currentTarget;
                         if (img.naturalWidth && img.naturalHeight) {
                           setFlyerNaturalRatio(
-                            img.naturalWidth / img.naturalHeight
+                            img.naturalWidth / img.naturalHeight,
                           );
                         }
                       }}
@@ -4342,7 +4625,9 @@ const EventJourney = ({
                     max="100"
                     step="1"
                     value={cropZoom}
-                    onChange={(event) => setCropZoom(Number(event.target.value))}
+                    onChange={(event) =>
+                      setCropZoom(Number(event.target.value))
+                    }
                     className="mt-1 w-full accent-[var(--owner-blue-500)]"
                   />
                 </label>
@@ -4397,13 +4682,12 @@ const EventJourney = ({
               <div className="flex items-start justify-between gap-4">
                 <div>
                   <h2 className="text-xl font-semibold text-[var(--owner-fg-1)]">
-                    Pick an offer to publish
+                    Pick a publish plan
                   </h2>
                   <p className="mt-1 text-sm leading-relaxed text-[var(--owner-fg-3)]">
-                    Hoizr studied this event and prepared a few offers.
-                    Each one cuts your commission in exchange for a small
-                    upfront fee. Pick the one that fits, or publish at
-                    your basic rate below.
+                    Publish at the basic Hoizr commission, or pick an AI offer
+                    that saves money after all upfront fees and included credits
+                    are counted. One option is always selected.
                   </p>
                 </div>
                 <button
@@ -4423,7 +4707,7 @@ const EventJourney = ({
                   settlement mode silently. */}
               {(() => {
                 const selectedOption = pricingOptions.find(
-                  (o) => o.optionId === selectedPricingOptionId
+                  (o) => o.optionId === selectedPricingOptionId,
                 );
                 const needsUpfrontChoice =
                   selectedOption && (selectedOption.upfrontFee ?? 0) > 0;
@@ -4445,12 +4729,15 @@ const EventJourney = ({
                         Reconcile through payout
                       </div>
                       <div className="mt-1 text-[var(--owner-fg-3)]">
-                        Hoizr reconciles the offer through your ticket settlement.
+                        Hoizr reconciles the offer through your ticket
+                        settlement.
                       </div>
                     </button>
                     <button
                       type="button"
-                      onClick={() => requestFeeSettlementModeChange("PAY_AFTER_EVENT")}
+                      onClick={() =>
+                        requestFeeSettlementModeChange("PAY_AFTER_EVENT")
+                      }
                       className={`rounded-lg border p-3 text-left text-xs ${
                         feeSettlementMode === "PAY_AFTER_EVENT"
                           ? "border-[var(--owner-blue-500)] bg-[var(--owner-blue-50,#eef4ff)]"
@@ -4469,242 +4756,298 @@ const EventJourney = ({
               })()}
 
               {(() => {
-                // Derive the basic ("no-offer") commission rate from any AI
-                // offer in the generation. Each offer carries `commissionPct`
-                // plus `howMuchDifferentFromBasicOffer.deltaPct` — adding
-                // them recovers the baseline the AI used. This avoids a
-                // hoizr-shared schema change to expose the
-                // generationContext field separately.
-                const baselineFromAi = (() => {
-                  const o = aiBoostGeneration?.offers?.[0];
-                  if (!o) return null;
-                  return (
-                    o.commissionPct +
-                    (o.howMuchDifferentFromBasicOffer?.deltaPct ?? 0)
-                  );
-                })();
-
                 const aiOptionIds = new Set(
                   (aiBoostGeneration?.offers ?? []).map(
-                    (o) => `${AI_OFFER_PREFIX}${o.offerCode}`
-                  )
+                    (o) => `${AI_OFFER_PREFIX}${o.offerCode}`,
+                  ),
                 );
                 const legacyOptions = pricingOptions.filter(
-                  (p) => !aiOptionIds.has(p.optionId)
+                  (p) => !aiOptionIds.has(p.optionId),
                 );
+                // Basic = the legacy option with no upfront fee (typically
+                // "Zero Upfront"). Falls back to the first legacy option so
+                // there is always exactly one "basic" card to anchor the
+                // selection.
+                const basicOption =
+                  legacyOptions.find((o) => (o.upfrontFee ?? 0) === 0) ??
+                  legacyOptions[0] ??
+                  null;
+
+                const aiCards = (aiBoostGeneration?.offers ?? [])
+                  .map((boost) => {
+                    const optionId = `${AI_OFFER_PREFIX}${boost.offerCode}`;
+                    const option = pricingOptions.find(
+                      (o) => o.optionId === optionId,
+                    );
+                    if (!option) return null;
+                    return { boost, option };
+                  })
+                  .filter(
+                    (
+                      entry,
+                    ): entry is {
+                      boost: NonNullable<
+                        typeof aiBoostGeneration
+                      >["offers"][number];
+                      option: PricingOption;
+                    } => entry !== null,
+                  );
+
+                if (!pricingOptions.length) {
+                  return (
+                    <div className="mt-5 rounded-lg border border-[var(--owner-border)] bg-[var(--owner-bg)] p-4 text-sm text-[var(--owner-fg-3)]">
+                      No offers calculated yet — close this modal and reopen it
+                      after saving the last step.
+                    </div>
+                  );
+                }
 
                 return (
-                  <div className="mt-5 space-y-5">
-                    {baselineFromAi != null ? (
-                      <div className="rounded-xl border border-[var(--owner-border)] bg-[var(--owner-bg-subtle)] p-4">
-                        <div className="flex items-start gap-3">
-                          <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[var(--owner-bg)] text-[var(--owner-fg-2)] shadow-sm">
-                            <BadgeIndianRupeeIcon size={18} />
-                          </span>
+                  <div className="mt-5 grid gap-3 md:grid-cols-3">
+                    {basicOption ? (
+                      <button
+                        key={basicOption.optionId}
+                        type="button"
+                        onClick={() =>
+                          setSelectedPricingOptionId(basicOption.optionId)
+                        }
+                        className={`flex h-full flex-col gap-3 rounded-2xl border p-4 text-left transition ${
+                          selectedPricingOptionId === basicOption.optionId
+                            ? "border-[var(--owner-blue-500)] bg-[var(--owner-blue-050)] shadow-sm"
+                            : "border-[var(--owner-border)] bg-[var(--owner-bg)] hover:border-[var(--owner-blue-400)]"
+                        }`}
+                      >
+                        <div className="flex items-start justify-between gap-2">
                           <div className="min-w-0">
-                            <p className="text-[11px] font-semibold uppercase tracking-[0.1em] text-[var(--owner-fg-3)]">
-                              Your basic Hoizr commission
-                            </p>
-                            <p className="mt-0.5 text-2xl font-bold tabular-nums text-[var(--owner-fg-1)]">
-                              {baselineFromAi.toFixed(2)}
-                              <span className="ml-1 text-sm font-medium text-[var(--owner-fg-3)]">
-                                % per ticket
-                              </span>
-                            </p>
-                            <p className="mt-1 text-xs leading-relaxed text-[var(--owner-fg-3)]">
-                              This is what you pay if you publish without picking an offer below.
-                            </p>
+                            <h3 className="text-sm font-semibold text-[var(--owner-fg-1)]">
+                              Basic Hoizr commission
+                            </h3>
+                            <span className="mt-1.5 inline-flex items-center gap-1 rounded-full bg-[var(--owner-bg-subtle)] px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-[var(--owner-fg-2)]">
+                              Default
+                            </span>
+                          </div>
+                          {selectedPricingOptionId === basicOption.optionId ? (
+                            <CheckCircle2Icon
+                              size={18}
+                              className="shrink-0 text-[var(--owner-blue-500)]"
+                            />
+                          ) : null}
+                        </div>
+
+                        <div>
+                          <div className="text-[10px] font-semibold uppercase tracking-[0.1em] text-[var(--owner-fg-4)]">
+                            Commission
+                          </div>
+                          <div className="mt-0.5 flex items-baseline gap-2">
+                            <span className="text-3xl font-bold tabular-nums text-[var(--owner-fg-1)]">
+                              {Number(basicOption.commissionRate).toFixed(2)}%
+                            </span>
                           </div>
                         </div>
-                      </div>
+
+                        <div className="grid grid-cols-2 gap-2 rounded-xl border border-[var(--owner-border-soft)] bg-[var(--owner-bg-subtle)] p-3">
+                          <div>
+                            <div className="text-[10px] font-semibold uppercase tracking-[0.1em] text-[var(--owner-fg-4)]">
+                              Upfront fee
+                            </div>
+                            <div className="mt-0.5 text-sm font-semibold tabular-nums text-[var(--owner-fg-1)]">
+                              {(basicOption.upfrontFee ?? 0) > 0
+                                ? formatIndianRupees(basicOption.upfrontFee)
+                                : "—"}
+                            </div>
+                          </div>
+                          <div>
+                            <div className="text-[10px] font-semibold uppercase tracking-[0.1em] text-[var(--owner-fg-4)]">
+                              Savings
+                            </div>
+                            <div className="mt-0.5 text-sm font-semibold tabular-nums text-[var(--owner-fg-3)]">
+                              Standard
+                            </div>
+                          </div>
+                        </div>
+
+                        <p className="text-xs leading-relaxed text-[var(--owner-fg-3)]">
+                          Publish at the standard Hoizr commission with no
+                          upfront fee.
+                        </p>
+                      </button>
                     ) : null}
 
-                    {aiBoostGeneration?.offers?.length ? (
-                      <div>
-                        <div className="mb-3 flex flex-wrap items-center gap-x-2 gap-y-1">
-                          <span className="inline-flex items-center gap-1.5 text-sm font-semibold text-[var(--owner-fg-1)]">
-                            <SparklesIcon
-                              size={14}
-                              className="text-[var(--owner-blue-500)]"
-                            />
-                            AI offers
-                          </span>
-                          <span className="text-xs text-[var(--owner-fg-3)]">
-                            — each one lowers your commission for a small upfront fee.
-                          </span>
-                        </div>
-                        <div className="grid gap-3 md:grid-cols-3">
-                          {aiBoostGeneration.offers.map((boost) => {
-                            const optionId = `${AI_OFFER_PREFIX}${boost.offerCode}`;
-                            const option = pricingOptions.find(
-                              (o) => o.optionId === optionId
-                            );
-                            if (!option) return null;
-                            const selected =
-                              selectedPricingOptionId === optionId;
-                            const recommended =
-                              aiBoostGeneration.recommendedOfferCode ===
-                              boost.offerCode;
-                            const delta =
-                              boost.howMuchDifferentFromBasicOffer?.deltaPct ??
-                              0;
-                            const savings =
-                              boost.totalSavingsForHosts?.value ?? 0;
-                            return (
-                              <button
-                                key={optionId}
-                                type="button"
-                                onClick={() =>
-                                  requestPricingOptionChange(option)
-                                }
-                                className={`flex h-full flex-col gap-3 rounded-2xl border p-4 text-left transition ${
-                                  selected
-                                    ? "border-[var(--owner-blue-500)] bg-[var(--owner-blue-050)] shadow-sm"
-                                    : "border-[var(--owner-border)] bg-[var(--owner-bg)] hover:border-[var(--owner-blue-400)]"
+                    {aiCards.map(({ boost, option }) => {
+                      const selected =
+                        selectedPricingOptionId === option.optionId;
+                      const recommended =
+                        aiBoostGeneration?.recommendedOfferCode ===
+                        boost.offerCode;
+                      const delta =
+                        boost.howMuchDifferentFromBasicOffer?.deltaPct ?? 0;
+                      const savings = boost.totalSavingsForHosts?.value ?? 0;
+                      const marketingCredit = Math.max(
+                        0,
+                        Number(boost.marketingCreditAmount ?? 0),
+                      );
+                      const creditDiscount = Math.max(
+                        0,
+                        Number(boost.marketingCreditDiscountPct ?? 0),
+                      );
+                      const message =
+                        boost.customerViewingMessage || boost.shortReason;
+                      return (
+                        <button
+                          key={option.optionId}
+                          type="button"
+                          onClick={() =>
+                            setSelectedPricingOptionId(option.optionId)
+                          }
+                          className={`flex h-full flex-col gap-3 rounded-2xl border p-4 text-left transition ${
+                            selected
+                              ? "border-[var(--owner-blue-500)] bg-[var(--owner-blue-050)] shadow-sm"
+                              : "border-[var(--owner-border)] bg-[var(--owner-bg)] hover:border-[var(--owner-blue-400)]"
+                          }`}
+                        >
+                          <div className="flex items-start justify-between gap-2">
+                            <div className="min-w-0">
+                              <h3 className="text-sm font-semibold text-[var(--owner-fg-1)]">
+                                {boost.label}
+                              </h3>
+                              {recommended ? (
+                                <span className="mt-1.5 inline-flex items-center gap-1 rounded-full bg-[var(--owner-accent-acid)] px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-[var(--owner-fg-1)]">
+                                  <SparklesIcon size={10} />
+                                  Recommended
+                                </span>
+                              ) : null}
+                            </div>
+                            {selected ? (
+                              <CheckCircle2Icon
+                                size={18}
+                                className="shrink-0 text-[var(--owner-blue-500)]"
+                              />
+                            ) : null}
+                          </div>
+
+                          <div>
+                            <div className="text-[10px] font-semibold uppercase tracking-[0.1em] text-[var(--owner-fg-4)]">
+                              Commission
+                            </div>
+                            <div className="mt-0.5 flex items-baseline gap-2">
+                              <span className="text-3xl font-bold tabular-nums text-[var(--owner-blue-500)]">
+                                {boost.commissionPct.toFixed(2)}%
+                              </span>
+                            </div>
+                            {delta > 0 ? (
+                              <div className="mt-1 inline-flex items-center gap-1 rounded-full bg-[var(--owner-blue-050)] px-2 py-0.5 text-[11px] font-semibold text-[var(--owner-blue-500)]">
+                                ↓ {delta.toFixed(2)}% below basic
+                              </div>
+                            ) : null}
+                          </div>
+
+                          <div className="grid grid-cols-2 gap-2 rounded-xl border border-[var(--owner-border-soft)] bg-[var(--owner-bg-subtle)] p-3">
+                            <div>
+                              <div className="text-[10px] font-semibold uppercase tracking-[0.1em] text-[var(--owner-fg-4)]">
+                                Upfront fee
+                              </div>
+                              <div className="mt-0.5 text-sm font-semibold tabular-nums text-[var(--owner-fg-1)]">
+                                {boost.extraAmount > 0
+                                  ? formatIndianRupees(boost.extraAmount)
+                                  : "—"}
+                              </div>
+                            </div>
+                            <div>
+                              <div className="text-[10px] font-semibold uppercase tracking-[0.1em] text-[var(--owner-fg-4)]">
+                                Savings
+                              </div>
+                              <div
+                                className={`mt-0.5 text-sm font-semibold tabular-nums ${
+                                  savings > 0
+                                    ? "text-[var(--owner-success-text)]"
+                                    : savings < 0
+                                      ? "text-[var(--owner-fg-1)]"
+                                      : "text-[var(--owner-fg-3)]"
                                 }`}
                               >
-                                <div className="flex items-start justify-between gap-2">
-                                  <div className="min-w-0">
-                                    <h3 className="text-sm font-semibold text-[var(--owner-fg-1)]">
-                                      {boost.label}
-                                    </h3>
-                                    {recommended ? (
-                                      <span className="mt-1.5 inline-flex items-center gap-1 rounded-full bg-[var(--owner-accent-acid)] px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-[var(--owner-fg-1)]">
-                                        <SparklesIcon size={10} />
-                                        Recommended
+                                {savings > 0
+                                  ? `You save ${formatIndianRupees(savings)}`
+                                  : "Standard"}
+                              </div>
+                            </div>
+                          </div>
+
+                          {boost.extraAmount > 0
+                            ? (() => {
+                                // Sell-through gate disclosure. INCL_TO_EXCL flips
+                                // the event to exclusive on selection so it uses
+                                // the EXCLUSIVE threshold (60%); plain exclusive
+                                // events are 60% too. Non-exclusive bar is 40%
+                                // because the host can't drive rival-platform
+                                // sales. Defaults match the config fallbacks in
+                                // offer-context.service.ts.
+                                const flipsToExcl =
+                                  boost.offerCode === "INCL_TO_EXCL_OFFER";
+                                const effectivelyExclusive =
+                                  flipsToExcl || eventType === "EXCLUSIVE";
+                                const thresholdPct = effectivelyExclusive
+                                  ? 60
+                                  : 40;
+                                return (
+                                  <div className="rounded-lg border border-amber-200 bg-amber-50 p-2.5">
+                                    <div className="flex items-start gap-1.5">
+                                      <span
+                                        aria-hidden
+                                        className="mt-0.5 text-amber-700"
+                                      >
+                                        ⓵
                                       </span>
-                                    ) : null}
-                                  </div>
-                                  {selected ? (
-                                    <CheckCircle2Icon
-                                      size={18}
-                                      className="shrink-0 text-[var(--owner-blue-500)]"
-                                    />
-                                  ) : null}
-                                </div>
-
-                                <div>
-                                  <div className="text-[10px] font-semibold uppercase tracking-[0.1em] text-[var(--owner-fg-4)]">
-                                    Commission
-                                  </div>
-                                  <div className="mt-0.5 flex items-baseline gap-2">
-                                    <span className="text-3xl font-bold tabular-nums text-[var(--owner-blue-500)]">
-                                      {boost.commissionPct.toFixed(2)}%
-                                    </span>
-                                  </div>
-                                  {delta > 0 ? (
-                                    <div className="mt-1 inline-flex items-center gap-1 rounded-full bg-[var(--owner-blue-050)] px-2 py-0.5 text-[11px] font-semibold text-[var(--owner-blue-500)]">
-                                      ↓ {delta.toFixed(2)}% below basic
-                                    </div>
-                                  ) : null}
-                                </div>
-
-                                <div className="grid grid-cols-2 gap-2 rounded-xl border border-[var(--owner-border-soft)] bg-[var(--owner-bg-subtle)] p-3">
-                                  <div>
-                                    <div className="text-[10px] font-semibold uppercase tracking-[0.1em] text-[var(--owner-fg-4)]">
-                                      Upfront fee
-                                    </div>
-                                    <div className="mt-0.5 text-sm font-semibold tabular-nums text-[var(--owner-fg-1)]">
-                                      {boost.extraAmount > 0
-                                        ? formatIndianRupees(boost.extraAmount)
-                                        : "—"}
+                                      <div className="text-[11px] leading-relaxed text-amber-900">
+                                        <span className="font-semibold">
+                                          Upfront charged only if you sell{" "}
+                                          {thresholdPct}%+ of paid-ticket
+                                          capacity.
+                                        </span>{" "}
+                                        Below that, the upfront is waived (or
+                                        refunded if pre-paid) and your offer
+                                        commission (
+                                        {boost.commissionPct.toFixed(2)}%) still
+                                        applies. Choose how you&apos;d like to
+                                        handle it below.
+                                      </div>
                                     </div>
                                   </div>
-                                  <div>
-                                    <div className="text-[10px] font-semibold uppercase tracking-[0.1em] text-[var(--owner-fg-4)]">
-                                      Net for you
-                                    </div>
-                                    <div
-                                      className={`mt-0.5 text-sm font-semibold tabular-nums ${
-                                        savings > 0
-                                          ? "text-[var(--owner-success-text)]"
-                                          : savings < 0
-                                          ? "text-[var(--owner-fg-1)]"
-                                          : "text-[var(--owner-fg-3)]"
-                                      }`}
-                                    >
-                                      {savings > 0
-                                        ? `You save ${formatIndianRupees(savings)}`
-                                        : savings < 0
-                                        ? `${formatIndianRupees(-savings)} extra`
-                                        : "Break-even"}
-                                    </div>
-                                  </div>
-                                </div>
+                                );
+                              })()
+                            : null}
 
-                                {boost.shortReason ? (
-                                  <p className="text-xs leading-relaxed text-[var(--owner-fg-3)]">
-                                    {boost.shortReason}
-                                  </p>
-                                ) : null}
-                              </button>
-                            );
-                          })}
-                        </div>
-                      </div>
-                    ) : null}
+                          {marketingCredit > 0 || creditDiscount > 0 ? (
+                            <div className="flex flex-wrap gap-1.5">
+                              {marketingCredit > 0 ? (
+                                <span className="rounded-full bg-emerald-50 px-2 py-0.5 text-[11px] font-semibold text-emerald-700">
+                                  Includes {formatIndianRupees(marketingCredit)}{" "}
+                                  marketing credit
+                                </span>
+                              ) : null}
+                              {creditDiscount > 0 ? (
+                                <span className="rounded-full bg-[var(--owner-blue-050)] px-2 py-0.5 text-[11px] font-semibold text-[var(--owner-blue-600,var(--owner-blue-500))]">
+                                  {creditDiscount.toFixed(0)}% marketing-credit
+                                  discount
+                                </span>
+                              ) : null}
+                            </div>
+                          ) : null}
 
-                    {legacyOptions.length > 0 ? (
-                      <div>
-                        <div className="mb-3 text-sm font-semibold text-[var(--owner-fg-1)]">
-                          Or publish at your basic rate
-                        </div>
-                        <div className="space-y-2">
-                          {legacyOptions.map((option) => {
-                            const selected =
-                              selectedPricingOptionId === option.optionId;
-                            return (
-                              <button
-                                key={option.optionId}
-                                type="button"
-                                onClick={() =>
-                                  requestPricingOptionChange(option)
-                                }
-                                className={`w-full rounded-2xl border p-4 text-left transition ${
-                                  selected
-                                    ? "border-[var(--owner-blue-500)] bg-[var(--owner-blue-050)]"
-                                    : "border-[var(--owner-border)] bg-[var(--owner-bg)] hover:border-[var(--owner-blue-400)]"
-                                }`}
-                              >
-                                <div className="flex items-center justify-between gap-3">
-                                  <div className="min-w-0">
-                                    <h3 className="text-sm font-semibold text-[var(--owner-fg-1)]">
-                                      {option.label}
-                                    </h3>
-                                    <p className="mt-0.5 text-xs text-[var(--owner-fg-3)]">
-                                      Commission:{" "}
-                                      <strong className="text-[var(--owner-fg-1)] tabular-nums">
-                                        {option.commissionRate}%
-                                      </strong>
-                                      {option.upfrontFee > 0 ? (
-                                        <>
-                                          {" · "}Upfront:{" "}
-                                          <strong className="text-[var(--owner-fg-1)] tabular-nums">
-                                            {formatIndianRupees(option.upfrontFee)}
-                                          </strong>
-                                        </>
-                                      ) : null}
-                                    </p>
-                                  </div>
-                                  {selected ? (
-                                    <CheckCircle2Icon
-                                      size={18}
-                                      className="shrink-0 text-[var(--owner-blue-500)]"
-                                    />
-                                  ) : null}
-                                </div>
-                              </button>
-                            );
-                          })}
-                        </div>
-                      </div>
-                    ) : null}
+                          {boost.offerCode === "INCL_TO_EXCL_OFFER" ? (
+                            <p className="rounded-lg border border-[var(--owner-border-soft)] bg-[var(--owner-bg-subtle)] p-2 text-[11px] leading-relaxed text-[var(--owner-fg-3)]">
+                              Selecting this converts the event to exclusive on
+                              Hoizr.
+                            </p>
+                          ) : null}
 
-                    {!pricingOptions.length ? (
-                      <div className="rounded-lg border border-[var(--owner-border)] bg-[var(--owner-bg)] p-4 text-sm text-[var(--owner-fg-3)]">
-                        No offers calculated yet — close this modal and reopen it after saving the last step.
-                      </div>
-                    ) : null}
+                          {message ? (
+                            <p className="text-xs leading-relaxed text-[var(--owner-fg-3)]">
+                              {message}
+                            </p>
+                          ) : null}
+                        </button>
+                      );
+                    })}
                   </div>
                 );
               })()}
@@ -4758,7 +5101,9 @@ const StepSection = ({
   <div className="space-y-5">
     <div>
       <h2 className="text-xl font-semibold">{title}</h2>
-      <p className="mt-1 text-sm leading-6 text-[var(--owner-fg-3)]">{subtitle}</p>
+      <p className="mt-1 text-sm leading-6 text-[var(--owner-fg-3)]">
+        {subtitle}
+      </p>
     </div>
     {children}
   </div>
@@ -4848,7 +5193,10 @@ const DateTimeInput = ({
       : "Pick a date";
   const selectedTimeLabel =
     timePickerOptions.find((option) => option.value === (time || pendingTime))
-      ?.label || (time || pendingTime || "Pick a time");
+      ?.label ||
+    time ||
+    pendingTime ||
+    "Pick a time";
 
   return (
     <label className="block min-w-0 text-sm font-medium">
@@ -4862,8 +5210,13 @@ const DateTimeInput = ({
                 disabled={disabled}
                 className="flex h-10 items-center gap-2 rounded-md bg-[var(--owner-bg)] px-3 text-left text-sm disabled:cursor-not-allowed disabled:opacity-60"
               >
-                <CalendarDaysIcon size={16} className="shrink-0 text-[var(--owner-blue-500)]" />
-                <span className={`min-w-0 flex-1 truncate ${!date ? "text-[var(--owner-fg-4)]" : ""}`}>
+                <CalendarDaysIcon
+                  size={16}
+                  className="shrink-0 text-[var(--owner-blue-500)]"
+                />
+                <span
+                  className={`min-w-0 flex-1 truncate ${!date ? "text-[var(--owner-fg-4)]" : ""}`}
+                >
                   {date ? formatDate(dateAsDate) : "Pick a date"}
                 </span>
               </button>
@@ -4891,7 +5244,7 @@ const DateTimeInput = ({
                 onSelect={(d) => {
                   if (!d) return;
                   const iso = `${d.getFullYear()}-${String(
-                    d.getMonth() + 1
+                    d.getMonth() + 1,
                   ).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
                   update(iso, time);
                   setPickerOpen(false);
@@ -4907,8 +5260,13 @@ const DateTimeInput = ({
                 disabled={disabled}
                 className="flex h-10 items-center gap-2 rounded-md bg-[var(--owner-bg)] px-3 text-left text-sm disabled:cursor-not-allowed disabled:opacity-60"
               >
-                <ClockIcon size={15} className="shrink-0 text-[var(--owner-blue-500)]" />
-                <span className={`min-w-0 flex-1 truncate ${!(time || pendingTime) ? "text-[var(--owner-fg-4)]" : ""}`}>
+                <ClockIcon
+                  size={15}
+                  className="shrink-0 text-[var(--owner-blue-500)]"
+                />
+                <span
+                  className={`min-w-0 flex-1 truncate ${!(time || pendingTime) ? "text-[var(--owner-fg-4)]" : ""}`}
+                >
                   {selectedTimeLabel}
                 </span>
               </button>
@@ -4957,7 +5315,8 @@ const CityInput = ({
   options: CityOption[];
   disabled?: boolean;
 }) => {
-  const hasCurrentValue = value && !options.some((option) => option.value === value);
+  const hasCurrentValue =
+    value && !options.some((option) => option.value === value);
   return (
     <label className="block min-w-0 text-sm font-medium">
       {label}
@@ -4970,10 +5329,7 @@ const CityInput = ({
         <option value="">Select city</option>
         {hasCurrentValue ? <option value={value}>{value}</option> : null}
         {options.map((option) => (
-          <option
-            key={option._id}
-            value={option.value}
-          >
+          <option key={option._id} value={option.value}>
             {option.value}
             {option.state ? `, ${option.state}` : ""}
           </option>
@@ -5196,13 +5552,7 @@ const Textarea = ({
   </label>
 );
 
-const PreviewRow = ({
-  Icon,
-  text,
-}: {
-  Icon: LucideIcon;
-  text: string;
-}) => (
+const PreviewRow = ({ Icon, text }: { Icon: LucideIcon; text: string }) => (
   <div className="flex items-center gap-2 text-sm">
     <Icon size={16} />
     <span className="truncate">{text}</span>

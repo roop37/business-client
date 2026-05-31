@@ -785,7 +785,7 @@ const EventCard = ({
         {isCollab ? (
           <span
             className="absolute left-2 top-2 inline-flex items-center gap-1.5 rounded-full bg-[#1B0B3D]/85 px-2.5 py-1 text-[10.5px] font-semibold uppercase tracking-[0.12em] text-white backdrop-blur"
-            title="You were added to this event as a collaborator. The host who added you controls what you can do here."
+            title="You were added to this event as a collaborator. The organizer who added you controls what you can do here."
           >
             <UsersRoundIcon size={11} />
             Collaborator
@@ -806,7 +806,7 @@ const EventCard = ({
             </p>
             {isCollab ? (
               <p className="mt-1 text-[12px] text-[#7E2BD6]">
-                Read-only · added by the event host
+                Read-only · added by the event organizer
               </p>
             ) : null}
           </div>

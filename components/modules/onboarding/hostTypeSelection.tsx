@@ -273,10 +273,10 @@ const HostTypeSelection = () => {
             Step 1/3
           </p>
           <h2 className="mt-1 text-xl font-semibold tracking-tight">
-            Host details
+            Organizer details
           </h2>
           <p className="mt-1 text-sm leading-5 text-gray-600">
-            Add the host type, contact, and basic public profile.
+            Add the organizer type, contact, and basic public profile.
           </p>
         </div>
         <form
@@ -292,7 +292,7 @@ const HostTypeSelection = () => {
               <Controller
                 name="hostType"
                 control={control}
-                rules={{ required: "Please select a host type" }}
+                rules={{ required: "Please select an organizer type" }}
                 render={({ field }) => (
                   <div
                     role="radiogroup"

@@ -467,7 +467,6 @@ Object.assign(sdk, {
             endDate
             markSeparateDays
             isComingSoon
-            repeatEveryWeek
             city
             location {
               addressLine1
@@ -539,6 +538,7 @@ Object.assign(sdk, {
             eventCollaborationBusiness {
               name
               businessLinkId
+              logo
               requestCustomerListAccess
               customerListShared
               hideOnEventPage
@@ -911,6 +911,7 @@ Object.assign(sdk, {
         eventCollaborationBusiness?: Array<{
           businessLinkId?: string;
           name?: string;
+          logo?: string;
           collaborationStatus?: string;
           canSeeMetrics?: boolean;
           canRunCampaigns?: boolean;
@@ -933,6 +934,7 @@ Object.assign(sdk, {
             eventCollaborationBusiness {
               businessLinkId
               name
+              logo
               collaborationStatus
               canSeeMetrics
               canRunCampaigns

@@ -48,6 +48,9 @@ export const RichTextEditor = ({
   useEffect(() => {
     const node = editorRef.current;
     if (!node) return;
+    // Skip while user is typing — re-setting innerHTML during edits
+    // resets the cursor to position 0.
+    if (document.activeElement === node) return;
     const clean = DOMPurify.sanitize(value || "", SANITISE_CONFIG);
     if (node.innerHTML !== clean) {
       node.innerHTML = clean;
@@ -64,6 +67,19 @@ export const RichTextEditor = ({
   const handleInput = (event: React.FormEvent<HTMLDivElement>) => {
     const html = event.currentTarget.innerHTML;
     onChange(DOMPurify.sanitize(html, SANITISE_CONFIG));
+  };
+
+  const handlePaste = (event: React.ClipboardEvent<HTMLDivElement>) => {
+    event.preventDefault();
+    const text = event.clipboardData.getData("text/plain");
+    // Replace any selection with the pasted plain text. execCommand fires
+    // an input event on Chromium/Firefox; Safari is unreliable, so we
+    // also sync the value manually right after.
+    document.execCommand("insertText", false, text);
+    const node = editorRef.current;
+    if (node) {
+      onChange(DOMPurify.sanitize(node.innerHTML, SANITISE_CONFIG));
+    }
   };
 
   return (
@@ -106,7 +122,8 @@ export const RichTextEditor = ({
         contentEditable
         suppressContentEditableWarning
         onInput={handleInput}
-        style={{ minHeight }}
+        onPaste={handlePaste}
+        style={{ minHeight, textAlign: "left" }}
         className="w-full rounded-lg border border-[var(--owner-border)] bg-white px-3 py-2 text-sm leading-6 outline-none transition focus:border-[var(--owner-blue-500)] focus:ring-2 focus:ring-[var(--owner-blue-050)] [&_ul]:ml-5 [&_ul]:list-disc"
       />
     </div>
