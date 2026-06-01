@@ -67,7 +67,7 @@ const AddTeamMemberForm = () => {
       type: string;
       id: string;
       isTicked: boolean;
-      preselect: string[];
+      preselect: TeamRole[];
     }[]
   >([]);
 
@@ -76,7 +76,7 @@ const AddTeamMemberForm = () => {
       type: string;
       id: string;
       isTicked: boolean;
-      preselect: string[];
+      preselect: TeamRole[];
     }[],
   ): any[] => {
     return permissions.map((permission) => ({
@@ -163,11 +163,14 @@ const AddTeamMemberForm = () => {
   };
 
   useEffect(() => {
-    const roleDefaults = defaultPermissionsByRole[form.role?.value || ""] ?? [];
+    const selectedRole = form.role?.value as TeamRole | undefined;
+    const roleDefaults = defaultPermissionsByRole[selectedRole || ""] ?? [];
     setPermissions((prevPermissions) =>
       prevPermissions.map((permission) => ({
         ...permission,
-        isTicked: roleDefaults.includes(permission.type as PermissionTypeEnum),
+        isTicked: permission.preselect?.length && selectedRole
+          ? permission.preselect.includes(selectedRole)
+          : roleDefaults.includes(permission.type as PermissionTypeEnum),
       })),
     );
   }, [form.role]);
@@ -176,18 +179,21 @@ const AddTeamMemberForm = () => {
     try {
       const response = await sdk.getAllPermissions();
       const roleDefaults = defaultPermissionsByRole[form.role?.value || ""] ?? [];
+      const selectedRole = form.role?.value as TeamRole | undefined;
       const formattedPermissions = response.getAllPermissions.map(
         (permission: {
           type: PermissionTypeEnum;
           _id: string;
-          preselect: UserRole[];
+          preselect: TeamRole[];
         }) => ({
           type: permission.type,
           id: permission._id,
-          isTicked: roleDefaults.includes(permission.type),
+          isTicked: permission.preselect?.length && selectedRole
+            ? permission.preselect.includes(selectedRole)
+            : roleDefaults.includes(permission.type),
           preselect: permission.preselect,
         }),
-      ).filter((permission) => permission.preselect?.includes(UserRole.Host));
+      );
       setPermissions(formattedPermissions);
     } catch (error) {
       setToastData({

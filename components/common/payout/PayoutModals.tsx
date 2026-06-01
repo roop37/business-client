@@ -32,15 +32,14 @@ const PayoutModals = () => {
       <ReusableModal
         isOpen={payoutPromptModal}
         onClose={() => showPayoutPromptModal(false)}
-        title="Add payout details to receive earnings"
+        title="Verified payout required to publish"
         width="md"
       >
         <div className="space-y-4 text-[#171614]">
           <p className="text-sm leading-6 text-[#6f6255]">
-            Your event can go live without payout details — but earnings stay
-            on hold until you add and admin verifies a primary payout account.
-            Add it now to avoid any delay in receiving your funds after the
-            event ends.
+            Paid events need a primary payout account that&apos;s been verified
+            by our team. Add your payout details — once we verify them
+            (usually within a few hours), you&apos;ll be able to publish.
           </p>
           <div className="flex justify-end gap-2">
             <CButton
@@ -58,7 +57,7 @@ const PayoutModals = () => {
                 showPayoutFormModal(true);
               }}
             >
-              Add now
+              Add payout
             </CButton>
           </div>
         </div>
@@ -83,7 +82,7 @@ const PayoutModals = () => {
             </span>
             <p className="text-sm leading-6 text-[#3d3328]">
               Please wait a moment — our team verifies new payout profiles within 1 to 4 hours. Your event is
-              safely saved as a draft. You can exit and we&apos;ll publish it the moment the payout clears verification.
+              safely saved as a draft. You can publish it once the payout clears verification.
             </p>
           </div>
           <p className="text-sm leading-6 text-[#6f6255]">

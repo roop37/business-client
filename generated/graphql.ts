@@ -165,7 +165,7 @@ export type AddPayoutInput = {
 
 export type AddPermissionInput = {
   isFunction?: Scalars['Boolean']['input'];
-  preselect: Array<UserRole>;
+  preselect: Array<TeamRole>;
   type: PermissionTypeEnum;
 };
 
@@ -3067,7 +3067,7 @@ export type MutationUpdateIndianCityStatusArgs = {
 
 export type MutationUpdatePermissionPreselectArgs = {
   id: Scalars['String']['input'];
-  preselect: Array<UserRole>;
+  preselect: Array<TeamRole>;
 };
 
 
@@ -3286,7 +3286,7 @@ export type Permission = {
   createdAt: Scalars['DateTimeISO']['output'];
   createdBy: Admin;
   isFunction: Scalars['Boolean']['output'];
-  preselect: Array<UserRole>;
+  preselect: Array<TeamRole>;
   type: PermissionTypeEnum;
   updatedAt: Scalars['DateTimeISO']['output'];
   updatedBy: Admin;
@@ -4931,7 +4931,7 @@ export type VerifyTeamEmailMutation = { __typename?: 'Mutation', verifyTeamEmail
 export type GetAllPermissionsQueryVariables = Exact<{ [key: string]: never; }>;
 
 
-export type GetAllPermissionsQuery = { __typename?: 'Query', getAllPermissions: Array<{ __typename?: 'Permission', _id: string, type: PermissionTypeEnum, preselect: Array<UserRole>, isFunction: boolean }> };
+export type GetAllPermissionsQuery = { __typename?: 'Query', getAllPermissions: Array<{ __typename?: 'Permission', _id: string, type: PermissionTypeEnum, preselect: Array<TeamRole>, isFunction: boolean }> };
 
 export type UpdateUserDetailsQueryVariables = Exact<{
   input: UpdateUserInput;

@@ -18,7 +18,11 @@ import {
 } from "@/utils/eventOfferOps";
 import { sdk } from "@/utils/graphqlClient";
 import { extractErrorMessage } from "@/utils/utilFUncs";
-import { VerificationStatus } from "@/generated/graphql";
+import {
+  hasPendingPrimaryPayout,
+  hasVerifiedPrimaryPayout,
+  isPayoutGateError,
+} from "@/utils/payout-eligibility";
 
 const AI_OFFER_PREFIX = "ai:";
 
@@ -2037,7 +2041,7 @@ const EventJourney = ({
       }
     } catch (error) {
       const message = extractErrorMessage(error);
-      if (message.toLowerCase().includes("payout profile")) {
+      if (isPayoutGateError(message)) {
         showPayoutPromptModal(true);
       } else {
         setToastData({ type: "error", message });
@@ -2060,7 +2064,7 @@ const EventJourney = ({
       router.push("/events");
     } catch (error) {
       const message = extractErrorMessage(error);
-      if (message.toLowerCase().includes("payout profile")) {
+      if (isPayoutGateError(message)) {
         showPayoutPromptModal(true);
       } else {
         setToastData({ type: "error", message });
@@ -2080,6 +2084,32 @@ const EventJourney = ({
       setToastData({ type: "error", message: error });
       return;
     }
+
+    // Preflight: for paid events, refuse to even start the publish flow
+    // if there's no verified primary payout. Avoids the wasted
+    // updateEventStep + AI-offer round-trip and surfaces the modal
+    // immediately. Server enforces the same predicate (plus the
+    // Razorpay X provisioning check it doesn't share with the client),
+    // so a missing/stale payout is caught either way.
+    if (isPaid) {
+      try {
+        const { hostPayoutAccounts } = await sdk.hostPayoutAccounts();
+        if (!hasVerifiedPrimaryPayout(hostPayoutAccounts)) {
+          if (hasPendingPrimaryPayout(hostPayoutAccounts)) {
+            showPayoutPendingVerificationModal(true);
+          } else {
+            showPayoutPromptModal(true);
+          }
+          return;
+        }
+      } catch {
+        // Network / cache miss — fail open: let the mutation run and
+        // the server-side gate be the authority. The post-error catch
+        // below + the catch in publishEvent() will still open the modal
+        // if the server rejects.
+      }
+    }
+
     setLoading(true);
     try {
       await sdk.updateEventStep({
@@ -2166,7 +2196,7 @@ const EventJourney = ({
       setPublishModalOpen(true);
     } catch (error) {
       const message = extractErrorMessage(error);
-      if (message.toLowerCase().includes("payout profile")) {
+      if (isPayoutGateError(message)) {
         showPayoutPromptModal(true);
       } else {
         setToastData({ type: "error", message });
@@ -2254,45 +2284,18 @@ const EventJourney = ({
         // ignore — host defaults will retry next publish
       }
 
-      // 2026-05-31: payout is no longer a publish gate. If the host is a
-      // paid event but doesn't yet have a verified primary payout, nudge
-      // them to add one as a post-publish step. The settlement service
-      // auto-pauses payout release until a verified Payout exists, so
-      // this prompt is a courtesy — funds are never released without
-      // it, but tickets can already sell. Best-effort — a query failure
-      // shouldn't break the publish-success path.
-      if (isPaid) {
-        try {
-          const payoutRes = await sdk.hostPayoutAccounts();
-          const hasVerifiedPrimary = (payoutRes.hostPayoutAccounts ?? []).some(
-            (a) =>
-              a.isPrimary &&
-              a.isActive &&
-              a.verificationStatus === VerificationStatus.Verified,
-          );
-          const hasPendingPrimary = (payoutRes.hostPayoutAccounts ?? []).some(
-            (a) =>
-              a.isPrimary &&
-              a.isActive &&
-              a.verificationStatus !== VerificationStatus.Verified,
-          );
-          if (!hasVerifiedPrimary) {
-            if (hasPendingPrimary) {
-              showPayoutPendingVerificationModal(true);
-            } else {
-              showPayoutPromptModal(true);
-            }
-          }
-        } catch {
-          // Silent — admin will see the paused settlement if anything
-          // slips through. Don't block the success-path UX.
-        }
-      }
-
       router.push(`/events/${eventId}/manage`);
     } catch (error) {
       const message = extractErrorMessage(error);
-      setToastData({ type: "error", message });
+      // Safety net for a race where the preflight in openPublishFlow saw
+      // a verified payout, but admin un-verified it between then and the
+      // actual publish mutation. Server still rejects with the prefix,
+      // so route the same way as the preflight would have.
+      if (isPayoutGateError(message)) {
+        showPayoutPromptModal(true);
+      } else {
+        setToastData({ type: "error", message });
+      }
     } finally {
       setPublishing(false);
     }
