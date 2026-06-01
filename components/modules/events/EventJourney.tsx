@@ -23,7 +23,6 @@ import {
   hasVerifiedPrimaryPayout,
   isPayoutGateError,
 } from "@/utils/payout-eligibility";
-import { VerificationStatus } from "@/generated/graphql";
 
 const AI_OFFER_PREFIX = "ai:";
 
@@ -2283,41 +2282,6 @@ const EventJourney = ({
         };
       } catch {
         // ignore — host defaults will retry next publish
-      }
-
-      // 2026-05-31: payout is no longer a publish gate. If the host is a
-      // paid event but doesn't yet have a verified primary payout, nudge
-      // them to add one as a post-publish step. The settlement service
-      // auto-pauses payout release until a verified Payout exists, so
-      // this prompt is a courtesy — funds are never released without
-      // it, but tickets can already sell. Best-effort — a query failure
-      // shouldn't break the publish-success path.
-      if (isPaid) {
-        try {
-          const payoutRes = await sdk.hostPayoutAccounts();
-          const hasVerifiedPrimary = (payoutRes.hostPayoutAccounts ?? []).some(
-            (a) =>
-              a.isPrimary &&
-              a.isActive &&
-              a.verificationStatus === VerificationStatus.Verified,
-          );
-          const hasPendingPrimary = (payoutRes.hostPayoutAccounts ?? []).some(
-            (a) =>
-              a.isPrimary &&
-              a.isActive &&
-              a.verificationStatus !== VerificationStatus.Verified,
-          );
-          if (!hasVerifiedPrimary) {
-            if (hasPendingPrimary) {
-              showPayoutPendingVerificationModal(true);
-            } else {
-              showPayoutPromptModal(true);
-            }
-          }
-        } catch {
-          // Silent — admin will see the paused settlement if anything
-          // slips through. Don't block the success-path UX.
-        }
       }
 
       router.push(`/events/${eventId}/manage`);

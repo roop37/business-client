@@ -40,7 +40,7 @@ export function hasPendingPrimaryPayout(
     (a) =>
       a.isPrimary === true &&
       a.isActive === true &&
-      a.verificationStatus !== VerificationStatus.Verified
+      a.verificationStatus === VerificationStatus.Pending
   );
 }
 

@@ -82,7 +82,7 @@ const PayoutModals = () => {
             </span>
             <p className="text-sm leading-6 text-[#3d3328]">
               Please wait a moment — our team verifies new payout profiles within 1 to 4 hours. Your event is
-              safely saved as a draft. You can exit and we&apos;ll publish it the moment the payout clears verification.
+              safely saved as a draft. You can publish it once the payout clears verification.
             </p>
           </div>
           <p className="text-sm leading-6 text-[#6f6255]">
