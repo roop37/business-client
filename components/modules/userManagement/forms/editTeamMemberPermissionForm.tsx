@@ -1,7 +1,7 @@
 import CButton from "@/components/common/button/button";
 import { ButtonType } from "@/components/common/button/interface";
 import CustomSwitchCard from "@/components/common/customSwitchCard/customSwitchCard";
-import { PermissionTypeEnum, UserRole } from "@/generated/graphql";
+import { PermissionTypeEnum } from "@/generated/graphql";
 import useGlobalStore from "@/store/global";
 import useUserManagementStore from "@/store/userManagement";
 import { sdk } from "@/utils/graphqlClient";
@@ -79,9 +79,6 @@ const EditTeamMemberPermissionForm: React.FC = () => {
         );
         setPermissionsList(
           permissionsResponse.getAllPermissions
-            .filter((permission) =>
-              permission.preselect?.includes(UserRole.Host)
-            )
             .map((permission) => {
               const existing = userPermissionMap.get(permission.type);
               return {
