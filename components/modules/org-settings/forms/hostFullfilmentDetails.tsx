@@ -594,7 +594,7 @@ const HostFulfillmentForm: React.FC = () => {
         <CustomSwitchCard
           label="Gift Cards"
           title="Gift Cards"
-          caption="Enable or disable gift card purchases for your host"
+          caption="Enable or disable gift card purchases for your venue"
           switchChecked={hostConfigs.giftCardEnabled ?? true}
           onSwitchChange={() => {
             setConfirmationModal(true);

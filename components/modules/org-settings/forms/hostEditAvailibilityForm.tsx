@@ -296,7 +296,7 @@ const HostEditAvailabilityForm: React.FC = () => {
 
         setIsHostAvaibiltyEdit(false);
         setToastData({
-          message: "Host details updated successfully",
+          message: "Venue details updated successfully",
           type: "success",
         });
 

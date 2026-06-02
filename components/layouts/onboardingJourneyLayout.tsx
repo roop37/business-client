@@ -257,10 +257,10 @@ const OnboardingJourneyLayout = ({ children, includeTimezones }: Props) => {
               keeps progress against your account.
             </p>
             <Link
-              href="mailto:support@hoizr.com"
+              href="mailto:contact@hoizr.com"
               className="mt-3 inline-flex font-semibold text-[var(--owner-fg-1)] underline-offset-4 hover:underline"
             >
-              support@hoizr.com →
+              contact@hoizr.com →
             </Link>
             <Link
               href={whatsappHref}
@@ -357,10 +357,10 @@ const OnboardingJourneyLayout = ({ children, includeTimezones }: Props) => {
             Privacy
           </Link>
           <Link
-            href="mailto:support@hoizr.com"
+            href="mailto:contact@hoizr.com"
             className="hover:text-[var(--owner-fg-1)] hover:underline"
           >
-            support@hoizr.com
+            contact@hoizr.com
           </Link>
         </div>
       </footer>

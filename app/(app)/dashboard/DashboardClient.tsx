@@ -183,7 +183,7 @@ export const DashboardClient = () => {
       },
       {
         key: "logo",
-        label: "Host logo",
+        label: "Venue logo",
         done: isDone(checklist?.logo),
         href: "/org-settings",
       },
@@ -210,7 +210,7 @@ export const DashboardClient = () => {
     <div className="font-owner text-owner-fg-1">
       <PageHeader
         title={`Hey ${greetingName}`}
-        subtitle="Live host overview for events, sales, scanners, and payouts."
+        subtitle="Live venue overview for events, sales, scanners, and payouts."
         actions={
           <>
             <OwnerButton
@@ -280,7 +280,7 @@ export const DashboardClient = () => {
             <PromoCard
               eyebrow="Collaborators"
               title="Pool audiences. Boost sales."
-              body="Add another host as a collaborator — they get the event on their dashboard and you both run campaigns against the combined customer base."
+              body="Add another venue as a collaborator — they get the event on their dashboard and you both run campaigns against the combined customer base."
               ctaLabel="How collaborators work"
               icon={<Users size={18} />}
               onClick={() => router.push("/events?create=1")}

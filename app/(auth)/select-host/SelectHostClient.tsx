@@ -4,7 +4,6 @@ import AuthLogo from "@/components/common/auth/AuthLogo";
 import { sdk } from "@/utils/graphqlClient";
 import { extractErrorMessage } from "@/utils/utilFUncs";
 import { ArrowRight } from "lucide-react";
-import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 import { FaSpinner } from "react-icons/fa";
 
@@ -16,26 +15,33 @@ type HostOption = {
 };
 
 export const SelectHostClient = () => {
-  const router = useRouter();
   const [hosts, setHosts] = useState<HostOption[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectingId, setSelectingId] = useState("");
   const [error, setError] = useState("");
 
-  const handleSelect = useCallback(
-    async (hostId: string) => {
-      try {
-        setSelectingId(hostId);
-        await sdk.SetHostIdAsCookie({ hostId });
-        const journey = await sdk.MeUserJourney();
-        router.replace(journey.meUserJourney.suggestedRoute || "/dashboard");
-      } catch (err) {
-        setError(extractErrorMessage(err));
-        setSelectingId("");
+  const handleSelect = useCallback(async (hostId: string) => {
+    try {
+      setSelectingId(hostId);
+      await sdk.SetHostIdAsCookie({ hostId });
+      const journey = await sdk.MeUserJourney();
+      const target =
+        journey.meUserJourney.suggestedRoute || "/dashboard";
+      // Hard-navigate instead of router.replace. The cookie set by the
+      // GraphQL response above must be committed by the browser before
+      // the destination page's SSR runs — Next.js soft navigation can
+      // dispatch the RSC fetch from a prefetched cache that races the
+      // cookie commit, leaving meUserJourney on the dashboard SSR with
+      // empty ctx.hostId, which bounces the user right back to
+      // /select-host and the click appears to do nothing.
+      if (typeof window !== "undefined") {
+        window.location.assign(target);
       }
-    },
-    [router]
-  );
+    } catch (err) {
+      setError(extractErrorMessage(err));
+      setSelectingId("");
+    }
+  }, []);
 
   useEffect(() => {
     const fetchHosts = async () => {

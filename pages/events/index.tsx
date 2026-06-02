@@ -300,7 +300,7 @@ const EventsPage = () => {
       setReadinessOpen(true);
       setToastData({
         type: "error",
-        message: "Upload a host logo before creating an event.",
+        message: "Upload a venue logo before creating an event.",
       });
       return;
     }

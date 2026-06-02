@@ -103,7 +103,39 @@ const CustomCampaigns: NextPageWithLayout = () => {
   const [loading, setLoading] = useState(false);
   const [editLoading, setEditLoading] = useState(false);
   const { setToastData, setSelectedSideBarMenu } = useGlobalStore();
-  const { hostLogo } = useHostsStore();
+  const { hostLogo, setHostLogo } = useHostsStore();
+
+  // Guard against the race where MainLayout's async restaurantDetails
+  // fetch hasn't hydrated `hostLogo` yet when the host clicks "Add". A
+  // store read alone gives false negatives ("upload your logo first")
+  // for hosts who already have one. We re-fetch on click and trust the
+  // server result.
+  const ensureHostLogoOrPrompt = async (): Promise<boolean> => {
+    if (hostLogo) return true;
+    try {
+      const res = await sdk.restaurantDetails();
+      const liveLogo = res?.restaurantDetails?.logo ?? "";
+      if (liveLogo) {
+        setHostLogo(liveLogo);
+        return true;
+      }
+    } catch {
+      // Network failure — fall through to the same "please upload"
+      // nudge; the host can retry once connectivity recovers.
+    }
+    setToastData({
+      type: "error",
+      message: "Please upload your venue logo first",
+    });
+    return false;
+  };
+
+  const handleAddCampaignClick = async () => {
+    const ok = await ensureHostLogoOrPrompt();
+    if (!ok) return;
+    resetBothStores();
+    router.push("/campaigns/onboarding/template-select");
+  };
   const [reload, setReload] = useState<number>(1);
   const [isPreviewModalOpen, setIsPreviewModalOpen] = useState<boolean>(false);
   const [previewCampaign, setPreviewCampaign] =
@@ -687,16 +719,7 @@ const CustomCampaigns: NextPageWithLayout = () => {
                 data={data}
                 loading={loading}
                 addClickHandler={() => {
-                  if (!hostLogo) {
-                    setToastData({
-                      type: "error",
-                      message: "Please upload your host logo first",
-                    });
-                    return;
-                  } else {
-                    resetBothStores();
-                    router.push("/campaigns/onboarding/template-select");
-                  }
+                  void handleAddCampaignClick();
                 }}
                 manualPagination={true}
                 pageSize={getPageSizeNumber(pageSize)}
@@ -749,16 +772,7 @@ const CustomCampaigns: NextPageWithLayout = () => {
               </div>
               <button
                 onClick={() => {
-                  if (!hostLogo) {
-                    setToastData({
-                      type: "error",
-                      message: "Please upload your host logo first",
-                    });
-                    return;
-                  } else {
-                    resetBothStores();
-                    router.push("/campaigns/onboarding/template-select");
-                  }
+                  void handleAddCampaignClick();
                 }}
                 className="px-4 py-2 bg-primary text-white rounded-xl hover:bg-primary/90 transition-colors flex justify-between items-center space-x-2 text-sm"
               >

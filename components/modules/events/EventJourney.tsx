@@ -21,7 +21,6 @@ import { extractErrorMessage } from "@/utils/utilFUncs";
 import {
   hasPendingPrimaryPayout,
   hasVerifiedPrimaryPayout,
-  isPayoutGateError,
 } from "@/utils/payout-eligibility";
 
 const AI_OFFER_PREFIX = "ai:";
@@ -384,6 +383,7 @@ const EventJourney = ({
     setToastData,
     showPayoutPromptModal,
     showPayoutPendingVerificationModal,
+    setPayoutModalSaveDraftHandler,
   } = useGlobalStore();
   const { selectedHostId } = useHostsStore();
   const [step, setStep] = useState(0);
@@ -1556,7 +1556,7 @@ const EventJourney = ({
         setToastData({
           type: "error",
           message:
-            "We couldn't load your host context. Refresh the page and try again.",
+            "We couldn't load your venue context. Refresh the page and try again.",
         });
         setUploadingFlyer(false);
         return;
@@ -1593,7 +1593,7 @@ const EventJourney = ({
       if (!host?.address) {
         setToastData({
           type: "error",
-          message: "Host address is not available",
+          message: "Venue address is not available",
         });
         return;
       }
@@ -1616,7 +1616,7 @@ const EventJourney = ({
       setCoords(host.address.coordinate?.coordinates ?? []);
       setEventLocationDecided(true);
       setManualLocationOpen(true);
-      setToastData({ type: "success", message: "Host address copied" });
+      setToastData({ type: "success", message: "Venue address copied" });
     } catch (error) {
       setToastData({ type: "error", message: extractErrorMessage(error) });
     }
@@ -2021,6 +2021,32 @@ const EventJourney = ({
       setToastData({ type: "error", message: error });
       return;
     }
+
+    // Payout gate runs as the host leaves step 0 (event category) into
+    // step 1 (basic details) on a paid event type. We surface the
+    // PayoutPromptModal / PayoutPendingVerificationModal early — much
+    // earlier than publish — so a host without a verified payout
+    // discovers the requirement before sinking work into the listing.
+    // Publish-time catches no longer open these modals; the server
+    // gate stays as a belt-and-braces fallback that surfaces as a
+    // toast if it ever fires.
+    if (step === 0 && isPaid && !isPublished) {
+      try {
+        const { hostPayoutAccounts } = await sdk.hostPayoutAccounts();
+        if (!hasVerifiedPrimaryPayout(hostPayoutAccounts)) {
+          if (hasPendingPrimaryPayout(hostPayoutAccounts)) {
+            showPayoutPendingVerificationModal(true);
+          } else {
+            showPayoutPromptModal(true);
+          }
+          return;
+        }
+      } catch {
+        // Network / cache miss — fail open and let the host continue.
+        // Server still validates at publish-time.
+      }
+    }
+
     setLoading(true);
     try {
       await sdk.updateEventStep({
@@ -2041,11 +2067,7 @@ const EventJourney = ({
       }
     } catch (error) {
       const message = extractErrorMessage(error);
-      if (isPayoutGateError(message)) {
-        showPayoutPromptModal(true);
-      } else {
-        setToastData({ type: "error", message });
-      }
+      setToastData({ type: "error", message });
     } finally {
       setLoading(false);
     }
@@ -2064,15 +2086,24 @@ const EventJourney = ({
       router.push("/events");
     } catch (error) {
       const message = extractErrorMessage(error);
-      if (isPayoutGateError(message)) {
-        showPayoutPromptModal(true);
-      } else {
-        setToastData({ type: "error", message });
-      }
+      setToastData({ type: "error", message });
     } finally {
       setLoading(false);
     }
   };
+
+  // Keep a ref so the global PayoutModals' Save-as-draft button always
+  // calls the freshest closure (with the current step, eventId, inputs)
+  // rather than a stale capture from mount-time.
+  const saveDraftAndExitRef = useRef(saveDraftAndExit);
+  saveDraftAndExitRef.current = saveDraftAndExit;
+
+  useEffect(() => {
+    setPayoutModalSaveDraftHandler(() => {
+      void saveDraftAndExitRef.current();
+    });
+    return () => setPayoutModalSaveDraftHandler(null);
+  }, [setPayoutModalSaveDraftHandler]);
 
   // Triggered by the "Publish" button on the final wizard step. For free
   // events we just save + publish. For paid events we save, fetch the
@@ -2085,31 +2116,11 @@ const EventJourney = ({
       return;
     }
 
-    // Preflight: for paid events, refuse to even start the publish flow
-    // if there's no verified primary payout. Avoids the wasted
-    // updateEventStep + AI-offer round-trip and surfaces the modal
-    // immediately. Server enforces the same predicate (plus the
-    // Razorpay X provisioning check it doesn't share with the client),
-    // so a missing/stale payout is caught either way.
-    if (isPaid) {
-      try {
-        const { hostPayoutAccounts } = await sdk.hostPayoutAccounts();
-        if (!hasVerifiedPrimaryPayout(hostPayoutAccounts)) {
-          if (hasPendingPrimaryPayout(hostPayoutAccounts)) {
-            showPayoutPendingVerificationModal(true);
-          } else {
-            showPayoutPromptModal(true);
-          }
-          return;
-        }
-      } catch {
-        // Network / cache miss — fail open: let the mutation run and
-        // the server-side gate be the authority. The post-error catch
-        // below + the catch in publishEvent() will still open the modal
-        // if the server rejects.
-      }
-    }
-
+    // No payout preflight here — the gate moved to the step 0 → step 1
+    // transition so the host hits it as soon as they pick a paid event
+    // type. The server still enforces the predicate at publish; if it
+    // rejects (e.g., admin un-verified the payout between step 1 and
+    // publish) the catch below shows a toast.
     setLoading(true);
     try {
       await sdk.updateEventStep({
@@ -2196,11 +2207,7 @@ const EventJourney = ({
       setPublishModalOpen(true);
     } catch (error) {
       const message = extractErrorMessage(error);
-      if (isPayoutGateError(message)) {
-        showPayoutPromptModal(true);
-      } else {
-        setToastData({ type: "error", message });
-      }
+      setToastData({ type: "error", message });
     } finally {
       setLoading(false);
     }
@@ -2287,15 +2294,7 @@ const EventJourney = ({
       router.push(`/events/${eventId}/manage`);
     } catch (error) {
       const message = extractErrorMessage(error);
-      // Safety net for a race where the preflight in openPublishFlow saw
-      // a verified payout, but admin un-verified it between then and the
-      // actual publish mutation. Server still rejects with the prefix,
-      // so route the same way as the preflight would have.
-      if (isPayoutGateError(message)) {
-        showPayoutPromptModal(true);
-      } else {
-        setToastData({ type: "error", message });
-      }
+      setToastData({ type: "error", message });
     } finally {
       setPublishing(false);
     }
@@ -2395,10 +2394,10 @@ const EventJourney = ({
         ? "AI read: choose this when the offer is strong enough to lift conversion and you are comfortable reconciling it through settlement or after the event."
         : isLowestUpfront
           ? "AI read: lowest-friction option for publishing quickly."
-          : "AI read: balanced plan for hosts who want a stronger offer without overcomplicating settlement.",
+          : "AI read: balanced plan for venues that want a stronger offer without overcomplicating settlement.",
       customerRecommendation: isFastestSettlement
         ? "Customer angle: simple ticket decision, clear offer, and fast event momentum."
-        : "Customer angle: clear value message in the host publish flow.",
+        : "Customer angle: clear value message in the venue publish flow.",
     };
   };
 
@@ -4284,7 +4283,7 @@ const EventJourney = ({
                     <div className="mt-3 grid gap-3 md:grid-cols-2">
                       <ToggleSettingRow
                         title="Hide on Event Page"
-                        subtitle="Don't show as a co-host publicly."
+                        subtitle="Don't show as a co-organizer publicly."
                         checked={hideOnEventPage}
                         onCheckedChange={setHideOnEventPage}
                       />
@@ -4681,8 +4680,8 @@ const EventJourney = ({
 
         {publishModalOpen ? (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-            <div className="max-h-[90vh] w-full max-w-5xl overflow-y-auto rounded-2xl bg-white p-6 shadow-2xl">
-              <div className="flex items-start justify-between gap-4">
+            <div className="flex max-h-[90vh] w-full max-w-5xl flex-col rounded-2xl bg-white shadow-2xl">
+              <div className="flex items-start justify-between gap-4 px-6 pt-6">
                 <div>
                   <h2 className="text-xl font-semibold text-[var(--owner-fg-1)]">
                     Pick a publish plan
@@ -4703,6 +4702,11 @@ const EventJourney = ({
                   <XIcon size={18} />
                 </button>
               </div>
+
+              <div className="min-h-0 flex-1 overflow-y-auto px-6 pb-4 pt-2">
+              {/* sticky-bottom footer added below — the cards section
+                  scrolls vertically if needed; the cards themselves lay
+                  out as a single horizontally-scrolling row. */}
 
               {/* Settlement-mode question only matters when the selected
                   offer needs a separate settlement path. For basic
@@ -4806,7 +4810,8 @@ const EventJourney = ({
                 }
 
                 return (
-                  <div className="mt-5 grid gap-3 md:grid-cols-3">
+                  <div className="-mx-6 mt-5 overflow-x-auto px-6 pb-1">
+                    <div className="flex min-w-min gap-3">
                     {basicOption ? (
                       <button
                         key={basicOption.optionId}
@@ -4814,7 +4819,7 @@ const EventJourney = ({
                         onClick={() =>
                           setSelectedPricingOptionId(basicOption.optionId)
                         }
-                        className={`flex h-full flex-col gap-3 rounded-2xl border p-4 text-left transition ${
+                        className={`flex h-full w-[280px] shrink-0 flex-col gap-3 rounded-2xl border p-4 text-left transition ${
                           selectedPricingOptionId === basicOption.optionId
                             ? "border-[var(--owner-blue-500)] bg-[var(--owner-blue-050)] shadow-sm"
                             : "border-[var(--owner-border)] bg-[var(--owner-bg)] hover:border-[var(--owner-blue-400)]"
@@ -4902,7 +4907,7 @@ const EventJourney = ({
                           onClick={() =>
                             setSelectedPricingOptionId(option.optionId)
                           }
-                          className={`flex h-full flex-col gap-3 rounded-2xl border p-4 text-left transition ${
+                          className={`flex h-full w-[280px] shrink-0 flex-col gap-3 rounded-2xl border p-4 text-left transition ${
                             selected
                               ? "border-[var(--owner-blue-500)] bg-[var(--owner-blue-050)] shadow-sm"
                               : "border-[var(--owner-border)] bg-[var(--owner-bg)] hover:border-[var(--owner-blue-400)]"
@@ -5051,11 +5056,13 @@ const EventJourney = ({
                         </button>
                       );
                     })}
+                    </div>
                   </div>
                 );
               })()}
+              </div>
 
-              <div className="mt-6 flex flex-col gap-2 sm:flex-row sm:justify-end">
+              <div className="flex shrink-0 flex-col gap-2 border-t border-[var(--owner-border)] bg-white px-6 py-4 sm:flex-row sm:justify-end">
                 <button
                   type="button"
                   disabled={publishing}
@@ -5416,7 +5423,7 @@ const ImageUrlInput = ({
         setToastData({
           type: "error",
           message:
-            "We couldn't load your host context. Refresh the page and try again.",
+            "We couldn't load your venue context. Refresh the page and try again.",
         });
         setUploading(false);
         return;

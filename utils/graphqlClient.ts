@@ -2,12 +2,33 @@
 import { getSdk } from "@/generated/graphql";
 import { GraphQLClient } from "graphql-request";
 
-if (!process.env.NEXT_PUBLIC_SERVER_BASE_URL) {
-  throw new Error("Endpoint URL is not defined.");
-}
-
 const TOKEN_REFRESH_QUERY = "mutation TokenRefresh { tokensRefresh }";
-const endpoint = process.env.NEXT_PUBLIC_SERVER_BASE_URL + "/graphql";
+
+// Resolve at module load without throwing. A missing env var (Vercel
+// build before envs are wired, local checkout without .env, etc.)
+// would otherwise crash Next.js's page-data collection and fail the
+// whole build — even for routes marked `dynamic = "force-dynamic"`.
+// Runtime requests will still fail loudly if the env stays unset, but
+// the build proceeds and the misconfiguration is recoverable without
+// a redeploy of code.
+const resolveEndpoint = (): string => {
+  const base = process.env.NEXT_PUBLIC_SERVER_BASE_URL?.replace(/\/+$/, "");
+  if (!base) {
+    if (
+      process.env.NEXT_PUBLIC_HOIZR_ENV === "prod" &&
+      typeof window !== "undefined"
+    ) {
+      // eslint-disable-next-line no-console
+      console.warn(
+        "[hoizr] NEXT_PUBLIC_SERVER_BASE_URL is not set; falling back to http://localhost:4000/graphql"
+      );
+    }
+    return "http://localhost:4000/graphql";
+  }
+  return base.endsWith("/graphql") ? base : `${base}/graphql`;
+};
+
+const endpoint = resolveEndpoint();
 
 const graphQLClient = new GraphQLClient(endpoint, {
   credentials: "include",

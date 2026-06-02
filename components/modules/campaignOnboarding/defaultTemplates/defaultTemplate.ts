@@ -694,7 +694,7 @@ export const defaultTemplates = [
                         duplicatable: true,
                         deletable: true,
                         hideable: true,
-                        text: '<p style="line-height: 140%;">Need help? Reach out to us by clicking <a style="color: {{primaryColor}};" rel="noopener" href="mailto:support@hoizr.com" target="_blank" data-u-link-value="eyJuYW1lIjoiZW1haWwiLCJhdHRycyI6eyJocmVmIjoibWFpbHRvOnt7ZW1haWx9fT9zdWJqZWN0PXt7c3ViamVjdH19JmJvZHk9e3tib2R5fX0ifSwidmFsdWVzIjp7ImVtYWlsIjoic3VwcG9ydEBjaG9vc2Vwb3MuY29tIiwic3ViamVjdCI6IiIsImJvZHkiOiIifX0=">here</a>.</p>',
+                        text: '<p style="line-height: 140%;">Need help? Reach out to us by clicking <a style="color: {{primaryColor}};" rel="noopener" href="mailto:contact@hoizr.com" target="_blank" data-u-link-value="eyJuYW1lIjoiZW1haWwiLCJhdHRycyI6eyJocmVmIjoibWFpbHRvOnt7ZW1haWx9fT9zdWJqZWN0PXt7c3ViamVjdH19JmJvZHk9e3tib2R5fX0ifSwidmFsdWVzIjp7ImVtYWlsIjoic3VwcG9ydEBjaG9vc2Vwb3MuY29tIiwic3ViamVjdCI6IiIsImJvZHkiOiIifX0=">here</a>.</p>',
                         _languages: {},
                       },
                     },
@@ -1065,7 +1065,7 @@ table, td { color: #000000; } #u_body a { color: #0000ee; text-decoration: none;
       <td style="overflow-wrap:break-word;word-break:break-word;padding:10px;font-family:'Source Sans Pro',sans-serif;" align="left">
         
   <div style="font-size: 12px; color: #aaaaaa; line-height: 140%; text-align: center; word-wrap: break-word;">
-    <p style="line-height: 140%;">Need help? Reach out to us by clicking <a rel="noopener" href="mailto:support@hoizr.com" target="_blank">here</a>.</p>
+    <p style="line-height: 140%;">Need help? Reach out to us by clicking <a rel="noopener" href="mailto:contact@hoizr.com" target="_blank">here</a>.</p>
   </div>
 
       </td>

@@ -24,9 +24,9 @@ const StaticLayout = ({ children }: Props) => {
         <div className="flex-1 flex flex-col justify- space-y-1">
           <p className="text-gray-500 whitespace-pre-line">
             If you have any queries please email us at
-            <Link className="text-primary" href="mailto:support@hoizr.com">
+            <Link className="text-primary" href="mailto:contact@hoizr.com">
               {" "}
-              support@hoizr.com
+              contact@hoizr.com
             </Link>
           </p>
           <p className="text-gray-500 whitespace-pre-line text-sm space-x-2">

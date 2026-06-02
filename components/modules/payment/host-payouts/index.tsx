@@ -19,6 +19,7 @@ import { extractErrorMessage } from "@/utils/utilFUncs";
 import {
   Building2,
   CheckCircle2,
+  Info,
   Landmark,
   Plus,
 } from "lucide-react";
@@ -301,6 +302,30 @@ const HostPayouts: React.FC = () => {
           })}
         </OwnerTable.Body>
       </OwnerTable>
+
+      <Card padding={16}>
+        <div className="flex items-start gap-3">
+          <div className="grid h-9 w-9 shrink-0 place-items-center rounded-owner-md bg-owner-bg-subtle text-owner-fg-2">
+            <Info size={16} />
+          </div>
+          <div className="text-[13px] leading-5 text-owner-fg-3">
+            <span className="font-semibold text-owner-fg-1">
+              Need to remove a payout?
+            </span>{" "}
+            For your security, payout accounts can&apos;t be deleted from this
+            dashboard. Email{" "}
+            <a
+              href="mailto:contact@hoizr.com?subject=Payout%20deletion%20request"
+              className="font-medium text-owner-blue-500 underline"
+            >
+              contact@hoizr.com
+            </a>{" "}
+            from your registered email with the account holder name and last 4
+            digits of the bank account, and our team will verify and remove it
+            for you.
+          </div>
+        </div>
+      </Card>
 
       <AddPayoutModal
         isOpen={addOpen}

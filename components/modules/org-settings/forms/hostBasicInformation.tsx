@@ -269,7 +269,7 @@ const HostBasicInformationEditForm: React.FC = () => {
 
       if (sanitizeText(data.hostName).length > 150) {
         setToastData({
-          message: "Host name should be of maximum 150 characters",
+          message: "Venue name should be of maximum 150 characters",
           type: "error",
         });
         return;
@@ -388,7 +388,7 @@ const HostBasicInformationEditForm: React.FC = () => {
           setFoodType(data.foodType?.map((option: any) => option.value) || []);
           setMeatType(data.meatType?.value || MeatType.Halal);
           setToastData({
-            message: "Basic Host Details Updated successfully",
+            message: "Basic Venue Details Updated successfully",
             type: "success",
           });
           setEditModalOpen(false);
@@ -412,7 +412,7 @@ const HostBasicInformationEditForm: React.FC = () => {
     if (!selectedHostId) {
       setToastData({
         type: "error",
-        message: "Host context is still loading, retry in a moment.",
+        message: "Venue context is still loading, retry in a moment.",
       });
       return;
     }
@@ -606,7 +606,7 @@ const HostBasicInformationEditForm: React.FC = () => {
         <FullPageModal
           actionButtonLabel=""
           onActionButtonClick={() => {}}
-          title="Edit Host"
+          title="Edit Venue"
           isOpen={editModalOpen}
           onClose={() => {
             reset();
@@ -633,7 +633,7 @@ const HostBasicInformationEditForm: React.FC = () => {
                   required: "Host name is required",
                 })}
                 className="input"
-                placeholder="Host Name"
+                placeholder="Venue Name"
                 defaultValue={restaurantName}
               />
               {errors.hostName && (
@@ -855,7 +855,7 @@ const HostBasicInformationEditForm: React.FC = () => {
                   },
                 })}
                 className="input"
-                placeholder="Host Website"
+                placeholder="Venue Website"
                 defaultValue={hostWebsite}
               />
               <p className="text-gray-500 text-xs mt-1 mx-1 text-start">

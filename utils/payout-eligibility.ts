@@ -12,10 +12,11 @@ export type PayoutAccountForEligibility = {
 
 // Client-side mirror of validatePublishPayoutPrecondition in main-server.
 // Returns true when the host has at least one primary, active,
-// admin-verified payout. The server enforces an additional Razorpay X
-// provisioning check that the client never sees — so a `true` here does
-// not guarantee publish will succeed; the EventJourney post-error catch
-// is the safety net for that race.
+// admin-verified payout. Razorpay X provisioning is intentionally
+// excluded from this check on both client and server — provisioning is
+// lazy (runs at first settlement transfer), so requiring it at publish
+// would reject every host trying to publish their first paid event.
+// Provisioning is enforced at the settlement-release gate instead.
 export function hasVerifiedPrimaryPayout(
   accounts: PayoutAccountForEligibility[] | null | undefined
 ): boolean {
@@ -42,18 +43,4 @@ export function hasPendingPrimaryPayout(
       a.isActive === true &&
       a.verificationStatus === VerificationStatus.Pending
   );
-}
-
-// True when the GraphQL error message indicates the publish-payout gate
-// blocked the request. Matches the new PAYOUT_NOT_VERIFIED: prefix
-// thrown by main-server, plus the legacy "payout profile" substring
-// for one release (in case a stale SDK is still in flight mid-deploy).
-// Used by EventJourney catches to decide whether to open the payout
-// modal vs. show a generic error toast.
-export function isPayoutGateError(
-  message: string | null | undefined
-): boolean {
-  if (!message) return false;
-  if (message.startsWith("PAYOUT_NOT_VERIFIED:")) return true;
-  return message.toLowerCase().includes("payout profile");
 }
