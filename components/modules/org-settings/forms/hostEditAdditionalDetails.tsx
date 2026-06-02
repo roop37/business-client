@@ -186,7 +186,7 @@ const HostEditAdditionalDetails: React.FC = () => {
           setMeatType(data.meatType?.value || MeatType.Halal);
           setInstagramLink(data.instagramLink || "");
           setToastData({
-            message: "Host Additional Information Updated Successfully",
+            message: "Venue Additional Information Updated Successfully",
             type: "success",
           });
 
@@ -285,7 +285,7 @@ const HostEditAdditionalDetails: React.FC = () => {
       <FullPageModal
         actionButtonLabel=""
         onActionButtonClick={() => {}}
-        title="Edit Host Details"
+        title="Edit Venue Details"
         isOpen={isHostAdditionalEdit}
         onClose={() => {
           if (originalData) {

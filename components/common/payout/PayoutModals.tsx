@@ -5,7 +5,7 @@ import { ButtonType } from "@/components/common/button/interface";
 import ReusableModal from "@/components/common/modal/modal";
 import AddPayoutModal from "@/components/modules/payment/host-payouts/addPayoutModal";
 import useGlobalStore from "@/store/global";
-import { Clock3, Megaphone } from "lucide-react";
+import { Clock3, FileText, Megaphone } from "lucide-react";
 
 /**
  * Global "you need a payout profile" prompt + the AddPayoutModal it
@@ -25,7 +25,12 @@ const PayoutModals = () => {
     showPayoutPendingVerificationModal,
     hostUnderReviewModal,
     showHostUnderReviewModal,
+    payoutModalSaveDraftHandler,
   } = useGlobalStore();
+
+  const runSaveDraft = () => {
+    payoutModalSaveDraftHandler?.();
+  };
 
   return (
     <>
@@ -41,7 +46,7 @@ const PayoutModals = () => {
             by our team. Add your payout details — once we verify them
             (usually within a few hours), you&apos;ll be able to publish.
           </p>
-          <div className="flex justify-end gap-2">
+          <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
             <CButton
               variant={ButtonType.Secondary}
               type="button"
@@ -49,6 +54,21 @@ const PayoutModals = () => {
             >
               Cancel
             </CButton>
+            {payoutModalSaveDraftHandler ? (
+              <CButton
+                variant={ButtonType.Secondary}
+                type="button"
+                onClick={() => {
+                  showPayoutPromptModal(false);
+                  runSaveDraft();
+                }}
+              >
+                <span className="inline-flex items-center gap-2">
+                  <FileText size={14} />
+                  Save as draft
+                </span>
+              </CButton>
+            ) : null}
             <CButton
               variant={ButtonType.Primary}
               type="button"
@@ -97,6 +117,21 @@ const PayoutModals = () => {
             >
               Stay on this page
             </CButton>
+            {payoutModalSaveDraftHandler ? (
+              <CButton
+                variant={ButtonType.Secondary}
+                type="button"
+                onClick={() => {
+                  showPayoutPendingVerificationModal(false);
+                  runSaveDraft();
+                }}
+              >
+                <span className="inline-flex items-center gap-2">
+                  <FileText size={14} />
+                  Save as draft
+                </span>
+              </CButton>
+            ) : null}
             <CButton
               variant={ButtonType.Primary}
               type="button"

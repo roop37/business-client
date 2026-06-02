@@ -40,6 +40,14 @@ type MenuState = {
   payoutPendingVerificationModal: boolean;
   showPayoutPendingVerificationModal: (value: boolean) => void;
 
+  // Optional callback registered by hosts of the payout modals (e.g.
+  // EventJourney) so the modal can offer a "Save as draft" exit. When
+  // unset, the Save-as-draft button is hidden. Set on page mount,
+  // clear on unmount so the button never fires the wrong action from
+  // a different route.
+  payoutModalSaveDraftHandler: (() => void) | null;
+  setPayoutModalSaveDraftHandler: (handler: (() => void) | null) => void;
+
   // Soft modal shown when an unverified host tries to activate (publish)
   // a campaign. Same UX vibe as payoutPendingVerificationModal.
   hostUnderReviewModal: boolean;
@@ -87,6 +95,10 @@ const useGlobalStore = create<MenuState>((set) => ({
   payoutPendingVerificationModal: false,
   showPayoutPendingVerificationModal: (e: boolean) =>
     set({ payoutPendingVerificationModal: e }),
+
+  payoutModalSaveDraftHandler: null,
+  setPayoutModalSaveDraftHandler: (handler) =>
+    set({ payoutModalSaveDraftHandler: handler }),
 
   hostUnderReviewModal: false,
   showHostUnderReviewModal: (e: boolean) => set({ hostUnderReviewModal: e }),

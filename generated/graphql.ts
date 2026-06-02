@@ -929,7 +929,7 @@ export enum ConfigTypeEnum {
   HoizrRegisteredAddress = 'hoizrRegisteredAddress',
   /** Hoizr Pvt Ltd's two-digit GST state code (Maharashtra = 27, Karnataka = 29, etc.). Drives CGST+SGST vs IGST split on Hoizr-issued invoices. */
   HoizrStateCode = 'hoizrStateCode',
-  /** Public support email rendered on customer invoices + ticket PDFs (e.g. 'support@hoizr.com'). */
+  /** Public support email rendered on customer invoices + ticket PDFs (e.g. 'contact@hoizr.com'). */
   HoizrSupportEmail = 'hoizrSupportEmail',
   HostMarketingEstablishedRecipientsThreshold = 'hostMarketingEstablishedRecipientsThreshold',
   HostMarketingGrowingRecipientsThreshold = 'hostMarketingGrowingRecipientsThreshold',

@@ -198,7 +198,7 @@ const HostSettings: React.FC & {
       const response = await sdk.restaurantDetails();
       const host = response.restaurantDetails;
       if (!host?._id) {
-        setToastData({ type: "error", message: "Host details not found." });
+        setToastData({ type: "error", message: "Venue details not found." });
         return;
       }
 
@@ -721,7 +721,7 @@ const HostSettings: React.FC & {
               <div className="grid gap-3 sm:grid-cols-2">
                 <SupportLink
                   channel="Discord"
-                  description="Live chat with the Hoizr team + other hosts. Fastest for product questions."
+                  description="Live chat with the Hoizr team + other venues. Fastest for product questions."
                   cta="Join the server"
                   href="https://discord.gg/hoizr"
                 />
@@ -734,8 +734,8 @@ const HostSettings: React.FC & {
                 <SupportLink
                   channel="Email"
                   description="For anything that needs a paper trail — refunds, payout reconciliation, KYC."
-                  cta="support@hoizr.com"
-                  href="mailto:support@hoizr.com"
+                  cta="contact@hoizr.com"
+                  href="mailto:contact@hoizr.com"
                 />
                 <SupportLink
                   channel="Status page"

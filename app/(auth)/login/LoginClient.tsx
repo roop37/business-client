@@ -32,7 +32,7 @@ export enum UserOnboardingStatusMessage {
   paymentPending = "Your payment details are pending.",
   internalVerificationPending = "Verification pending.",
   onboardingPending = "Your onboarding details are pending",
-  restaurantOnboardingPending = "Host onboarding pending",
+  restaurantOnboardingPending = "Venue onboarding pending",
 }
 
 export const LoginClient: FC = () => {
@@ -372,7 +372,7 @@ export const LoginClient: FC = () => {
       <ReusableModal
         isOpen={showMultiAccount}
         onClose={() => setShowMultiAccount(false)}
-        title={"Select a host to manage"}
+        title={"Select a venue to manage"}
         width="md"
       >
         {multiAccountLoading ? (

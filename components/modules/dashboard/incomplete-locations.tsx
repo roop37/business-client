@@ -50,7 +50,7 @@ const IncompleteLocations = ({ restaurants }: IIncompleteLocationsProps) => {
       const res = await sdk.deleteIncompleteRestaurant({ id });
       if (res.deleteIncompleteRestaurant) {
         setToastData({
-          message: "Host details discarded.",
+          message: "Venue details discarded.",
           type: "success",
         });
         setConfirmationModalOpen(false);

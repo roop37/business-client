@@ -60,10 +60,10 @@ const BlockerLayouout = ({ children }: Props) => {
         <div className=" flex flex-col justify-start items-end space-y-1 text-xs">
           <Link
             className="text-primary hover:underline"
-            href="mailto:support@hoizr.com"
+            href="mailto:contact@hoizr.com"
             target="_blank"
           >
-            Need Help? <span className="text-black">support@hoizr.com</span>
+            Need Help? <span className="text-black">contact@hoizr.com</span>
           </Link>
           <div className="flex space-x-2">
             <Link

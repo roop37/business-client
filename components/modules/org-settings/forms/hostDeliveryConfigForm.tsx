@@ -263,7 +263,7 @@ const HostDeliveryConfigForm: React.FC = () => {
       <CustomSwitchCard
         label="Delivery"
         title="Delivery"
-        caption="Enable delivery orders for this host"
+        caption="Enable delivery orders for this venue"
         switchChecked={deliveryConfig.provideDelivery ?? false}
         // onSwitchChange={handleDeliveryToggle}
         onSwitchChange={() => setConfirmationModal(true)}

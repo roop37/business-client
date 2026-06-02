@@ -338,7 +338,7 @@ const Teams: NextPageWithLayout = () => {
 
       <PageHeader
         title="Teams"
-        subtitle="Invite host team members, assign roles, and keep permissions aligned with the current workspace."
+        subtitle="Invite venue team members, assign roles, and keep permissions aligned with the current workspace."
         actions={
           <OwnerButton leadingIcon={<UserPlus size={16} />} onClick={handleAddMember}>
             Invite member

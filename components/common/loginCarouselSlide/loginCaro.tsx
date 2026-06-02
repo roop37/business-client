@@ -41,14 +41,14 @@ const LoginCarousel = () => {
         "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?q=80&w=2070&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
       title: "HOIZR",
       description:
-        "Hoizr helps hosts, venues, and event teams manage onboarding, operations, payments, and growth.",
+        "Hoizr helps venues, event organizations, and event teams manage onboarding, operations, payments, and growth.",
     },
     {
       image:
         "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?q=80&w=2070&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
       title: "Sales Insights",
       description:
-        "Track your host's performance with detailed analytics and insights to make data-driven decisions.",
+        "Track your venue's performance with detailed analytics and insights to make data-driven decisions.",
     },
     {
       image:

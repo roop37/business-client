@@ -280,7 +280,7 @@ const AddTeamMemberForm = () => {
             </h1>
             <p className="mt-1 max-w-2xl text-sm leading-6 text-[#6f6255]">
               {showPermissions
-                ? "Choose the areas this user can access for the current host."
+                ? "Choose the areas this user can access for the current venue."
                 : "Send an invite and define the role before selecting permissions."}
             </p>
           </div>
@@ -424,7 +424,7 @@ const AddTeamMemberForm = () => {
                 title={formatPermissionType(
                   permission.type as PermissionTypeEnum,
                 )}
-                caption="Controls access for this host area."
+                caption="Controls access for this venue area."
                 switchChecked={permission.isTicked}
                 onSwitchChange={() => handlePermissionChange(permission.type)}
               />
