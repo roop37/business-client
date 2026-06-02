@@ -897,90 +897,101 @@ export type Config = {
   valueType: ConfigValueEnum;
 };
 
-/** Master config keys that can be changed by admins at runtime without a deploy. See docs/HOIZR_FINANCE_SOURCE_OF_TRUTH.md §31 for the locked V1 values. */
+/** Master config keys that admins can change at runtime without a deploy. Grouped by domain in declaration order — marketing channel costs → event commission → AI Boost band → upfront-fee gate → platform fees → marketing-credit pricing → Hoizr-side GST → operational → company identity → SAC codes → admin alerts → host marketing tiers. See docs/HOIZR_FINANCE_SOURCE_OF_TRUTH.md §31 for the locked V1 values. */
 export enum ConfigTypeEnum {
-  /** Comma-separated email addresses that receive internal payout / reconciliation alerts. */
+  /** Comma-separated email addresses that receive internal payout, reconciliation and shortfall alerts. Use a distribution list when more than two admins need notifying. */
   AdminAlertEmails = 'adminAlertEmails',
-  /** Sell-through % of paid-ticket capacity required for an AI-Boost upfront fee to be charged on EXCLUSIVE events. Below this, the upfront is waived (or refunded if already paid). Locked: 60. */
+  /** Sell-through % of paid-ticket capacity required before an AI-Boost upfront fee is actually charged on EXCLUSIVE events. Below this, the upfront is waived at settlement (or refunded if pre-paid) and only the offer commission applies. Locked: 60. */
   AiBoostUpfrontTriggerSellThroughPctExcl = 'aiBoostUpfrontTriggerSellThroughPctExcl',
-  /** Sell-through % of paid-ticket capacity required for an AI-Boost upfront fee to be charged on NON-EXCLUSIVE events. Lower than the exclusive bar because the host cannot control sales on rival platforms. Locked: 40. */
+  /** Same gate as above, for NON-EXCLUSIVE events. The bar is lower because the host can't drive sales on rival platforms — they should only owe the upfront when Hoizr-side sales clear this threshold. Locked: 40. */
   AiBoostUpfrontTriggerSellThroughPctNonExcl = 'aiBoostUpfrontTriggerSellThroughPctNonExcl',
-  /** Credits debited per outbound email (1 credit = ₹1). Locked: 1. */
+  /** Credits debited per outbound email. 1 credit = ₹1, so this is also the rupee cost per email. Locked: 1. */
   EmailMarketingCost = 'emailMarketingCost',
-  /** Basic commission percent for exclusive paid events. Locked: 4.49. */
+  /** Hoizr commission percent on exclusive paid events (sold ONLY on Hoizr). Also acts as the ceiling for the AI Boost corridor — the AI can never propose a rate above this. Locked: 4.49. */
   FixedBasicComissionForExclEvent = 'fixedBasicComissionForExclEvent',
-  /** Basic commission percent for guestlist / free events. Locked: 0. */
+  /** Hoizr commission percent on free / guestlist events (no paid tickets). Locked: 0 — no money flow, no commission. */
   FixedBasicComissionForFreeEvent = 'fixedBasicComissionForFreeEvent',
-  /** Basic commission percent for non-exclusive paid events. Locked: 8.49. */
+  /** Hoizr commission percent on non-exclusive paid events (sold on Hoizr AND rival platforms). Also acts as the ceiling for the AI Boost corridor. Locked: 8.49. */
   FixedBasicComissionForNonExclEvent = 'fixedBasicComissionForNonExclEvent',
-  /** GST percent on the AI Boost fee charged to the host. Locked: 18. */
+  /** GST percent on the AI Boost upfront fee invoiced to the host. Locked: 18. */
   GstOnAiBoost = 'gstOnAiBoost',
-  /** GST percent collected on Hoizr commission revenue at payout settlement. Locked: 18. */
+  /** GST percent collected on Hoizr's commission revenue at payout settlement. Locked: 18. */
   GstOnComission = 'gstOnComission',
-  /** GST percent on marketing credit purchase (applied to credit value). Locked: 18. */
+  /** GST percent on marketing credit purchase, applied to the credit value. Locked: 18. */
   GstOnMarketingCredit = 'gstOnMarketingCredit',
-  /** GST percent on the customer-facing platform fee. Locked: 18. */
+  /** GST percent applied to the customer-facing platform fee. Hoizr remits this to the government. Locked: 18. */
   GstOnPlatformFeeOnEvent = 'gstOnPlatformFeeOnEvent',
-  /** Hoizr Pvt Ltd's GSTIN. Placeholder until Razorpay Rize incorporation completes; replace with live GSTIN before launch. */
+  /** Hoizr Pvt Ltd's GSTIN, rendered on every invoice and tax document. Placeholder until Razorpay Rize incorporation completes — replace with the live GSTIN before launch. */
   HoizrGstin = 'hoizrGstin',
-  /** Hoizr's legal entity name rendered on every invoice (e.g. 'Hoizr Pvt Ltd'). */
+  /** Legal entity name rendered on every invoice and ticket PDF (e.g. 'Hoizr Pvt Ltd'). Must match the GSTIN registration exactly. */
   HoizrLegalName = 'hoizrLegalName',
-  /** Hoizr's registered office address rendered on every invoice. Plain text, multi-line. */
+  /** Hoizr's registered office address rendered on every invoice. Plain text, multi-line. Must match the GSTIN registration address. */
   HoizrRegisteredAddress = 'hoizrRegisteredAddress',
-  /** Hoizr Pvt Ltd's two-digit GST state code (Maharashtra = 27, Karnataka = 29, etc.). Drives CGST+SGST vs IGST split on Hoizr-issued invoices. */
+  /** Hoizr Pvt Ltd's two-digit GST state code (Maharashtra = 27, Karnataka = 29, etc.). Drives the CGST+SGST vs IGST split on every Hoizr-issued invoice. */
   HoizrStateCode = 'hoizrStateCode',
-  /** Public support email rendered on customer invoices + ticket PDFs (e.g. 'contact@hoizr.com'). */
+  /** Public support email rendered on customer invoices, ticket PDFs and order confirmation emails (e.g. 'contact@hoizr.com'). */
   HoizrSupportEmail = 'hoizrSupportEmail',
+  /** Cumulative recipients-sent count a GROWING host must hit to graduate to ESTABLISHED tier. Locked: 75000. */
   HostMarketingEstablishedRecipientsThreshold = 'hostMarketingEstablishedRecipientsThreshold',
+  /** Cumulative recipients-sent count a STARTER host must hit to graduate to GROWING tier. Locked: 25000. */
   HostMarketingGrowingRecipientsThreshold = 'hostMarketingGrowingRecipientsThreshold',
+  /** Customer-base size a NEW host must hit (in their followed-customers list) to graduate to STARTER tier. Locked: 1000. */
   HostMarketingStarterCustomerCount = 'hostMarketingStarterCustomerCount',
+  /** Max recipients per marketing campaign for hosts in the ESTABLISHED tier (large customer base, consistent sends). Locked: 200000. Hosts that exceed the next upgrade threshold move to UNLIMITED (no cap). */
   HostMarketingTierEstablishedMaxRecipients = 'hostMarketingTierEstablishedMaxRecipients',
+  /** Max recipients per marketing campaign for hosts in the GROWING tier (regular event organisers with proven engagement). Locked: 75000. */
   HostMarketingTierGrowingMaxRecipients = 'hostMarketingTierGrowingMaxRecipients',
+  /** Max recipients per marketing campaign for hosts in the NEW tier (just signed up, no track record yet). Locked: 10000. */
   HostMarketingTierNewMaxRecipients = 'hostMarketingTierNewMaxRecipients',
+  /** Max recipients per marketing campaign for hosts in the STARTER tier (have demonstrated some customer growth). Locked: 25000. */
   HostMarketingTierStarterMaxRecipients = 'hostMarketingTierStarterMaxRecipients',
+  /** Cumulative recipients-sent count an ESTABLISHED host must hit to unlock UNLIMITED tier (no per-campaign recipient cap). Locked: 200000. */
   HostMarketingUnlimitedRecipientsThreshold = 'hostMarketingUnlimitedRecipientsThreshold',
-  /** Minimum credits per top-up. Locked: 100. */
+  /** Minimum credits per top-up (i.e. the smallest amount a host can buy in one purchase). Locked: 100 credits (₹100 + GST). */
   MarketingCreditMinimumPerPurchase = 'marketingCreditMinimumPerPurchase',
-  /** Paise per marketing credit (1 credit = ₹1 = 100 paise). Locked: 100. */
+  /** Paise per marketing credit. 1 credit = ₹1 = 100 paise. Locked: 100 — do not change without a finance review. */
   MarketingCreditValuePaise = 'marketingCreditValuePaise',
-  /** FLOOR on AI-offer commission rate for exclusive paid events (the lowest commission the AI may propose). Despite the historical 'max' in the name, it represents the most aggressive cut. Locked: 1.89. */
+  /** FLOOR on the AI-offer commission rate for exclusive paid events — the most aggressive cut the AI may propose. (Despite the historical 'max' name, this is the lower bound.) Locked: 1.89. */
   MaxAiBoostComissionForExclEvent = 'maxAiBoostComissionForExclEvent',
-  /** Cap on AI-offer commission rate for free events. Locked: 0. */
+  /** (Legacy name — actually the floor.) Lowest commission the AI may propose for free events. Locked: 0 — irrelevant since free events never see an AI offer. */
   MaxAiBoostComissionForFreeEvent = 'maxAiBoostComissionForFreeEvent',
-  /** FLOOR on AI-offer commission rate for non-exclusive paid events. Locked: 3.89. */
+  /** FLOOR on the AI-offer commission rate for non-exclusive paid events. Locked: 3.89. */
   MaxAiBoostComissionForNonExclEvent = 'maxAiBoostComissionForNonExclEvent',
-  /** Ceiling on AI Boost fee in rupees. Locked: 500000 (₹5L max — applied at the EXCLUSIVE/NON-EXCL outer corridor). Per-template bands scale to event GTV inside this cap. */
+  /** Outer ceiling on the AI Boost upfront fee in rupees, applied at the EXCLUSIVE / NON-EXCLUSIVE corridor level. Per-template bands scale to event GTV inside this cap. Locked: 500000 (₹5L max). */
   MaxOfferChargeAmount = 'maxOfferChargeAmount',
-  /** Floor on AI Boost fee in rupees. Locked: 0 (offer may legitimately propose zero upfront). */
+  /** Floor on the AI Boost upfront fee in rupees. Locked: 0 — the AI may legitimately propose zero upfront for some templates. */
   MinOfferChargeAmount = 'minOfferChargeAmount',
-  /** Customer-facing platform fee percent on ticket taxable value. Locked: 5. */
+  /** Customer-facing platform fee percent, charged on top of the ticket taxable value at checkout. Locked: 5. */
   PlatformFeeOnEvent = 'platformFeeOnEvent',
-  /** Platform fee percent on marketing credit top-ups. Locked: 0 (SortMyScene parity — only GST is added). */
+  /** Platform fee percent added to marketing credit top-ups (in addition to GST). Locked: 0 — SortMyScene parity, only GST is added. */
   PlatformFeeOnMarketingCredit = 'platformFeeOnMarketingCredit',
-  /** Credits debited per push notification. Locked: 0 (push is free). */
+  /** Credits debited per push notification. Locked: 0 — push is free for hosts on Hoizr. */
   PushNotificationCost = 'pushNotificationCost',
-  /** Working days after event end during which the refund window stays open before payout becomes eligible. Locked: 2. */
+  /** Number of working days after event end during which customers can still request a refund. Payouts to the host are blocked from releasing until this window closes. Locked: 2. */
   RefundWindowDaysAfterEvent = 'refundWindowDaysAfterEvent',
-  /** SAC code for the AI Boost fee invoice. */
+  /** SAC code printed on the AI Boost upfront-fee invoice issued to the host. CA confirms before launch. */
   SacAiBoost = 'sacAiBoost',
-  /** SAC code for the host commission invoice. CA confirms; defaults align with platform service SAC. */
+  /** SAC code printed on the host commission invoice. Defaults align with platform-service SAC; CA confirms before launch. */
   SacCommissionInvoice = 'sacCommissionInvoice',
-  /** SAC code for the customer booking-fee invoice. SortMyScene uses 9997 — CA confirms final code before launch. */
+  /** SAC code printed on the customer booking-fee invoice. SortMyScene uses 9997 — CA confirms the final code before launch. */
   SacCustomerPlatformFee = 'sacCustomerPlatformFee',
-  /** SAC code for the host's ticket receipt (issued under host's name). */
+  /** SAC code printed on the host's ticket receipt (issued under the host's own GSTIN, not Hoizr's). CA confirms before launch. */
   SacHostTicketReceipt = 'sacHostTicketReceipt',
-  /** SAC code for marketing credit invoices. */
+  /** SAC code printed on the marketing-credit top-up invoice issued to the host. CA confirms before launch. */
   SacMarketingCredit = 'sacMarketingCredit',
-  /** Credits debited per SMS. Locked: 0.2. */
+  /** Credits debited per outbound SMS. Locked: 0.2 (₹0.20 per SMS). */
   SmsMarketingCost = 'smsMarketingCost',
-  /** Credits debited per WhatsApp message. Locked: 0.5. */
+  /** Credits debited per outbound WhatsApp message. Locked: 0.5 (₹0.50 per WhatsApp). */
   WhatsappMarketingCost = 'whatsappMarketingCost'
 }
 
-/** Storage type for a Config row's value (text / number / boolean) */
+/** Storage type for a Config row's value. Pick TEXT for strings (GSTIN, emails, SAC codes), NUMBER for percentages and rupee amounts, BOOLEAN for on/off flags. */
 export enum ConfigValueEnum {
+  /** True / false toggle. Use for feature flags (e.g. tdsEnabled, tcsEnabled, creditExpiryEnabled). */
   Boolean = 'BOOLEAN',
+  /** Numeric value (integer or decimal). Use for fee percentages, GST rates, rupee floors/ceilings, day counts. */
   Number = 'NUMBER',
+  /** Free-form string. Use for GSTIN, email addresses, SAC codes, state codes, legal names — anything that isn't a number or boolean. */
   Text = 'TEXT'
 }
 
@@ -3292,18 +3303,29 @@ export type Permission = {
   updatedBy: Admin;
 };
 
-/** Enum to store the types of permissions that can be given to sub-users */
+/** Granular permissions assignable to a host's sub-users. The host owner has all permissions by default; sub-users get only the boxes the owner ticks. Permissions are evaluated server-side on every mutation/query — UI hiding is a UX nicety, not the security boundary. */
 export enum PermissionTypeEnum {
+  /** View the host's customer list — names, contact info, ticket history, followed-since dates. Required for the marketing audience-builder. Treat as PII access. */
   Customers = 'Customers',
+  /** Export report data to CSV / PDF / Excel. Grant separately from Reports so finance/ops can export while marketers only view in-app. */
   DownloadReports = 'DownloadReports',
+  /** Create, edit, publish, pause, cancel and duplicate events. Includes editing lineup, venue, refund policy, and ticketing terms. */
   Events = 'Events',
+  /** Launch marketing campaigns (email, SMS, WhatsApp, push). Requires existing marketing credit balance. Recipient cap is set by the host's reputation tier (see hostMarketingTier* configs). */
   Marketing = 'Marketing',
+  /** Manage AI Boost selections, accept/reject AI-generated offers, and create custom discount codes for events. */
   Offers = 'Offers',
+  /** View individual ticket orders, issue refunds, mark as checked-in, resend ticket emails. Includes order-level customer detail. */
   Orders = 'Orders',
+  /** Add, edit, mark primary, deactivate, and view bank/UPI payout accounts. Sensitive — only grant to finance-aware sub-users. */
   PayoutManagement = 'PayoutManagement',
+  /** View sales, payout, audience demographic and event-performance dashboards. Read-only — does NOT include the ability to export raw data (see DownloadReports). */
   Reports = 'Reports',
+  /** Invite new sub-users, edit their permissions, deactivate or remove them. Grant only to trusted ops leads — a sub-user with this can effectively grant themselves any other permission. */
   TeamManagement = 'TeamManagement',
+  /** Manage ticket types within an event — create, edit prices, set capacity, mark sold-out, mark as on-ground-only. Does NOT include reading customer orders (see Orders). */
   Tickets = 'Tickets',
+  /** Edit the business / venue profile — name, logo, GST registration details, contact info, registered address. Does NOT include payout or team management (separate permissions). */
   UpdateHost = 'UpdateHost'
 }
 
