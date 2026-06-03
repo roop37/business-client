@@ -250,7 +250,7 @@ const OnboardingJourneyLayout = ({ children, includeTimezones }: Props) => {
 
           <div className="mt-6 rounded-lg border border-[var(--owner-border)] bg-[var(--owner-bg)] p-4 text-xs leading-5 text-[var(--owner-fg-3)]">
             <p className="font-semibold text-[var(--owner-fg-1)]">
-              Need a hand?
+              Need help?
             </p>
             <p className="mt-1">
               Setup usually takes 4–6 minutes. You can return any time — Hoizr
@@ -269,7 +269,7 @@ const OnboardingJourneyLayout = ({ children, includeTimezones }: Props) => {
               className="mt-2 inline-flex items-center gap-1.5 font-semibold text-[var(--owner-blue-500)] underline-offset-4 hover:underline"
             >
               <MessageCircle size={13} strokeWidth={2.2} />
-              Start a chat on WhatsApp
+              Chat with us now on WhatsApp
             </Link>
           </div>
         </aside>
