@@ -235,7 +235,11 @@ const EventsPage = () => {
   const [loading, setLoading] = useState(true);
   const [creating, setCreating] = useState(false);
   const [readinessOpen, setReadinessOpen] = useState(false);
-  const [visibleCount, setVisibleCount] = useState(8);
+  // Render a generous first page (most hosts have <24 events total) so
+  // the IntersectionObserver only matters for power users. Earlier
+  // initial of 8 meant the sentinel was offscreen on small lists and
+  // pagination never grew when users scrolled the list.
+  const [visibleCount, setVisibleCount] = useState(24);
   const [statusFilter, setStatusFilter] = useState("all");
   const [searchQuery, setSearchQuery] = useState("");
   const [showFilterPanel, setShowFilterPanel] = useState(false);
@@ -344,7 +348,7 @@ const EventsPage = () => {
     if (!node) return;
     const observer = new IntersectionObserver((entries) => {
       if (entries[0]?.isIntersecting) {
-        setVisibleCount((count) => Math.min(count + 6, events.length));
+        setVisibleCount((count) => Math.min(count + 12, events.length));
       }
     });
     observer.observe(node);
@@ -352,7 +356,7 @@ const EventsPage = () => {
   }, [customFromDate, customToDate, events.length, rangePreset, searchQuery, statusFilter]);
 
   useEffect(() => {
-    setVisibleCount(8);
+    setVisibleCount(24);
   }, [customFromDate, customToDate, rangePreset, searchQuery, statusFilter]);
 
   const metrics = useMemo(() => {
@@ -571,7 +575,12 @@ const EventsPage = () => {
       ) : null}
 
       <div className="space-y-4">
-        <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+        {/* Tabs + filter controls stay pinned to the top of the scroll
+            area so the list below can scroll without the host losing
+            context of which segment they're viewing. Negative margins +
+            matching padding extend the translucent backdrop edge-to-
+            edge inside the rounded-canvas frame. */}
+        <div className="sticky top-0 z-20 -mx-4 flex flex-col gap-4 border-b border-owner-border-soft bg-owner-bg/95 px-4 py-3 backdrop-blur lg:-mx-10 lg:flex-row lg:items-center lg:justify-between lg:px-10 sm:-mx-6 sm:px-6">
           <div className="inline-flex w-full max-w-max rounded-owner-lg border border-owner-border bg-owner-bg p-2">
             {statusOptions.map((option) => (
               <button
@@ -769,6 +778,7 @@ const EventListCard = ({
   onLeaveCollab: () => void;
 }) => {
   const router = useRouter();
+  const openRunCampaignModal = useGlobalStore((s) => s.openRunCampaignModal);
   const status = normalizeStatus(event.status);
   const isDraftLike = status.includes("draft") || status.includes("pending");
   const isCompleted = status.includes("completed");
@@ -833,9 +843,10 @@ const EventListCard = ({
                 label="Run a Campaign"
                 Icon={MegaphoneIcon}
                 onClick={() =>
-                  router.push(
-                    `/campaigns/onboarding/template-select?eventId=${event._id}`,
-                  )
+                  openRunCampaignModal({
+                    eventId: event._id,
+                    title: event.title || "Untitled Event",
+                  })
                 }
                 disabled={!collabPerms?.canRunCampaigns}
               />
@@ -880,9 +891,10 @@ const EventListCard = ({
                 label="Run a Campaign"
                 Icon={MegaphoneIcon}
                 onClick={() =>
-                  router.push(
-                    `/campaigns/onboarding/template-select?eventId=${event._id}`,
-                  )
+                  openRunCampaignModal({
+                    eventId: event._id,
+                    title: event.title || "Untitled Event",
+                  })
                 }
               />
               <ActionButton label="Delete" Icon={Trash2Icon} onClick={onDelete} />

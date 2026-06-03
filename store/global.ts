@@ -60,6 +60,23 @@ type MenuState = {
   topUpPresetAmount: number | null;
   openTopUpModal: (presetAmount?: number) => void;
   closeTopUpModal: () => void;
+
+  // Unified settings modal — replaces /profile and /org-settings.
+  // `settingsModalTab` selects the initial tab; "account" lands the user
+  // on the Personal info tab (used by the host-switcher's "Account
+  // details" entry), "brand" opens the organisation tab (used by the
+  // sidebar Settings entry).
+  settingsModalOpen: boolean;
+  settingsModalTab: "account" | "security" | "brand" | "alerts";
+  openSettingsModal: (tab?: "account" | "security" | "brand" | "alerts") => void;
+  closeSettingsModal: () => void;
+
+  // Per-event "Run a Campaign" launcher — pops a compact channel
+  // picker with the event pre-selected. Stores the eventId + a
+  // display title so the modal can render context without a fetch.
+  runCampaignModalEvent: { eventId: string; title: string } | null;
+  openRunCampaignModal: (event: { eventId: string; title: string }) => void;
+  closeRunCampaignModal: () => void;
 };
 
 const useGlobalStore = create<MenuState>((set) => ({
@@ -114,6 +131,16 @@ const useGlobalStore = create<MenuState>((set) => ({
           : null,
     }),
   closeTopUpModal: () => set({ topUpModalOpen: false, topUpPresetAmount: null }),
+
+  settingsModalOpen: false,
+  settingsModalTab: "account",
+  openSettingsModal: (tab) =>
+    set({ settingsModalOpen: true, settingsModalTab: tab ?? "account" }),
+  closeSettingsModal: () => set({ settingsModalOpen: false }),
+
+  runCampaignModalEvent: null,
+  openRunCampaignModal: (event) => set({ runCampaignModalEvent: event }),
+  closeRunCampaignModal: () => set({ runCampaignModalEvent: null }),
 }));
 
 export default useGlobalStore;

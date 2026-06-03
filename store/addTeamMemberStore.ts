@@ -26,8 +26,13 @@ const useAddTeamMemberFormStore = create<AddTeamMemberFormState>((set) => ({
     phone: "",
     role: null,
     restaurant: [],
-    sms: false,
-    emailPref: false,
+    // SMS + email default to enabled so a new team member receives
+    // operational alerts (invite, payouts, refund requests, etc.) out
+    // of the box. The owner can flip either off in the same form
+    // before submitting. WhatsApp stays off until the host opts into
+    // the broadcast channel separately.
+    sms: true,
+    emailPref: true,
   },
   setFormValue: (field, value) =>
     set((state) => ({

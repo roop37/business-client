@@ -395,7 +395,8 @@ export default function AppSidebar() {
   const router = useRouter();
   const pathname = usePathname() ?? "";
   const { isMobile, toggleSidebar } = useSidebar();
-  const { setSelectedSideBarMenu, setToastData } = useGlobalStore();
+  const { setSelectedSideBarMenu, setToastData, openSettingsModal } =
+    useGlobalStore();
   const { selectedHostId } = useHostsStore();
 
   const items = useMemo(() => getSidebarList(), []);
@@ -526,7 +527,7 @@ export default function AppSidebar() {
           activeHostId={selectedHostId ?? hosts[0]?._id ?? null}
           onSwitch={switchHost}
           onAddHost={handleAddHost}
-          onAccount={() => navigate("/profile")}
+          onAccount={() => openSettingsModal("account")}
           onLogout={handleLogout}
         />
         {hostsLoading ? (
@@ -551,6 +552,11 @@ export default function AppSidebar() {
                     setExpandedId((current) =>
                       current === item.title ? null : item.title
                     );
+                  } else if (item.title === "Settings") {
+                    // Settings has no dedicated page anymore — open the
+                    // unified Settings modal at the Organisation tab.
+                    if (isMobile) toggleSidebar();
+                    openSettingsModal("brand");
                   } else {
                     navigate(item.href, item.title);
                   }

@@ -1,5 +1,5 @@
 import ConfirmModal from "@/components/common/confirm-modal";
-import EventCard from "@/components/common/event/EventCard";
+import CustomerEventCard from "@/components/common/event/CustomerEventCard";
 import { RichTextEditor } from "@/components/common/RichTextEditor";
 import ToggleSettingRow from "@/components/modules/events/ToggleSettingRow";
 import { Calendar } from "@/components/ui/calendar";
@@ -4057,16 +4057,19 @@ const EventJourney = ({
             <SparklesIcon size={16} />
             Live Event Preview
           </div>
-          <div className="mt-4 text-[var(--owner-fg-1)]">
-            <EventCard
+          <div className="mt-4">
+            <CustomerEventCard
               flyer={eventFlyer || undefined}
-              dateLabel={formatDate(startDate)}
+              dateLine={formatDate(startDate)}
               title={title || "Untitled Event"}
-              city={city || "City pending"}
-              priceLabel={(() => {
-                // Pull the cheapest visible PAID ticket from the saved
-                // list — "0 onwards" used to leak through when only
-                // `ticketPrice` (the modal draft) was checked.
+              venueLine={(() => {
+                const venue = selectedPlace?.label || addressLine1;
+                const cityLabel = city || "City pending";
+                return venue ? `${venue} | ${cityLabel}` : cityLabel;
+              })()}
+              priceLine={(() => {
+                // Cheapest visible PAID ticket. "0 onwards" used to leak
+                // through when only the draft `ticketPrice` was checked.
                 if (eventType === "FREE") return "Guestlist";
                 const paid = (tickets ?? [])
                   .filter(

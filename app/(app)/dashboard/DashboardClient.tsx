@@ -16,6 +16,7 @@ import { extractErrorMessage } from "@/utils/utilFUncs";
 import {
   AlertTriangle,
   ArrowUpRight,
+  Banknote,
   CalendarDays,
   CheckCircle2,
   ChevronRight,
@@ -29,7 +30,7 @@ import {
   Sparkles,
   Users,
 } from "lucide-react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useMemo, useState, type ReactNode } from "react";
 import {
   Area,
@@ -274,6 +275,15 @@ const clampPercent = (percent: number) => {
   return Math.max(percent, 2);
 };
 
+type ReadinessItem = {
+  key: string;
+  label: string;
+  description?: string;
+  done: boolean;
+  href?: string;
+  onSelect?: () => void;
+};
+
 const ChartTooltip = ({ active, payload, label }: any) => {
   if (!active || !payload?.length) return null;
   const sales = payload.find((item: any) => item.dataKey === "sales")?.value ?? 0;
@@ -289,7 +299,9 @@ const ChartTooltip = ({ active, payload, label }: any) => {
 
 export const DashboardClient = () => {
   const router = useRouter();
-  const { setSelectedSideBarMenu, setToastData } = useGlobalStore();
+  const searchParams = useSearchParams();
+  const { setSelectedSideBarMenu, setToastData, openSettingsModal } =
+    useGlobalStore();
   const { meUser } = useUserStore();
   const [summary, setSummary] = useState<HostDashboardSummary>(emptySummary);
   const [events, setEvents] = useState<DashboardEvent[]>([]);
@@ -300,6 +312,25 @@ export const DashboardClient = () => {
   useEffect(() => {
     setSelectedSideBarMenu("dashboard");
   }, [setSelectedSideBarMenu]);
+
+  // /profile and /org-settings are now thin redirects that land here
+  // with ?settings=<tab>. Auto-open the modal once, then strip the
+  // param so a refresh doesn't re-open it.
+  useEffect(() => {
+    const settings = searchParams?.get("settings");
+    if (!settings) return;
+    const allowed = ["account", "security", "brand", "alerts"] as const;
+    type SettingsTab = (typeof allowed)[number];
+    const isAllowed = (s: string): s is SettingsTab =>
+      (allowed as readonly string[]).includes(s);
+    if (isAllowed(settings)) {
+      openSettingsModal(settings);
+    }
+    const params = new URLSearchParams(searchParams?.toString() ?? "");
+    params.delete("settings");
+    const next = params.toString();
+    router.replace(next ? `/dashboard?${next}` : "/dashboard");
+  }, [searchParams, openSettingsModal, router]);
 
   useEffect(() => {
     const load = async () => {
@@ -384,38 +415,136 @@ export const DashboardClient = () => {
       .slice(0, 8);
   }, [events]);
 
-  const readinessItems = useMemo(
+  // Each item carries either a route (`href`) or an in-app handler
+  // (`onSelect`). The logo upload step has no dedicated route anymore —
+  // it lives in the Settings modal's Organisation tab.
+  const readinessItems = useMemo<ReadinessItem[]>(
     () => [
       {
         key: "payout",
         label: "Payout profile",
+        description:
+          "Add bank or UPI details so settlements can land in the right account.",
         done: isDone(checklist?.payout),
         href: "/payment/payouts",
       },
       {
         key: "logo",
         label: "Venue logo",
+        description:
+          "Upload a brand mark — it shows on every ticket, email, and customer-facing page.",
         done: isDone(checklist?.logo),
-        href: "/org-settings",
+        onSelect: () => openSettingsModal("brand"),
       },
       {
         key: "event",
         label: "First event",
+        description:
+          "Create your first event listing and publish it to start selling tickets.",
         done: isDone(checklist?.event),
         href: "/events?create=1",
       },
       {
         key: "scanner",
         label: "Scanner access",
+        description:
+          "Set up scanner accounts so your team can verify QR tickets at the door.",
         done: isDone(checklist?.Scanner),
         href: "/scanners",
       },
     ],
-    [checklist]
+    [checklist, openSettingsModal]
   );
+
+  const goToReadinessItem = (item: ReadinessItem) => {
+    if (item.onSelect) item.onSelect();
+    else if (item.href) router.push(item.href);
+  };
 
   const needsAttention = readinessItems.filter((item) => !item.done);
   const greetingName = meUser?.firstName?.trim() || "there";
+
+  // Hero state machine. The greeting ("Hey {name}") stays fixed; only
+  // the subtitle copy + CTA buttons swap. We surface the "You made ₹X"
+  // earnings sentence only when an event exists AND the AOV is above
+  // ₹99 — below that threshold (or with no events at all) the host
+  // sees an action-oriented prompt instead of a near-zero revenue
+  // headline that reads as failure.
+  const hasPayout = isDone(checklist?.payout);
+  const hasEvent = events.length > 0;
+  const hostStage: "no-payout" | "no-event" | "earning" | "active" = !hasPayout
+    ? "no-payout"
+    : !hasEvent
+      ? "no-event"
+      : displayAverageOrderValue > 99
+        ? "earning"
+        : "active";
+
+  type HeroCta = {
+    label: string;
+    icon: ReactNode;
+    variant?: "primary" | "secondary";
+    onClick: () => void;
+  };
+  const heroCopy = (() => {
+    switch (hostStage) {
+      case "no-payout":
+        return "Add your payout profile to publish exclusive and non-exclusive events. You can run campaigns now to grow your audience before launch.";
+      case "no-event":
+        return "Payout is verified — list your first event and start filling tickets through Hoizr campaigns.";
+      case "earning":
+        return null; // Render the "You made ₹X …" headline directly.
+      default:
+        return "Your events are live — promote them with a campaign or queue your next listing.";
+    }
+  })();
+
+  const heroCtas: HeroCta[] = (() => {
+    switch (hostStage) {
+      case "no-payout":
+        return [
+          {
+            label: "Add payout",
+            icon: <Banknote size={15} />,
+            onClick: () => router.push("/payment/payouts"),
+          },
+          {
+            label: "Run campaign",
+            icon: <Megaphone size={15} />,
+            variant: "secondary",
+            onClick: () => router.push("/campaigns"),
+          },
+        ];
+      case "no-event":
+        return [
+          {
+            label: "Add event",
+            icon: <CalendarDays size={15} />,
+            onClick: () => router.push("/events?create=1"),
+          },
+          {
+            label: "Run campaign",
+            icon: <Megaphone size={15} />,
+            variant: "secondary",
+            onClick: () => router.push("/campaigns"),
+          },
+        ];
+      default:
+        return [
+          {
+            label: "Create event",
+            icon: <CalendarDays size={15} />,
+            onClick: () => router.push("/events?create=1"),
+          },
+          {
+            label: "Run campaigns",
+            icon: <Megaphone size={15} />,
+            variant: "secondary",
+            onClick: () => router.push("/campaigns"),
+          },
+        ];
+    }
+  })();
 
   if (loading) {
     return (
@@ -433,57 +562,55 @@ export const DashboardClient = () => {
   return (
     <div className="mx-auto w-full max-w-[1180px] space-y-5 font-owner text-owner-fg-1">
       <Card padding={0} className="overflow-hidden shadow-[0_2px_10px_rgba(15,15,15,0.04)]">
-        <div className="grid gap-5 p-5 lg:grid-cols-[minmax(0,1fr)_minmax(320px,420px)] lg:p-6">
+        <div className="grid gap-5 p-5 lg:grid-cols-[minmax(0,1fr)_minmax(280px,360px)] lg:p-6">
           <div>
             <p className="text-[24px] font-semibold leading-tight text-owner-fg-3 sm:text-[30px]">
               Hey {greetingName},
             </p>
-            <h1 className="mt-3 max-w-[780px] text-[31px] font-semibold leading-[1.18] text-owner-fg-1 sm:text-[38px]">
-              You made <span className="text-owner-blue-500">{inrFormat(displaySales)}</span> {displayRangeSentence}.
-            </h1>
+            {hostStage === "earning" ? (
+              <h1 className="mt-3 max-w-[780px] text-[31px] font-semibold leading-[1.18] text-owner-fg-1 sm:text-[38px]">
+                You made{" "}
+                <span className="text-owner-blue-500">
+                  {inrFormat(displaySales)}
+                </span>{" "}
+                {displayRangeSentence}.
+              </h1>
+            ) : (
+              <h1 className="mt-3 max-w-[680px] text-[20px] font-medium leading-[1.32] text-owner-fg-1 sm:text-[22px]">
+                {heroCopy}
+              </h1>
+            )}
             <div className="mt-4 flex flex-wrap gap-2">
-              <OwnerButton
-                leadingIcon={<CalendarDays size={15} />}
-                onClick={() => router.push("/events?create=1")}
-              >
-                Create event
-              </OwnerButton>
-              <OwnerButton
-                variant="secondary"
-                leadingIcon={<ReceiptText size={15} />}
-                onClick={() => router.push("/payment/settlement-history")}
-              >
-                Settlements
-              </OwnerButton>
+              {heroCtas.map((cta) => (
+                <OwnerButton
+                  key={cta.label}
+                  variant={cta.variant}
+                  leadingIcon={cta.icon}
+                  onClick={cta.onClick}
+                >
+                  {cta.label}
+                </OwnerButton>
+              ))}
+              {/* Settlement button appears only when at least one
+                  event exists — surfaces the payout history right
+                  next to the hero CTAs without crowding new hosts. */}
+              {hasEvent ? (
+                <OwnerButton
+                  variant="secondary"
+                  leadingIcon={<ReceiptText size={15} />}
+                  onClick={() => router.push("/payment/settlement-history")}
+                >
+                  Settlements
+                </OwnerButton>
+              ) : null}
             </div>
           </div>
 
-          <button
-            type="button"
-            onClick={() => router.push(needsAttention[0]?.href ?? "/org-settings")}
-            className={`flex min-h-[92px] items-center justify-between gap-4 rounded-owner-md border px-4 py-3 text-left transition hover:-translate-y-0.5 ${
-              needsAttention.length
-                ? "border-owner-warning-bg bg-[#FFF8E7] text-owner-warning-text"
-                : "border-owner-success-bg bg-owner-success-bg text-owner-success-text"
-            }`}
-          >
-            <div className="flex items-center gap-3">
-              <span className="grid h-10 w-10 shrink-0 place-items-center rounded-owner-sm bg-white/75">
-                {needsAttention.length ? <AlertTriangle size={19} /> : <CheckCircle2 size={19} />}
-              </span>
-              <div>
-                <div className="text-[14px] font-semibold">
-                  {needsAttention.length
-                    ? `${needsAttention.length} setup item${needsAttention.length === 1 ? "" : "s"} need attention`
-                    : "Your setup is ready"}
-                </div>
-                <div className="mt-1 text-[12.5px] opacity-80">
-                  {needsAttention[0]?.label ?? "Profile, payout, event, and scanner checks are complete"}
-                </div>
-              </div>
-            </div>
-            <ChevronRight size={19} />
-          </button>
+          <ReadinessBadgeRail
+            items={readinessItems}
+            needsAttention={needsAttention}
+            onSelect={goToReadinessItem}
+          />
         </div>
       </Card>
 
@@ -691,14 +818,14 @@ export const DashboardClient = () => {
           icon={<CheckCircle2 size={17} />}
           title="Launch readiness"
           actionLabel="Open settings"
-          onAction={() => router.push("/org-settings")}
+          onAction={() => openSettingsModal("brand")}
         />
         <div className="grid gap-0 divide-y divide-owner-border-soft md:grid-cols-4 md:divide-x md:divide-y-0">
           {readinessItems.map((item) => (
             <button
               key={item.key}
               type="button"
-              onClick={() => router.push(item.href)}
+              onClick={() => goToReadinessItem(item)}
               className="flex items-center justify-between gap-3 px-5 py-4 text-left transition hover:bg-owner-bg-subtle"
             >
               <div>
@@ -932,6 +1059,95 @@ const MiniMetric = ({ label, value }: { label: string; value: string }) => (
     <div className="mt-1 text-[20px] font-semibold leading-none tabular-nums text-owner-fg-1">{value}</div>
   </div>
 );
+
+// Readiness badges — one pill per checklist item. Pending items use
+// the amber tone, done items the green tone. Hovering or focusing a
+// pending pill expands a small popover with the action description so
+// the host knows what's required without leaving the dashboard.
+const ReadinessBadgeRail = ({
+  items,
+  needsAttention,
+  onSelect,
+}: {
+  items: ReadinessItem[];
+  needsAttention: ReadinessItem[];
+  onSelect: (item: ReadinessItem) => void;
+}) => {
+  if (!items.length) return null;
+  const allDone = needsAttention.length === 0;
+  return (
+    <div
+      className={`flex flex-col gap-2 rounded-owner-md border p-4 ${
+        allDone
+          ? "border-owner-success-bg bg-owner-success-bg/40"
+          : "border-owner-border bg-owner-bg-subtle"
+      }`}
+    >
+      <div className="flex items-center justify-between gap-2">
+        <span className="text-[11.5px] font-semibold uppercase tracking-[0.08em] text-owner-fg-3">
+          Setup
+        </span>
+        <span
+          className={`inline-flex items-center gap-1 text-[11.5px] font-semibold ${
+            allDone ? "text-owner-success-text" : "text-owner-warning-text"
+          }`}
+        >
+          {allDone ? (
+            <>
+              <CheckCircle2 size={12} /> All set
+            </>
+          ) : (
+            <>
+              <AlertTriangle size={12} /> {needsAttention.length} pending
+            </>
+          )}
+        </span>
+      </div>
+      <div className="flex flex-wrap gap-1.5">
+        {items.map((item) => (
+          <ReadinessBadge
+            key={item.key}
+            item={item}
+            onSelect={onSelect}
+          />
+        ))}
+      </div>
+    </div>
+  );
+};
+
+const ReadinessBadge = ({
+  item,
+  onSelect,
+}: {
+  item: ReadinessItem;
+  onSelect: (item: ReadinessItem) => void;
+}) => {
+  const tone = item.done
+    ? "border-owner-success-bg bg-owner-bg text-owner-success-text"
+    : "border-owner-warning-bg bg-[#FFF8E7] text-owner-warning-text";
+  return (
+    <div className="group relative">
+      <button
+        type="button"
+        onClick={() => onSelect(item)}
+        className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[11.5px] font-semibold transition group-hover:shadow-sm ${tone}`}
+        aria-label={item.description ?? item.label}
+      >
+        {item.done ? <CheckCircle2 size={11} /> : <AlertTriangle size={11} />}
+        <span>{item.label}</span>
+      </button>
+      {/* Hover/focus expansion. Pinned to the right column the rail
+          lives in so it never spills outside the card. `group-hover`
+          + `group-focus-within` cover both pointer and keyboard. */}
+      {item.description ? (
+        <div className="pointer-events-none absolute left-0 right-0 top-full z-10 mt-1 hidden rounded-owner-sm border border-owner-border bg-owner-bg p-2 text-[11.5px] leading-4 text-owner-fg-2 shadow-owner-dropdown group-hover:block group-focus-within:block">
+          {item.description}
+        </div>
+      ) : null}
+    </div>
+  );
+};
 
 const MarketingSpotlightCard = ({
   kicker,

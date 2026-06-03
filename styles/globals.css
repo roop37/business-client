@@ -390,3 +390,95 @@ body,
     linear-gradient(110deg, transparent 8%, rgba(31, 98, 232, 0.08) 18%, transparent 33%),
     linear-gradient(70deg, transparent 45%, rgba(231, 231, 227, 0.28) 55%, transparent 70%);
 }
+
+/* =============================================================================
+   CustomerEventCard — mirrors hoizr-client `.h-tile` for the host preview.
+   Keep visually in sync with hoizr-client/src/app/globals.css `.h-tile*`.
+   Self-contained colour values (no Owner tokens) so the card looks
+   identical on any background.
+   ============================================================================= */
+.cust-tile {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  align-self: start;
+  text-decoration: none;
+  color: #fff;
+  border-radius: 18px;
+  overflow: hidden;
+  isolation: isolate;
+  background: rgba(255, 255, 255, 0.04);
+  backdrop-filter: blur(22px) saturate(170%);
+  -webkit-backdrop-filter: blur(22px) saturate(170%);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow:
+    0 16px 32px rgba(0, 0, 0, 0.42),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Inter",
+    system-ui, sans-serif;
+}
+.cust-tile-flyer {
+  display: block;
+  width: 100%;
+  line-height: 0;
+  background: rgba(0, 0, 0, 0.35);
+}
+.cust-tile-flyer img {
+  display: block;
+  width: 100%;
+  height: auto;
+  object-fit: contain;
+}
+.cust-tile-flyer-fallback,
+.cust-tile-flyer-placeholder {
+  width: 100%;
+  aspect-ratio: 4 / 5;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.cust-tile-info {
+  padding: 16px 18px 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  background: rgba(255, 255, 255, 0.04);
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+  backdrop-filter: blur(14px) saturate(160%);
+  -webkit-backdrop-filter: blur(14px) saturate(160%);
+}
+.cust-tile-date {
+  color: #c5ff3d;
+  font-size: 12.5px;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+}
+.cust-tile-title {
+  color: #ffffff;
+  font-size: 17px;
+  font-weight: 700;
+  line-height: 1.22;
+  letter-spacing: -0.015em;
+  margin: 4px 0 2px;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.cust-tile-venue {
+  color: rgba(255, 255, 255, 0.78);
+  font-size: 13px;
+  line-height: 1.35;
+  margin: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.cust-tile-price {
+  margin: 6px 0 0;
+  color: #ffffff;
+  font-size: 14.5px;
+  font-weight: 700;
+  letter-spacing: -0.005em;
+  font-variant-numeric: tabular-nums;
+}
