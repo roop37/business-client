@@ -2,6 +2,7 @@ import CButton from "@/components/common/button/button";
 import { ButtonType } from "@/components/common/button/interface";
 import CustomSwitchCard from "@/components/common/customSwitchCard/customSwitchCard";
 import { PermissionTypeEnum, TeamRole, UserRole } from "@/generated/graphql";
+import { useHostTypeLabel } from "@/hooks/useHostTypeLabel";
 import useAddTeamMemberFormStore from "@/store/addTeamMemberStore";
 import useGlobalStore from "@/store/global";
 import useUserManagementStore from "@/store/userManagement";
@@ -56,6 +57,7 @@ const defaultPermissionsByRole: Record<string, PermissionTypeEnum[]> = {
 
 const AddTeamMemberForm = () => {
   const [btnLoading, setBtnLoading] = useState(false);
+  const hostLabel = useHostTypeLabel();
   const { setToastData } = useGlobalStore();
   const { isAddTeamMemberModalOpen, setIsAddTeamMemberModalOpen } =
     useUserManagementStore();
@@ -280,7 +282,7 @@ const AddTeamMemberForm = () => {
             </h1>
             <p className="mt-1 max-w-2xl text-sm leading-6 text-[#6f6255]">
               {showPermissions
-                ? "Choose the areas this user can access for the current venue."
+                ? `Choose the areas this user can access for the current ${hostLabel.lower}.`
                 : "Send an invite and define the role before selecting permissions."}
             </p>
           </div>
@@ -424,7 +426,7 @@ const AddTeamMemberForm = () => {
                 title={formatPermissionType(
                   permission.type as PermissionTypeEnum,
                 )}
-                caption="Controls access for this venue area."
+                caption={`Controls access for this ${hostLabel.lower} area.`}
                 switchChecked={permission.isTicked}
                 onSwitchChange={() => handlePermissionChange(permission.type)}
               />

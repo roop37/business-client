@@ -7,6 +7,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
+import { useHostTypeLabel } from "@/hooks/useHostTypeLabel";
 import useGlobalStore from "@/store/global";
 import useHostsStore from "@/store/host";
 import { uploadHostAsset } from "@/utils/cloudinaryUpload";
@@ -386,6 +387,7 @@ const EventJourney = ({
     setPayoutModalSaveDraftHandler,
   } = useGlobalStore();
   const { selectedHostId } = useHostsStore();
+  const hostLabel = useHostTypeLabel();
   const [step, setStep] = useState(0);
   const [maxStep, setMaxStep] = useState(
     mode === "update" ? steps.length - 1 : 0,
@@ -1556,7 +1558,7 @@ const EventJourney = ({
         setToastData({
           type: "error",
           message:
-            "We couldn't load your venue context. Refresh the page and try again.",
+            `We couldn't load your ${hostLabel.lower} context. Refresh the page and try again.`,
         });
         setUploadingFlyer(false);
         return;
@@ -2394,10 +2396,10 @@ const EventJourney = ({
         ? "AI read: choose this when the offer is strong enough to lift conversion and you are comfortable reconciling it through settlement or after the event."
         : isLowestUpfront
           ? "AI read: lowest-friction option for publishing quickly."
-          : "AI read: balanced plan for venues that want a stronger offer without overcomplicating settlement.",
+          : `AI read: balanced plan for ${hostLabel.plural.toLowerCase()} that want a stronger offer without overcomplicating settlement.`,
       customerRecommendation: isFastestSettlement
         ? "Customer angle: simple ticket decision, clear offer, and fast event momentum."
-        : "Customer angle: clear value message in the venue publish flow.",
+        : `Customer angle: clear value message in the ${hostLabel.lower} publish flow.`,
     };
   };
 
@@ -5403,6 +5405,7 @@ const ImageUrlInput = ({
 }) => {
   const [uploading, setUploading] = useState(false);
   const { setToastData } = useGlobalStore();
+  const hostLabel = useHostTypeLabel();
   const handleFile = async (file?: File) => {
     if (!file) return;
     if (!file.type.startsWith("image/")) {
@@ -5423,7 +5426,7 @@ const ImageUrlInput = ({
         setToastData({
           type: "error",
           message:
-            "We couldn't load your venue context. Refresh the page and try again.",
+            `We couldn't load your ${hostLabel.lower} context. Refresh the page and try again.`,
         });
         setUploading(false);
         return;

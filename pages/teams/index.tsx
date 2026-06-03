@@ -18,6 +18,7 @@ import { PermissionTypeEnum, UserStatus, WalkthroughKey } from "@/generated/grap
 import useGlobalStore from "@/store/global";
 import useUserStore from "@/store/user";
 import useUserManagementStore from "@/store/userManagement";
+import { useHostTypeLabel } from "@/hooks/useHostTypeLabel";
 import { sdk } from "@/utils/graphqlClient";
 import { hasAccess } from "@/utils/hasAccess";
 import {
@@ -88,6 +89,7 @@ const Teams: NextPageWithLayout = () => {
   const { setSelectedSideBarMenu, setToastData } = useGlobalStore();
   const { resetForm } = useAddTeamMemberFormStore();
   const { meUser } = useUserStore();
+  const hostLabel = useHostTypeLabel();
   const {
     setIsEditTeamMember,
     setIsEditTeamMemberId,
@@ -293,7 +295,7 @@ const Teams: NextPageWithLayout = () => {
 
       <PageHeader
         title="Teams"
-        subtitle="Invite venue team members, assign roles, and keep permissions aligned with the current workspace."
+        subtitle={`Invite ${hostLabel.lower} team members, assign roles, and keep permissions aligned with the current workspace.`}
         actions={
           <OwnerButton leadingIcon={<UserPlus size={16} />} onClick={handleAddMember}>
             Invite member

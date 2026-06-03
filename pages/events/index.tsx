@@ -1,6 +1,7 @@
 import ConfirmModal from "@/components/common/confirm-modal";
 import { HoizrStatusPill } from "@/components/common/hoizr/HoizrSurface";
 import MainLayout from "@/components/layouts/mainBodyLayout";
+import { useHostTypeLabel } from "@/hooks/useHostTypeLabel";
 import useGlobalStore from "@/store/global";
 import useHostsStore from "@/store/host";
 import { sdk } from "@/utils/graphqlClient";
@@ -227,6 +228,7 @@ const formatRangeLabel = (from: Date | null, to: Date | null) => {
 const EventsPage = () => {
   const router = useRouter();
   const { setToastData, setSelectedSideBarMenu } = useGlobalStore();
+  const hostLabel = useHostTypeLabel();
   const [events, setEvents] = useState<EventCardData[]>([]);
   const [checklist, setChecklist] = useState<Checklist | null>(null);
   const [loading, setLoading] = useState(true);
@@ -300,7 +302,7 @@ const EventsPage = () => {
       setReadinessOpen(true);
       setToastData({
         type: "error",
-        message: "Upload a venue logo before creating an event.",
+        message: `Upload a ${hostLabel.lower} logo before creating an event.`,
       });
       return;
     }
@@ -320,7 +322,7 @@ const EventsPage = () => {
     } finally {
       setCreating(false);
     }
-  }, [checklist, router, setToastData]);
+  }, [checklist, router, setToastData, hostLabel.lower]);
 
   useEffect(() => {
     if (

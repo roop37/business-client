@@ -6,6 +6,7 @@ import {
 } from "@/components/common/owner";
 import MainLayout from "@/components/layouts/mainBodyLayout";
 import Loader from "@/components/loader";
+import { useHostTypeLabel } from "@/hooks/useHostTypeLabel";
 import { PermissionTypeEnum } from "@/generated/graphql";
 import useGlobalStore from "@/store/global";
 import useUserStore from "@/store/user";
@@ -171,6 +172,7 @@ const HostSettings: React.FC & {
 } = () => {
   const { meUser } = useUserStore();
   const { setSelectedSideBarMenu, setToastData } = useGlobalStore();
+  const hostLabel = useHostTypeLabel();
   const [form, setForm] = useState<HostSettingsForm>(emptyForm);
   const [initialForm, setInitialForm] = useState<HostSettingsForm>(emptyForm);
   const [activeTab, setActiveTab] = useState<SettingsTab>("brand");
@@ -368,7 +370,7 @@ const HostSettings: React.FC & {
     <div className="min-w-0">
       <PageHeader
         title="Settings"
-        subtitle="Manage your venue, payouts, fees and integrations."
+        subtitle={`Manage your ${hostLabel.lower}, payouts, fees and integrations.`}
       />
 
       {!canUpdateHost ? (
@@ -553,7 +555,7 @@ const HostSettings: React.FC & {
           {activeTab === "hours" ? (
             <SettingsPanel
               title="Opening hours"
-              subtitle="Default hours used for listings, support windows and venue pages."
+              subtitle={`Default hours used for listings, support windows and ${hostLabel.lower} pages.`}
             >
               <div className="divide-y divide-owner-border-soft">
                 {openingHours.map((item) => (
@@ -721,7 +723,7 @@ const HostSettings: React.FC & {
               <div className="grid gap-3 sm:grid-cols-2">
                 <SupportLink
                   channel="Discord"
-                  description="Live chat with the Hoizr team + other venues. Fastest for product questions."
+                  description={`Live chat with the Hoizr team + other ${hostLabel.plural.toLowerCase()}. Fastest for product questions.`}
                   cta="Join the server"
                   href="https://discord.gg/hoizr"
                 />

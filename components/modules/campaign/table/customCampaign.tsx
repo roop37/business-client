@@ -27,6 +27,7 @@ import useCampaignStore from "@/store/customCampaignStore";
 import useGlobalStore from "@/store/global";
 import useOriginalCampaignStore from "@/store/originalCampaignStore";
 import useHostsStore from "@/store/host";
+import { useHostTypeLabel } from "@/hooks/useHostTypeLabel";
 import { sdk } from "@/utils/graphqlClient";
 import { hasAccess } from "@/utils/hasAccess";
 import {
@@ -104,6 +105,7 @@ const CustomCampaigns: NextPageWithLayout = () => {
   const [editLoading, setEditLoading] = useState(false);
   const { setToastData, setSelectedSideBarMenu } = useGlobalStore();
   const { hostLogo, setHostLogo } = useHostsStore();
+  const hostLabel = useHostTypeLabel();
 
   // Guard against the race where MainLayout's async restaurantDetails
   // fetch hasn't hydrated `hostLogo` yet when the host clicks "Add". A
@@ -125,7 +127,7 @@ const CustomCampaigns: NextPageWithLayout = () => {
     }
     setToastData({
       type: "error",
-      message: "Please upload your venue logo first",
+      message: `Please upload your ${hostLabel.lower} logo first`,
     });
     return false;
   };
