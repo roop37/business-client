@@ -2,6 +2,7 @@ import ConfirmModal from "@/components/common/confirm-modal";
 import { HoizrStatusPill } from "@/components/common/hoizr/HoizrSurface";
 import MainLayout from "@/components/layouts/mainBodyLayout";
 import { useHostTypeLabel } from "@/hooks/useHostTypeLabel";
+import useDateRangeStore from "@/store/dateRange";
 import useGlobalStore from "@/store/global";
 import useHostsStore from "@/store/host";
 import { sdk } from "@/utils/graphqlClient";
@@ -246,6 +247,7 @@ const EventsPage = () => {
   const createHandledRef = useRef(false);
 
   const selectedHostId = useHostsStore((s) => s.selectedHostId);
+  const topbarRange = useDateRangeStore((s) => ({ from: s.from, to: s.to }));
 
   const fetchData = useCallback(async () => {
     setLoading(true);
@@ -382,14 +384,25 @@ const EventsPage = () => {
     (checklist?.Scanner ?? 0);
   const showReadiness = Boolean(checklist?.nextSteps?.length);
   const activeRange = useMemo(() => {
+    // Custom in-panel range wins over the topbar selection so power users can
+    // still narrow to specific dates from the filter panel.
+    if (rangePreset === "custom" && (customFromDate || customToDate)) {
+      return {
+        from: dateFromInput(customFromDate),
+        to: dateFromInput(customToDate || customFromDate, true),
+      };
+    }
     if (rangePreset !== "custom") {
       return rangeForPreset(rangePreset);
     }
-    return {
-      from: dateFromInput(customFromDate),
-      to: dateFromInput(customToDate || customFromDate, true),
-    };
-  }, [customFromDate, customToDate, rangePreset]);
+    return { from: topbarRange.from, to: topbarRange.to };
+  }, [
+    customFromDate,
+    customToDate,
+    rangePreset,
+    topbarRange.from,
+    topbarRange.to,
+  ]);
   const dateRangeLabel = formatRangeLabel(activeRange.from, activeRange.to);
   const filteredEvents = useMemo(() => {
     const query = searchQuery.trim().toLowerCase();
