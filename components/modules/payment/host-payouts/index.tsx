@@ -5,7 +5,6 @@ import {
   Card,
   OwnerButton,
   OwnerTable,
-  StatTile,
 } from "@/components/common/owner";
 import {
   Tooltip,
@@ -93,20 +92,6 @@ const HostPayouts: React.FC = () => {
     [data]
   );
 
-  const stats = useMemo(() => {
-    const verified = data.filter(
-      (a) => a.verificationStatus === "VERIFIED"
-    ).length;
-    const pending = data.filter(
-      (a) => a.verificationStatus === "PENDING"
-    ).length;
-    return {
-      total: data.length,
-      verified,
-      pending,
-    };
-  }, [data]);
-
   const handleSetPrimary = async (id: string) => {
     try {
       setPrimaryLoadingId(id);
@@ -130,29 +115,6 @@ const HostPayouts: React.FC = () => {
 
   return (
     <div className="flex flex-col gap-6 font-owner">
-      {/* KPI strip */}
-      <div className="grid gap-4 sm:grid-cols-3">
-        <StatTile
-          label="Active payout profile"
-          value={primaryPayout ? "Verified" : "Not yet"}
-          hint={
-            primaryPayout
-              ? `${primaryPayout.bankName} •••• ${primaryPayout.last4}`
-              : "Add and verify a profile to publish paid events."
-          }
-        />
-        <StatTile
-          label="Verified profiles"
-          value={`${stats.verified}`}
-          hint={`${stats.total} total on file`}
-        />
-        <StatTile
-          label="Pending verification"
-          value={`${stats.pending}`}
-          hint="Hoizr typically verifies within 1 to 4 hours."
-        />
-      </div>
-
       {/* Primary payout summary card */}
       <Card padding={20}>
         {primaryPayout ? (
