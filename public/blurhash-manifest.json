@@ -321,13 +321,6 @@
     "height": 1035,
     "mtime": 1779284084745.2585
   },
-  "/marketing/brand/product-reviews-engine.png": {
-    "hash": "U4FY[J9b00iw_L8|-q?a00xa00kk%L.700Rn",
-    "dataURL": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABgAAAASCAMAAAB2Mu6sAAAABlBMVEWpsozE0aJgoaMYAAAAAnRSTlMLGx8C3R8AAAAJcEhZcwAACxMAAAsTAQCanBgAAABMSURBVHjajZBRDgAgCELl/pduS8sQ3fLHxYtCzf4KgEquFwSuEEV3slsPBsd+q7LUOYZEviiOIJgOvojiOJ9Osyt5gGlMDBvvQZl0AaCsAKvqlRrZAAAAAElFTkSuQmCC",
-    "width": 1448,
-    "height": 1086,
-    "mtime": 1779314960906.7112
-  },
   "/marketing/hero/SaaS-dashboard-for-event-management.png": {
     "hash": "UTRMh{NF-;%f~WxaD%V[9GR%%Moy-;ofM|jZ",
     "dataURL": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABgAAAAPCAMAAADJev/pAAAAHlBMVEX6+vrw8vP29vfj6erS3eCwwcmSq7Vui555m6XCz9TlmrGsAAAACXBIWXMAAAsTAAALEwEAmpwYAAAAbUlEQVR42mXPWxbAEAwE0LwE+99wRYjQ6Y+TO4cUGGfIAh6yASyYdgEmWEJ0Ax6wjhXjlZhvTn2an8N7TxwQbbXYCSgBB2wHnzPzfzdkkd7FMwoUv8nSy8oobPG5atOZ0iVB0VZrbRYtwi9YDnxb3QLLDq1OQAAAAABJRU5ErkJggg==",
@@ -502,5 +495,12 @@
     "width": 1672,
     "height": 941,
     "mtime": 1779632230430.334
+  },
+  "/walkthrough/metallic-line-banner.png": {
+    "hash": "U671vM4T_4IU00_48_t7xvIUt7Rjfkofogax",
+    "dataURL": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABgAAAAOCAMAAAACJixMAAAAG1BMVEUrLTEhIyYVFhk0NzxBRU1PVWFiaHV7gY+WnaoPoKHcAAAACXBIWXMAAAsTAAALEwEAmpwYAAAAcElEQVR42nWPQQ7AIAgEV6Hi/19cFoTYQ9eDYSZsFNMzICIYY17BLSK/4igEdwEKAOVd5IxzdYqHkDySzZyrJ5gy6P42qo8H0g+6+FoLmnyWcO7YDKrx59oIbmabG/xSCl/wHnIKJC/Bhf0R4zQF3y9+kALWsUAV4QAAAABJRU5ErkJggg==",
+    "width": 1672,
+    "height": 941,
+    "mtime": 1780511000780.9832
   }
 }
