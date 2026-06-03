@@ -70,7 +70,7 @@ const EventOperations = ({
   mode: "manage" | "scanners";
 }) => {
   const router = useRouter();
-  const { setToastData } = useGlobalStore();
+  const { setToastData, openRunCampaignModal } = useGlobalStore();
   const [overview, setOverview] = useState<any>(null);
   const [busy, setBusy] = useState(false);
 
@@ -281,7 +281,10 @@ const EventOperations = ({
                 description="Start a campaign that is attached to this event."
                 Icon={MegaphoneIcon}
                 onClick={() =>
-                  router.push(`/campaigns/onboarding/template-select?eventId=${eventId}`)
+                  openRunCampaignModal({
+                    eventId,
+                    title: overview?.title || "Untitled Event",
+                  })
                 }
                 disabled={!canRunCampaigns}
               />

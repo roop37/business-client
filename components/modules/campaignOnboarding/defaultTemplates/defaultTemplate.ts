@@ -97,8 +97,14 @@ const createEventFlyerRow = () => ({
 });
 
 const withEventFlyer = (template: { html: string; json: any }) => {
+  // Flyer goes at the TOP of the email — before the first row in
+  // both representations. Previously the JSON spliced the flyer at
+  // index 1 (after row 0) while the HTML prepended it before row 0,
+  // so the Unlayer editor (JSON-driven) and the right-pane preview
+  // (HTML-driven) showed different orders and the layout flipped
+  // when the host navigated between steps.
   const json = JSON.parse(JSON.stringify(template.json));
-  json.body.rows.splice(1, 0, createEventFlyerRow());
+  json.body.rows.splice(0, 0, createEventFlyerRow());
   return {
     html: template.html.replace(
       '<div class="u-row-container"',

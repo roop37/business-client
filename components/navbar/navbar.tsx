@@ -1,6 +1,5 @@
 "use client";
 
-import DateRangePicker from "@/components/common/DateRangePicker";
 import useGlobalStore from "@/store/global";
 import { Bell, Plus, Search } from "lucide-react";
 import { usePathname, useRouter } from "next/navigation";
@@ -11,7 +10,6 @@ import { SidebarTrigger } from "../ui/sidebar";
  *
  * Sits at the top of the canvas, inside the rounded white panel. Hosts:
  *   - Mobile sidebar trigger (lg:hidden)
- *   - Date-range pill (Dashboard and Email campaigns only)
  *   - Notifications bell
  *   - Primary action button — context-aware:
  *       /campaigns/*  → "Add email campaign"
@@ -38,10 +36,6 @@ const Navbar = () => {
     (pathname.startsWith("/events") && !onEventsRoot) ||
     onCampaigns;
 
-  const showDateRange =
-    pathname.startsWith("/dashboard") ||
-    pathname.startsWith("/campaigns/email");
-
   const primaryLabel = onCampaigns ? "Add email campaign" : "Add event";
   const primaryHref = onCampaigns
     ? "/campaigns/onboarding/template-select"
@@ -51,7 +45,6 @@ const Navbar = () => {
     <header className="sticky top-0 z-30 flex min-h-[64px] items-center justify-between gap-3 border-b border-owner-border-soft bg-owner-bg/95 px-4 py-3 backdrop-blur lg:px-10">
       <div className="flex items-center gap-3">
         <SidebarTrigger className="lg:hidden" />
-        {showDateRange ? <DateRangePicker /> : null}
       </div>
 
       <div className="flex items-center gap-2 sm:gap-3">

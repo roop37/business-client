@@ -1,6 +1,8 @@
 import PayoutModals from "@/components/common/payout/PayoutModals";
 import Toast from "@/components/common/toast/toast";
 import GlobalTopUpModal from "@/components/common/topup/GlobalTopUpModal";
+import SettingsModal from "@/components/common/settings/SettingsModal";
+import RunCampaignModal from "@/components/common/campaign/RunCampaignModal";
 import useGlobalStore from "@/store/global";
 import { NextPage } from "next";
 import { DefaultSeo } from "next-seo";
@@ -128,6 +130,8 @@ function MyApp({ Component, pageProps }: AppPropsWithLayout) {
         {getLayout(<Component {...pageProps} />)}
         <PayoutModals />
         <GlobalTopUpModal />
+        <SettingsModal />
+        <RunCampaignModal />
         {toastData && (
           <Toast message={toastData.message} type={toastData.type} />
         )}
