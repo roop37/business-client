@@ -531,6 +531,7 @@ const EventJourney = ({
   const [artistActualName, setArtistActualName] = useState("");
   const [artistName, setArtistName] = useState("");
   const [artistPicture, setArtistPicture] = useState("");
+  const [pendingArtistFile, setPendingArtistFile] = useState<File | null>(null);
   const [artistInstagram, setArtistInstagram] = useState("");
   const [artistSpotify, setArtistSpotify] = useState("");
   const [artistYoutube, setArtistYoutube] = useState("");
@@ -1207,6 +1208,7 @@ const EventJourney = ({
     setArtistActualName("");
     setArtistName("");
     setArtistPicture("");
+    setPendingArtistFile(null);
     setArtistInstagram("");
     setArtistSpotify("");
     setArtistYoutube("");
@@ -1242,12 +1244,13 @@ const EventJourney = ({
     resetArtistDraftFields();
   };
 
-  const saveArtistDraft = () => {
+  const [artistSaving, setArtistSaving] = useState(false);
+  const saveArtistDraft = async () => {
     if (!artistName.trim()) {
       setToastData({ type: "error", message: "Stage name is required." });
       return;
     }
-    if (!artistPicture.trim()) {
+    if (!artistPicture.trim() && !pendingArtistFile) {
       setToastData({ type: "error", message: "Artist picture is required." });
       return;
     }
@@ -1272,10 +1275,44 @@ const EventJourney = ({
       });
       return;
     }
+
+    // Deferred upload: ImageUrlInput captured a File but left it pending so
+    // we don't burn Cloudinary requests on every drop. Push it up now,
+    // right before the artist row gets committed.
+    let resolvedPicture = artistPicture;
+    if (pendingArtistFile) {
+      setArtistSaving(true);
+      try {
+        const resolvedHostId =
+          selectedHostId || (await awaitSelectedHostId());
+        if (!resolvedHostId) {
+          setToastData({
+            type: "error",
+            message: `We couldn't load your ${hostLabel.lower} context. Refresh and try again.`,
+          });
+          setArtistSaving(false);
+          return;
+        }
+        const result = await uploadHostAsset({
+          kind: "event-extra",
+          hostId: resolvedHostId,
+          eventId,
+          file: pendingArtistFile,
+        });
+        resolvedPicture = result.secureUrl;
+      } catch (error) {
+        setToastData({ type: "error", message: extractErrorMessage(error) });
+        setArtistSaving(false);
+        return;
+      } finally {
+        setArtistSaving(false);
+      }
+    }
+
     const draft: ArtistEntry = {
       name: artistName.trim(),
       actualName: artistActualName.trim() || undefined,
-      picture: artistPicture,
+      picture: resolvedPicture,
       artistLinkId: artistLinkId || undefined,
       tempArtistId: tempArtistId || undefined,
       instagramLink: artistInstagram || undefined,
@@ -4500,6 +4537,7 @@ const EventJourney = ({
                         label="Artist Picture *"
                         value={artistPicture}
                         onChange={setArtistPicture}
+                        onFileChange={setPendingArtistFile}
                         hostId={selectedHostId}
                         eventId={eventId}
                         uploadKind="event-extra"
@@ -4541,10 +4579,14 @@ const EventJourney = ({
                 <button
                   type="button"
                   onClick={saveArtistDraft}
-                  disabled={!artistManualEntryEnabled}
+                  disabled={!artistManualEntryEnabled || artistSaving}
                   className="rounded-lg bg-[var(--owner-blue-500)] px-3 py-2 text-sm font-semibold text-[var(--owner-bg)] disabled:cursor-not-allowed disabled:opacity-50"
                 >
-                  {artistEditIndex === null ? "Add Artist" : "Save Artist"}
+                  {artistSaving
+                    ? "Uploading..."
+                    : artistEditIndex === null
+                      ? "Add Artist"
+                      : "Save Artist"}
                 </button>
               </div>
             </div>
@@ -5486,6 +5528,7 @@ const ImageUrlInput = ({
   uploadKind = "event-extra",
   hostId,
   eventId,
+  onFileChange,
 }: {
   label: string;
   value: string;
@@ -5496,6 +5539,12 @@ const ImageUrlInput = ({
   uploadKind?: "event-extra" | "event-instagram" | "event-table-layout";
   hostId?: string;
   eventId?: string;
+  // When provided, switches to deferred mode: the picker holds the File in
+  // memory and reports it via this callback instead of uploading on drop.
+  // The parent is responsible for running the actual Cloudinary upload at
+  // form-save time. `onChange(blobUrl)` is still called so the preview
+  // works while the file is pending.
+  onFileChange?: (file: File | null) => void;
 }) => {
   const [uploading, setUploading] = useState(false);
   const { setToastData } = useGlobalStore();
@@ -5511,6 +5560,14 @@ const ImageUrlInput = ({
         type: "error",
         message: "Image must be 5 MB or smaller.",
       });
+      return;
+    }
+    if (onFileChange) {
+      // Deferred mode: preview via blob URL, defer Cloudinary upload to the
+      // parent's save action.
+      const blobUrl = URL.createObjectURL(file);
+      onChange(blobUrl);
+      onFileChange(file);
       return;
     }
     setUploading(true);
