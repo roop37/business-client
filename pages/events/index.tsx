@@ -3,7 +3,6 @@ import EventCard from "@/components/common/event/EventCard";
 import { HoizrStatusPill } from "@/components/common/hoizr/HoizrSurface";
 import MainLayout from "@/components/layouts/mainBodyLayout";
 import { useHostTypeLabel } from "@/hooks/useHostTypeLabel";
-import useDateRangeStore from "@/store/dateRange";
 import useGlobalStore from "@/store/global";
 import useHostsStore from "@/store/host";
 import { sdk } from "@/utils/graphqlClient";
@@ -248,7 +247,6 @@ const EventsPage = () => {
   const createHandledRef = useRef(false);
 
   const selectedHostId = useHostsStore((s) => s.selectedHostId);
-  const topbarRange = useDateRangeStore((s) => ({ from: s.from, to: s.to }));
 
   const fetchData = useCallback(async () => {
     setLoading(true);
@@ -384,9 +382,13 @@ const EventsPage = () => {
     (checklist?.event ?? 0) +
     (checklist?.Scanner ?? 0);
   const showReadiness = Boolean(checklist?.nextSteps?.length);
-  const activeRange = useMemo(() => {
-    // Custom in-panel range wins over the topbar selection so power users can
-    // still narrow to specific dates from the filter panel.
+  const activeRange = useMemo<{ from: Date | null; to: Date | null }>(() => {
+    // Date range is only meaningful for the "Past" tab. Live/Drafts/All
+    // contain future-dated events that a retrospective range would
+    // incorrectly hide.
+    if (statusFilter !== "past") {
+      return { from: null, to: null };
+    }
     if (rangePreset === "custom" && (customFromDate || customToDate)) {
       return {
         from: dateFromInput(customFromDate),
@@ -396,14 +398,8 @@ const EventsPage = () => {
     if (rangePreset !== "custom") {
       return rangeForPreset(rangePreset);
     }
-    return { from: topbarRange.from, to: topbarRange.to };
-  }, [
-    customFromDate,
-    customToDate,
-    rangePreset,
-    topbarRange.from,
-    topbarRange.to,
-  ]);
+    return { from: null, to: null };
+  }, [customFromDate, customToDate, rangePreset, statusFilter]);
   const dateRangeLabel = formatRangeLabel(activeRange.from, activeRange.to);
   const filteredEvents = useMemo(() => {
     const query = searchQuery.trim().toLowerCase();
@@ -595,14 +591,16 @@ const EventsPage = () => {
           </div>
 
           <div className="flex flex-wrap gap-3">
-            <button
-              type="button"
-              onClick={() => setShowFilterPanel((open) => !open)}
-              className="owner-btn owner-btn--secondary"
-            >
-              <SlidersHorizontalIcon size={16} />
-              Filter
-            </button>
+            {statusFilter === "past" ? (
+              <button
+                type="button"
+                onClick={() => setShowFilterPanel((open) => !open)}
+                className="owner-btn owner-btn--secondary"
+              >
+                <SlidersHorizontalIcon size={16} />
+                Filter
+              </button>
+            ) : null}
             <button type="button" className="owner-btn owner-btn--secondary">
               <DownloadIcon size={16} />
               Export
@@ -610,7 +608,7 @@ const EventsPage = () => {
           </div>
         </div>
 
-        {showFilterPanel ? (
+        {statusFilter === "past" && showFilterPanel ? (
           <div className="rounded-owner-lg border border-owner-border bg-owner-bg p-4">
             <div className="grid gap-3 md:grid-cols-[220px_minmax(260px,1fr)]">
               <label className="text-[12px] font-semibold uppercase tracking-[0.04em] text-owner-fg-3">

@@ -10,6 +10,14 @@ export type PayoutAccountForEligibility = {
   verificationStatus?: VerificationStatus | null;
 };
 
+// Event drafting only needs proof that the host has submitted payout
+// details. Verification is intentionally handled later, at publish time.
+export function hasAnyPayoutAccount(
+  accounts: PayoutAccountForEligibility[] | null | undefined
+): boolean {
+  return Boolean(accounts && accounts.length > 0);
+}
+
 // Client-side mirror of validatePublishPayoutPrecondition in main-server.
 // Returns true when the host has at least one primary, active,
 // admin-verified payout. Razorpay X provisioning is intentionally
@@ -30,9 +38,8 @@ export function hasVerifiedPrimaryPayout(
 }
 
 // True when the host has a primary payout that exists but is not yet
-// verified (PENDING). Used by the EventJourney preflight to decide
-// between PayoutPromptModal (no payout at all) and
-// PayoutPendingVerificationModal (payout submitted, admin reviewing).
+// verified (PENDING). Useful for routes that want to distinguish
+// "submitted, admin reviewing" from "no payout on file".
 export function hasPendingPrimaryPayout(
   accounts: PayoutAccountForEligibility[] | null | undefined
 ): boolean {

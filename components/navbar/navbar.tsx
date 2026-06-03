@@ -11,7 +11,7 @@ import { SidebarTrigger } from "../ui/sidebar";
  *
  * Sits at the top of the canvas, inside the rounded white panel. Hosts:
  *   - Mobile sidebar trigger (lg:hidden)
- *   - Date-range pill (Dashboard, Events sub-routes, Email campaigns only)
+ *   - Date-range pill (Dashboard and Email campaigns only)
  *   - Notifications bell
  *   - Primary action button — context-aware:
  *       /campaigns/*  → "Add email campaign"
@@ -40,7 +40,6 @@ const Navbar = () => {
 
   const showDateRange =
     pathname.startsWith("/dashboard") ||
-    pathname.startsWith("/events") ||
     pathname.startsWith("/campaigns/email");
 
   const primaryLabel = onCampaigns ? "Add email campaign" : "Add event";

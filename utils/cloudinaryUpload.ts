@@ -54,6 +54,7 @@ export type HostAssetKind =
   | "host-logo"
   | "host-settings"
   | "event-flyer"
+  | "event-horizontal-flyer"
   | "event-table-layout"
   | "event-instagram"
   | "event-extra"
@@ -89,6 +90,8 @@ export const buildHostAssetFolder = ({
       return `${root}/settings`;
     case "event-flyer":
       return `${root}/events/${event}/flyer`;
+    case "event-horizontal-flyer":
+      return `${root}/events/${event}/horizontal-flyer`;
     case "event-table-layout":
       return `${root}/events/${event}/table-layout`;
     case "event-instagram":

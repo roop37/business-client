@@ -1910,10 +1910,18 @@ export type HostDashboardCampaignRow = {
   status: Scalars['String']['output'];
 };
 
+export enum HostDashboardRange {
+  Last_7Days = 'LAST_7_DAYS',
+  Last_30Days = 'LAST_30_DAYS',
+  Today = 'TODAY',
+  Yesterday = 'YESTERDAY'
+}
+
 export type HostDashboardSeriesPoint = {
   __typename?: 'HostDashboardSeriesPoint';
   date: Scalars['String']['output'];
   label: Scalars['String']['output'];
+  orderCount: Scalars['Int']['output'];
   sales: Scalars['Float']['output'];
   tickets: Scalars['Int']['output'];
 };
@@ -1938,6 +1946,10 @@ export type HostDashboardSummary = {
   topItems: Array<HostDashboardBreakdownRow>;
   upcomingCampaigns: Array<HostDashboardCampaignRow>;
   upcomingEventsCount: Scalars['Int']['output'];
+};
+
+export type HostDashboardSummaryInput = {
+  range?: InputMaybe<HostDashboardRange>;
 };
 
 /** Publication status for host email campaigns */
@@ -3832,6 +3844,11 @@ export type QueryGetHostAttendeesTargetCountArgs = {
 };
 
 
+export type QueryGetHostDashboardSummaryArgs = {
+  input?: InputMaybe<HostDashboardSummaryInput>;
+};
+
+
 export type QueryGetLatestAiBoostGenerationArgs = {
   eventId: Scalars['String']['input'];
 };
@@ -4685,7 +4702,7 @@ export type SelectEventPricingOptionMutation = { __typename?: 'Mutation', select
 export type GetMyEventsForSelectorQueryVariables = Exact<{ [key: string]: never; }>;
 
 
-export type GetMyEventsForSelectorQuery = { __typename?: 'Query', getMyEvents: Array<{ __typename?: 'Event', _id: string, title?: string | null, eventFlyer?: string | null, eventType?: Array<EventType> | null, startDate?: any | null, endDate?: any | null, city?: string | null, slug?: string | null, status: EventStatus }> };
+export type GetMyEventsForSelectorQuery = { __typename?: 'Query', getMyEvents: Array<{ __typename?: 'Event', _id: string, title?: string | null, eventFlyer?: string | null, eventType?: Array<EventType> | null, startDate?: any | null, endDate?: any | null, city?: string | null, slug?: string | null, status: EventStatus, tickets?: Array<{ __typename?: 'EventTicket', ticketCapacity: number, ticketSold: number, ticketPrice: number, ticketVisible?: boolean | null }> | null }> };
 
 export type HostListEventScansQueryVariables = Exact<{
   eventId: Scalars['String']['input'];
@@ -4782,10 +4799,12 @@ export type GetHostQueryVariables = Exact<{ [key: string]: never; }>;
 
 export type GetHostQuery = { __typename?: 'Query', getHost?: { __typename?: 'Host', _id: string, name?: string | null, email?: string | null, phone?: string | null, hostType: HostType, venueType?: string | null, description?: string | null, logo?: string | null, businessRegistrationNumber?: string | null, gstNumber?: string | null, websiteUrl?: string | null, averageEventSize?: string | null, profileComplete: boolean, status: HostStatus, onboardingCompleted: boolean, isAdminVerified: boolean, isActive: boolean, createdAt?: any | null, updatedAt?: any | null, address?: { __typename?: 'AddressInfo', addressLine1?: string | null, addressLine2?: string | null, state?: string | null, city?: string | null, pincode?: string | null, coordinate?: { __typename?: 'CoordinatePoint', coordinates: Array<number> } | null, place?: { __typename?: 'PlaceInfo', displayName?: string | null, placeId?: string | null } | null } | null } | null };
 
-export type GetHostDashboardSummaryQueryVariables = Exact<{ [key: string]: never; }>;
+export type GetHostDashboardSummaryQueryVariables = Exact<{
+  input?: InputMaybe<HostDashboardSummaryInput>;
+}>;
 
 
-export type GetHostDashboardSummaryQuery = { __typename?: 'Query', getHostDashboardSummary: { __typename?: 'HostDashboardSummary', upcomingEventsCount: number, publishedEventsCount: number, draftEventsCount: number, salesToday: number, ticketsSoldToday: number, salesLast30Days: number, ticketsSoldLast30Days: number, orderCountLast30Days: number, averageOrderValueLast30Days: number, pendingSettlementsCount: number, paidOutLifetime: number, marketingSubscribersCount: number, lifetimeCampaignMessagesSent: number, salesSeries: Array<{ __typename?: 'HostDashboardSeriesPoint', date: string, label: string, sales: number, tickets: number }>, salesBySource: Array<{ __typename?: 'HostDashboardBreakdownRow', label: string, amount: number, count: number, percent: number }>, ticketMix: Array<{ __typename?: 'HostDashboardBreakdownRow', label: string, amount: number, count: number, percent: number }>, topItems: Array<{ __typename?: 'HostDashboardBreakdownRow', label: string, amount: number, count: number, percent: number }>, upcomingCampaigns: Array<{ __typename?: 'HostDashboardCampaignRow', id: string, name: string, status: string, scheduledFor?: any | null, recipientCount: number }> } };
+export type GetHostDashboardSummaryQuery = { __typename?: 'Query', getHostDashboardSummary: { __typename?: 'HostDashboardSummary', upcomingEventsCount: number, publishedEventsCount: number, draftEventsCount: number, salesToday: number, ticketsSoldToday: number, salesLast30Days: number, ticketsSoldLast30Days: number, orderCountLast30Days: number, averageOrderValueLast30Days: number, pendingSettlementsCount: number, paidOutLifetime: number, marketingSubscribersCount: number, lifetimeCampaignMessagesSent: number, salesSeries: Array<{ __typename?: 'HostDashboardSeriesPoint', date: string, label: string, sales: number, tickets: number, orderCount: number }>, salesBySource: Array<{ __typename?: 'HostDashboardBreakdownRow', label: string, amount: number, count: number, percent: number }>, ticketMix: Array<{ __typename?: 'HostDashboardBreakdownRow', label: string, amount: number, count: number, percent: number }>, topItems: Array<{ __typename?: 'HostDashboardBreakdownRow', label: string, amount: number, count: number, percent: number }>, upcomingCampaigns: Array<{ __typename?: 'HostDashboardCampaignRow', id: string, name: string, status: string, scheduledFor?: any | null, recipientCount: number }> } };
 
 export type CreateHostMutationVariables = Exact<{
   input: CreateHostInput;
@@ -5504,6 +5523,12 @@ export const GetMyEventsForSelectorDocument = gql`
     city
     slug
     status
+    tickets {
+      ticketCapacity
+      ticketSold
+      ticketPrice
+      ticketVisible
+    }
   }
 }
     `;
@@ -5753,8 +5778,8 @@ export const GetHostDocument = gql`
 }
     ${AddressInfoFragmentDoc}`;
 export const GetHostDashboardSummaryDocument = gql`
-    query getHostDashboardSummary {
-  getHostDashboardSummary {
+    query getHostDashboardSummary($input: HostDashboardSummaryInput) {
+  getHostDashboardSummary(input: $input) {
     upcomingEventsCount
     publishedEventsCount
     draftEventsCount
@@ -5773,6 +5798,7 @@ export const GetHostDashboardSummaryDocument = gql`
       label
       sales
       tickets
+      orderCount
     }
     salesBySource {
       label
