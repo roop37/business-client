@@ -253,8 +253,43 @@ Object.assign(sdk, {
           ticketsSoldToday
           salesLast30Days
           ticketsSoldLast30Days
+          orderCountLast30Days
+          averageOrderValueLast30Days
           pendingSettlementsCount
           paidOutLifetime
+          marketingSubscribersCount
+          lifetimeCampaignMessagesSent
+          salesSeries {
+            date
+            label
+            sales
+            tickets
+          }
+          salesBySource {
+            label
+            amount
+            count
+            percent
+          }
+          ticketMix {
+            label
+            amount
+            count
+            percent
+          }
+          topItems {
+            label
+            amount
+            count
+            percent
+          }
+          upcomingCampaigns {
+            id
+            name
+            status
+            scheduledFor
+            recipientCount
+          }
         }
       }
     `),
