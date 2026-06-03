@@ -5108,314 +5108,323 @@ const EventJourney = ({
                 })()}
 
                 {(() => {
-                const aiOptionIds = new Set(
-                  (aiBoostGeneration?.offers ?? []).map(
-                    (o) => `${AI_OFFER_PREFIX}${o.offerCode}`,
-                  ),
-                );
-                const legacyOptions = pricingOptions.filter(
-                  (p) => !aiOptionIds.has(p.optionId),
-                );
-                // Basic = the legacy option with no upfront fee (typically
-                // "Zero Upfront"). Falls back to the first legacy option so
-                // there is always exactly one "basic" card to anchor the
-                // selection.
-                const basicOption =
-                  legacyOptions.find((o) => (o.upfrontFee ?? 0) === 0) ??
-                  legacyOptions[0] ??
-                  null;
+                  const aiOptionIds = new Set(
+                    (aiBoostGeneration?.offers ?? []).map(
+                      (o) => `${AI_OFFER_PREFIX}${o.offerCode}`,
+                    ),
+                  );
+                  const legacyOptions = pricingOptions.filter(
+                    (p) => !aiOptionIds.has(p.optionId),
+                  );
+                  // Basic = the legacy option with no upfront fee (typically
+                  // "Zero Upfront"). Falls back to the first legacy option so
+                  // there is always exactly one "basic" card to anchor the
+                  // selection.
+                  const basicOption =
+                    legacyOptions.find((o) => (o.upfrontFee ?? 0) === 0) ??
+                    legacyOptions[0] ??
+                    null;
 
-                const aiCards = (aiBoostGeneration?.offers ?? [])
-                  .map((boost) => {
-                    const optionId = `${AI_OFFER_PREFIX}${boost.offerCode}`;
-                    const option = pricingOptions.find(
-                      (o) => o.optionId === optionId,
+                  const aiCards = (aiBoostGeneration?.offers ?? [])
+                    .map((boost) => {
+                      const optionId = `${AI_OFFER_PREFIX}${boost.offerCode}`;
+                      const option = pricingOptions.find(
+                        (o) => o.optionId === optionId,
+                      );
+                      if (!option) return null;
+                      return { boost, option };
+                    })
+                    .filter(
+                      (
+                        entry,
+                      ): entry is {
+                        boost: NonNullable<
+                          typeof aiBoostGeneration
+                        >["offers"][number];
+                        option: PricingOption;
+                      } => entry !== null,
+                    )
+                    // Order: largest absolute savings first, then marketing /
+                    // commission benefit as a tie-breaker. The first smart card
+                    // is also the recommended one.
+                    .sort((a, b) =>
+                      compareAiBoostBenefit(a.boost, b.boost),
                     );
-                    if (!option) return null;
-                    return { boost, option };
-                  })
-                  .filter(
-                    (
-                      entry,
-                    ): entry is {
-                      boost: NonNullable<
-                        typeof aiBoostGeneration
-                      >["offers"][number];
-                      option: PricingOption;
-                    } => entry !== null,
-                  )
-                  // Order: largest absolute savings first, then marketing /
-                  // commission benefit as a tie-breaker. The first smart card
-                  // is also the recommended one.
-                  .sort((a, b) =>
-                    compareAiBoostBenefit(a.boost, b.boost),
-                  );
-                const recommendedOfferCode = aiCards[0]?.boost.offerCode ?? "";
+                  const recommendedOfferCode =
+                    aiCards[0]?.boost.offerCode ?? "";
 
-                if (!pricingOptions.length) {
+                  if (!pricingOptions.length) {
+                    return (
+                      <div className="mt-5 rounded-lg border border-[var(--owner-border)] bg-[var(--owner-bg)] p-4 text-sm text-[var(--owner-fg-3)]">
+                        No offers calculated yet. Close this modal and reopen it
+                        after saving the last step.
+                      </div>
+                    );
+                  }
+
                   return (
-                    <div className="mt-5 rounded-lg border border-[var(--owner-border)] bg-[var(--owner-bg)] p-4 text-sm text-[var(--owner-fg-3)]">
-                      No offers calculated yet. Close this modal and reopen it
-                      after saving the last step.
-                    </div>
-                  );
-                }
-
-                return (
-                  <div className="-mx-6 mt-5 overflow-x-auto px-6 pb-1">
-                    <div className="flex min-w-min items-stretch gap-4">
-                    {basicOption ? (
-                      <button
-                        key={basicOption.optionId}
-                        type="button"
-                        onClick={() =>
-                          setSelectedPricingOptionId(basicOption.optionId)
-                        }
-                        className={`flex min-h-[540px] w-[300px] shrink-0 self-stretch flex-col gap-3 rounded-2xl border p-4 text-left transition ${
-                          selectedPricingOptionId === basicOption.optionId
-                            ? "border-[var(--owner-blue-500)] bg-[var(--owner-blue-050)] shadow-sm"
-                            : "border-[var(--owner-border)] bg-[var(--owner-bg)] hover:border-[var(--owner-blue-400)]"
-                        }`}
-                      >
-                        <div className="flex items-start justify-between gap-2">
-                          <div className="min-w-0">
-                            <h3 className="text-sm font-semibold text-[var(--owner-fg-1)]">
-                              Basic Hoizr commission
-                            </h3>
-                            <span className="mt-1.5 inline-flex items-center gap-1 rounded-full bg-[var(--owner-bg-subtle)] px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-[var(--owner-fg-2)]">
-                              Default
-                            </span>
-                          </div>
-                          {selectedPricingOptionId === basicOption.optionId ? (
-                            <CheckCircle2Icon
-                              size={18}
-                              className="shrink-0 text-[var(--owner-blue-500)]"
-                            />
-                          ) : null}
-                        </div>
-
-                        <div>
-                          <div className="text-[10px] font-semibold uppercase tracking-[0.1em] text-[var(--owner-fg-4)]">
-                            Commission
-                          </div>
-                          <div className="mt-0.5 flex items-baseline gap-2">
-                            <span className="text-3xl font-bold tabular-nums text-[var(--owner-fg-1)]">
-                              {Number(basicOption.commissionRate).toFixed(2)}%
-                            </span>
-                          </div>
-                        </div>
-
-                        <div className="grid grid-cols-2 gap-2 rounded-xl border border-[var(--owner-border-soft)] bg-[var(--owner-bg-subtle)] p-3">
-                          <div>
-                            <div className="text-[10px] font-semibold uppercase tracking-[0.1em] text-[var(--owner-fg-4)]">
-                              Upfront amount
-                            </div>
-                            <div className="mt-0.5 text-sm font-semibold tabular-nums text-[var(--owner-fg-1)]">
-                              {(basicOption.upfrontFee ?? 0) > 0
-                                ? formatIndianRupees(basicOption.upfrontFee)
-                                : "No upfront"}
-                            </div>
-                          </div>
-                          <div>
-                            <div className="text-[10px] font-semibold uppercase tracking-[0.1em] text-[var(--owner-fg-4)]">
-                              Savings
-                            </div>
-                            <div className="mt-0.5 text-sm font-semibold tabular-nums text-[var(--owner-fg-3)]">
-                              Standard
-                            </div>
-                          </div>
-                        </div>
-
-                        <p className="text-xs leading-relaxed text-[var(--owner-fg-3)]">
-                          Publish at the standard Hoizr commission. No
-                          performance-based upfront amount is attached.
-                        </p>
-                      </button>
-                    ) : null}
-
-                    {aiCards.map(({ boost, option }) => {
-                      const selected =
-                        selectedPricingOptionId === option.optionId;
-                      const recommended = recommendedOfferCode === boost.offerCode;
-                      const delta =
-                        boost.howMuchDifferentFromBasicOffer?.deltaPct ?? 0;
-                      const savings = boost.totalSavingsForHosts?.value ?? 0;
-                      const marketingCredit = Math.max(
-                        0,
-                        Number(boost.marketingCreditAmount ?? 0),
-                      );
-                      const creditDiscount = Math.max(
-                        0,
-                        Number(boost.marketingCreditDiscountPct ?? 0),
-                      );
-                      const message =
-                        boost.customerViewingMessage || boost.shortReason;
-                      return (
-                        <button
-                          key={option.optionId}
-                          type="button"
-                          onClick={() =>
-                            setSelectedPricingOptionId(option.optionId)
-                          }
-                          className={`flex min-h-[540px] w-[300px] shrink-0 self-stretch flex-col gap-3 rounded-2xl border p-4 text-left transition ${
-                            selected
-                              ? "border-[var(--owner-blue-500)] bg-[var(--owner-blue-050)] shadow-sm"
-                              : "border-[var(--owner-border)] bg-[var(--owner-bg)] hover:border-[var(--owner-blue-400)]"
-                          }`}
-                        >
-                          <div className="flex items-start justify-between gap-2">
-                            <div className="min-w-0">
-                              <h3 className="text-sm font-semibold text-[var(--owner-fg-1)]">
-                                {boost.label}
-                              </h3>
-                              {recommended ? (
-                                <span className="mt-1.5 inline-flex items-center gap-1 rounded-full bg-[var(--owner-accent-acid)] px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-[var(--owner-fg-1)]">
-                                  <SparklesIcon size={10} />
-                                  Recommended
+                    <div className="-mx-6 mt-5 overflow-x-auto px-6 pb-1">
+                      <div className="flex min-w-min items-stretch gap-4">
+                        {basicOption ? (
+                          <button
+                            key={basicOption.optionId}
+                            type="button"
+                            onClick={() =>
+                              setSelectedPricingOptionId(basicOption.optionId)
+                            }
+                            className={`flex min-h-[540px] w-[300px] shrink-0 self-stretch flex-col gap-3 rounded-2xl border p-4 text-left transition ${
+                              selectedPricingOptionId === basicOption.optionId
+                                ? "border-[var(--owner-blue-500)] bg-[var(--owner-blue-050)] shadow-sm"
+                                : "border-[var(--owner-border)] bg-[var(--owner-bg)] hover:border-[var(--owner-blue-400)]"
+                            }`}
+                          >
+                            <div className="flex items-start justify-between gap-2">
+                              <div className="min-w-0">
+                                <h3 className="text-sm font-semibold text-[var(--owner-fg-1)]">
+                                  Basic Hoizr commission
+                                </h3>
+                                <span className="mt-1.5 inline-flex items-center gap-1 rounded-full bg-[var(--owner-bg-subtle)] px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-[var(--owner-fg-2)]">
+                                  Default
                                 </span>
+                              </div>
+                              {selectedPricingOptionId === basicOption.optionId ? (
+                                <CheckCircle2Icon
+                                  size={18}
+                                  className="shrink-0 text-[var(--owner-blue-500)]"
+                                />
                               ) : null}
                             </div>
-                            {selected ? (
-                              <CheckCircle2Icon
-                                size={18}
-                                className="shrink-0 text-[var(--owner-blue-500)]"
-                              />
-                            ) : null}
-                          </div>
 
-                          <div>
-                            <div className="text-[10px] font-semibold uppercase tracking-[0.1em] text-[var(--owner-fg-4)]">
-                              Commission
-                            </div>
-                            <div className="mt-0.5 flex items-baseline gap-2">
-                              <span className="text-3xl font-bold tabular-nums text-[var(--owner-blue-500)]">
-                                {boost.commissionPct.toFixed(2)}%
-                              </span>
-                            </div>
-                            {delta > 0 ? (
-                              <div className="mt-1 inline-flex items-center gap-1 rounded-full bg-[var(--owner-blue-050)] px-2 py-0.5 text-[11px] font-semibold text-[var(--owner-blue-500)]">
-                                {delta.toFixed(2)}% below basic
-                              </div>
-                            ) : null}
-                          </div>
-
-                          <div className="grid grid-cols-2 gap-2 rounded-xl border border-[var(--owner-border-soft)] bg-[var(--owner-bg-subtle)] p-3">
-                            <div
-                              className={
-                                boost.extraAmount > 0
-                                  ? "rounded-lg border border-amber-200 bg-amber-50 px-2 py-1.5"
-                                  : ""
-                              }
-                            >
-                              <div className="text-[10px] font-semibold uppercase tracking-[0.1em] text-[var(--owner-fg-4)]">
-                                Upfront amount
-                              </div>
-                              <div className="mt-0.5 text-sm font-semibold tabular-nums text-[var(--owner-fg-1)]">
-                                {boost.extraAmount > 0
-                                  ? formatIndianRupees(boost.extraAmount)
-                                  : "No upfront"}
-                              </div>
-                            </div>
                             <div>
                               <div className="text-[10px] font-semibold uppercase tracking-[0.1em] text-[var(--owner-fg-4)]">
-                                Savings
+                                Commission
                               </div>
-                              <div
-                                className={`mt-0.5 text-sm font-semibold tabular-nums ${
-                                  savings > 0
-                                    ? "text-[var(--owner-success-text)]"
-                                    : savings < 0
-                                      ? "text-[var(--owner-fg-1)]"
-                                      : "text-[var(--owner-fg-3)]"
-                                }`}
-                              >
-                                {savings > 0
-                                  ? `You save ${formatIndianRupees(savings)}`
-                                  : "Standard"}
+                              <div className="mt-0.5 flex items-baseline gap-2">
+                                <span className="text-3xl font-bold tabular-nums text-[var(--owner-fg-1)]">
+                                  {`${Number(
+                                    basicOption.commissionRate,
+                                  ).toFixed(2)}%`}
+                                </span>
                               </div>
                             </div>
-                          </div>
 
-                          {boost.extraAmount > 0
-                            ? (() => {
-                                // Sell-through gate disclosure. INCL_TO_EXCL flips
-                                // the event to exclusive on selection so it uses
-                                // the EXCLUSIVE threshold (60%); plain exclusive
-                                // events are 60% too. Non-exclusive bar is 40%
-                                // because the host can't drive rival-platform
-                                // sales. Defaults match the config fallbacks in
-                                // offer-context.service.ts.
-                                const flipsToExcl =
-                                  boost.offerCode === "INCL_TO_EXCL_OFFER";
-                                const effectivelyExclusive =
-                                  flipsToExcl || eventType === "EXCLUSIVE";
-                                const thresholdPct = effectivelyExclusive
-                                  ? 60
-                                  : 40;
-                                return (
-                                  <div className="rounded-lg border border-amber-200 bg-amber-50 p-2.5">
-                                    <div className="flex items-start gap-1.5">
-                                      <span
-                                        aria-hidden
-                                        className="mt-0.5 text-amber-700"
-                                      >
-                                        ⓵
-                                      </span>
-                                      <div className="text-[11px] leading-relaxed text-amber-900">
-                                        <span className="font-semibold">
-                                          Upfront charged only if you sell{" "}
-                                          {thresholdPct}%+ of paid-ticket
-                                          capacity.
-                                        </span>{" "}
-                                        Below that, the upfront is waived (or
-                                        refunded if pre-paid) and your offer
-                                        commission (
-                                        {boost.commissionPct.toFixed(2)}%) still
-                                        applies. Choose how you&apos;d like to
-                                        handle it below.
-                                      </div>
-                                    </div>
-                                  </div>
-                                );
-                              })()
-                            : null}
-
-                          {marketingCredit > 0 || creditDiscount > 0 ? (
-                            <div className="flex flex-wrap gap-1.5">
-                              {marketingCredit > 0 ? (
-                                <span className="rounded-full bg-emerald-50 px-2 py-0.5 text-[11px] font-semibold text-emerald-700">
-                                  Includes {formatIndianRupees(marketingCredit)}{" "}
-                                  marketing credit
-                                </span>
-                              ) : null}
-                              {creditDiscount > 0 ? (
-                                <span className="rounded-full bg-[var(--owner-blue-050)] px-2 py-0.5 text-[11px] font-semibold text-[var(--owner-blue-600,var(--owner-blue-500))]">
-                                  {creditDiscount.toFixed(0)}% marketing-credit
-                                  discount
-                                </span>
-                              ) : null}
+                            <div className="grid grid-cols-2 gap-2 rounded-xl border border-[var(--owner-border-soft)] bg-[var(--owner-bg-subtle)] p-3">
+                              <div>
+                                <div className="text-[10px] font-semibold uppercase tracking-[0.1em] text-[var(--owner-fg-4)]">
+                                  Upfront amount
+                                </div>
+                                <div className="mt-0.5 text-sm font-semibold tabular-nums text-[var(--owner-fg-1)]">
+                                  {(basicOption.upfrontFee ?? 0) > 0
+                                    ? formatIndianRupees(
+                                        basicOption.upfrontFee,
+                                      )
+                                    : "No upfront"}
+                                </div>
+                              </div>
+                              <div>
+                                <div className="text-[10px] font-semibold uppercase tracking-[0.1em] text-[var(--owner-fg-4)]">
+                                  Savings
+                                </div>
+                                <div className="mt-0.5 text-sm font-semibold tabular-nums text-[var(--owner-fg-3)]">
+                                  Standard
+                                </div>
+                              </div>
                             </div>
-                          ) : null}
 
-                          {boost.offerCode === "INCL_TO_EXCL_OFFER" ? (
-                            <p className="rounded-lg border border-[var(--owner-border-soft)] bg-[var(--owner-bg-subtle)] p-2 text-[11px] leading-relaxed text-[var(--owner-fg-3)]">
-                              Selecting this converts the event to exclusive on
-                              Hoizr.
-                            </p>
-                          ) : null}
-
-                          {message ? (
                             <p className="text-xs leading-relaxed text-[var(--owner-fg-3)]">
-                              {message}
+                              Publish at the standard Hoizr commission. No
+                              performance-based upfront amount is attached.
                             </p>
-                          ) : null}
-                        </button>
-                      );
-                    })}
+                          </button>
+                        ) : null}
+
+                        {aiCards.map(({ boost, option }) => {
+                          const selected =
+                            selectedPricingOptionId === option.optionId;
+                          const recommended =
+                            recommendedOfferCode === boost.offerCode;
+                          const delta =
+                            boost.howMuchDifferentFromBasicOffer?.deltaPct ?? 0;
+                          const savings =
+                            boost.totalSavingsForHosts?.value ?? 0;
+                          const marketingCredit = Math.max(
+                            0,
+                            Number(boost.marketingCreditAmount ?? 0),
+                          );
+                          const creditDiscount = Math.max(
+                            0,
+                            Number(boost.marketingCreditDiscountPct ?? 0),
+                          );
+                          const message =
+                            boost.customerViewingMessage || boost.shortReason;
+
+                          return (
+                            <button
+                              key={option.optionId}
+                              type="button"
+                              onClick={() =>
+                                setSelectedPricingOptionId(option.optionId)
+                              }
+                              className={`flex min-h-[540px] w-[300px] shrink-0 self-stretch flex-col gap-3 rounded-2xl border p-4 text-left transition ${
+                                selected
+                                  ? "border-[var(--owner-blue-500)] bg-[var(--owner-blue-050)] shadow-sm"
+                                  : "border-[var(--owner-border)] bg-[var(--owner-bg)] hover:border-[var(--owner-blue-400)]"
+                              }`}
+                            >
+                              <div className="flex items-start justify-between gap-2">
+                                <div className="min-w-0">
+                                  <h3 className="text-sm font-semibold text-[var(--owner-fg-1)]">
+                                    {boost.label}
+                                  </h3>
+                                  {recommended ? (
+                                    <span className="mt-1.5 inline-flex items-center gap-1 rounded-full bg-[var(--owner-accent-acid)] px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-[var(--owner-fg-1)]">
+                                      <SparklesIcon size={10} />
+                                      Recommended
+                                    </span>
+                                  ) : null}
+                                </div>
+                                {selected ? (
+                                  <CheckCircle2Icon
+                                    size={18}
+                                    className="shrink-0 text-[var(--owner-blue-500)]"
+                                  />
+                                ) : null}
+                              </div>
+
+                              <div>
+                                <div className="text-[10px] font-semibold uppercase tracking-[0.1em] text-[var(--owner-fg-4)]">
+                                  Commission
+                                </div>
+                                <div className="mt-0.5 flex items-baseline gap-2">
+                                  <span className="text-3xl font-bold tabular-nums text-[var(--owner-blue-500)]">
+                                    {boost.commissionPct.toFixed(2)}%
+                                  </span>
+                                </div>
+                                {delta > 0 ? (
+                                  <div className="mt-1 inline-flex items-center gap-1 rounded-full bg-[var(--owner-blue-050)] px-2 py-0.5 text-[11px] font-semibold text-[var(--owner-blue-500)]">
+                                    {delta.toFixed(2)}% below basic
+                                  </div>
+                                ) : null}
+                              </div>
+
+                              <div className="grid grid-cols-2 gap-2 rounded-xl border border-[var(--owner-border-soft)] bg-[var(--owner-bg-subtle)] p-3">
+                                <div
+                                  className={
+                                    boost.extraAmount > 0
+                                      ? "rounded-lg border border-amber-200 bg-amber-50 px-2 py-1.5"
+                                      : ""
+                                  }
+                                >
+                                  <div className="text-[10px] font-semibold uppercase tracking-[0.1em] text-[var(--owner-fg-4)]">
+                                    Upfront amount
+                                  </div>
+                                  <div className="mt-0.5 text-sm font-semibold tabular-nums text-[var(--owner-fg-1)]">
+                                    {boost.extraAmount > 0
+                                      ? formatIndianRupees(boost.extraAmount)
+                                      : "No upfront"}
+                                  </div>
+                                </div>
+                                <div>
+                                  <div className="text-[10px] font-semibold uppercase tracking-[0.1em] text-[var(--owner-fg-4)]">
+                                    Savings
+                                  </div>
+                                  <div
+                                    className={`mt-0.5 text-sm font-semibold tabular-nums ${
+                                      savings > 0
+                                        ? "text-[var(--owner-success-text)]"
+                                        : savings < 0
+                                          ? "text-[var(--owner-fg-1)]"
+                                          : "text-[var(--owner-fg-3)]"
+                                    }`}
+                                  >
+                                    {savings > 0
+                                      ? `You save ${formatIndianRupees(savings)}`
+                                      : "Standard"}
+                                  </div>
+                                </div>
+                              </div>
+
+                              {boost.extraAmount > 0
+                                ? (() => {
+                                    // Sell-through gate disclosure. INCL_TO_EXCL flips
+                                    // the event to exclusive on selection so it uses
+                                    // the EXCLUSIVE threshold (60%); plain exclusive
+                                    // events are 60% too. Non-exclusive bar is 40%
+                                    // because the host can't drive rival-platform
+                                    // sales. Defaults match the config fallbacks in
+                                    // offer-context.service.ts.
+                                    const flipsToExcl =
+                                      boost.offerCode === "INCL_TO_EXCL_OFFER";
+                                    const effectivelyExclusive =
+                                      flipsToExcl || eventType === "EXCLUSIVE";
+                                    const thresholdPct = effectivelyExclusive
+                                      ? 60
+                                      : 40;
+                                    return (
+                                      <div className="rounded-lg border border-amber-200 bg-amber-50 p-2.5">
+                                        <div className="flex items-start gap-1.5">
+                                          <span
+                                            aria-hidden
+                                            className="mt-0.5 text-amber-700"
+                                          >
+                                            ⓵
+                                          </span>
+                                          <div className="text-[11px] leading-relaxed text-amber-900">
+                                            <span className="font-semibold">
+                                              Upfront charged only if you sell{" "}
+                                              {thresholdPct}%+ of paid-ticket
+                                              capacity.
+                                            </span>{" "}
+                                            Below that, the upfront is waived
+                                            (or refunded if pre-paid) and your
+                                            offer commission (
+                                            {boost.commissionPct.toFixed(2)}%)
+                                            still applies. Choose how you&apos;d
+                                            like to handle it below.
+                                          </div>
+                                        </div>
+                                      </div>
+                                    );
+                                  })()
+                                : null}
+
+                              {marketingCredit > 0 || creditDiscount > 0 ? (
+                                <div className="flex flex-wrap gap-1.5">
+                                  {marketingCredit > 0 ? (
+                                    <span className="rounded-full bg-emerald-50 px-2 py-0.5 text-[11px] font-semibold text-emerald-700">
+                                      Includes{" "}
+                                      {formatIndianRupees(marketingCredit)}{" "}
+                                      marketing credit
+                                    </span>
+                                  ) : null}
+                                  {creditDiscount > 0 ? (
+                                    <span className="rounded-full bg-[var(--owner-blue-050)] px-2 py-0.5 text-[11px] font-semibold text-[var(--owner-blue-600,var(--owner-blue-500))]">
+                                      {creditDiscount.toFixed(0)}%
+                                      marketing-credit discount
+                                    </span>
+                                  ) : null}
+                                </div>
+                              ) : null}
+
+                              {boost.offerCode === "INCL_TO_EXCL_OFFER" ? (
+                                <p className="rounded-lg border border-[var(--owner-border-soft)] bg-[var(--owner-bg-subtle)] p-2 text-[11px] leading-relaxed text-[var(--owner-fg-3)]">
+                                  Selecting this converts the event to exclusive
+                                  on Hoizr.
+                                </p>
+                              ) : null}
+
+                              {message ? (
+                                <p className="text-xs leading-relaxed text-[var(--owner-fg-3)]">
+                                  {message}
+                                </p>
+                              ) : null}
+                            </button>
+                          );
+                        })}
+                      </div>
                     </div>
-                  </div>
-                );
-              })()}
+                  );
+                })()}
               </div>
 
               {pricingOptions.length > 0 ? (
