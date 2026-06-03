@@ -7,6 +7,7 @@ import {
 import MainLayout from "@/components/layouts/mainBodyLayout";
 import Loader from "@/components/loader";
 import { useHostTypeLabel } from "@/hooks/useHostTypeLabel";
+import { HoizrVenueType, formatHoizrVenueType } from "@/lib/hoizrConstants";
 import { PermissionTypeEnum } from "@/generated/graphql";
 import useGlobalStore from "@/store/global";
 import useUserStore from "@/store/user";
@@ -384,8 +385,8 @@ const HostSettings: React.FC & {
         </Card>
       ) : null}
 
-      <div className="grid gap-8 lg:grid-cols-[240px_minmax(0,1fr)]">
-        <nav className="flex h-fit flex-col gap-1.5">
+      <div className="flex flex-col gap-5">
+        <nav className="flex flex-wrap gap-1.5 rounded-owner-md border border-owner-border-soft bg-owner-bg-subtle p-1">
           {settingsTabs.map((tab) => {
             const active = activeTab === tab.value;
             return (
@@ -393,10 +394,10 @@ const HostSettings: React.FC & {
                 key={tab.value}
                 type="button"
                 onClick={() => setActiveTab(tab.value)}
-                className={`rounded-owner-md px-5 py-4 text-left text-[14px] font-semibold transition ${
+                className={`rounded-owner-sm px-3.5 py-2 text-[13px] font-semibold transition ${
                   active
-                    ? "bg-owner-blue-050 text-owner-blue-500 shadow-owner-sm"
-                    : "text-owner-fg-2 hover:bg-owner-bg-subtle hover:text-owner-fg-1"
+                    ? "bg-owner-bg text-owner-blue-500 shadow-owner-sm"
+                    : "text-owner-fg-3 hover:text-owner-fg-1"
                 }`}
               >
                 {tab.label}
@@ -489,12 +490,19 @@ const HostSettings: React.FC & {
                     onChange={(value) => setField("websiteUrl", value)}
                     disabled={!canUpdateHost}
                   />
-                  <TextField
-                    label="Venue type"
-                    value={form.venueType}
-                    onChange={(value) => setField("venueType", value)}
-                    disabled={!canUpdateHost}
-                  />
+                  {hostLabel.noun === "Venue" ? (
+                    <SelectField
+                      label="Venue type"
+                      value={form.venueType}
+                      onChange={(value) => setField("venueType", value)}
+                      disabled={!canUpdateHost}
+                      options={Object.values(HoizrVenueType).map((value) => ({
+                        value,
+                        label: formatHoizrVenueType(value),
+                      }))}
+                      placeholder="Select venue type"
+                    />
+                  ) : null}
                   <TextareaField
                     label="About"
                     value={form.description}
@@ -775,15 +783,15 @@ const SettingsPanel = ({
   footer?: React.ReactNode;
 }) => (
   <Card padding={0}>
-    <div className="border-b border-owner-border-soft px-8 py-7">
-      <h2 className="text-[20px] font-semibold leading-tight text-owner-fg-1">
+    <div className="border-b border-owner-border-soft px-6 py-5">
+      <h2 className="text-[17px] font-semibold leading-tight text-owner-fg-1">
         {title}
       </h2>
-      <p className="mt-2 text-[14px] leading-6 text-owner-fg-4">{subtitle}</p>
+      <p className="mt-1 text-[13px] leading-5 text-owner-fg-4">{subtitle}</p>
     </div>
-    <div className="px-8 py-8">{children}</div>
+    <div className="px-6 py-6">{children}</div>
     {footer ? (
-      <div className="border-t border-owner-border-soft px-8 py-5">{footer}</div>
+      <div className="border-t border-owner-border-soft px-6 py-4">{footer}</div>
     ) : null}
   </Card>
 );
@@ -812,6 +820,41 @@ const TextField = ({
       onChange={(event) => onChange(event.target.value)}
       className={fieldClassName}
     />
+  </label>
+);
+
+const SelectField = ({
+  label,
+  value,
+  onChange,
+  options,
+  disabled,
+  className = "",
+  placeholder = "Select an option",
+}: {
+  label: string;
+  value: string;
+  onChange: (value: string) => void;
+  options: Array<{ value: string; label: string }>;
+  disabled?: boolean;
+  className?: string;
+  placeholder?: string;
+}) => (
+  <label className={`block min-w-0 ${className}`}>
+    <span className="text-[13px] font-medium text-owner-fg-2">{label}</span>
+    <select
+      value={value}
+      disabled={disabled}
+      onChange={(event) => onChange(event.target.value)}
+      className={fieldClassName}
+    >
+      <option value="">{placeholder}</option>
+      {options.map((option) => (
+        <option key={option.value} value={option.value}>
+          {option.label}
+        </option>
+      ))}
+    </select>
   </label>
 );
 
