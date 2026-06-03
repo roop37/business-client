@@ -5,7 +5,7 @@ import { ButtonType } from "@/components/common/button/interface";
 import ReusableModal from "@/components/common/modal/modal";
 import AddPayoutModal from "@/components/modules/payment/host-payouts/addPayoutModal";
 import useGlobalStore from "@/store/global";
-import { Clock3, FileText, Megaphone } from "lucide-react";
+import { Clock3, FileText, Mail, Megaphone, MessageCircle } from "lucide-react";
 
 /**
  * Global "you need a payout profile" prompt + the AddPayoutModal it
@@ -37,15 +37,15 @@ const PayoutModals = () => {
       <ReusableModal
         isOpen={payoutPromptModal}
         onClose={() => showPayoutPromptModal(false)}
-        title="Verified payout required to publish"
+        title="Add a payout account to continue"
         width="md"
       >
         <div className="space-y-4 text-[#171614]">
           <p className="text-sm leading-6 text-[#6f6255]">
-            Paid events need a primary payout account verified by our team.
-            You can keep building this event and save it as a draft — once
-            we verify your payout (usually within 1 to 4 hours), the event
-            becomes publishable so customers can start buying tickets.
+            Paid events need at least one payout account before you continue
+            setup or publish. You can add the details now and keep building
+            the event; our team only needs to verify the payout before you
+            publish.
           </p>
           <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
             <CButton
@@ -93,7 +93,7 @@ const PayoutModals = () => {
       <ReusableModal
         isOpen={payoutPendingVerificationModal}
         onClose={() => showPayoutPendingVerificationModal(false)}
-        title="Payout being verified"
+        title="Payout verification required to publish"
         width="md"
       >
         <div className="space-y-4 text-[#171614]">
@@ -102,9 +102,10 @@ const PayoutModals = () => {
               <Clock3 size={18} />
             </span>
             <p className="text-sm leading-6 text-[#3d3328]">
-              Our team verifies new payout profiles within 1 to 4 hours. Your
-              event is safely saved as a draft and you can keep editing it.
-              The moment your payout clears, the event becomes publishable.
+              This payout is not verified yet. New payout profiles are usually
+              reviewed within 1 to 4 hours. Your event can stay in draft and
+              you can keep editing it, but paid events cannot publish until the
+              primary payout is verified.
             </p>
           </div>
           <p className="text-sm leading-6 text-[#6f6255]">
@@ -169,21 +170,45 @@ const PayoutModals = () => {
               <Clock3 size={18} />
             </span>
             <p className="text-sm leading-6 text-[#3d3328]">
-              Your business account is still being verified by our team. You can build and save campaigns now —
-              we&apos;ll publish them automatically the moment verification clears (usually within 1 to 4 hours).
+              Your business account is still being verified by our internal
+              admin team. You can keep building drafts, but publishing is
+              blocked until verification clears.
             </p>
           </div>
           <p className="text-sm leading-6 text-[#6f6255]">
-            In the meantime, draft your next campaign, polish your event listing, or finish your team setup.
+            Need it resolved quickly? Contact us and we&apos;ll check the review
+            queue for your account.
           </p>
-          <div className="flex justify-end">
+          <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
             <CButton
-              variant={ButtonType.Primary}
+              variant={ButtonType.Secondary}
               type="button"
               onClick={() => showHostUnderReviewModal(false)}
             >
               Got it
             </CButton>
+            <a
+              href="mailto:contact@hoizr.com?subject=Host%20verification%20review"
+              onClick={() => showHostUnderReviewModal(false)}
+              className="inline-flex min-h-10 items-center justify-center rounded-md border border-[#d9d2c4] px-4 py-2 text-sm font-semibold text-[#171614] transition hover:bg-[#f7f2e9]"
+            >
+              <span className="inline-flex items-center gap-2">
+                <Mail size={14} />
+                Email support
+              </span>
+            </a>
+            <a
+              href="https://wa.me/918910385523?text=Hi%20Hoizr%2C%20please%20help%20with%20my%20host%20verification."
+              target="_blank"
+              rel="noreferrer"
+              onClick={() => showHostUnderReviewModal(false)}
+              className="inline-flex min-h-10 items-center justify-center rounded-md bg-[var(--owner-blue-500)] px-4 py-2 text-sm font-semibold text-[var(--owner-bg)] transition hover:opacity-90"
+            >
+              <span className="inline-flex items-center gap-2">
+                <MessageCircle size={14} />
+                WhatsApp
+              </span>
+            </a>
           </div>
         </div>
       </ReusableModal>

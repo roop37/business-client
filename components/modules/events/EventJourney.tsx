@@ -21,7 +21,7 @@ import {
 import { sdk } from "@/utils/graphqlClient";
 import { extractErrorMessage } from "@/utils/utilFUncs";
 import {
-  hasPendingPrimaryPayout,
+  hasAnyPayoutAccount,
   hasVerifiedPrimaryPayout,
 } from "@/utils/payout-eligibility";
 
@@ -50,6 +50,29 @@ const formatIndianRupees = (n: number): string => {
   if (!Number.isFinite(n) || n <= 0) return "₹0";
   // Approximate Indian-format grouping (lakhs/crores) using locale.
   return `₹${Math.round(n).toLocaleString("en-IN")}`;
+};
+
+const aiBoostSavingsValue = (boost: AiBoostCard) =>
+  Math.max(0, Number(boost.totalSavingsForHosts?.value ?? 0));
+
+const aiBoostFallbackBenefitValue = (boost: AiBoostCard) =>
+  Math.max(0, Number(boost.marketingCreditAmount ?? 0)) +
+  Math.max(0, Number(boost.marketingCreditDiscountPct ?? 0)) * 100 +
+  Math.max(0, Number(boost.howMuchDifferentFromBasicOffer?.deltaPct ?? 0)) *
+    1000;
+
+const compareAiBoostBenefit = (a: AiBoostCard, b: AiBoostCard) => {
+  const savingsDelta = aiBoostSavingsValue(b) - aiBoostSavingsValue(a);
+  if (savingsDelta !== 0) return savingsDelta;
+  return aiBoostFallbackBenefitValue(b) - aiBoostFallbackBenefitValue(a);
+};
+
+const isHostVerificationBlockMessage = (message: string) => {
+  const normalized = message.toLowerCase();
+  return (
+    normalized.includes("host account") &&
+    normalized.includes("verified")
+  );
 };
 import {
   CalendarDaysIcon,
@@ -277,8 +300,29 @@ const eventTypeCards: {
   },
 ];
 
-const flyerTargetWidth = 1200;
-const flyerTargetHeight = 1500;
+const flyerCropTargets = {
+  event: {
+    width: 1200,
+    height: 1500,
+    title: "Crop event flyer",
+    description:
+      "Fixed 4:5 crop. Drag on the image to position the crop and use zoom to adjust the selected area.",
+    uploadKind: "event-flyer" as const,
+    fileName: "event-flyer.jpg",
+    successMessage: "Event flyer uploaded",
+  },
+  horizontal: {
+    width: 1600,
+    height: 900,
+    title: "Crop horizontal flyer",
+    description:
+      "Fixed 16:9 crop. Drag on the image to position the crop and use zoom to adjust the selected area.",
+    uploadKind: "event-horizontal-flyer" as const,
+    fileName: "horizontal-flyer.jpg",
+    successMessage: "Horizontal flyer uploaded",
+  },
+};
+type FlyerCropMode = keyof typeof flyerCropTargets;
 const flyerMaxFileSizeBytes = 5 * 1024 * 1024;
 const flyerCropScaleFromPercent = (zoomPercent: number) => 1 + zoomPercent / 50;
 
@@ -385,6 +429,7 @@ const EventJourney = ({
     setToastData,
     showPayoutPromptModal,
     showPayoutPendingVerificationModal,
+    showHostUnderReviewModal,
     setPayoutModalSaveDraftHandler,
   } = useGlobalStore();
   const { selectedHostId } = useHostsStore();
@@ -412,6 +457,8 @@ const EventJourney = ({
   const [flyerPreview, setFlyerPreview] = useState("");
   const [flyerFile, setFlyerFile] = useState<File | null>(null);
   const [flyerCropOpen, setFlyerCropOpen] = useState(false);
+  const [flyerCropMode, setFlyerCropMode] =
+    useState<FlyerCropMode>("event");
   const [cropZoom, setCropZoom] = useState(0);
   const [cropX, setCropX] = useState(50);
   const [cropY, setCropY] = useState(50);
@@ -420,6 +467,7 @@ const EventJourney = ({
   const [flyerNaturalRatio, setFlyerNaturalRatio] = useState<number | null>(
     null,
   );
+  const flyerCropTarget = flyerCropTargets[flyerCropMode];
   const flyerCropScale = useMemo(
     () => flyerCropScaleFromPercent(cropZoom),
     [cropZoom],
@@ -432,7 +480,7 @@ const EventJourney = ({
     if (!flyerNaturalRatio || flyerCropScale <= 0) {
       return { widthPct: 0, heightPct: 0 };
     }
-    const targetRatio = flyerTargetWidth / flyerTargetHeight; // 0.8 for 4:5
+    const targetRatio = flyerCropTarget.width / flyerCropTarget.height;
     const widthOfImg =
       flyerNaturalRatio >= targetRatio
         ? (targetRatio / flyerNaturalRatio) * 100
@@ -445,7 +493,7 @@ const EventJourney = ({
       widthPct: widthOfImg / flyerCropScale,
       heightPct: heightOfImg / flyerCropScale,
     };
-  }, [flyerNaturalRatio, flyerCropScale]);
+  }, [flyerNaturalRatio, flyerCropScale, flyerCropTarget]);
   const [isComingSoon, setIsComingSoon] = useState(false);
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
@@ -619,6 +667,77 @@ const EventJourney = ({
   );
   const canEditEventCategory =
     mode === "create" && !isPublished && !firstStepCompleted;
+
+  const fetchHostPayoutAccounts = async () => {
+    const { hostPayoutAccounts } = await sdk.hostPayoutAccounts();
+    return hostPayoutAccounts ?? [];
+  };
+
+  const ensurePaidDraftHasPayoutAccount = async () => {
+    if (!isPaid || isPublished) return true;
+
+    try {
+      const accounts = await fetchHostPayoutAccounts();
+      if (!hasAnyPayoutAccount(accounts)) {
+        showPayoutPromptModal(true);
+        return false;
+      }
+      return true;
+    } catch {
+      // Drafting should not be blocked by a transient payout lookup.
+      // Publishing still verifies the payout requirement server-side.
+      return true;
+    }
+  };
+
+  const ensurePaidPublishPayoutReady = async () => {
+    if (!isPaid || isPublished) return true;
+
+    try {
+      const accounts = await fetchHostPayoutAccounts();
+      if (!hasAnyPayoutAccount(accounts)) {
+        showPayoutPromptModal(true);
+        return false;
+      }
+      if (!hasVerifiedPrimaryPayout(accounts)) {
+        showPayoutPendingVerificationModal(true);
+        return false;
+      }
+      return true;
+    } catch (error) {
+      setToastData({
+        type: "error",
+        message:
+          extractErrorMessage(error) ||
+          "Unable to confirm payout verification. Please try again.",
+      });
+      return false;
+    }
+  };
+
+  const ensureHostAccountPublishReady = async () => {
+    if (isPublished) return true;
+
+    try {
+      const response = await sdk.getHost();
+      const host = response?.getHost;
+      if (!host) return true;
+      if (host.status !== "ACTIVE" || host.isAdminVerified !== true) {
+        showHostUnderReviewModal(true);
+        return false;
+      }
+      return true;
+    } catch (error) {
+      setToastData({
+        type: "error",
+        message:
+          extractErrorMessage(error) ||
+          "Unable to confirm account verification. Please try again.",
+      });
+      return false;
+    }
+  };
+
   const multiDayEligible = useMemo(() => {
     if (!startDate || !endDate) return false;
     return (
@@ -1488,7 +1607,7 @@ const EventJourney = ({
   // Pricing/offer selection no longer lives in the wizard; the publish
   // modal handles it inline.
 
-  const handleFlyerFile = (file?: File) => {
+  const handleCropImageFile = (file: File | undefined, mode: FlyerCropMode) => {
     if (!file) return;
     if (!file.type.startsWith("image/")) {
       setToastData({ type: "error", message: "Please upload an image file." });
@@ -1504,6 +1623,7 @@ const EventJourney = ({
     if (flyerPreview) {
       URL.revokeObjectURL(flyerPreview);
     }
+    setFlyerCropMode(mode);
     setFlyerFile(file);
     setFlyerPreview(URL.createObjectURL(file));
     setFlyerNaturalRatio(null);
@@ -1511,6 +1631,14 @@ const EventJourney = ({
     setCropX(50);
     setCropY(50);
     setFlyerCropOpen(true);
+  };
+
+  const handleFlyerFile = (file?: File) => {
+    handleCropImageFile(file, "event");
+  };
+
+  const handleHorizontalFlyerFile = (file?: File) => {
+    handleCropImageFile(file, "horizontal");
   };
 
   const clearFlyerSelection = () => {
@@ -1531,6 +1659,11 @@ const EventJourney = ({
     setEventFlyer("");
   };
 
+  const removeHorizontalFlyer = () => {
+    clearFlyerSelection();
+    setHorizontalFlyer("");
+  };
+
   const cropFlyerToBlob = async (file: File): Promise<Blob> => {
     const imageUrl = URL.createObjectURL(file);
     const image = new Image();
@@ -1546,7 +1679,8 @@ const EventJourney = ({
     // % values straight onto natural pixel space gives a canvas cut that
     // matches exactly what the user saw in the preview.
     const naturalRatio = image.width / image.height;
-    const targetRatio = flyerTargetWidth / flyerTargetHeight;
+    const target = flyerCropTargets[flyerCropMode];
+    const targetRatio = target.width / target.height;
     const cropScale = flyerCropScaleFromPercent(cropZoom);
     const widthPctOfImg =
       (naturalRatio >= targetRatio ? (targetRatio / naturalRatio) * 100 : 100) /
@@ -1561,8 +1695,8 @@ const EventJourney = ({
     const sourceX = maxX * (cropX / 100);
     const sourceY = maxY * (cropY / 100);
     const canvas = document.createElement("canvas");
-    canvas.width = flyerTargetWidth;
-    canvas.height = flyerTargetHeight;
+    canvas.width = target.width;
+    canvas.height = target.height;
     const ctx = canvas.getContext("2d");
     if (!ctx) throw new Error("Unable to crop event flyer");
     ctx.drawImage(
@@ -1573,8 +1707,8 @@ const EventJourney = ({
       sourceHeight,
       0,
       0,
-      flyerTargetWidth,
-      flyerTargetHeight,
+      target.width,
+      target.height,
     );
     URL.revokeObjectURL(imageUrl);
 
@@ -1595,6 +1729,7 @@ const EventJourney = ({
     setUploadingFlyer(true);
     try {
       const hostId = await awaitSelectedHostId();
+      const target = flyerCropTargets[flyerCropMode];
       if (!hostId) {
         setToastData({
           type: "error",
@@ -1605,23 +1740,24 @@ const EventJourney = ({
         return;
       }
       const croppedBlob = await cropFlyerToBlob(flyerFile);
-      const file = new File([croppedBlob], "event-flyer.jpg", {
+      const file = new File([croppedBlob], target.fileName, {
         type: "image/jpeg",
       });
-      // Pass `eventFlyer` as previousUrl so the previously uploaded
-      // flyer is destroyed in Cloudinary right after this one lands —
-      // keeps `hoizr/{env}/hosts/{hostId}/events/{eventId}/flyer/`
-      // from accumulating one orphan per crop adjustment.
       const result = await uploadHostAsset({
-        kind: "event-flyer",
+        kind: target.uploadKind,
         hostId,
         eventId,
         file,
-        previousUrl: eventFlyer,
+        previousUrl:
+          flyerCropMode === "event" ? eventFlyer : horizontalFlyer,
       });
-      setEventFlyer(result.secureUrl);
+      if (flyerCropMode === "event") {
+        setEventFlyer(result.secureUrl);
+      } else {
+        setHorizontalFlyer(result.secureUrl);
+      }
       clearFlyerSelection();
-      setToastData({ type: "success", message: "Event flyer uploaded" });
+      setToastData({ type: "success", message: target.successMessage });
     } catch (error) {
       setToastData({ type: "error", message: extractErrorMessage(error) });
     } finally {
@@ -2065,29 +2201,12 @@ const EventJourney = ({
       return;
     }
 
-    // Payout gate runs as the host leaves step 0 (event category) into
-    // step 1 (basic details) on a paid event type. We surface the
-    // PayoutPromptModal / PayoutPendingVerificationModal early — much
-    // earlier than publish — so a host without a verified payout
-    // discovers the requirement before sinking work into the listing.
-    // Publish-time catches no longer open these modals; the server
-    // gate stays as a belt-and-braces fallback that surfaces as a
-    // toast if it ever fires.
+    // Paid event drafts can continue once the host has submitted at
+    // least one payout account. Admin verification is enforced only at
+    // publish time, matching main-server's publish precondition.
     if (step === 0 && isPaid && !isPublished) {
-      try {
-        const { hostPayoutAccounts } = await sdk.hostPayoutAccounts();
-        if (!hasVerifiedPrimaryPayout(hostPayoutAccounts)) {
-          if (hasPendingPrimaryPayout(hostPayoutAccounts)) {
-            showPayoutPendingVerificationModal(true);
-          } else {
-            showPayoutPromptModal(true);
-          }
-          return;
-        }
-      } catch {
-        // Network / cache miss — fail open and let the host continue.
-        // Server still validates at publish-time.
-      }
+      const canContinue = await ensurePaidDraftHasPayoutAccount();
+      if (!canContinue) return;
     }
 
     setLoading(true);
@@ -2129,7 +2248,11 @@ const EventJourney = ({
       router.push("/events");
     } catch (error) {
       const message = extractErrorMessage(error);
-      setToastData({ type: "error", message });
+      if (isHostVerificationBlockMessage(message)) {
+        showHostUnderReviewModal(true);
+      } else {
+        setToastData({ type: "error", message });
+      }
     } finally {
       setLoading(false);
     }
@@ -2159,11 +2282,6 @@ const EventJourney = ({
       return;
     }
 
-    // No payout preflight here — the gate moved to the step 0 → step 1
-    // transition so the host hits it as soon as they pick a paid event
-    // type. The server still enforces the predicate at publish; if it
-    // rejects (e.g., admin un-verified the payout between step 1 and
-    // publish) the catch below shows a toast.
     setLoading(true);
     try {
       await sdk.updateEventStep({
@@ -2171,6 +2289,9 @@ const EventJourney = ({
         step: 6,
         stepInput: buildEventInput(),
       });
+
+      const hostReady = await ensureHostAccountPublishReady();
+      if (!hostReady) return;
 
       if (!isPaid) {
         await sdk.publishEvent({ id: eventId });
@@ -2193,6 +2314,9 @@ const EventJourney = ({
         router.push(`/events/${eventId}/manage`);
         return;
       }
+
+      const payoutReady = await ensurePaidPublishPayoutReady();
+      if (!payoutReady) return;
 
       const response = await sdk.eventPricingOptions({
         input: {
@@ -2250,7 +2374,11 @@ const EventJourney = ({
       setPublishModalOpen(true);
     } catch (error) {
       const message = extractErrorMessage(error);
-      setToastData({ type: "error", message });
+      if (isHostVerificationBlockMessage(message)) {
+        showHostUnderReviewModal(true);
+      } else {
+        setToastData({ type: "error", message });
+      }
     } finally {
       setLoading(false);
     }
@@ -2287,6 +2415,16 @@ const EventJourney = ({
         type: "error",
         message: "Select an offer to publish, or choose the basic option.",
       });
+      return;
+    }
+    const hostReady = await ensureHostAccountPublishReady();
+    if (!hostReady) {
+      setPublishModalOpen(false);
+      return;
+    }
+    const payoutReady = await ensurePaidPublishPayoutReady();
+    if (!payoutReady) {
+      setPublishModalOpen(false);
       return;
     }
     setPublishing(true);
@@ -2337,7 +2475,11 @@ const EventJourney = ({
       router.push(`/events/${eventId}/manage`);
     } catch (error) {
       const message = extractErrorMessage(error);
-      setToastData({ type: "error", message });
+      if (isHostVerificationBlockMessage(message)) {
+        showHostUnderReviewModal(true);
+      } else {
+        setToastData({ type: "error", message });
+      }
     } finally {
       setPublishing(false);
     }
@@ -2460,8 +2602,11 @@ const EventJourney = ({
   }
 
   return (
-    <div className="flex h-[100dvh] min-h-0 flex-col overflow-hidden bg-[var(--owner-bg-sidebar)] text-[var(--owner-fg-1)]">
-      <header className="flex min-h-[64px] shrink-0 items-center justify-between border-b border-[var(--owner-border)] px-4 md:px-6">
+    <div
+      className="flex h-[100dvh] min-h-screen flex-col overflow-hidden bg-[var(--owner-bg-sidebar)] text-[var(--owner-fg-1)]"
+      style={{ height: "100dvh" }}
+    >
+      <header className="flex h-16 min-h-16 shrink-0 items-center justify-between border-b border-[var(--owner-border)] px-4 md:px-6">
         <div className="min-w-0">
           <p className="text-xs font-semibold uppercase tracking-[0.12em] text-[var(--owner-blue-500)]">
             Event {mode === "create" ? "Creation" : "Update"}
@@ -2499,7 +2644,7 @@ const EventJourney = ({
         </div>
       </header>
 
-      <main className="grid min-h-0 flex-1 grid-cols-1 grid-rows-[minmax(0,1fr)] overflow-hidden lg:grid-cols-[260px_minmax(0,1fr)_340px]">
+      <main className="grid h-[calc(100dvh-64px)] min-h-0 flex-1 grid-cols-1 grid-rows-[minmax(0,1fr)] overflow-hidden lg:grid-cols-[260px_minmax(0,1fr)_340px]">
         <aside className="hidden min-h-0 border-r border-[var(--owner-border)] p-4 lg:block">
           <nav className="space-y-2">
             {visibleSteps.map((label) => {
@@ -3704,14 +3849,86 @@ const EventJourney = ({
                             Lifts social CTR — used on event hero + OG previews
                           </span>
                         </div>
-                        <ImageUrlInput
-                          label="Horizontal flyer (16:9)"
-                          value={horizontalFlyer}
-                          onChange={setHorizontalFlyer}
-                          uploadKind="event-extra"
-                          hostId={selectedHostId}
-                          eventId={eventId}
-                        />
+                        <div className="rounded-lg border border-[var(--owner-border)] bg-white p-3 shadow-sm">
+                          <div className="flex flex-col gap-3 sm:flex-row sm:items-stretch">
+                            <label
+                              className="flex min-h-[126px] flex-1 cursor-pointer items-center gap-4 rounded-lg border border-dashed border-[var(--owner-border)] bg-[var(--owner-bg)] px-4 py-4 text-sm transition hover:border-[var(--owner-blue-500)] hover:bg-[var(--owner-bg-subtle)]"
+                              onDragOver={(event) => event.preventDefault()}
+                              onDrop={(event) => {
+                                event.preventDefault();
+                                handleHorizontalFlyerFile(
+                                  event.dataTransfer.files?.[0],
+                                );
+                              }}
+                            >
+                              {horizontalFlyer ? (
+                                <span
+                                  className="aspect-video h-24 shrink-0 rounded-lg bg-cover bg-center shadow-sm"
+                                  style={{
+                                    backgroundImage: `url(${horizontalFlyer})`,
+                                  }}
+                                />
+                              ) : (
+                                <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-white text-[var(--owner-fg-3)] shadow-sm">
+                                  <UploadCloudIcon size={22} />
+                                </span>
+                              )}
+                              <span className="min-w-0 text-left">
+                                <span className="block font-semibold text-[var(--owner-fg-1)]">
+                                  Horizontal flyer (16:9)
+                                </span>
+                                <span className="mt-1 block text-xs leading-5 text-[var(--owner-fg-3)]">
+                                  Drop an image or click to crop a 16:9 flyer.
+                                  JPG, PNG, or WebP up to 5 MB.
+                                </span>
+                                {horizontalFlyer ? (
+                                  <span className="mt-2 inline-flex items-center gap-1 text-xs font-semibold text-[var(--owner-blue-500)]">
+                                    <ImagePlusIcon size={14} />
+                                    Replace image
+                                  </span>
+                                ) : null}
+                              </span>
+                              <input
+                                type="file"
+                                accept="image/*"
+                                className="sr-only"
+                                onChange={(event) => {
+                                  handleHorizontalFlyerFile(
+                                    event.target.files?.[0],
+                                  );
+                                  event.currentTarget.value = "";
+                                }}
+                              />
+                            </label>
+                            {horizontalFlyer ? (
+                              <div className="flex shrink-0 gap-2 md:w-36 md:flex-col">
+                                <label className="inline-flex flex-1 cursor-pointer items-center justify-center gap-2 rounded-lg border border-[var(--owner-border)] bg-white px-3 py-2 text-xs font-semibold text-[var(--owner-fg-1)] transition hover:border-[var(--owner-blue-500)] md:flex-none">
+                                  <ImagePlusIcon size={15} />
+                                  Replace
+                                  <input
+                                    type="file"
+                                    accept="image/*"
+                                    className="sr-only"
+                                    onChange={(event) => {
+                                      handleHorizontalFlyerFile(
+                                        event.target.files?.[0],
+                                      );
+                                      event.currentTarget.value = "";
+                                    }}
+                                  />
+                                </label>
+                                <button
+                                  type="button"
+                                  onClick={removeHorizontalFlyer}
+                                  className="inline-flex flex-1 items-center justify-center gap-2 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-xs font-semibold text-red-700 transition hover:bg-red-100 md:flex-none"
+                                >
+                                  <XIcon size={15} />
+                                  Delete
+                                </button>
+                              </div>
+                            ) : null}
+                          </div>
+                        </div>
                       </div>
 
                       {/* Social */}
@@ -4620,11 +4837,10 @@ const EventJourney = ({
             <div className="w-full max-w-md rounded-lg bg-[var(--owner-bg)] p-5 shadow-2xl">
               <div className="flex items-center gap-2 text-sm font-semibold">
                 <ImageIcon size={18} />
-                Crop event flyer
+                {flyerCropTarget.title}
               </div>
               <p className="mt-2 text-xs leading-5 text-[var(--owner-fg-3)]">
-                Fixed 4:5 crop. Drag on the image to position the crop and use
-                zoom to adjust the selected area.
+                {flyerCropTarget.description}
               </p>
               <div className="mt-4 flex justify-center">
                 <div
@@ -4697,7 +4913,11 @@ const EventJourney = ({
                           );
                         }
                       }}
-                      className="pointer-events-none block h-auto max-h-[60vh] w-auto max-w-[20rem] select-none"
+                      className={`pointer-events-none block h-auto max-h-[60vh] w-auto select-none ${
+                        flyerCropMode === "horizontal"
+                          ? "max-w-[32rem]"
+                          : "max-w-[20rem]"
+                      }`}
                     />
                   ) : null}
                   {flyerNaturalRatio ? (
@@ -4779,7 +4999,7 @@ const EventJourney = ({
 
         {publishModalOpen ? (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-            <div className="flex max-h-[90vh] w-full max-w-5xl flex-col rounded-2xl bg-white shadow-2xl">
+            <div className="flex h-[96dvh] max-h-[96dvh] w-full max-w-7xl flex-col overflow-hidden rounded-2xl bg-white shadow-2xl">
               <div className="flex items-start justify-between gap-4 px-6 pt-6">
                 <div>
                   <h2 className="text-xl font-semibold text-[var(--owner-fg-1)]">
@@ -4787,8 +5007,9 @@ const EventJourney = ({
                   </h2>
                   <p className="mt-1 text-sm leading-relaxed text-[var(--owner-fg-3)]">
                     Basic Hoizr commission stays first. Smart offers are shown
-                    after it by highest projected customer-side savings, with
-                    commission and upfront amount separated before you publish.
+                    after it by highest projected savings and benefit. The
+                    strongest offer is marked recommended, with commission and
+                    upfront amount separated before you publish.
                   </p>
                 </div>
                 <button
@@ -4802,7 +5023,7 @@ const EventJourney = ({
                 </button>
               </div>
 
-              <div className="min-h-0 flex-1 overflow-y-auto px-6 pb-4 pt-2">
+              <div className="min-h-0 flex-1 overflow-y-auto px-6 py-4">
                 {(() => {
                   const selectedOption = pricingOptions.find(
                     (o) => o.optionId === selectedPricingOptionId,
@@ -4923,15 +5144,13 @@ const EventJourney = ({
                       option: PricingOption;
                     } => entry !== null,
                   )
-                  // Order: largest absolute savings first so the most attractive
-                  // offer sits immediately after the basic option. (User: "show
-                  // the offer where the customers are saving the most first
-                  // after the basic one".)
-                  .sort((a, b) => {
-                    const aSavings = a.boost.totalSavingsForHosts?.value ?? 0;
-                    const bSavings = b.boost.totalSavingsForHosts?.value ?? 0;
-                    return bSavings - aSavings;
-                  });
+                  // Order: largest absolute savings first, then marketing /
+                  // commission benefit as a tie-breaker. The first smart card
+                  // is also the recommended one.
+                  .sort((a, b) =>
+                    compareAiBoostBenefit(a.boost, b.boost),
+                  );
+                const recommendedOfferCode = aiCards[0]?.boost.offerCode ?? "";
 
                 if (!pricingOptions.length) {
                   return (
@@ -4944,7 +5163,7 @@ const EventJourney = ({
 
                 return (
                   <div className="-mx-6 mt-5 overflow-x-auto px-6 pb-1">
-                    <div className="flex min-w-min gap-3">
+                    <div className="flex min-w-min items-stretch gap-4">
                     {basicOption ? (
                       <button
                         key={basicOption.optionId}
@@ -4952,7 +5171,7 @@ const EventJourney = ({
                         onClick={() =>
                           setSelectedPricingOptionId(basicOption.optionId)
                         }
-                        className={`flex h-full w-[280px] shrink-0 flex-col gap-3 rounded-2xl border p-4 text-left transition ${
+                        className={`flex min-h-[540px] w-[300px] shrink-0 self-stretch flex-col gap-3 rounded-2xl border p-4 text-left transition ${
                           selectedPricingOptionId === basicOption.optionId
                             ? "border-[var(--owner-blue-500)] bg-[var(--owner-blue-050)] shadow-sm"
                             : "border-[var(--owner-border)] bg-[var(--owner-bg)] hover:border-[var(--owner-blue-400)]"
@@ -5017,9 +5236,7 @@ const EventJourney = ({
                     {aiCards.map(({ boost, option }) => {
                       const selected =
                         selectedPricingOptionId === option.optionId;
-                      const recommended =
-                        aiBoostGeneration?.recommendedOfferCode ===
-                        boost.offerCode;
+                      const recommended = recommendedOfferCode === boost.offerCode;
                       const delta =
                         boost.howMuchDifferentFromBasicOffer?.deltaPct ?? 0;
                       const savings = boost.totalSavingsForHosts?.value ?? 0;
@@ -5040,7 +5257,7 @@ const EventJourney = ({
                           onClick={() =>
                             setSelectedPricingOptionId(option.optionId)
                           }
-                          className={`flex h-full w-[280px] shrink-0 flex-col gap-3 rounded-2xl border p-4 text-left transition ${
+                          className={`flex min-h-[540px] w-[300px] shrink-0 self-stretch flex-col gap-3 rounded-2xl border p-4 text-left transition ${
                             selected
                               ? "border-[var(--owner-blue-500)] bg-[var(--owner-blue-050)] shadow-sm"
                               : "border-[var(--owner-border)] bg-[var(--owner-bg)] hover:border-[var(--owner-blue-400)]"
@@ -5199,16 +5416,19 @@ const EventJourney = ({
                   </div>
                 );
               })()}
+              </div>
 
               {pricingOptions.length > 0 ? (
-                <p className="mx-6 mt-3 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-[12px] leading-relaxed text-amber-900">
-                  <span className="font-semibold">Important:</span> event listings
-                  must be accurate. Misrepresented event details (lineup, venue,
-                  start time, ticket inclusions) can result in a fine charged on
-                  each wrong ticket sold. Double-check details before publishing.
-                </p>
+                <div className="shrink-0 px-6 pb-3">
+                  <p className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-[12px] leading-relaxed text-amber-900">
+                    <span className="font-semibold">Important:</span> event
+                    listings must be accurate. Misrepresented event details
+                    (lineup, venue, start time, ticket inclusions) can result
+                    in a fine charged on each wrong ticket sold. Double-check
+                    details before publishing.
+                  </p>
+                </div>
               ) : null}
-              </div>
 
               <div className="flex shrink-0 flex-col gap-2 border-t border-[var(--owner-border)] bg-white px-6 py-4 sm:flex-row sm:justify-end">
                 <button

@@ -78,6 +78,12 @@ query getMyEventsForSelector {
     city
     slug
     status
+    tickets {
+      ticketCapacity
+      ticketSold
+      ticketPrice
+      ticketVisible
+    }
   }
 }
 

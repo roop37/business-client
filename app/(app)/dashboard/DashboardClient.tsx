@@ -8,6 +8,7 @@ import {
   PillTabs,
 } from "@/components/common/owner";
 import type { BadgeTone, PillTab } from "@/components/common/owner";
+import { HostDashboardRange } from "@/generated/graphql";
 import useGlobalStore from "@/store/global";
 import useUserStore from "@/store/user";
 import { sdk } from "@/utils/graphqlClient";
@@ -26,7 +27,6 @@ import {
   ReceiptText,
   Send,
   Sparkles,
-  Ticket,
   Users,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
@@ -46,6 +46,7 @@ type DashboardSeriesPoint = {
   label: string;
   sales: number;
   tickets: number;
+  orderCount: number;
 };
 
 type DashboardBreakdownRow = {
@@ -87,6 +88,7 @@ type HostDashboardSummary = {
 type DashboardEvent = {
   _id: string;
   title?: string | null;
+  eventFlyer?: string | null;
   status?: string | null;
   startDate?: string | null;
   city?: string | null;
@@ -254,6 +256,19 @@ const selectedRangeLabel = (range: DashboardRange, series: DashboardSeriesPoint[
   return `${series[0].label} - ${series[series.length - 1].label}`;
 };
 
+const rangeSentenceLabel = (range: DashboardRange) => {
+  if (range === "today") return "today";
+  if (range === "yesterday") return "yesterday";
+  return `in the ${rangeTabs.find((tab) => tab.value === range)?.label.toLowerCase() ?? "selected range"}`;
+};
+
+const toApiRange = (range: DashboardRange): HostDashboardRange => {
+  if (range === "today") return HostDashboardRange.Today;
+  if (range === "yesterday") return HostDashboardRange.Yesterday;
+  if (range === "last7") return HostDashboardRange.Last_7Days;
+  return HostDashboardRange.Last_30Days;
+};
+
 const clampPercent = (percent: number) => {
   if (!Number.isFinite(percent) || percent <= 0) return 0;
   return Math.max(percent, 2);
@@ -292,8 +307,8 @@ export const DashboardClient = () => {
       try {
         const [summaryResponse, eventsResponse, checklistResponse]: any[] =
           await Promise.all([
-            sdk.getHostDashboardSummary(),
-            sdk.getMyEvents(),
+            sdk.getHostDashboardSummary({ input: { range: toApiRange(range) } }),
+            sdk.getMyEventsForSelector(),
             sdk.eventOnboardingChecklist(),
           ]);
         setSummary({
@@ -309,7 +324,7 @@ export const DashboardClient = () => {
       }
     };
     load();
-  }, [setToastData]);
+  }, [range, setToastData]);
 
   const filteredSeries = useMemo(() => {
     const series = summary.salesSeries ?? [];
@@ -327,23 +342,31 @@ export const DashboardClient = () => {
     [filteredSeries]
   );
 
+  const rangeOrderCount = useMemo(
+    () => filteredSeries.reduce((sum, point) => sum + Number(point.orderCount ?? 0), 0),
+    [filteredSeries]
+  );
+
   const chartData = filteredSeries.length > 0 ? filteredSeries : summary.salesSeries;
   const displaySales = filteredSeries.length > 0 ? rangeSales : summary.salesLast30Days;
   const displayTickets = filteredSeries.length > 0 ? rangeTickets : summary.ticketsSoldLast30Days;
+  const displayOrderCount = filteredSeries.length > 0 ? rangeOrderCount : summary.orderCountLast30Days;
+  const displayAverageOrderValue = displayOrderCount > 0 ? displaySales / displayOrderCount : 0;
   const displayRange = selectedRangeLabel(range, chartData);
+  const displayRangeSentence = rangeSentenceLabel(range);
 
   const sourceRows = useMemo(() => {
     if (summary.salesBySource.length > 0) return summary.salesBySource;
-    if (summary.salesLast30Days <= 0) return [];
+    if (displaySales <= 0) return [];
     return [
       {
         label: "Direct",
-        amount: summary.salesLast30Days,
-        count: summary.orderCountLast30Days,
+        amount: displaySales,
+        count: displayOrderCount,
         percent: 100,
       },
     ];
-  }, [summary.orderCountLast30Days, summary.salesBySource, summary.salesLast30Days]);
+  }, [displayOrderCount, displaySales, summary.salesBySource]);
 
   const upcomingEvents = useMemo(() => {
     const now = Date.now();
@@ -358,7 +381,7 @@ export const DashboardClient = () => {
         const bTime = b.startDate ? new Date(b.startDate).getTime() : Number.MAX_SAFE_INTEGER;
         return aTime - bTime;
       })
-      .slice(0, 5);
+      .slice(0, 8);
   }, [events]);
 
   const readinessItems = useMemo(
@@ -416,7 +439,7 @@ export const DashboardClient = () => {
               Hey {greetingName},
             </p>
             <h1 className="mt-3 max-w-[780px] text-[31px] font-semibold leading-[1.18] text-owner-fg-1 sm:text-[38px]">
-              You made <span className="text-owner-blue-500">{inrFormat(summary.salesLast30Days)}</span> in the last 30 days.
+              You made <span className="text-owner-blue-500">{inrFormat(displaySales)}</span> {displayRangeSentence}.
             </h1>
             <div className="mt-4 flex flex-wrap gap-2">
               <OwnerButton
@@ -544,11 +567,11 @@ export const DashboardClient = () => {
             <MetricBlock
               icon={<ClipboardList size={17} />}
               label="Total orders"
-              value={formatInteger(summary.orderCountLast30Days)}
+              value={formatInteger(displayOrderCount)}
               rows={[
-                { label: "Average order value", value: inrFormat(summary.averageOrderValueLast30Days, { decimals: 2 }) },
-                { label: "Tickets sold", value: formatInteger(summary.ticketsSoldLast30Days) },
-                { label: "Today", value: `${inrFormat(summary.salesToday)} / ${formatInteger(summary.ticketsSoldToday)} tickets` },
+                { label: "Average order value", value: inrFormat(displayAverageOrderValue, { decimals: 2 }) },
+                { label: "Tickets sold", value: formatInteger(displayTickets) },
+                { label: "Net sales", value: inrFormat(displaySales, { decimals: displaySales > 0 && displaySales < 1000 ? 2 : 0 }) },
               ]}
               actionLabel="Open orders"
               onAction={() => router.push("/orders")}
@@ -567,38 +590,41 @@ export const DashboardClient = () => {
       <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_420px]">
         <Card padding={0} className="overflow-hidden">
           <SectionHeader
-            icon={<Ticket size={17} />}
-            title="Items"
-            actionLabel="View menu"
+            icon={<CalendarDays size={17} />}
+            title="Upcoming events"
+            actionLabel="View events"
             onAction={() => router.push("/events")}
           />
-          <div className="grid gap-6 p-5 lg:grid-cols-2 lg:p-6">
-            <RankedList
-              title="Best selling tickets"
-              rows={summary.topItems}
-              empty="Ticket sales will appear after orders are paid."
-              valueFormatter={(row) => inrFormat(row.amount, { decimals: row.amount > 0 && row.amount < 1000 ? 2 : 0 })}
-              metaFormatter={(row) => `${formatInteger(row.count)} sold`}
-            />
-            <RankedList
-              title="Upcoming events"
-              rows={upcomingEvents.map((event) => {
-                const totals = eventTotals(event);
-                return {
-                  label: event.title || "Untitled event",
-                  amount: totals.gross,
-                  count: totals.sold,
-                  percent: totals.capacity ? Math.round((totals.sold / totals.capacity) * 1000) / 10 : 0,
-                  href: `/events/${event._id}/manage`,
-                  badge: event.status || "Draft",
-                  subLabel: formatDate(event.startDate, true),
-                };
-              })}
-              empty="Create an event to start the operations list."
-              valueFormatter={(row) => inrFormat(row.amount, { decimals: row.amount > 0 && row.amount < 1000 ? 2 : 0 })}
-              metaFormatter={(row) => `${formatInteger(row.count)} sold`}
-              onRowClick={(row) => router.push(row.href ?? "/events")}
-            />
+          <div className="p-5 lg:p-6">
+            {upcomingEvents.length ? (
+              <div className="-mx-5 overflow-x-auto px-5 pb-2 [scrollbar-width:thin] lg:-mx-6 lg:px-6">
+                <div className="flex min-w-max gap-4">
+                  {upcomingEvents.map((event) => (
+                    <CompactDashboardEventCard
+                      key={event._id}
+                      event={event}
+                      onClick={() => router.push(`/events/${event._id}/manage`)}
+                    />
+                  ))}
+                </div>
+              </div>
+            ) : (
+              <button
+                type="button"
+                onClick={() => router.push("/events?create=1")}
+                className="flex min-h-[150px] w-full items-center justify-between gap-4 rounded-owner-md border border-dashed border-owner-border bg-owner-bg-subtle px-5 py-5 text-left transition hover:border-owner-blue-200 hover:bg-owner-blue-050/40"
+              >
+                <div>
+                  <div className="text-[15px] font-semibold text-owner-fg-1">
+                    Create your first event
+                  </div>
+                  <div className="mt-1 max-w-[480px] text-[13px] leading-5 text-owner-fg-4">
+                    Your compact event cards will appear here once drafts or published events exist.
+                  </div>
+                </div>
+                <ChevronRight size={18} className="text-owner-fg-4" />
+              </button>
+            )}
           </div>
         </Card>
 
@@ -808,83 +834,78 @@ const BreakdownBlock = ({ title, rows, amountFormatter, empty }: BreakdownBlockP
   </div>
 );
 
-type RankedRow = DashboardBreakdownRow & {
-  href?: string;
-  badge?: string | null;
-  subLabel?: string;
-};
+const CompactDashboardEventCard = ({
+  event,
+  onClick,
+}: {
+  event: DashboardEvent;
+  onClick: () => void;
+}) => {
+  const totals = eventTotals(event);
+  const progress =
+    totals.capacity > 0 ? Math.min(100, Math.round((totals.sold / totals.capacity) * 100)) : 0;
+  const salesLabel =
+    totals.gross > 0
+      ? inrFormat(totals.gross, { decimals: totals.gross < 1000 ? 2 : 0 })
+      : "Sales pending";
 
-type RankedListProps = {
-  title: string;
-  rows: RankedRow[];
-  empty: string;
-  valueFormatter: (row: RankedRow) => string;
-  metaFormatter: (row: RankedRow) => string;
-  onRowClick?: (row: RankedRow) => void;
-};
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className="group w-[214px] shrink-0 overflow-hidden rounded-owner-lg border border-owner-border bg-owner-bg text-left shadow-owner-sm transition hover:-translate-y-0.5 hover:border-owner-blue-200 hover:shadow-[0_16px_34px_rgba(15,15,15,0.12)]"
+    >
+      <div className="relative aspect-[4/5] overflow-hidden bg-owner-bg-subtle">
+        {event.eventFlyer ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={event.eventFlyer}
+            alt=""
+            className="h-full w-full object-cover transition duration-300 group-hover:scale-[1.02]"
+            draggable={false}
+          />
+        ) : (
+          <div className="flex h-full w-full items-center justify-center bg-[linear-gradient(135deg,#f7f2ea,#edf3fb)]">
+            <CalendarDays size={34} className="text-owner-fg-4/60" />
+          </div>
+        )}
+        <Badge
+          tone={statusTone(event.status)}
+          className="absolute right-2.5 top-2.5 bg-white/92 px-2 py-0.5 text-[10.5px] shadow-[0_8px_20px_rgba(15,15,15,0.16)]"
+        >
+          {event.status || "Draft"}
+        </Badge>
+      </div>
 
-const RankedList = ({
-  title,
-  rows,
-  empty,
-  valueFormatter,
-  metaFormatter,
-  onRowClick,
-}: RankedListProps) => (
-  <div>
-    <div className="text-[14px] font-semibold text-owner-fg-3">{title}</div>
-    <div className="mt-3 divide-y divide-owner-border-soft">
-      {rows.length ? (
-        rows.slice(0, 5).map((row, index) => {
-          const clickable = typeof onRowClick === "function";
-          const content = (
-            <>
-              <div className="flex min-w-0 items-center gap-3">
-                <span className="grid h-8 w-8 shrink-0 place-items-center rounded-owner-sm bg-owner-bg-subtle text-[13px] font-semibold text-owner-fg-3">
-                  {index + 1}
-                </span>
-                <div className="min-w-0">
-                  <div className="truncate text-[14px] font-semibold text-owner-fg-1">{row.label}</div>
-                  <div className="mt-0.5 flex flex-wrap items-center gap-2 text-[12px] text-owner-fg-4">
-                    {row.subLabel ? <span>{row.subLabel}</span> : null}
-                    {row.badge ? <Badge tone={statusTone(row.badge)} className="px-2 py-0.5 text-[11px]">{row.badge}</Badge> : null}
-                    <span>{metaFormatter(row)}</span>
-                  </div>
-                </div>
-              </div>
-              <div className="shrink-0 text-right text-[13.5px] font-semibold tabular-nums text-owner-fg-1">
-                {valueFormatter(row)}
-              </div>
-            </>
-          );
-
-          if (clickable) {
-            return (
-              <button
-                key={`${row.label}-${index}`}
-                type="button"
-                onClick={() => onRowClick(row)}
-                className="flex w-full items-center justify-between gap-4 py-3 text-left hover:bg-owner-bg-subtle"
-              >
-                {content}
-              </button>
-            );
-          }
-
-          return (
-            <div key={`${row.label}-${index}`} className="flex items-center justify-between gap-4 py-3">
-              {content}
-            </div>
-          );
-        })
-      ) : (
-        <div className="rounded-owner-md bg-owner-bg-subtle px-3 py-5 text-[13px] text-owner-fg-4">
-          {empty}
+      <div className="px-3.5 pb-4 pt-3">
+        <p className="text-[11px] font-semibold uppercase tracking-[0.04em] text-owner-blue-500">
+          {formatDate(event.startDate, true)}
+        </p>
+        <h3 className="mt-1 line-clamp-2 min-h-[38px] text-[15px] font-semibold leading-tight text-owner-fg-1">
+          {event.title || "Untitled event"}
+        </h3>
+        <div className="mt-2 flex items-center justify-between gap-2 text-[12px] font-medium text-owner-fg-4">
+          <span className="truncate">{event.city || "Location pending"}</span>
+          <span className="shrink-0">{formatInteger(totals.sold)} sold</span>
         </div>
-      )}
-    </div>
-  </div>
-);
+        <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-owner-bg-subtle">
+          <span
+            className="block h-full rounded-full bg-owner-blue-500"
+            style={{ width: `${progress}%` }}
+          />
+        </div>
+        <div className="mt-2 flex items-center justify-between gap-2">
+          <span className="text-[12px] font-medium text-owner-fg-4">
+            {totals.capacity ? `${progress}% capacity` : "Capacity pending"}
+          </span>
+          <span className="text-[12.5px] font-semibold tabular-nums text-owner-fg-1">
+            {salesLabel}
+          </span>
+        </div>
+      </div>
+    </button>
+  );
+};
 
 type SectionHeaderProps = {
   icon: ReactNode;
@@ -937,12 +958,8 @@ const MarketingSpotlightCard = ({
       src={marketingCardImage}
       alt=""
       aria-hidden
-      className="absolute inset-0 h-full w-full object-cover opacity-95"
+      className="absolute inset-0 h-full w-full object-cover"
       draggable={false}
-    />
-    <div
-      aria-hidden
-      className="absolute inset-0 bg-[radial-gradient(circle_at_20%_0%,rgba(214,255,63,0.18),transparent_30%),linear-gradient(135deg,rgba(0,0,0,0.18),rgba(0,0,0,0.62)_46%,rgba(0,0,0,0.88))]"
     />
     <div className="relative flex min-h-[146px] flex-col justify-between">
       <div>
@@ -950,10 +967,16 @@ const MarketingSpotlightCard = ({
           {icon}
           {kicker}
         </span>
-        <h2 className="mt-5 max-w-[540px] text-[22px] font-semibold leading-[1.12] text-white sm:text-[26px]">
+        <h2
+          className="mt-5 max-w-[540px] text-[22px] font-semibold leading-[1.12] text-white sm:text-[26px]"
+          style={{ textShadow: "0 2px 16px rgba(0,0,0,0.72)" }}
+        >
           {title}
         </h2>
-        <p className="mt-3 max-w-[560px] text-[13.5px] leading-5 text-white/70 sm:text-[14px]">
+        <p
+          className="mt-3 max-w-[560px] text-[13.5px] leading-5 text-white/78 sm:text-[14px]"
+          style={{ textShadow: "0 2px 14px rgba(0,0,0,0.78)" }}
+        >
           {body}
         </p>
       </div>
