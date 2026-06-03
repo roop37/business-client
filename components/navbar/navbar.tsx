@@ -19,8 +19,8 @@ import { SidebarTrigger } from "../ui/sidebar";
  *   - Date-range pill (placeholder; non-functional for now)
  *   - Notifications bell
  *   - Primary action button — context-aware:
- *       /campaigns/*  → "Create campaign"
- *       /events,/dashboard → "New event"
+ *       /campaigns/*  → "Add email campaign"
+ *       /events sub-routes,/dashboard → "Add event"
  *       elsewhere → hidden
  *
  * Page titles are NOT rendered here — Owner pattern is to render
@@ -35,14 +35,15 @@ const Navbar = () => {
 
   const onCampaigns =
     pathname.startsWith("/campaigns/") &&
-    !pathname.startsWith("/campaigns/onboarding");
+    !pathname.startsWith("/campaigns/onboarding") &&
+    !pathname.startsWith("/campaigns/marketing-credit");
   const onEventsRoot = pathname === "/events" || pathname === "/events/";
   const showPrimary =
     pathname.startsWith("/dashboard") ||
     (pathname.startsWith("/events") && !onEventsRoot) ||
     onCampaigns;
 
-  const primaryLabel = onCampaigns ? "Create campaign" : "New event";
+  const primaryLabel = onCampaigns ? "Add email campaign" : "Add event";
   const primaryHref = onCampaigns
     ? "/campaigns/onboarding/template-select"
     : "/events?create=1";

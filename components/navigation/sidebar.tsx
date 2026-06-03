@@ -21,7 +21,6 @@ import {
   Check,
   ChevronDown,
   ChevronRight,
-  Gift,
   LogOut,
   MapPin,
   Plus,
@@ -383,32 +382,6 @@ const NavItem = ({
   );
 };
 
-const ReferralCard = ({ onCopy }: { onCopy: () => void }) => (
-  <div
-    className="rounded-owner-lg border p-3.5"
-    style={{
-      background: "var(--owner-success-bg)",
-      borderColor: "var(--owner-success-border)",
-    }}
-  >
-    <div className="flex items-start gap-2">
-      <Gift size={18} className="mt-0.5 text-owner-success-text" />
-      <div className="min-w-0">
-        <p className="text-[13px] font-semibold text-owner-success-text">
-          Earn ₹25,000 per referral 💰
-        </p>
-        <button
-          type="button"
-          onClick={onCopy}
-          className="mt-1 text-[12.5px] font-medium underline text-owner-success-text"
-        >
-          Tap to share!
-        </button>
-      </div>
-    </div>
-  </div>
-);
-
 const isActiveFor = (pathname: string, item: TSidebarItem) => {
   if (item.title === "Dashboard") return pathname === "/dashboard";
   if (item.title === "Campaigns") return pathname.startsWith("/campaigns");
@@ -527,25 +500,6 @@ export default function AppSidebar() {
     if (typeof window !== "undefined") window.location.assign("/login");
   }, []);
 
-  const copyReferral = useCallback(async () => {
-    try {
-      if (typeof navigator !== "undefined" && navigator.clipboard) {
-        await navigator.clipboard.writeText(
-          typeof window !== "undefined" ? `${window.location.origin}/signup?ref=hoizr` : ""
-        );
-        setToastData({
-          type: "success",
-          message: "Referral link copied to clipboard",
-        });
-      }
-    } catch {
-      setToastData({
-        type: "warning",
-        message: "Could not copy. Visit Settings → Referrals.",
-      });
-    }
-  }, [setToastData]);
-
   return (
     <Sidebar
       id="app-sidebar"
@@ -607,7 +561,6 @@ export default function AppSidebar() {
           })}
         </ul>
 
-        <ReferralCard onCopy={copyReferral} />
       </div>
       {switchingTo ? <HostSwitchOverlay host={switchingTo} /> : null}
     </Sidebar>

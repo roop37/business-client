@@ -1,10 +1,5 @@
-import { AddressInfo, DeliveryZone, EdgeDeviceInfo, HostType } from "@/generated/graphql";
+import { AddressInfo, HostType } from "@/generated/graphql";
 import { create } from "zustand";
-
-interface DeliveryConfig {
-  provideDelivery: boolean | null | undefined;
-  deliveryZone: DeliveryZone[] | null | undefined;
-}
 
 type HostStates = {
   hosts: any[];
@@ -19,16 +14,10 @@ type HostStates = {
   setSelectedHostType: (type: HostType | null) => void;
   refreshHostChange: boolean;
   setRefreshHostChange: (res: boolean) => void;
-  onlineOrderingActive: boolean;
-  setOnlineOrderingActive: (res: boolean) => void;
   hostLogo: string;
   setHostLogo: (res: string) => void;
   hostAddress: AddressInfo | null;
   setHostAddress: (res: AddressInfo) => void;
-
-  ////////////////////
-  hostAvailability: any[] | null;
-  setHostAvailability: (hours: any[]) => void;
 
   hostEmail: string;
   setHostEmail: (res: string) => void;
@@ -44,12 +33,6 @@ type HostStates = {
 
   timezone: string;
   setTimezone: (timezone: string) => void;
-
-  deliveryConfig?: DeliveryConfig | null;
-  setDeliveryConfig: (config?: DeliveryConfig) => void;
-
-  hasEdgeDevice: boolean;
-  setHasEdgeDevice: (hasDevice: boolean) => void;
 };
 
 const useHostsStore = create<HostStates>((set) => ({
@@ -66,16 +49,11 @@ const useHostsStore = create<HostStates>((set) => ({
   setHosts: (res) => set({ hosts: res }),
   refreshHostChange: false,
   setRefreshHostChange: (res) => set({ refreshHostChange: res }),
-  onlineOrderingActive: false,
-  setOnlineOrderingActive: (res) => set({ onlineOrderingActive: res }),
   hostLogo: "",
   setHostLogo: (logo) => set({ hostLogo: logo }),
   hostAddress: null,
   setHostAddress: (address) => set({ hostAddress: address }),
 
-  /////////////////
-  hostAvailability: [],
-  setHostAvailability: (hours) => set({ hostAvailability: hours }),
   hostEmail: "",
   setHostEmail: (email) => set({ hostEmail: email }),
   hostPhone: "",
@@ -89,15 +67,6 @@ const useHostsStore = create<HostStates>((set) => ({
 
   timezone: "",
   setTimezone: (timezone) => set({ timezone }),
-
-  deliveryConfig: {
-    provideDelivery: false,
-    deliveryZone: [],
-  },
-  setDeliveryConfig: (config) => set({ deliveryConfig: config }),
-
-  hasEdgeDevice: false,
-  setHasEdgeDevice: (hasDevice) => set({ hasEdgeDevice: hasDevice }),
 }));
 
 export default useHostsStore;

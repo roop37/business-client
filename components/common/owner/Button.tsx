@@ -20,7 +20,7 @@ const SIZE_CLASS: Record<OwnerButtonSize, string> = {
 /**
  * Owner button. Use as the standard button across new screens.
  *
- *   <OwnerButton variant="primary" onClick={…}>New event</OwnerButton>
+ *   <OwnerButton variant="primary" onClick={…}>Add event</OwnerButton>
  *   <OwnerButton variant="secondary" leadingIcon={<Filter size={14} />}>Filter</OwnerButton>
  */
 export type OwnerButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & {

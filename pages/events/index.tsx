@@ -494,7 +494,7 @@ const EventsPage = () => {
           className="owner-btn owner-btn--primary"
         >
           <PlusIcon size={16} strokeWidth={2.4} />
-          {creating ? "Creating…" : "New event"}
+          {creating ? "Adding…" : "Add event"}
         </button>
       </header>
 
