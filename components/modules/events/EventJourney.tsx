@@ -406,6 +406,7 @@ const EventJourney = ({
     [],
   );
   const [selectedGenreIds, setSelectedGenreIds] = useState<string[]>([]);
+  const [genreFilter, setGenreFilter] = useState("");
   const [eventFlyer, setEventFlyer] = useState("");
   const [flyerPreview, setFlyerPreview] = useState("");
   const [flyerFile, setFlyerFile] = useState<File | null>(null);
@@ -980,7 +981,9 @@ const EventJourney = ({
     if (targetStep === 1) {
       if (!eventFlyer) return "Event flyer is required.";
       if (!title.trim()) return "Event name is required.";
-      if (!description.trim()) return "Event description is required.";
+      if (description.length > 3800) {
+        return "Event description must be 3800 characters or fewer.";
+      }
       if (!isComingSoon && (!startDate || !endDate)) {
         return "Event start and end date are required.";
       }
@@ -2492,13 +2495,16 @@ const EventJourney = ({
             pinned to its bottom. The bar is a flex sibling (not a sticky
             child of the scrolling section) so it touches the viewport bottom
             regardless of section padding — previous sticky-inside-padded-
-            scroll-container placed the bar 24px above the viewport bottom. */}
+            scroll-container placed the bar 24px above the viewport bottom.
+            Inner wrapper uses min-h-full so short steps fill the viewport
+            instead of leaving a large empty band below the form (Phase 4
+            polish). */}
         <div className="flex min-h-0 min-w-0 flex-col overflow-hidden">
           <section
             ref={formScrollRef}
             className="min-h-0 min-w-0 flex-1 overflow-y-auto overflow-x-hidden p-4 pb-3 md:p-6 md:pb-4"
           >
-            <div className="mx-auto flex max-w-5xl flex-col gap-5">
+            <div className="mx-auto flex min-h-full max-w-5xl flex-col gap-5">
               <div className="flex gap-2 overflow-x-auto pb-1 lg:hidden">
                 {visibleSteps.map((label) => {
                   const index = steps.indexOf(label);
@@ -2748,48 +2754,93 @@ const EventJourney = ({
                         </div>
                         <div className="md:col-span-2">
                           <RichTextEditor
-                            label="Event Description"
+                            label="Event Description (optional)"
                             value={description}
                             onChange={setDescription}
                           />
+                          <p
+                            className={`mt-1 text-right text-xs ${
+                              description.length > 3800
+                                ? "text-[var(--owner-danger-text)]"
+                                : "text-[var(--owner-fg-4)]"
+                            }`}
+                          >
+                            {description.length} / 3800
+                          </p>
                         </div>
-                        {/* Genres — multi-select chips. Tags drive
-                          discoverability filters on the customer site. */}
+                        {/* Genres — selected chips on top, searchable
+                            scrollable list below. Tags drive discoverability
+                            filters on the customer site. */}
                         {allGenres.length > 0 ? (
                           <div className="md:col-span-2">
                             <p className="mb-2 text-sm font-medium">
                               Genres
                               <span className="ml-2 text-xs font-normal text-[var(--owner-fg-3)]">
-                                (pick all that apply — Comedy, Bollywood, EDM,
-                                etc.)
+                                — pick what fits this event
                               </span>
                             </p>
-                            <div className="flex flex-wrap gap-2">
-                              {allGenres.map((g) => {
-                                const selected = selectedGenreIds.includes(
-                                  g._id,
-                                );
-                                return (
-                                  <button
-                                    key={g._id}
-                                    type="button"
-                                    onClick={() =>
-                                      setSelectedGenreIds((prev) =>
-                                        prev.includes(g._id)
-                                          ? prev.filter((id) => id !== g._id)
-                                          : [...prev, g._id],
-                                      )
-                                    }
-                                    className={`rounded-full border px-3 py-1 text-xs font-semibold transition ${
-                                      selected
-                                        ? "border-[var(--owner-blue-500)] bg-[var(--owner-blue-050)] text-[var(--owner-blue-500)]"
-                                        : "border-[var(--owner-border)] bg-white text-[var(--owner-fg-3)] hover:border-[var(--owner-blue-500)]"
-                                    }`}
-                                  >
-                                    {g.value}
-                                  </button>
-                                );
-                              })}
+                            {selectedGenreIds.length > 0 ? (
+                              <div className="mb-2 flex flex-wrap gap-1.5 rounded-md border border-[var(--owner-border-soft)] bg-[var(--owner-bg-subtle)] p-2">
+                                {allGenres
+                                  .filter((g) =>
+                                    selectedGenreIds.includes(g._id),
+                                  )
+                                  .map((g) => (
+                                    <button
+                                      key={g._id}
+                                      type="button"
+                                      onClick={() =>
+                                        setSelectedGenreIds((prev) =>
+                                          prev.filter((id) => id !== g._id),
+                                        )
+                                      }
+                                      className="inline-flex items-center gap-1 rounded-full border border-[var(--owner-blue-500)] bg-[var(--owner-blue-050)] px-2.5 py-1 text-xs font-semibold text-[var(--owner-blue-500)] hover:bg-[var(--owner-blue-100)]"
+                                    >
+                                      {g.value}
+                                      <span aria-hidden>×</span>
+                                    </button>
+                                  ))}
+                              </div>
+                            ) : null}
+                            <input
+                              type="text"
+                              value={genreFilter}
+                              onChange={(e) => setGenreFilter(e.target.value)}
+                              placeholder="Search genres…"
+                              className="mb-2 w-full rounded-md border border-[var(--owner-border)] bg-white px-3 py-2 text-sm outline-none focus:border-[var(--owner-blue-500)]"
+                            />
+                            <div className="flex max-h-[180px] flex-wrap gap-1.5 overflow-y-auto rounded-md border border-[var(--owner-border-soft)] p-2">
+                              {allGenres
+                                .filter((g) => {
+                                  const q = genreFilter.trim().toLowerCase();
+                                  if (!q) return true;
+                                  return g.value.toLowerCase().includes(q);
+                                })
+                                .map((g) => {
+                                  const selected = selectedGenreIds.includes(
+                                    g._id,
+                                  );
+                                  return (
+                                    <button
+                                      key={g._id}
+                                      type="button"
+                                      onClick={() =>
+                                        setSelectedGenreIds((prev) =>
+                                          prev.includes(g._id)
+                                            ? prev.filter((id) => id !== g._id)
+                                            : [...prev, g._id],
+                                        )
+                                      }
+                                      className={`rounded-full border px-3 py-1 text-xs font-medium transition ${
+                                        selected
+                                          ? "border-[var(--owner-blue-500)] bg-[var(--owner-blue-050)] text-[var(--owner-blue-500)]"
+                                          : "border-[var(--owner-border)] bg-white text-[var(--owner-fg-3)] hover:border-[var(--owner-blue-500)] hover:text-[var(--owner-fg-1)]"
+                                      }`}
+                                    >
+                                      {g.value}
+                                    </button>
+                                  );
+                                })}
                             </div>
                           </div>
                         ) : null}
@@ -3798,6 +3849,27 @@ const EventJourney = ({
               </p>
             </div>
           </div>
+
+          <div className="mt-5 rounded-lg border border-white/10 bg-white/5 p-4 text-xs leading-5 text-[var(--owner-blue-100)]">
+            <p className="font-semibold text-white">Need help?</p>
+            <p className="mt-1">
+              Stuck on a step? Drop us a note and we&apos;ll jump in.
+            </p>
+            <a
+              href="mailto:contact@hoizr.com"
+              className="mt-3 inline-flex font-semibold text-white underline-offset-4 hover:underline"
+            >
+              contact@hoizr.com →
+            </a>
+            <a
+              href="https://wa.me/918910385523"
+              target="_blank"
+              rel="noreferrer"
+              className="mt-2 inline-flex items-center gap-1.5 font-semibold text-white underline-offset-4 hover:underline"
+            >
+              Chat with us now on WhatsApp →
+            </a>
+          </div>
         </aside>
         {ticketModalOpen ? (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/55 px-4 py-6">
@@ -4225,84 +4297,88 @@ const EventJourney = ({
                     ) : collaboratorQuery.trim().length >= 2 ? (
                       <div className="mt-3 rounded-md border border-dashed border-[var(--owner-border)] bg-[var(--owner-bg-subtle)] p-3 text-sm">
                         <p className="font-semibold">
-                          No organizer on Hoizr matches “
-                          {collaboratorQuery.trim()}”.
+                          No match for “{collaboratorQuery.trim()}” on Hoizr.
                         </p>
                         <p className="mt-1 text-xs text-[var(--owner-fg-3)]">
-                          Refer this organizer to bring them on board — you’ll
-                          be able to collaborate once they join.
+                          Please onboard {collaboratorQuery.trim()} to Hoizr to
+                          maximize event sales and event performance — once
+                          they join, you can add them as a collaborator here.
                         </p>
                         <button
                           type="button"
                           onClick={openReferralModalFromCollab}
                           className="mt-3 inline-flex items-center gap-2 rounded-lg border border-[var(--owner-blue-500)] bg-white px-3 py-1.5 text-xs font-semibold text-[var(--owner-blue-500)]"
                         >
-                          Refer this organizer to Hoizr
+                          Refer them to Hoizr
                         </button>
                       </div>
                     ) : null}
                   </div>
-                  <Input
-                    label="Collaborator display name"
-                    value={collaboratorName}
-                    onChange={setCollaboratorName}
-                  />
-                  <div>
-                    <div className="text-xs font-semibold uppercase tracking-[0.08em] text-[var(--owner-fg-3)]">
-                      What this collaborator can do
-                    </div>
-                    <div className="mt-3 grid gap-3 md:grid-cols-2">
-                      <ToggleSettingRow
-                        title="See event metrics"
-                        subtitle="Sales, attendance, conversion."
-                        checked={canSeeMetrics}
-                        onCheckedChange={setCanSeeMetrics}
+                  {collaboratorLinkId ? (
+                    <>
+                      <Input
+                        label="Collaborator display name"
+                        value={collaboratorName}
+                        onChange={setCollaboratorName}
                       />
-                      <ToggleSettingRow
-                        title="Run campaigns for this event"
-                        subtitle="Email blasts targeting attendees."
-                        checked={canRunCampaigns}
-                        onCheckedChange={setCanRunCampaigns}
-                      />
-                      <ToggleSettingRow
-                        title="Create offers / discount codes"
-                        subtitle="Promo codes that apply at checkout."
-                        checked={canCreateOffers}
-                        onCheckedChange={setCanCreateOffers}
-                      />
-                      <ToggleSettingRow
-                        title="Access customer list"
-                        subtitle="Download buyer contact details."
-                        checked={requestCustomerListAccess}
-                        onCheckedChange={setRequestCustomerListAccess}
-                      />
-                    </div>
-                  </div>
-                  <div>
-                    <div className="text-xs font-semibold uppercase tracking-[0.08em] text-[var(--owner-fg-3)]">
-                      Display &amp; operations
-                    </div>
-                    <div className="mt-3 grid gap-3 md:grid-cols-2">
-                      <ToggleSettingRow
-                        title="Hide on Event Page"
-                        subtitle="Don't show as a co-organizer publicly."
-                        checked={hideOnEventPage}
-                        onCheckedChange={setHideOnEventPage}
-                      />
-                      <ToggleSettingRow
-                        title="Allow Offline Tickets"
-                        subtitle="Can issue tickets at the door."
-                        checked={allowIssuingOfflineTickets}
-                        onCheckedChange={setAllowIssuingOfflineTickets}
-                      />
-                      <ToggleSettingRow
-                        title="Send Transactional Emails"
-                        subtitle="Cc'd on ticket purchase emails."
-                        checked={sendTransactionalMails}
-                        onCheckedChange={setSendTransactionalMails}
-                      />
-                    </div>
-                  </div>
+                      <div>
+                        <div className="text-xs font-semibold uppercase tracking-[0.08em] text-[var(--owner-fg-3)]">
+                          What this collaborator can do
+                        </div>
+                        <div className="mt-3 grid gap-3 md:grid-cols-2">
+                          <ToggleSettingRow
+                            title="See event metrics"
+                            subtitle="Sales, attendance, conversion."
+                            checked={canSeeMetrics}
+                            onCheckedChange={setCanSeeMetrics}
+                          />
+                          <ToggleSettingRow
+                            title="Run campaigns for this event"
+                            subtitle="Email blasts targeting attendees."
+                            checked={canRunCampaigns}
+                            onCheckedChange={setCanRunCampaigns}
+                          />
+                          <ToggleSettingRow
+                            title="Create offers / discount codes"
+                            subtitle="Promo codes that apply at checkout."
+                            checked={canCreateOffers}
+                            onCheckedChange={setCanCreateOffers}
+                          />
+                          <ToggleSettingRow
+                            title="Access customer list"
+                            subtitle="Download buyer contact details."
+                            checked={requestCustomerListAccess}
+                            onCheckedChange={setRequestCustomerListAccess}
+                          />
+                        </div>
+                      </div>
+                      <div>
+                        <div className="text-xs font-semibold uppercase tracking-[0.08em] text-[var(--owner-fg-3)]">
+                          Display &amp; operations
+                        </div>
+                        <div className="mt-3 grid gap-3 md:grid-cols-2">
+                          <ToggleSettingRow
+                            title="Hide on Event Page"
+                            subtitle="Don't show as a co-organizer publicly."
+                            checked={hideOnEventPage}
+                            onCheckedChange={setHideOnEventPage}
+                          />
+                          <ToggleSettingRow
+                            title="Allow Offline Tickets"
+                            subtitle="Can issue tickets at the door."
+                            checked={allowIssuingOfflineTickets}
+                            onCheckedChange={setAllowIssuingOfflineTickets}
+                          />
+                          <ToggleSettingRow
+                            title="Send Transactional Emails"
+                            subtitle="Cc'd on ticket purchase emails."
+                            checked={sendTransactionalMails}
+                            onCheckedChange={setSendTransactionalMails}
+                          />
+                        </div>
+                      </div>
+                    </>
+                  ) : null}
                 </div>
               </div>
               <div className="flex shrink-0 items-center justify-end gap-2 border-t border-[var(--owner-border)] px-5 py-3">
@@ -4800,7 +4876,16 @@ const EventJourney = ({
                       >["offers"][number];
                       option: PricingOption;
                     } => entry !== null,
-                  );
+                  )
+                  // Order: largest absolute savings first so the most attractive
+                  // offer sits immediately after the basic option. (User: "show
+                  // the offer where the customers are saving the most first
+                  // after the basic one".)
+                  .sort((a, b) => {
+                    const aSavings = a.boost.totalSavingsForHosts?.value ?? 0;
+                    const bSavings = b.boost.totalSavingsForHosts?.value ?? 0;
+                    return bSavings - aSavings;
+                  });
 
                 if (!pricingOptions.length) {
                   return (
@@ -5062,6 +5147,15 @@ const EventJourney = ({
                   </div>
                 );
               })()}
+
+              {pricingOptions.length > 0 ? (
+                <p className="mx-6 mt-3 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-[12px] leading-relaxed text-amber-900">
+                  <span className="font-semibold">Important:</span> event listings
+                  must be accurate. Misrepresented event details (lineup, venue,
+                  start time, ticket inclusions) can result in a fine charged on
+                  each wrong ticket sold. Double-check details before publishing.
+                </p>
+              ) : null}
               </div>
 
               <div className="flex shrink-0 flex-col gap-2 border-t border-[var(--owner-border)] bg-white px-6 py-4 sm:flex-row sm:justify-end">

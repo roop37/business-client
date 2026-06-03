@@ -42,9 +42,10 @@ const PayoutModals = () => {
       >
         <div className="space-y-4 text-[#171614]">
           <p className="text-sm leading-6 text-[#6f6255]">
-            Paid events need a primary payout account that&apos;s been verified
-            by our team. Add your payout details — once we verify them
-            (usually within a few hours), you&apos;ll be able to publish.
+            Paid events need a primary payout account verified by our team.
+            You can keep building this event and save it as a draft — once
+            we verify your payout (usually within 1 to 4 hours), the event
+            becomes publishable so customers can start buying tickets.
           </p>
           <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
             <CButton
@@ -101,13 +102,15 @@ const PayoutModals = () => {
               <Clock3 size={18} />
             </span>
             <p className="text-sm leading-6 text-[#3d3328]">
-              Please wait a moment — our team verifies new payout profiles within 1 to 4 hours. Your event is
-              safely saved as a draft. You can publish it once the payout clears verification.
+              Our team verifies new payout profiles within 1 to 4 hours. Your
+              event is safely saved as a draft and you can keep editing it.
+              The moment your payout clears, the event becomes publishable.
             </p>
           </div>
           <p className="text-sm leading-6 text-[#6f6255]">
-            While you wait, set up marketing so your event flies the moment it goes live — top up credits, draft an
-            email campaign, or line up an offer.
+            While you wait, set up marketing so your event flies the moment
+            it goes live — top up marketing credit, draft an email campaign,
+            or line up an offer.
           </p>
           <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
             <CButton
