@@ -36,8 +36,10 @@ const Navbar = () => {
   const onCampaigns =
     pathname.startsWith("/campaigns/") &&
     !pathname.startsWith("/campaigns/onboarding");
-  const showPrimary = pathname.startsWith("/dashboard") ||
-    pathname.startsWith("/events") ||
+  const onEventsRoot = pathname === "/events" || pathname === "/events/";
+  const showPrimary =
+    pathname.startsWith("/dashboard") ||
+    (pathname.startsWith("/events") && !onEventsRoot) ||
     onCampaigns;
 
   const primaryLabel = onCampaigns ? "Create campaign" : "New event";
