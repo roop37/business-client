@@ -67,7 +67,7 @@ const reports: Record<string, ReportConfig> = {
   },
   "city-breakdown": {
     title: "Customer cohorts",
-    description: "Event distribution by city for the active venue.",
+    description: "Event distribution by city for the active account.",
   },
   "ticket-inventory": {
     title: "Door & check-in",

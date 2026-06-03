@@ -1,4 +1,5 @@
 import ConfirmModal from "@/components/common/confirm-modal";
+import EventCard from "@/components/common/event/EventCard";
 import { RichTextEditor } from "@/components/common/RichTextEditor";
 import ToggleSettingRow from "@/components/modules/events/ToggleSettingRow";
 import { Calendar } from "@/components/ui/calendar";
@@ -7,6 +8,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
+import { useHostTypeLabel } from "@/hooks/useHostTypeLabel";
 import useGlobalStore from "@/store/global";
 import useHostsStore from "@/store/host";
 import { uploadHostAsset } from "@/utils/cloudinaryUpload";
@@ -386,6 +388,7 @@ const EventJourney = ({
     setPayoutModalSaveDraftHandler,
   } = useGlobalStore();
   const { selectedHostId } = useHostsStore();
+  const hostLabel = useHostTypeLabel();
   const [step, setStep] = useState(0);
   const [maxStep, setMaxStep] = useState(
     mode === "update" ? steps.length - 1 : 0,
@@ -404,6 +407,7 @@ const EventJourney = ({
     [],
   );
   const [selectedGenreIds, setSelectedGenreIds] = useState<string[]>([]);
+  const [genreFilter, setGenreFilter] = useState("");
   const [eventFlyer, setEventFlyer] = useState("");
   const [flyerPreview, setFlyerPreview] = useState("");
   const [flyerFile, setFlyerFile] = useState<File | null>(null);
@@ -528,6 +532,7 @@ const EventJourney = ({
   const [artistActualName, setArtistActualName] = useState("");
   const [artistName, setArtistName] = useState("");
   const [artistPicture, setArtistPicture] = useState("");
+  const [pendingArtistFile, setPendingArtistFile] = useState<File | null>(null);
   const [artistInstagram, setArtistInstagram] = useState("");
   const [artistSpotify, setArtistSpotify] = useState("");
   const [artistYoutube, setArtistYoutube] = useState("");
@@ -978,7 +983,9 @@ const EventJourney = ({
     if (targetStep === 1) {
       if (!eventFlyer) return "Event flyer is required.";
       if (!title.trim()) return "Event name is required.";
-      if (!description.trim()) return "Event description is required.";
+      if (description.length > 3800) {
+        return "Event description must be 3800 characters or fewer.";
+      }
       if (!isComingSoon && (!startDate || !endDate)) {
         return "Event start and end date are required.";
       }
@@ -1202,6 +1209,7 @@ const EventJourney = ({
     setArtistActualName("");
     setArtistName("");
     setArtistPicture("");
+    setPendingArtistFile(null);
     setArtistInstagram("");
     setArtistSpotify("");
     setArtistYoutube("");
@@ -1237,12 +1245,13 @@ const EventJourney = ({
     resetArtistDraftFields();
   };
 
-  const saveArtistDraft = () => {
+  const [artistSaving, setArtistSaving] = useState(false);
+  const saveArtistDraft = async () => {
     if (!artistName.trim()) {
       setToastData({ type: "error", message: "Stage name is required." });
       return;
     }
-    if (!artistPicture.trim()) {
+    if (!artistPicture.trim() && !pendingArtistFile) {
       setToastData({ type: "error", message: "Artist picture is required." });
       return;
     }
@@ -1267,10 +1276,44 @@ const EventJourney = ({
       });
       return;
     }
+
+    // Deferred upload: ImageUrlInput captured a File but left it pending so
+    // we don't burn Cloudinary requests on every drop. Push it up now,
+    // right before the artist row gets committed.
+    let resolvedPicture = artistPicture;
+    if (pendingArtistFile) {
+      setArtistSaving(true);
+      try {
+        const resolvedHostId =
+          selectedHostId || (await awaitSelectedHostId());
+        if (!resolvedHostId) {
+          setToastData({
+            type: "error",
+            message: `We couldn't load your ${hostLabel.lower} context. Refresh and try again.`,
+          });
+          setArtistSaving(false);
+          return;
+        }
+        const result = await uploadHostAsset({
+          kind: "event-extra",
+          hostId: resolvedHostId,
+          eventId,
+          file: pendingArtistFile,
+        });
+        resolvedPicture = result.secureUrl;
+      } catch (error) {
+        setToastData({ type: "error", message: extractErrorMessage(error) });
+        setArtistSaving(false);
+        return;
+      } finally {
+        setArtistSaving(false);
+      }
+    }
+
     const draft: ArtistEntry = {
       name: artistName.trim(),
       actualName: artistActualName.trim() || undefined,
-      picture: artistPicture,
+      picture: resolvedPicture,
       artistLinkId: artistLinkId || undefined,
       tempArtistId: tempArtistId || undefined,
       instagramLink: artistInstagram || undefined,
@@ -1556,7 +1599,7 @@ const EventJourney = ({
         setToastData({
           type: "error",
           message:
-            "We couldn't load your venue context. Refresh the page and try again.",
+            `We couldn't load your ${hostLabel.lower} context. Refresh the page and try again.`,
         });
         setUploadingFlyer(false);
         return;
@@ -2331,12 +2374,12 @@ const EventJourney = ({
   ) => {
     if (mode === feeSettlementMode) return;
     setConfirmAction({
-      title: "Switch settlement handling?",
+      title: "Switch upfront collection?",
       description:
         mode === "DEDUCT_FROM_PAYOUT"
-          ? "Hoizr will reconcile the offer through the event settlement after the event."
-          : "Hoizr will reconcile the offer after the event closes instead of through settlement.",
-      confirmLabel: "Switch handling",
+          ? "If this offer's upfront condition is met, Hoizr will deduct the upfront amount from the event payout. No separate payment is due before payout release."
+          : "If this offer's upfront condition is met, you will pay the upfront amount separately through Hoizr/Razorpay after the event and before payout release.",
+      confirmLabel: "Switch collection",
       tone: "warning",
       onConfirm: () => setFeeSettlementMode(mode),
     });
@@ -2394,10 +2437,10 @@ const EventJourney = ({
         ? "AI read: choose this when the offer is strong enough to lift conversion and you are comfortable reconciling it through settlement or after the event."
         : isLowestUpfront
           ? "AI read: lowest-friction option for publishing quickly."
-          : "AI read: balanced plan for venues that want a stronger offer without overcomplicating settlement.",
+          : `AI read: balanced plan for ${hostLabel.plural.toLowerCase()} that want a stronger offer without overcomplicating settlement.`,
       customerRecommendation: isFastestSettlement
         ? "Customer angle: simple ticket decision, clear offer, and fast event momentum."
-        : "Customer angle: clear value message in the venue publish flow.",
+        : `Customer angle: clear value message in the ${hostLabel.lower} publish flow.`,
     };
   };
 
@@ -2490,13 +2533,16 @@ const EventJourney = ({
             pinned to its bottom. The bar is a flex sibling (not a sticky
             child of the scrolling section) so it touches the viewport bottom
             regardless of section padding — previous sticky-inside-padded-
-            scroll-container placed the bar 24px above the viewport bottom. */}
+            scroll-container placed the bar 24px above the viewport bottom.
+            Inner wrapper uses min-h-full so short steps fill the viewport
+            instead of leaving a large empty band below the form (Phase 4
+            polish). */}
         <div className="flex min-h-0 min-w-0 flex-col overflow-hidden">
           <section
             ref={formScrollRef}
             className="min-h-0 min-w-0 flex-1 overflow-y-auto overflow-x-hidden p-4 pb-3 md:p-6 md:pb-4"
           >
-            <div className="mx-auto flex max-w-5xl flex-col gap-5">
+            <div className="mx-auto flex min-h-full max-w-5xl flex-col gap-5">
               <div className="flex gap-2 overflow-x-auto pb-1 lg:hidden">
                 {visibleSteps.map((label) => {
                   const index = steps.indexOf(label);
@@ -2746,48 +2792,93 @@ const EventJourney = ({
                         </div>
                         <div className="md:col-span-2">
                           <RichTextEditor
-                            label="Event Description"
+                            label="Event Description (optional)"
                             value={description}
                             onChange={setDescription}
                           />
+                          <p
+                            className={`mt-1 text-right text-xs ${
+                              description.length > 3800
+                                ? "text-[var(--owner-danger-text)]"
+                                : "text-[var(--owner-fg-4)]"
+                            }`}
+                          >
+                            {description.length} / 3800
+                          </p>
                         </div>
-                        {/* Genres — multi-select chips. Tags drive
-                          discoverability filters on the customer site. */}
+                        {/* Genres — selected chips on top, searchable
+                            scrollable list below. Tags drive discoverability
+                            filters on the customer site. */}
                         {allGenres.length > 0 ? (
                           <div className="md:col-span-2">
                             <p className="mb-2 text-sm font-medium">
                               Genres
                               <span className="ml-2 text-xs font-normal text-[var(--owner-fg-3)]">
-                                (pick all that apply — Comedy, Bollywood, EDM,
-                                etc.)
+                                — pick what fits this event
                               </span>
                             </p>
-                            <div className="flex flex-wrap gap-2">
-                              {allGenres.map((g) => {
-                                const selected = selectedGenreIds.includes(
-                                  g._id,
-                                );
-                                return (
-                                  <button
-                                    key={g._id}
-                                    type="button"
-                                    onClick={() =>
-                                      setSelectedGenreIds((prev) =>
-                                        prev.includes(g._id)
-                                          ? prev.filter((id) => id !== g._id)
-                                          : [...prev, g._id],
-                                      )
-                                    }
-                                    className={`rounded-full border px-3 py-1 text-xs font-semibold transition ${
-                                      selected
-                                        ? "border-[var(--owner-blue-500)] bg-[var(--owner-blue-050)] text-[var(--owner-blue-500)]"
-                                        : "border-[var(--owner-border)] bg-white text-[var(--owner-fg-3)] hover:border-[var(--owner-blue-500)]"
-                                    }`}
-                                  >
-                                    {g.value}
-                                  </button>
-                                );
-                              })}
+                            {selectedGenreIds.length > 0 ? (
+                              <div className="mb-2 flex flex-wrap gap-1.5 rounded-md border border-[var(--owner-border-soft)] bg-[var(--owner-bg-subtle)] p-2">
+                                {allGenres
+                                  .filter((g) =>
+                                    selectedGenreIds.includes(g._id),
+                                  )
+                                  .map((g) => (
+                                    <button
+                                      key={g._id}
+                                      type="button"
+                                      onClick={() =>
+                                        setSelectedGenreIds((prev) =>
+                                          prev.filter((id) => id !== g._id),
+                                        )
+                                      }
+                                      className="inline-flex items-center gap-1 rounded-full border border-[var(--owner-blue-500)] bg-[var(--owner-blue-050)] px-2.5 py-1 text-xs font-semibold text-[var(--owner-blue-500)] hover:bg-[var(--owner-blue-100)]"
+                                    >
+                                      {g.value}
+                                      <span aria-hidden>×</span>
+                                    </button>
+                                  ))}
+                              </div>
+                            ) : null}
+                            <input
+                              type="text"
+                              value={genreFilter}
+                              onChange={(e) => setGenreFilter(e.target.value)}
+                              placeholder="Search genres…"
+                              className="mb-2 w-full rounded-md border border-[var(--owner-border)] bg-white px-3 py-2 text-sm outline-none focus:border-[var(--owner-blue-500)]"
+                            />
+                            <div className="flex max-h-[180px] flex-wrap gap-1.5 overflow-y-auto rounded-md border border-[var(--owner-border-soft)] p-2">
+                              {allGenres
+                                .filter((g) => {
+                                  const q = genreFilter.trim().toLowerCase();
+                                  if (!q) return true;
+                                  return g.value.toLowerCase().includes(q);
+                                })
+                                .map((g) => {
+                                  const selected = selectedGenreIds.includes(
+                                    g._id,
+                                  );
+                                  return (
+                                    <button
+                                      key={g._id}
+                                      type="button"
+                                      onClick={() =>
+                                        setSelectedGenreIds((prev) =>
+                                          prev.includes(g._id)
+                                            ? prev.filter((id) => id !== g._id)
+                                            : [...prev, g._id],
+                                        )
+                                      }
+                                      className={`rounded-full border px-3 py-1 text-xs font-medium transition ${
+                                        selected
+                                          ? "border-[var(--owner-blue-500)] bg-[var(--owner-blue-050)] text-[var(--owner-blue-500)]"
+                                          : "border-[var(--owner-border)] bg-white text-[var(--owner-fg-3)] hover:border-[var(--owner-blue-500)] hover:text-[var(--owner-fg-1)]"
+                                      }`}
+                                    >
+                                      {g.value}
+                                    </button>
+                                  );
+                                })}
                             </div>
                           </div>
                         ) : null}
@@ -3744,57 +3835,56 @@ const EventJourney = ({
           </div>
         </div>
 
-        <aside className="hidden min-h-0 border-l border-[var(--owner-border)] bg-[var(--owner-fg-1)] p-5 text-[var(--owner-bg)] xl:block">
+        <aside className="hidden min-h-0 overflow-y-auto border-l border-[var(--owner-border)] bg-[var(--owner-fg-1)] p-5 text-[var(--owner-bg)] xl:block">
           <div className="flex items-center gap-2 text-sm font-semibold text-[var(--owner-blue-100)]">
             <SparklesIcon size={16} />
             Live Event Preview
           </div>
-          <div className="mt-5 overflow-hidden rounded-[22px] bg-white p-3 text-[var(--owner-fg-1)]">
-            <div
-              className="flex aspect-[4/5] items-center justify-center rounded-[18px] bg-[var(--owner-bg-subtle)] bg-cover bg-center"
-              style={
-                eventFlyer
-                  ? { backgroundImage: `url(${eventFlyer})` }
-                  : undefined
-              }
+          <div className="mt-4 text-[var(--owner-fg-1)]">
+            <EventCard
+              flyer={eventFlyer || undefined}
+              dateLabel={formatDate(startDate)}
+              title={title || "Untitled Event"}
+              city={city || "City pending"}
+              priceLabel={(() => {
+                // Pull the cheapest visible PAID ticket from the saved
+                // list — "0 onwards" used to leak through when only
+                // `ticketPrice` (the modal draft) was checked.
+                if (eventType === "FREE") return "Guestlist";
+                const paid = (tickets ?? [])
+                  .filter(
+                    (t) =>
+                      t.ticketCategory !== "GUESTLIST" &&
+                      Number(t.ticketPrice ?? 0) > 0 &&
+                      (t.ticketVisible ?? true),
+                  )
+                  .map((t) => Number(t.ticketPrice ?? 0));
+                if (paid.length === 0) return "Guestlist";
+                const cheapest = Math.min(...paid);
+                return `${rupee(cheapest)} onwards`;
+              })()}
+            />
+          </div>
+
+          <div className="mt-5 rounded-lg border border-white/10 bg-white/5 p-4 text-xs leading-5 text-[var(--owner-blue-100)]">
+            <p className="font-semibold text-white">Need help?</p>
+            <p className="mt-1">
+              Stuck on a step? Drop us a note and we&apos;ll jump in.
+            </p>
+            <a
+              href="mailto:contact@hoizr.com"
+              className="mt-3 inline-flex font-semibold text-white underline-offset-4 hover:underline"
             >
-              {!eventFlyer ? (
-                <CalendarDaysIcon
-                  size={42}
-                  className="text-[var(--owner-blue-500)]"
-                />
-              ) : null}
-            </div>
-            <div className="space-y-2 px-2 pb-2 pt-4">
-              <p className="text-sm font-semibold text-[var(--owner-blue-500)]">
-                {formatDate(startDate)}
-              </p>
-              <h2 className="line-clamp-2 text-xl font-semibold leading-tight">
-                {title || "Untitled Event"}
-              </h2>
-              <p className="line-clamp-1 text-base font-medium text-[var(--owner-fg-3)]">
-                {city || "City pending"}
-              </p>
-              <p className="text-base font-semibold text-[var(--owner-fg-3)]">
-                {(() => {
-                  // Pull the cheapest visible PAID ticket from the saved
-                  // list — "0 onwards" used to leak through when only
-                  // `ticketPrice` (the modal draft) was checked.
-                  if (eventType === "FREE") return "Guestlist";
-                  const paid = (tickets ?? [])
-                    .filter(
-                      (t) =>
-                        t.ticketCategory !== "GUESTLIST" &&
-                        Number(t.ticketPrice ?? 0) > 0 &&
-                        (t.ticketVisible ?? true),
-                    )
-                    .map((t) => Number(t.ticketPrice ?? 0));
-                  if (paid.length === 0) return "Guestlist";
-                  const cheapest = Math.min(...paid);
-                  return `${rupee(cheapest)} onwards`;
-                })()}
-              </p>
-            </div>
+              contact@hoizr.com →
+            </a>
+            <a
+              href="https://wa.me/918910385523"
+              target="_blank"
+              rel="noreferrer"
+              className="mt-2 inline-flex items-center gap-1.5 font-semibold text-white underline-offset-4 hover:underline"
+            >
+              Chat with us now on WhatsApp →
+            </a>
           </div>
         </aside>
         {ticketModalOpen ? (
@@ -4223,84 +4313,88 @@ const EventJourney = ({
                     ) : collaboratorQuery.trim().length >= 2 ? (
                       <div className="mt-3 rounded-md border border-dashed border-[var(--owner-border)] bg-[var(--owner-bg-subtle)] p-3 text-sm">
                         <p className="font-semibold">
-                          No organizer on Hoizr matches “
-                          {collaboratorQuery.trim()}”.
+                          No match for “{collaboratorQuery.trim()}” on Hoizr.
                         </p>
                         <p className="mt-1 text-xs text-[var(--owner-fg-3)]">
-                          Refer this organizer to bring them on board — you’ll
-                          be able to collaborate once they join.
+                          Please onboard {collaboratorQuery.trim()} to Hoizr to
+                          maximize event sales and event performance — once
+                          they join, you can add them as a collaborator here.
                         </p>
                         <button
                           type="button"
                           onClick={openReferralModalFromCollab}
                           className="mt-3 inline-flex items-center gap-2 rounded-lg border border-[var(--owner-blue-500)] bg-white px-3 py-1.5 text-xs font-semibold text-[var(--owner-blue-500)]"
                         >
-                          Refer this organizer to Hoizr
+                          Refer them to Hoizr
                         </button>
                       </div>
                     ) : null}
                   </div>
-                  <Input
-                    label="Collaborator display name"
-                    value={collaboratorName}
-                    onChange={setCollaboratorName}
-                  />
-                  <div>
-                    <div className="text-xs font-semibold uppercase tracking-[0.08em] text-[var(--owner-fg-3)]">
-                      What this collaborator can do
-                    </div>
-                    <div className="mt-3 grid gap-3 md:grid-cols-2">
-                      <ToggleSettingRow
-                        title="See event metrics"
-                        subtitle="Sales, attendance, conversion."
-                        checked={canSeeMetrics}
-                        onCheckedChange={setCanSeeMetrics}
+                  {collaboratorLinkId ? (
+                    <>
+                      <Input
+                        label="Collaborator display name"
+                        value={collaboratorName}
+                        onChange={setCollaboratorName}
                       />
-                      <ToggleSettingRow
-                        title="Run campaigns for this event"
-                        subtitle="Email blasts targeting attendees."
-                        checked={canRunCampaigns}
-                        onCheckedChange={setCanRunCampaigns}
-                      />
-                      <ToggleSettingRow
-                        title="Create offers / discount codes"
-                        subtitle="Promo codes that apply at checkout."
-                        checked={canCreateOffers}
-                        onCheckedChange={setCanCreateOffers}
-                      />
-                      <ToggleSettingRow
-                        title="Access customer list"
-                        subtitle="Download buyer contact details."
-                        checked={requestCustomerListAccess}
-                        onCheckedChange={setRequestCustomerListAccess}
-                      />
-                    </div>
-                  </div>
-                  <div>
-                    <div className="text-xs font-semibold uppercase tracking-[0.08em] text-[var(--owner-fg-3)]">
-                      Display &amp; operations
-                    </div>
-                    <div className="mt-3 grid gap-3 md:grid-cols-2">
-                      <ToggleSettingRow
-                        title="Hide on Event Page"
-                        subtitle="Don't show as a co-organizer publicly."
-                        checked={hideOnEventPage}
-                        onCheckedChange={setHideOnEventPage}
-                      />
-                      <ToggleSettingRow
-                        title="Allow Offline Tickets"
-                        subtitle="Can issue tickets at the door."
-                        checked={allowIssuingOfflineTickets}
-                        onCheckedChange={setAllowIssuingOfflineTickets}
-                      />
-                      <ToggleSettingRow
-                        title="Send Transactional Emails"
-                        subtitle="Cc'd on ticket purchase emails."
-                        checked={sendTransactionalMails}
-                        onCheckedChange={setSendTransactionalMails}
-                      />
-                    </div>
-                  </div>
+                      <div>
+                        <div className="text-xs font-semibold uppercase tracking-[0.08em] text-[var(--owner-fg-3)]">
+                          What this collaborator can do
+                        </div>
+                        <div className="mt-3 grid gap-3 md:grid-cols-2">
+                          <ToggleSettingRow
+                            title="See event metrics"
+                            subtitle="Sales, attendance, conversion."
+                            checked={canSeeMetrics}
+                            onCheckedChange={setCanSeeMetrics}
+                          />
+                          <ToggleSettingRow
+                            title="Run campaigns for this event"
+                            subtitle="Email blasts targeting attendees."
+                            checked={canRunCampaigns}
+                            onCheckedChange={setCanRunCampaigns}
+                          />
+                          <ToggleSettingRow
+                            title="Create offers / discount codes"
+                            subtitle="Promo codes that apply at checkout."
+                            checked={canCreateOffers}
+                            onCheckedChange={setCanCreateOffers}
+                          />
+                          <ToggleSettingRow
+                            title="Access customer list"
+                            subtitle="Download buyer contact details."
+                            checked={requestCustomerListAccess}
+                            onCheckedChange={setRequestCustomerListAccess}
+                          />
+                        </div>
+                      </div>
+                      <div>
+                        <div className="text-xs font-semibold uppercase tracking-[0.08em] text-[var(--owner-fg-3)]">
+                          Display &amp; operations
+                        </div>
+                        <div className="mt-3 grid gap-3 md:grid-cols-2">
+                          <ToggleSettingRow
+                            title="Hide on Event Page"
+                            subtitle="Don't show as a co-organizer publicly."
+                            checked={hideOnEventPage}
+                            onCheckedChange={setHideOnEventPage}
+                          />
+                          <ToggleSettingRow
+                            title="Allow Offline Tickets"
+                            subtitle="Can issue tickets at the door."
+                            checked={allowIssuingOfflineTickets}
+                            onCheckedChange={setAllowIssuingOfflineTickets}
+                          />
+                          <ToggleSettingRow
+                            title="Send Transactional Emails"
+                            subtitle="Cc'd on ticket purchase emails."
+                            checked={sendTransactionalMails}
+                            onCheckedChange={setSendTransactionalMails}
+                          />
+                        </div>
+                      </div>
+                    </>
+                  ) : null}
                 </div>
               </div>
               <div className="flex shrink-0 items-center justify-end gap-2 border-t border-[var(--owner-border)] px-5 py-3">
@@ -4422,6 +4516,7 @@ const EventJourney = ({
                         label="Artist Picture *"
                         value={artistPicture}
                         onChange={setArtistPicture}
+                        onFileChange={setPendingArtistFile}
                         hostId={selectedHostId}
                         eventId={eventId}
                         uploadKind="event-extra"
@@ -4463,10 +4558,14 @@ const EventJourney = ({
                 <button
                   type="button"
                   onClick={saveArtistDraft}
-                  disabled={!artistManualEntryEnabled}
+                  disabled={!artistManualEntryEnabled || artistSaving}
                   className="rounded-lg bg-[var(--owner-blue-500)] px-3 py-2 text-sm font-semibold text-[var(--owner-bg)] disabled:cursor-not-allowed disabled:opacity-50"
                 >
-                  {artistEditIndex === null ? "Add Artist" : "Save Artist"}
+                  {artistSaving
+                    ? "Uploading..."
+                    : artistEditIndex === null
+                      ? "Add Artist"
+                      : "Save Artist"}
                 </button>
               </div>
             </div>
@@ -4684,12 +4783,12 @@ const EventJourney = ({
               <div className="flex items-start justify-between gap-4 px-6 pt-6">
                 <div>
                   <h2 className="text-xl font-semibold text-[var(--owner-fg-1)]">
-                    Pick a publish plan
+                    Confirm your publish offer
                   </h2>
                   <p className="mt-1 text-sm leading-relaxed text-[var(--owner-fg-3)]">
-                    Publish at the basic Hoizr commission, or pick an AI offer
-                    that saves money after all upfront fees and included credits
-                    are counted. One option is always selected.
+                    Basic Hoizr commission stays first. Smart offers are shown
+                    after it by highest projected customer-side savings, with
+                    commission and upfront amount separated before you publish.
                   </p>
                 </div>
                 <button
@@ -4704,65 +4803,90 @@ const EventJourney = ({
               </div>
 
               <div className="min-h-0 flex-1 overflow-y-auto px-6 pb-4 pt-2">
-              {/* sticky-bottom footer added below — the cards section
-                  scrolls vertically if needed; the cards themselves lay
-                  out as a single horizontally-scrolling row. */}
+                {(() => {
+                  const selectedOption = pricingOptions.find(
+                    (o) => o.optionId === selectedPricingOptionId,
+                  );
+                  const upfrontFee = Number(selectedOption?.upfrontFee ?? 0);
+                  if (upfrontFee <= 0) return null;
+                  const selectedAmount = formatIndianRupees(upfrontFee);
+                  return (
+                    <div className="mt-5 rounded-xl border border-amber-200 bg-amber-50 p-4">
+                      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                        <div>
+                          <p className="text-[12px] font-semibold uppercase tracking-[0.08em] text-amber-800">
+                            Selected upfront amount
+                          </p>
+                          <p className="mt-1 text-sm leading-6 text-amber-900">
+                            This amount applies only if the offer&apos;s
+                            sell-through condition is met. Choose how it should
+                            be collected before payout release.
+                          </p>
+                        </div>
+                        <div className="rounded-lg bg-white px-4 py-3 text-right shadow-sm">
+                          <p className="text-[11px] font-semibold uppercase tracking-[0.08em] text-amber-700">
+                            Upfront
+                          </p>
+                          <p className="text-2xl font-bold tabular-nums text-amber-950">
+                            {selectedAmount}
+                          </p>
+                        </div>
+                      </div>
 
-              {/* Settlement-mode question only matters when the selected
-                  offer needs a separate settlement path. For basic
-                  no-offer publishes we skip the prompt and default the
-                  settlement mode silently. */}
-              {(() => {
-                const selectedOption = pricingOptions.find(
-                  (o) => o.optionId === selectedPricingOptionId,
-                );
-                const needsUpfrontChoice =
-                  selectedOption && (selectedOption.upfrontFee ?? 0) > 0;
-                if (!needsUpfrontChoice) return null;
-                return (
-                  <div className="mt-5 grid gap-3 md:grid-cols-2">
-                    <button
-                      type="button"
-                      onClick={() =>
-                        requestFeeSettlementModeChange("DEDUCT_FROM_PAYOUT")
-                      }
-                      className={`rounded-lg border p-3 text-left text-xs ${
-                        feeSettlementMode === "DEDUCT_FROM_PAYOUT"
-                          ? "border-[var(--owner-blue-500)] bg-[var(--owner-blue-50,#eef4ff)]"
-                          : "border-[var(--owner-border)] bg-[var(--owner-bg)]"
-                      }`}
-                    >
-                      <div className="font-semibold text-[var(--owner-fg-1)]">
-                        Reconcile through payout
+                      <div className="mt-4 grid gap-3 md:grid-cols-2">
+                        <button
+                          type="button"
+                          onClick={() =>
+                            requestFeeSettlementModeChange(
+                              "DEDUCT_FROM_PAYOUT",
+                            )
+                          }
+                          className={`rounded-lg border p-3 text-left text-xs transition ${
+                            feeSettlementMode === "DEDUCT_FROM_PAYOUT"
+                              ? "border-[var(--owner-blue-500)] bg-white shadow-sm"
+                              : "border-amber-200 bg-white/65 hover:bg-white"
+                          }`}
+                        >
+                          <div className="font-semibold text-[var(--owner-fg-1)]">
+                            Auto-deduct from payout
+                          </div>
+                          <div className="mt-1 leading-5 text-[var(--owner-fg-3)]">
+                            If triggered, Hoizr withholds {selectedAmount} from
+                            the event settlement. No separate payment link is
+                            needed.
+                          </div>
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() =>
+                            requestFeeSettlementModeChange("PAY_AFTER_EVENT")
+                          }
+                          className={`rounded-lg border p-3 text-left text-xs transition ${
+                            feeSettlementMode === "PAY_AFTER_EVENT"
+                              ? "border-[var(--owner-blue-500)] bg-white shadow-sm"
+                              : "border-amber-200 bg-white/65 hover:bg-white"
+                          }`}
+                        >
+                          <div className="font-semibold text-[var(--owner-fg-1)]">
+                            Organizer-paid payment link
+                          </div>
+                          <div className="mt-1 leading-5 text-[var(--owner-fg-3)]">
+                            If triggered, Hoizr collects {selectedAmount} plus
+                            GST through a Razorpay payment link/order after the
+                            event. Your payout is not reduced by this fee.
+                          </div>
+                        </button>
                       </div>
-                      <div className="mt-1 text-[var(--owner-fg-3)]">
-                        Hoizr reconciles the offer through your ticket
-                        settlement.
-                      </div>
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() =>
-                        requestFeeSettlementModeChange("PAY_AFTER_EVENT")
-                      }
-                      className={`rounded-lg border p-3 text-left text-xs ${
-                        feeSettlementMode === "PAY_AFTER_EVENT"
-                          ? "border-[var(--owner-blue-500)] bg-[var(--owner-blue-50,#eef4ff)]"
-                          : "border-[var(--owner-border)] bg-[var(--owner-bg)]"
-                      }`}
-                    >
-                      <div className="font-semibold text-[var(--owner-fg-1)]">
-                        Reconcile after event completion
-                      </div>
-                      <div className="mt-1 text-[var(--owner-fg-3)]">
-                        Reconcile the offer after the event closes.
-                      </div>
-                    </button>
-                  </div>
-                );
-              })()}
+                      <p className="mt-3 text-[11.5px] leading-5 text-amber-900">
+                        If the sell-through condition is not met, the upfront
+                        amount is waived or refunded according to the selected
+                        collection path.
+                      </p>
+                    </div>
+                  );
+                })()}
 
-              {(() => {
+                {(() => {
                 const aiOptionIds = new Set(
                   (aiBoostGeneration?.offers ?? []).map(
                     (o) => `${AI_OFFER_PREFIX}${o.offerCode}`,
@@ -4798,12 +4922,21 @@ const EventJourney = ({
                       >["offers"][number];
                       option: PricingOption;
                     } => entry !== null,
-                  );
+                  )
+                  // Order: largest absolute savings first so the most attractive
+                  // offer sits immediately after the basic option. (User: "show
+                  // the offer where the customers are saving the most first
+                  // after the basic one".)
+                  .sort((a, b) => {
+                    const aSavings = a.boost.totalSavingsForHosts?.value ?? 0;
+                    const bSavings = b.boost.totalSavingsForHosts?.value ?? 0;
+                    return bSavings - aSavings;
+                  });
 
                 if (!pricingOptions.length) {
                   return (
                     <div className="mt-5 rounded-lg border border-[var(--owner-border)] bg-[var(--owner-bg)] p-4 text-sm text-[var(--owner-fg-3)]">
-                      No offers calculated yet — close this modal and reopen it
+                      No offers calculated yet. Close this modal and reopen it
                       after saving the last step.
                     </div>
                   );
@@ -4856,12 +4989,12 @@ const EventJourney = ({
                         <div className="grid grid-cols-2 gap-2 rounded-xl border border-[var(--owner-border-soft)] bg-[var(--owner-bg-subtle)] p-3">
                           <div>
                             <div className="text-[10px] font-semibold uppercase tracking-[0.1em] text-[var(--owner-fg-4)]">
-                              Upfront fee
+                              Upfront amount
                             </div>
                             <div className="mt-0.5 text-sm font-semibold tabular-nums text-[var(--owner-fg-1)]">
                               {(basicOption.upfrontFee ?? 0) > 0
                                 ? formatIndianRupees(basicOption.upfrontFee)
-                                : "—"}
+                                : "No upfront"}
                             </div>
                           </div>
                           <div>
@@ -4875,8 +5008,8 @@ const EventJourney = ({
                         </div>
 
                         <p className="text-xs leading-relaxed text-[var(--owner-fg-3)]">
-                          Publish at the standard Hoizr commission with no
-                          upfront fee.
+                          Publish at the standard Hoizr commission. No
+                          performance-based upfront amount is attached.
                         </p>
                       </button>
                     ) : null}
@@ -4944,20 +5077,26 @@ const EventJourney = ({
                             </div>
                             {delta > 0 ? (
                               <div className="mt-1 inline-flex items-center gap-1 rounded-full bg-[var(--owner-blue-050)] px-2 py-0.5 text-[11px] font-semibold text-[var(--owner-blue-500)]">
-                                ↓ {delta.toFixed(2)}% below basic
+                                {delta.toFixed(2)}% below basic
                               </div>
                             ) : null}
                           </div>
 
                           <div className="grid grid-cols-2 gap-2 rounded-xl border border-[var(--owner-border-soft)] bg-[var(--owner-bg-subtle)] p-3">
-                            <div>
+                            <div
+                              className={
+                                boost.extraAmount > 0
+                                  ? "rounded-lg border border-amber-200 bg-amber-50 px-2 py-1.5"
+                                  : ""
+                              }
+                            >
                               <div className="text-[10px] font-semibold uppercase tracking-[0.1em] text-[var(--owner-fg-4)]">
-                                Upfront fee
+                                Upfront amount
                               </div>
                               <div className="mt-0.5 text-sm font-semibold tabular-nums text-[var(--owner-fg-1)]">
                                 {boost.extraAmount > 0
                                   ? formatIndianRupees(boost.extraAmount)
-                                  : "—"}
+                                  : "No upfront"}
                               </div>
                             </div>
                             <div>
@@ -5060,6 +5199,15 @@ const EventJourney = ({
                   </div>
                 );
               })()}
+
+              {pricingOptions.length > 0 ? (
+                <p className="mx-6 mt-3 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-[12px] leading-relaxed text-amber-900">
+                  <span className="font-semibold">Important:</span> event listings
+                  must be accurate. Misrepresented event details (lineup, venue,
+                  start time, ticket inclusions) can result in a fine charged on
+                  each wrong ticket sold. Double-check details before publishing.
+                </p>
+              ) : null}
               </div>
 
               <div className="flex shrink-0 flex-col gap-2 border-t border-[var(--owner-border)] bg-white px-6 py-4 sm:flex-row sm:justify-end">
@@ -5390,6 +5538,7 @@ const ImageUrlInput = ({
   uploadKind = "event-extra",
   hostId,
   eventId,
+  onFileChange,
 }: {
   label: string;
   value: string;
@@ -5400,9 +5549,16 @@ const ImageUrlInput = ({
   uploadKind?: "event-extra" | "event-instagram" | "event-table-layout";
   hostId?: string;
   eventId?: string;
+  // When provided, switches to deferred mode: the picker holds the File in
+  // memory and reports it via this callback instead of uploading on drop.
+  // The parent is responsible for running the actual Cloudinary upload at
+  // form-save time. `onChange(blobUrl)` is still called so the preview
+  // works while the file is pending.
+  onFileChange?: (file: File | null) => void;
 }) => {
   const [uploading, setUploading] = useState(false);
   const { setToastData } = useGlobalStore();
+  const hostLabel = useHostTypeLabel();
   const handleFile = async (file?: File) => {
     if (!file) return;
     if (!file.type.startsWith("image/")) {
@@ -5416,6 +5572,14 @@ const ImageUrlInput = ({
       });
       return;
     }
+    if (onFileChange) {
+      // Deferred mode: preview via blob URL, defer Cloudinary upload to the
+      // parent's save action.
+      const blobUrl = URL.createObjectURL(file);
+      onChange(blobUrl);
+      onFileChange(file);
+      return;
+    }
     setUploading(true);
     try {
       const resolvedHostId = hostId || (await awaitSelectedHostId());
@@ -5423,7 +5587,7 @@ const ImageUrlInput = ({
         setToastData({
           type: "error",
           message:
-            "We couldn't load your venue context. Refresh the page and try again.",
+            `We couldn't load your ${hostLabel.lower} context. Refresh the page and try again.`,
         });
         setUploading(false);
         return;

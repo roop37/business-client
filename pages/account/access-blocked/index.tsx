@@ -140,7 +140,7 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
         hasAccess: true,
         target,
         message:
-          "Complete your payment to access the dashboard and enable online ordering for your venue.",
+          "Complete your payment to access the dashboard and unlock event publishing.",
       },
     };
   } catch (error) {

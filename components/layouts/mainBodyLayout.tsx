@@ -93,18 +93,15 @@ const MainLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     setSelectedHost,
     setSelectedHostTaxRateId,
     setSelectedHostId,
-    setOnlineOrderingActive,
+    setSelectedHostType,
     setHostLogo,
     setHostAddress,
-    setHostAvailability,
     setHostEmail,
     setHostPhone,
     setFacebookLink,
     setInstagramLink,
     setGoogleMapsLink,
     setTimezone,
-    setDeliveryConfig,
-    setHasEdgeDevice,
   } = useHostsStore();
   const { setTaxRate, taxRate } = useAuthStore();
   const { setMasterStates, setMasterTimezones, setCuisinesOptions } =
@@ -277,6 +274,7 @@ const MainLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
               address,
               email,
               phone,
+              hostType,
             } = res.restaurantDetails;
 
             setSelectedHost(name || "");
@@ -286,23 +284,16 @@ const MainLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
             }
 
             setSelectedHostId(_id || "");
+            setSelectedHostType(hostType ?? null);
 
-            setHostAvailability([]);
             setHostEmail(email || "");
             setHostPhone(phone || "");
             setInstagramLink("");
             setFacebookLink("");
             setGoogleMapsLink("");
             setTimezone("");
-            setDeliveryConfig({
-              deliveryZone: [],
-              provideDelivery:
-                false,
-            });
-            setHasEdgeDevice(false);
             setExistingTaxRateId(null);
             setButtonTitle("Add");
-            setOnlineOrderingActive(false);
           } else {
             try {
               const res = await sdk.setRestaurantIdAsCookie({

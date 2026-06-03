@@ -1,3 +1,4 @@
+import RotatingTipsPanel from "@/components/common/RotatingTipsPanel";
 import useGlobalStore from "@/store/global";
 import useMasterStore from "@/store/masters";
 import { sdk } from "@/utils/graphqlClient";
@@ -250,7 +251,7 @@ const OnboardingJourneyLayout = ({ children, includeTimezones }: Props) => {
 
           <div className="mt-6 rounded-lg border border-[var(--owner-border)] bg-[var(--owner-bg)] p-4 text-xs leading-5 text-[var(--owner-fg-3)]">
             <p className="font-semibold text-[var(--owner-fg-1)]">
-              Need a hand?
+              Need help?
             </p>
             <p className="mt-1">
               Setup usually takes 4–6 minutes. You can return any time — Hoizr
@@ -269,7 +270,7 @@ const OnboardingJourneyLayout = ({ children, includeTimezones }: Props) => {
               className="mt-2 inline-flex items-center gap-1.5 font-semibold text-[var(--owner-blue-500)] underline-offset-4 hover:underline"
             >
               <MessageCircle size={13} strokeWidth={2.2} />
-              Start a chat on WhatsApp
+              Chat with us now on WhatsApp
             </Link>
           </div>
         </aside>
@@ -304,31 +305,21 @@ const OnboardingJourneyLayout = ({ children, includeTimezones }: Props) => {
           </section>
         </div>
 
-        <aside className="hidden min-h-0 border-l border-[var(--owner-border)] bg-[var(--owner-fg-1)] p-5 text-[var(--owner-bg)] xl:block">
+        <aside className="hidden min-h-0 overflow-y-auto border-l border-[var(--owner-border)] bg-[var(--owner-fg-1)] p-5 text-[var(--owner-bg)] xl:block">
           <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.14em] text-[var(--owner-accent-acid)]">
             <SparklesIcon size={14} />
             {activeStep?.helper.eyebrow}
           </div>
-          <h2 className="mt-4 text-xl font-semibold leading-tight">
+          <h2 className="mt-3 text-lg font-semibold leading-tight">
             {activeStep?.helper.headline}
           </h2>
-          <p className="mt-3 text-sm leading-6 text-white/70">
-            {activeStep?.helper.body}
-          </p>
 
-          <ul className="mt-5 space-y-3 text-sm leading-5 text-white/80">
-            {activeStep?.helper.tips.map((tip) => (
-              <li key={tip} className="flex items-start gap-2.5">
-                <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-[var(--owner-accent-acid)]" />
-                <span>{tip}</span>
-              </li>
-            ))}
-          </ul>
+          <div className="mt-5">
+            <RotatingTipsPanel className="!border-white/15 !bg-white/5 [&_p]:!text-white/85 [&_.text-\\[var\\(--owner-fg-3\\)\\]]:!text-white/70 [&_.text-\\[var\\(--owner-fg-1\\)\\]]:!text-white" />
+          </div>
 
           <div className="mt-6 border-t border-white/10 pt-4 text-xs leading-5 text-white/55">
-            <p className="font-semibold text-white/80">
-              Saved as you go
-            </p>
+            <p className="font-semibold text-white/80">Saved as you go</p>
             <p className="mt-1">
               Hoizr autosaves after each step. Close the tab and come back —
               your progress is held against this account.

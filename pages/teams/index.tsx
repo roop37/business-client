@@ -1,6 +1,5 @@
 import {
   Badge,
-  Card,
   OwnerButton,
   OwnerTable,
   PageHeader,
@@ -19,6 +18,7 @@ import { PermissionTypeEnum, UserStatus, WalkthroughKey } from "@/generated/grap
 import useGlobalStore from "@/store/global";
 import useUserStore from "@/store/user";
 import useUserManagementStore from "@/store/userManagement";
+import { useHostTypeLabel } from "@/hooks/useHostTypeLabel";
 import { sdk } from "@/utils/graphqlClient";
 import { hasAccess } from "@/utils/hasAccess";
 import {
@@ -32,13 +32,9 @@ import Joyride, { STATUS } from "react-joyride";
 import useAddTeamMemberFormStore from "../../store/addTeamMemberStore";
 import {
   Filter,
-  Megaphone,
   MoreVertical,
   Pencil,
-  ScanLine,
-  ShieldCheck,
   Trash2,
-  UserCheck,
   UserPlus,
   UsersRound,
 } from "lucide-react";
@@ -54,37 +50,6 @@ type UserRepo = {
 };
 
 type RoleFilter = "all" | "Owner" | "Manager" | "Marketing" | "Staff";
-
-const roleCards = [
-  {
-    role: "Owner",
-    title: "Owner",
-    description: "Full workspace control",
-    Icon: ShieldCheck,
-    tone: "info" as BadgeTone,
-  },
-  {
-    role: "Manager",
-    title: "Manager",
-    description: "Events, tickets, and reports",
-    Icon: UserCheck,
-    tone: "success" as BadgeTone,
-  },
-  {
-    role: "Marketing",
-    title: "Marketer",
-    description: "Campaigns and audience tools",
-    Icon: Megaphone,
-    tone: "warning" as BadgeTone,
-  },
-  {
-    role: "Staff",
-    title: "Door staff",
-    description: "Scanner and check-in access",
-    Icon: ScanLine,
-    tone: "neutral" as BadgeTone,
-  },
-];
 
 const memberName = (member: TeamsRowType) =>
   [member.firstName, member.lastName].filter(Boolean).join(" ") ||
@@ -124,6 +89,7 @@ const Teams: NextPageWithLayout = () => {
   const { setSelectedSideBarMenu, setToastData } = useGlobalStore();
   const { resetForm } = useAddTeamMemberFormStore();
   const { meUser } = useUserStore();
+  const hostLabel = useHostTypeLabel();
   const {
     setIsEditTeamMember,
     setIsEditTeamMemberId,
@@ -261,15 +227,6 @@ const Teams: NextPageWithLayout = () => {
     }
   };
 
-  const roleSummary = useMemo(
-    () =>
-      roleCards.map((card) => ({
-        ...card,
-        count: data.filter((member) => roleMatches(member, card.role)).length,
-      })),
-    [data]
-  );
-
   const filteredMembers = useMemo(() => {
     const search = query.trim().toLowerCase();
     return data.filter((member) => {
@@ -338,34 +295,13 @@ const Teams: NextPageWithLayout = () => {
 
       <PageHeader
         title="Teams"
-        subtitle="Invite venue team members, assign roles, and keep permissions aligned with the current workspace."
+        subtitle={`Invite ${hostLabel.lower} team members, assign roles, and keep permissions aligned with the current workspace.`}
         actions={
           <OwnerButton leadingIcon={<UserPlus size={16} />} onClick={handleAddMember}>
             Invite member
           </OwnerButton>
         }
       />
-
-      <div className="mb-7 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-        {roleSummary.map(({ title, description, count, Icon, tone }) => (
-          <Card key={title} padding={22}>
-            <div className="mb-8 flex items-start justify-between gap-3">
-              <span className="flex h-10 w-10 items-center justify-center rounded-owner-md bg-owner-blue-050 text-owner-blue-500">
-                <Icon size={20} />
-              </span>
-              <span className="text-[28px] font-semibold leading-none text-owner-fg-1 tabular-nums">
-                {count}
-              </span>
-            </div>
-            <div className="flex items-center gap-2">
-              <Badge tone={tone}>{title}</Badge>
-            </div>
-            <p className="mt-3 text-[13px] leading-5 text-owner-fg-4">
-              {description}
-            </p>
-          </Card>
-        ))}
-      </div>
 
       <OwnerTable
         rowCount={filteredMembers.length}

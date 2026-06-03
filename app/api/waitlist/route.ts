@@ -47,7 +47,10 @@ const UNSUBSCRIBE_MAILTO = `mailto:contact@hoizr.com?subject=${encodeURIComponen
   "Remove me from Hoizr account updates",
 )}`;
 
-const NOTIFY_TO = process.env.WAITLIST_NOTIFY_EMAIL ?? "sanbedan9989@gmail.com";
+const NOTIFY_TO = (process.env.WAITLIST_NOTIFY_EMAIL ?? "tech@hoizr.com,contact@hoizr.com")
+  .split(",")
+  .map((email) => email.trim())
+  .filter(Boolean);
 
 const EMAIL_RX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const PHONE_RX = /^[+\d][\d\s().-]{6,}$/;

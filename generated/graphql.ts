@@ -1893,16 +1893,50 @@ export type HostContentDefaults = {
   updatedAt?: Maybe<Scalars['DateTimeISO']['output']>;
 };
 
+export type HostDashboardBreakdownRow = {
+  __typename?: 'HostDashboardBreakdownRow';
+  amount: Scalars['Float']['output'];
+  count: Scalars['Int']['output'];
+  label: Scalars['String']['output'];
+  percent: Scalars['Float']['output'];
+};
+
+export type HostDashboardCampaignRow = {
+  __typename?: 'HostDashboardCampaignRow';
+  id: Scalars['String']['output'];
+  name: Scalars['String']['output'];
+  recipientCount: Scalars['Int']['output'];
+  scheduledFor?: Maybe<Scalars['DateTimeISO']['output']>;
+  status: Scalars['String']['output'];
+};
+
+export type HostDashboardSeriesPoint = {
+  __typename?: 'HostDashboardSeriesPoint';
+  date: Scalars['String']['output'];
+  label: Scalars['String']['output'];
+  sales: Scalars['Float']['output'];
+  tickets: Scalars['Int']['output'];
+};
+
 export type HostDashboardSummary = {
   __typename?: 'HostDashboardSummary';
+  averageOrderValueLast30Days: Scalars['Float']['output'];
   draftEventsCount: Scalars['Int']['output'];
+  lifetimeCampaignMessagesSent: Scalars['Int']['output'];
+  marketingSubscribersCount: Scalars['Int']['output'];
+  orderCountLast30Days: Scalars['Int']['output'];
   paidOutLifetime: Scalars['Float']['output'];
   pendingSettlementsCount: Scalars['Int']['output'];
   publishedEventsCount: Scalars['Int']['output'];
+  salesBySource: Array<HostDashboardBreakdownRow>;
   salesLast30Days: Scalars['Float']['output'];
+  salesSeries: Array<HostDashboardSeriesPoint>;
   salesToday: Scalars['Float']['output'];
+  ticketMix: Array<HostDashboardBreakdownRow>;
   ticketsSoldLast30Days: Scalars['Int']['output'];
   ticketsSoldToday: Scalars['Int']['output'];
+  topItems: Array<HostDashboardBreakdownRow>;
+  upcomingCampaigns: Array<HostDashboardCampaignRow>;
   upcomingEventsCount: Scalars['Int']['output'];
 };
 
@@ -4751,7 +4785,7 @@ export type GetHostQuery = { __typename?: 'Query', getHost?: { __typename?: 'Hos
 export type GetHostDashboardSummaryQueryVariables = Exact<{ [key: string]: never; }>;
 
 
-export type GetHostDashboardSummaryQuery = { __typename?: 'Query', getHostDashboardSummary: { __typename?: 'HostDashboardSummary', upcomingEventsCount: number, publishedEventsCount: number, draftEventsCount: number, salesToday: number, ticketsSoldToday: number, salesLast30Days: number, ticketsSoldLast30Days: number, pendingSettlementsCount: number, paidOutLifetime: number } };
+export type GetHostDashboardSummaryQuery = { __typename?: 'Query', getHostDashboardSummary: { __typename?: 'HostDashboardSummary', upcomingEventsCount: number, publishedEventsCount: number, draftEventsCount: number, salesToday: number, ticketsSoldToday: number, salesLast30Days: number, ticketsSoldLast30Days: number, orderCountLast30Days: number, averageOrderValueLast30Days: number, pendingSettlementsCount: number, paidOutLifetime: number, marketingSubscribersCount: number, lifetimeCampaignMessagesSent: number, salesSeries: Array<{ __typename?: 'HostDashboardSeriesPoint', date: string, label: string, sales: number, tickets: number }>, salesBySource: Array<{ __typename?: 'HostDashboardBreakdownRow', label: string, amount: number, count: number, percent: number }>, ticketMix: Array<{ __typename?: 'HostDashboardBreakdownRow', label: string, amount: number, count: number, percent: number }>, topItems: Array<{ __typename?: 'HostDashboardBreakdownRow', label: string, amount: number, count: number, percent: number }>, upcomingCampaigns: Array<{ __typename?: 'HostDashboardCampaignRow', id: string, name: string, status: string, scheduledFor?: any | null, recipientCount: number }> } };
 
 export type CreateHostMutationVariables = Exact<{
   input: CreateHostInput;
@@ -5728,8 +5762,43 @@ export const GetHostDashboardSummaryDocument = gql`
     ticketsSoldToday
     salesLast30Days
     ticketsSoldLast30Days
+    orderCountLast30Days
+    averageOrderValueLast30Days
     pendingSettlementsCount
     paidOutLifetime
+    marketingSubscribersCount
+    lifetimeCampaignMessagesSent
+    salesSeries {
+      date
+      label
+      sales
+      tickets
+    }
+    salesBySource {
+      label
+      amount
+      count
+      percent
+    }
+    ticketMix {
+      label
+      amount
+      count
+      percent
+    }
+    topItems {
+      label
+      amount
+      count
+      percent
+    }
+    upcomingCampaigns {
+      id
+      name
+      status
+      scheduledFor
+      recipientCount
+    }
   }
 }
     `;

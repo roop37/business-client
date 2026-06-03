@@ -25,10 +25,14 @@ type ContactLead = {
 
 const FROM_ADDRESS = "Sanbedan Paul <contact@hoizr.com>";
 const REPLY_TO = "contact@hoizr.com";
+const DEFAULT_NOTIFY_TO = "tech@hoizr.com,contact@hoizr.com";
 const NOTIFY_TO =
-  process.env.CONTACT_NOTIFY_EMAIL ??
-  process.env.WAITLIST_NOTIFY_EMAIL ??
-  "sanbedan9989@gmail.com";
+  (process.env.CONTACT_NOTIFY_EMAIL ??
+    process.env.WAITLIST_NOTIFY_EMAIL ??
+    DEFAULT_NOTIFY_TO)
+    .split(",")
+    .map((email) => email.trim())
+    .filter(Boolean);
 
 const SITE_URL =
   process.env.NEXT_PUBLIC_SITE_URL ?? "https://business.hoizr.com";
