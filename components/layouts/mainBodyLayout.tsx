@@ -18,7 +18,7 @@ import {
 import { useCallback, useEffect, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { FaSpinner } from "react-icons/fa";
-import Joyride, { STATUS } from "react-joyride";
+import Joyride, { STATUS, type Step } from "react-joyride";
 import CButton from "../common/button/button";
 import { ButtonType } from "../common/button/interface";
 import ReusableModal from "../common/modal/modal";
@@ -61,6 +61,92 @@ const isWalkthroughCompleted = (
   completed: WalkthroughKey[] | undefined,
   key: WalkthroughKey
 ) => (completed ?? []).includes(key);
+
+export type WalkthroughStep = Step & {
+  imageSrc?: string;
+  imageAlt?: string;
+};
+
+const walkthroughFallbackImage = "/walkthrough/metallic-line-banner.png";
+
+const withWalkthroughImage = (step: Step): WalkthroughStep => ({
+  ...step,
+  imageSrc: walkthroughFallbackImage,
+  imageAlt: "Hoizr platform walkthrough preview",
+});
+
+const mainWalkthroughSteps: WalkthroughStep[] = [
+  withWalkthroughImage({
+    title: "Welcome to Hoizr",
+    content:
+      "Let's walk through the places you will use most to create events, sell tickets, run campaigns, and manage payouts.",
+    placement: "center",
+    target: "body",
+  }),
+  withWalkthroughImage({
+    title: "Sidebar",
+    content:
+      "Use the sidebar to move between operations, marketing, ticket sales, customer data, and payments.",
+    target: "#app-sidebar",
+    placement: "right",
+  }),
+  withWalkthroughImage({
+    title: "Dashboard",
+    content:
+      "Start here for event performance, ticket sales, upcoming events, and recent activity.",
+    target: "#sidebar-dashboard",
+    placement: "right",
+  }),
+  withWalkthroughImage({
+    title: "Events",
+    content:
+      "Create and manage event drafts, ticketing, collaborators, lineup, and publishing.",
+    target: "#sidebar-events",
+    placement: "right",
+  }),
+  withWalkthroughImage({
+    title: "Campaigns",
+    content:
+      "Create campaigns, manage saved campaigns, and track metrics from your marketing activity.",
+    target: "#sidebar-campaigns",
+    placement: "right",
+  }),
+  withWalkthroughImage({
+    title: "Rewards and Loyalties",
+    content:
+      "Configure loyalty settings and offers for customers who keep coming back.",
+    target: "#sidebar-rewards",
+    placement: "right",
+  }),
+  withWalkthroughImage({
+    title: "Customers",
+    content:
+      "View customer profiles, segments, and purchase behavior for future campaigns.",
+    target: "#sidebar-customers",
+    placement: "right",
+  }),
+  withWalkthroughImage({
+    title: "Ticket Sales",
+    content:
+      "Track ticket purchases, guestlist entries, and sales activity for your events.",
+    target: "#sidebar-ticket-sales",
+    placement: "right",
+  }),
+  withWalkthroughImage({
+    title: "Payment",
+    content:
+      "Add payout profiles and review settlement details for paid events.",
+    target: "#sidebar-payment",
+    placement: "right",
+  }),
+  withWalkthroughImage({
+    title: "Account Settings",
+    content:
+      "Use the account menu for profile, business, and workspace controls.",
+    target: "#nav-account-management",
+    placement: "bottom",
+  }),
+];
 
 const MainLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   // Configs
@@ -518,78 +604,7 @@ const MainLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   return (
     <SidebarProvider className="min-w-0 overflow-hidden">
       <Joyride
-        steps={[
-          {
-            title: "Welcome to Hoizr",
-            content:
-              "Let's walk through the places you will use most to create events, sell tickets, run campaigns, and manage payouts.",
-            placement: "center",
-            target: "body",
-          },
-          {
-            title: "Sidebar",
-            content:
-              "Use the sidebar to move between operations, marketing, ticket sales, customer data, and payments.",
-            target: "#app-sidebar",
-            placement: "right",
-          },
-          {
-            title: "Dashboard",
-            content:
-              "Start here for event performance, ticket sales, upcoming events, and recent activity.",
-            target: "#sidebar-dashboard",
-            placement: "right",
-          },
-          {
-            title: "Events",
-            content:
-              "Create and manage event drafts, ticketing, collaborators, lineup, and publishing.",
-            target: "#sidebar-events",
-            placement: "right",
-          },
-          {
-            title: "Campaigns",
-            content:
-              "Create campaigns, manage saved campaigns, and track metrics from your marketing activity.",
-            target: "#sidebar-campaigns",
-            placement: "right",
-          },
-          {
-            title: "Rewards and Loyalties",
-            content:
-              "Configure loyalty settings and offers for customers who keep coming back.",
-            target: "#sidebar-rewards",
-            placement: "right",
-          },
-          {
-            title: "Customers",
-            content:
-              "View customer profiles, segments, and purchase behavior for future campaigns.",
-            target: "#sidebar-customers",
-            placement: "right",
-          },
-          {
-            title: "Ticket Sales",
-            content:
-              "Track ticket purchases, guestlist entries, and sales activity for your events.",
-            target: "#sidebar-ticket-sales",
-            placement: "right",
-          },
-          {
-            title: "Payment",
-            content:
-              "Add payout profiles and review settlement details for paid events.",
-            target: "#sidebar-payment",
-            placement: "right",
-          },
-          {
-            title: "Account Settings",
-            content:
-              "Use the account menu for profile, business, and workspace controls.",
-            target: "#nav-account-management",
-            placement: "bottom",
-          },
-        ]}
+        steps={mainWalkthroughSteps}
         run={showWalkthrough && !loading}
         continuous
         disableScrollParentFix

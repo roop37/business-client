@@ -21,9 +21,11 @@ import {
   CircleDollarSign,
   ClipboardList,
   Mail,
+  Megaphone,
   QrCode,
   ReceiptText,
   Send,
+  Sparkles,
   Ticket,
   Users,
 } from "lucide-react";
@@ -142,6 +144,33 @@ const emptySummary: HostDashboardSummary = {
 };
 
 const sourceColors = ["#0F8842", "#151412", "#D6A22D", "#3E82D9", "#B54D77", "#6B7280"];
+const marketingCardImage = "/marketing/brand/metallic-line-banner.png";
+
+const dashboardMarketingCards = [
+  {
+    kicker: "Campaign engine",
+    title: "Turn the next event into an owned-audience push",
+    body: "Top up credits, draft email, and line up direct customer sends before tickets go live.",
+    actionLabel: "Open campaigns",
+    href: "/campaigns/email",
+    icon: <Megaphone size={16} />,
+  },
+  {
+    kicker: "Launch planning",
+    title: "Shape the offer before the event hits the market",
+    body: "Create the event, compare publish plans, and keep the best customer-saving offer visible first.",
+    actionLabel: "Create event",
+    href: "/events?create=1",
+    icon: <Sparkles size={16} />,
+  },
+] satisfies {
+  kicker: string;
+  title: string;
+  body: string;
+  actionLabel: string;
+  href: string;
+  icon: ReactNode;
+}[];
 
 const isDone = (value: unknown) => value === true || value === 1;
 
@@ -435,6 +464,16 @@ export const DashboardClient = () => {
         </div>
       </Card>
 
+      <div className="grid gap-5 lg:grid-cols-2">
+        {dashboardMarketingCards.map((card) => (
+          <MarketingSpotlightCard
+            key={card.title}
+            {...card}
+            onClick={() => router.push(card.href)}
+          />
+        ))}
+      </div>
+
       <Card padding={0} className="overflow-hidden shadow-[0_2px_10px_rgba(15,15,15,0.04)]">
         <div className="flex flex-col gap-3 border-b border-owner-border-soft px-5 py-4 lg:flex-row lg:items-center lg:justify-between">
           <PillTabs tabs={rangeTabs} value={range} onChange={setRange} />
@@ -568,7 +607,7 @@ export const DashboardClient = () => {
             icon={<Mail size={17} />}
             title="Marketing"
             actionLabel="View campaigns"
-            onAction={() => router.push("/marketing-credit")}
+            onAction={() => router.push("/campaigns/marketing-credit")}
           />
           <div className="p-5 lg:p-6">
             <div>
@@ -594,7 +633,7 @@ export const DashboardClient = () => {
                     <button
                       type="button"
                       key={campaign.id}
-                      onClick={() => router.push("/marketing-credit")}
+                      onClick={() => router.push("/campaigns/marketing-credit")}
                       className="flex w-full items-center justify-between gap-3 px-3 py-3 text-left transition hover:bg-owner-bg-subtle"
                     >
                       <div className="min-w-0">
@@ -871,6 +910,59 @@ const MiniMetric = ({ label, value }: { label: string; value: string }) => (
     <div className="text-[12px] font-medium text-owner-fg-4">{label}</div>
     <div className="mt-1 text-[20px] font-semibold leading-none tabular-nums text-owner-fg-1">{value}</div>
   </div>
+);
+
+const MarketingSpotlightCard = ({
+  kicker,
+  title,
+  body,
+  actionLabel,
+  icon,
+  onClick,
+}: {
+  kicker: string;
+  title: string;
+  body: string;
+  actionLabel: string;
+  icon: ReactNode;
+  onClick: () => void;
+}) => (
+  <button
+    type="button"
+    onClick={onClick}
+    className="group relative min-h-[194px] overflow-hidden rounded-owner-lg border border-white/10 bg-[#080907] p-5 text-left text-white shadow-[0_18px_46px_rgba(15,15,15,0.20)] transition hover:-translate-y-0.5 hover:shadow-[0_22px_54px_rgba(15,15,15,0.25)] sm:p-6"
+  >
+    {/* eslint-disable-next-line @next/next/no-img-element */}
+    <img
+      src={marketingCardImage}
+      alt=""
+      aria-hidden
+      className="absolute inset-0 h-full w-full object-cover opacity-95"
+      draggable={false}
+    />
+    <div
+      aria-hidden
+      className="absolute inset-0 bg-[radial-gradient(circle_at_20%_0%,rgba(214,255,63,0.18),transparent_30%),linear-gradient(135deg,rgba(0,0,0,0.18),rgba(0,0,0,0.62)_46%,rgba(0,0,0,0.88))]"
+    />
+    <div className="relative flex min-h-[146px] flex-col justify-between">
+      <div>
+        <span className="inline-flex items-center gap-1.5 rounded-full border border-white/15 bg-white/10 px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.08em] text-white/80 backdrop-blur">
+          {icon}
+          {kicker}
+        </span>
+        <h2 className="mt-5 max-w-[540px] text-[22px] font-semibold leading-[1.12] text-white sm:text-[26px]">
+          {title}
+        </h2>
+        <p className="mt-3 max-w-[560px] text-[13.5px] leading-5 text-white/70 sm:text-[14px]">
+          {body}
+        </p>
+      </div>
+      <span className="mt-5 inline-flex w-fit items-center gap-1.5 rounded-owner-sm bg-white px-3 py-2 text-[13px] font-semibold text-[#10110D] transition group-hover:translate-x-0.5">
+        {actionLabel}
+        <ChevronRight size={14} />
+      </span>
+    </div>
+  </button>
 );
 
 const ActionTile = ({
