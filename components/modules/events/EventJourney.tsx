@@ -1,4 +1,5 @@
 import ConfirmModal from "@/components/common/confirm-modal";
+import EventCard from "@/components/common/event/EventCard";
 import { RichTextEditor } from "@/components/common/RichTextEditor";
 import ToggleSettingRow from "@/components/modules/events/ToggleSettingRow";
 import { Calendar } from "@/components/ui/calendar";
@@ -2373,12 +2374,12 @@ const EventJourney = ({
   ) => {
     if (mode === feeSettlementMode) return;
     setConfirmAction({
-      title: "Switch settlement handling?",
+      title: "Switch upfront collection?",
       description:
         mode === "DEDUCT_FROM_PAYOUT"
-          ? "Hoizr will reconcile the offer through the event settlement after the event."
-          : "Hoizr will reconcile the offer after the event closes instead of through settlement.",
-      confirmLabel: "Switch handling",
+          ? "If this offer's upfront condition is met, Hoizr will deduct the upfront amount from the event payout. No separate payment is due before payout release."
+          : "If this offer's upfront condition is met, you will pay the upfront amount separately through Hoizr/Razorpay after the event and before payout release.",
+      confirmLabel: "Switch collection",
       tone: "warning",
       onConfirm: () => setFeeSettlementMode(mode),
     });
@@ -3834,57 +3835,35 @@ const EventJourney = ({
           </div>
         </div>
 
-        <aside className="hidden min-h-0 border-l border-[var(--owner-border)] bg-[var(--owner-fg-1)] p-5 text-[var(--owner-bg)] xl:block">
+        <aside className="hidden min-h-0 overflow-y-auto border-l border-[var(--owner-border)] bg-[var(--owner-fg-1)] p-5 text-[var(--owner-bg)] xl:block">
           <div className="flex items-center gap-2 text-sm font-semibold text-[var(--owner-blue-100)]">
             <SparklesIcon size={16} />
             Live Event Preview
           </div>
-          <div className="mt-5 overflow-hidden rounded-[22px] bg-white p-3 text-[var(--owner-fg-1)]">
-            <div
-              className="flex aspect-[4/5] items-center justify-center rounded-[18px] bg-[var(--owner-bg-subtle)] bg-cover bg-center"
-              style={
-                eventFlyer
-                  ? { backgroundImage: `url(${eventFlyer})` }
-                  : undefined
-              }
-            >
-              {!eventFlyer ? (
-                <CalendarDaysIcon
-                  size={42}
-                  className="text-[var(--owner-blue-500)]"
-                />
-              ) : null}
-            </div>
-            <div className="space-y-2 px-2 pb-2 pt-4">
-              <p className="text-sm font-semibold text-[var(--owner-blue-500)]">
-                {formatDate(startDate)}
-              </p>
-              <h2 className="line-clamp-2 text-xl font-semibold leading-tight">
-                {title || "Untitled Event"}
-              </h2>
-              <p className="line-clamp-1 text-base font-medium text-[var(--owner-fg-3)]">
-                {city || "City pending"}
-              </p>
-              <p className="text-base font-semibold text-[var(--owner-fg-3)]">
-                {(() => {
-                  // Pull the cheapest visible PAID ticket from the saved
-                  // list — "0 onwards" used to leak through when only
-                  // `ticketPrice` (the modal draft) was checked.
-                  if (eventType === "FREE") return "Guestlist";
-                  const paid = (tickets ?? [])
-                    .filter(
-                      (t) =>
-                        t.ticketCategory !== "GUESTLIST" &&
-                        Number(t.ticketPrice ?? 0) > 0 &&
-                        (t.ticketVisible ?? true),
-                    )
-                    .map((t) => Number(t.ticketPrice ?? 0));
-                  if (paid.length === 0) return "Guestlist";
-                  const cheapest = Math.min(...paid);
-                  return `${rupee(cheapest)} onwards`;
-                })()}
-              </p>
-            </div>
+          <div className="mt-4 text-[var(--owner-fg-1)]">
+            <EventCard
+              flyer={eventFlyer || undefined}
+              dateLabel={formatDate(startDate)}
+              title={title || "Untitled Event"}
+              city={city || "City pending"}
+              priceLabel={(() => {
+                // Pull the cheapest visible PAID ticket from the saved
+                // list — "0 onwards" used to leak through when only
+                // `ticketPrice` (the modal draft) was checked.
+                if (eventType === "FREE") return "Guestlist";
+                const paid = (tickets ?? [])
+                  .filter(
+                    (t) =>
+                      t.ticketCategory !== "GUESTLIST" &&
+                      Number(t.ticketPrice ?? 0) > 0 &&
+                      (t.ticketVisible ?? true),
+                  )
+                  .map((t) => Number(t.ticketPrice ?? 0));
+                if (paid.length === 0) return "Guestlist";
+                const cheapest = Math.min(...paid);
+                return `${rupee(cheapest)} onwards`;
+              })()}
+            />
           </div>
 
           <div className="mt-5 rounded-lg border border-white/10 bg-white/5 p-4 text-xs leading-5 text-[var(--owner-blue-100)]">
@@ -4804,12 +4783,12 @@ const EventJourney = ({
               <div className="flex items-start justify-between gap-4 px-6 pt-6">
                 <div>
                   <h2 className="text-xl font-semibold text-[var(--owner-fg-1)]">
-                    Pick a publish plan
+                    Confirm your publish offer
                   </h2>
                   <p className="mt-1 text-sm leading-relaxed text-[var(--owner-fg-3)]">
-                    Publish at the basic Hoizr commission, or pick an AI offer
-                    that saves money after all upfront fees and included credits
-                    are counted. One option is always selected.
+                    Basic Hoizr commission stays first. Smart offers are shown
+                    after it by highest projected customer-side savings, with
+                    commission and upfront amount separated before you publish.
                   </p>
                 </div>
                 <button
@@ -4824,65 +4803,90 @@ const EventJourney = ({
               </div>
 
               <div className="min-h-0 flex-1 overflow-y-auto px-6 pb-4 pt-2">
-              {/* sticky-bottom footer added below — the cards section
-                  scrolls vertically if needed; the cards themselves lay
-                  out as a single horizontally-scrolling row. */}
+                {(() => {
+                  const selectedOption = pricingOptions.find(
+                    (o) => o.optionId === selectedPricingOptionId,
+                  );
+                  const upfrontFee = Number(selectedOption?.upfrontFee ?? 0);
+                  if (upfrontFee <= 0) return null;
+                  const selectedAmount = formatIndianRupees(upfrontFee);
+                  return (
+                    <div className="mt-5 rounded-xl border border-amber-200 bg-amber-50 p-4">
+                      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                        <div>
+                          <p className="text-[12px] font-semibold uppercase tracking-[0.08em] text-amber-800">
+                            Selected upfront amount
+                          </p>
+                          <p className="mt-1 text-sm leading-6 text-amber-900">
+                            This amount applies only if the offer&apos;s
+                            sell-through condition is met. Choose how it should
+                            be collected before payout release.
+                          </p>
+                        </div>
+                        <div className="rounded-lg bg-white px-4 py-3 text-right shadow-sm">
+                          <p className="text-[11px] font-semibold uppercase tracking-[0.08em] text-amber-700">
+                            Upfront
+                          </p>
+                          <p className="text-2xl font-bold tabular-nums text-amber-950">
+                            {selectedAmount}
+                          </p>
+                        </div>
+                      </div>
 
-              {/* Settlement-mode question only matters when the selected
-                  offer needs a separate settlement path. For basic
-                  no-offer publishes we skip the prompt and default the
-                  settlement mode silently. */}
-              {(() => {
-                const selectedOption = pricingOptions.find(
-                  (o) => o.optionId === selectedPricingOptionId,
-                );
-                const needsUpfrontChoice =
-                  selectedOption && (selectedOption.upfrontFee ?? 0) > 0;
-                if (!needsUpfrontChoice) return null;
-                return (
-                  <div className="mt-5 grid gap-3 md:grid-cols-2">
-                    <button
-                      type="button"
-                      onClick={() =>
-                        requestFeeSettlementModeChange("DEDUCT_FROM_PAYOUT")
-                      }
-                      className={`rounded-lg border p-3 text-left text-xs ${
-                        feeSettlementMode === "DEDUCT_FROM_PAYOUT"
-                          ? "border-[var(--owner-blue-500)] bg-[var(--owner-blue-50,#eef4ff)]"
-                          : "border-[var(--owner-border)] bg-[var(--owner-bg)]"
-                      }`}
-                    >
-                      <div className="font-semibold text-[var(--owner-fg-1)]">
-                        Reconcile through payout
+                      <div className="mt-4 grid gap-3 md:grid-cols-2">
+                        <button
+                          type="button"
+                          onClick={() =>
+                            requestFeeSettlementModeChange(
+                              "DEDUCT_FROM_PAYOUT",
+                            )
+                          }
+                          className={`rounded-lg border p-3 text-left text-xs transition ${
+                            feeSettlementMode === "DEDUCT_FROM_PAYOUT"
+                              ? "border-[var(--owner-blue-500)] bg-white shadow-sm"
+                              : "border-amber-200 bg-white/65 hover:bg-white"
+                          }`}
+                        >
+                          <div className="font-semibold text-[var(--owner-fg-1)]">
+                            Auto-deduct from payout
+                          </div>
+                          <div className="mt-1 leading-5 text-[var(--owner-fg-3)]">
+                            If triggered, Hoizr withholds {selectedAmount} from
+                            the event settlement. No separate payment link is
+                            needed.
+                          </div>
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() =>
+                            requestFeeSettlementModeChange("PAY_AFTER_EVENT")
+                          }
+                          className={`rounded-lg border p-3 text-left text-xs transition ${
+                            feeSettlementMode === "PAY_AFTER_EVENT"
+                              ? "border-[var(--owner-blue-500)] bg-white shadow-sm"
+                              : "border-amber-200 bg-white/65 hover:bg-white"
+                          }`}
+                        >
+                          <div className="font-semibold text-[var(--owner-fg-1)]">
+                            Organizer-paid payment link
+                          </div>
+                          <div className="mt-1 leading-5 text-[var(--owner-fg-3)]">
+                            If triggered, Hoizr collects {selectedAmount} plus
+                            GST through a Razorpay payment link/order after the
+                            event. Your payout is not reduced by this fee.
+                          </div>
+                        </button>
                       </div>
-                      <div className="mt-1 text-[var(--owner-fg-3)]">
-                        Hoizr reconciles the offer through your ticket
-                        settlement.
-                      </div>
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() =>
-                        requestFeeSettlementModeChange("PAY_AFTER_EVENT")
-                      }
-                      className={`rounded-lg border p-3 text-left text-xs ${
-                        feeSettlementMode === "PAY_AFTER_EVENT"
-                          ? "border-[var(--owner-blue-500)] bg-[var(--owner-blue-50,#eef4ff)]"
-                          : "border-[var(--owner-border)] bg-[var(--owner-bg)]"
-                      }`}
-                    >
-                      <div className="font-semibold text-[var(--owner-fg-1)]">
-                        Reconcile after event completion
-                      </div>
-                      <div className="mt-1 text-[var(--owner-fg-3)]">
-                        Reconcile the offer after the event closes.
-                      </div>
-                    </button>
-                  </div>
-                );
-              })()}
+                      <p className="mt-3 text-[11.5px] leading-5 text-amber-900">
+                        If the sell-through condition is not met, the upfront
+                        amount is waived or refunded according to the selected
+                        collection path.
+                      </p>
+                    </div>
+                  );
+                })()}
 
-              {(() => {
+                {(() => {
                 const aiOptionIds = new Set(
                   (aiBoostGeneration?.offers ?? []).map(
                     (o) => `${AI_OFFER_PREFIX}${o.offerCode}`,
@@ -4932,7 +4936,7 @@ const EventJourney = ({
                 if (!pricingOptions.length) {
                   return (
                     <div className="mt-5 rounded-lg border border-[var(--owner-border)] bg-[var(--owner-bg)] p-4 text-sm text-[var(--owner-fg-3)]">
-                      No offers calculated yet — close this modal and reopen it
+                      No offers calculated yet. Close this modal and reopen it
                       after saving the last step.
                     </div>
                   );
@@ -4985,12 +4989,12 @@ const EventJourney = ({
                         <div className="grid grid-cols-2 gap-2 rounded-xl border border-[var(--owner-border-soft)] bg-[var(--owner-bg-subtle)] p-3">
                           <div>
                             <div className="text-[10px] font-semibold uppercase tracking-[0.1em] text-[var(--owner-fg-4)]">
-                              Upfront fee
+                              Upfront amount
                             </div>
                             <div className="mt-0.5 text-sm font-semibold tabular-nums text-[var(--owner-fg-1)]">
                               {(basicOption.upfrontFee ?? 0) > 0
                                 ? formatIndianRupees(basicOption.upfrontFee)
-                                : "—"}
+                                : "No upfront"}
                             </div>
                           </div>
                           <div>
@@ -5004,8 +5008,8 @@ const EventJourney = ({
                         </div>
 
                         <p className="text-xs leading-relaxed text-[var(--owner-fg-3)]">
-                          Publish at the standard Hoizr commission with no
-                          upfront fee.
+                          Publish at the standard Hoizr commission. No
+                          performance-based upfront amount is attached.
                         </p>
                       </button>
                     ) : null}
@@ -5073,20 +5077,26 @@ const EventJourney = ({
                             </div>
                             {delta > 0 ? (
                               <div className="mt-1 inline-flex items-center gap-1 rounded-full bg-[var(--owner-blue-050)] px-2 py-0.5 text-[11px] font-semibold text-[var(--owner-blue-500)]">
-                                ↓ {delta.toFixed(2)}% below basic
+                                {delta.toFixed(2)}% below basic
                               </div>
                             ) : null}
                           </div>
 
                           <div className="grid grid-cols-2 gap-2 rounded-xl border border-[var(--owner-border-soft)] bg-[var(--owner-bg-subtle)] p-3">
-                            <div>
+                            <div
+                              className={
+                                boost.extraAmount > 0
+                                  ? "rounded-lg border border-amber-200 bg-amber-50 px-2 py-1.5"
+                                  : ""
+                              }
+                            >
                               <div className="text-[10px] font-semibold uppercase tracking-[0.1em] text-[var(--owner-fg-4)]">
-                                Upfront fee
+                                Upfront amount
                               </div>
                               <div className="mt-0.5 text-sm font-semibold tabular-nums text-[var(--owner-fg-1)]">
                                 {boost.extraAmount > 0
                                   ? formatIndianRupees(boost.extraAmount)
-                                  : "—"}
+                                  : "No upfront"}
                               </div>
                             </div>
                             <div>
