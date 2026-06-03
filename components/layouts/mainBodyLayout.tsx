@@ -93,6 +93,7 @@ const MainLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     setSelectedHost,
     setSelectedHostTaxRateId,
     setSelectedHostId,
+    setSelectedHostType,
     setOnlineOrderingActive,
     setHostLogo,
     setHostAddress,
@@ -277,6 +278,7 @@ const MainLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
               address,
               email,
               phone,
+              hostType,
             } = res.restaurantDetails;
 
             setSelectedHost(name || "");
@@ -286,6 +288,7 @@ const MainLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
             }
 
             setSelectedHostId(_id || "");
+            setSelectedHostType(hostType ?? null);
 
             setHostAvailability([]);
             setHostEmail(email || "");

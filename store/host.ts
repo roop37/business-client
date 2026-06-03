@@ -1,4 +1,4 @@
-import { AddressInfo, DeliveryZone, EdgeDeviceInfo } from "@/generated/graphql";
+import { AddressInfo, DeliveryZone, EdgeDeviceInfo, HostType } from "@/generated/graphql";
 import { create } from "zustand";
 
 interface DeliveryConfig {
@@ -15,6 +15,8 @@ type HostStates = {
   setSelectedHostTaxRateId: (tax: string) => void;
   selectedHostId: string;
   setSelectedHostId: (tax: string) => void;
+  selectedHostType: HostType | null;
+  setSelectedHostType: (type: HostType | null) => void;
   refreshHostChange: boolean;
   setRefreshHostChange: (res: boolean) => void;
   onlineOrderingActive: boolean;
@@ -58,6 +60,8 @@ const useHostsStore = create<HostStates>((set) => ({
     set({ selectedHostTaxRateId }),
   selectedHostId: "",
   setSelectedHostId: (selectedHostId) => set({ selectedHostId }),
+  selectedHostType: null,
+  setSelectedHostType: (selectedHostType) => set({ selectedHostType }),
   hosts: [],
   setHosts: (res) => set({ hosts: res }),
   refreshHostChange: false,
