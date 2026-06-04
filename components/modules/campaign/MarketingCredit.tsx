@@ -98,16 +98,18 @@ const formatDate = (value?: string | null) => {
   }).format(date);
 };
 
+const formatCredit = (value: number) => inrFormat(value, { decimals: 2 });
+
 const formatAmountCell = (amount: number) => {
   if (amount === 0) return { text: "—", className: "text-owner-fg-4" };
   if (amount > 0) {
     return {
-      text: `+ ${inrFormat(amount)}`,
+      text: `+ ${formatCredit(amount)}`,
       className: "text-owner-success-text font-semibold",
     };
   }
   return {
-    text: `− ${inrFormat(Math.abs(amount))}`,
+    text: `− ${formatCredit(Math.abs(amount))}`,
     className: "text-owner-fg-1 font-semibold",
   };
 };
@@ -248,7 +250,7 @@ export const MarketingCredit = () => {
             Marketing credit balance
           </div>
           <div className="mt-3 text-[44px] font-semibold leading-none tabular-nums">
-            {inrFormat(balance)}
+            {formatCredit(balance)}
           </div>
           <p className="mt-2 text-[12.5px] text-white/70">
             ~{messageCapacity.whatsapp.toLocaleString("en-IN")} WhatsApp ·
@@ -401,7 +403,7 @@ export const MarketingCredit = () => {
                     <span className={amount.className}>{amount.text}</span>
                   </OwnerTable.Cell>
                   <OwnerTable.Cell align="right" bold>
-                    {inrFormat(row.balance)}
+                    {formatCredit(row.balance)}
                   </OwnerTable.Cell>
                 </OwnerTable.Row>
               );
