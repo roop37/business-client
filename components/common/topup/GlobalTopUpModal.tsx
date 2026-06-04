@@ -33,7 +33,8 @@ const inrFormat = (value: number) =>
   new Intl.NumberFormat("en-IN", {
     style: "currency",
     currency: "INR",
-    maximumFractionDigits: 0,
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
   }).format(Math.max(0, value));
 
 type RazorpayResponse = {

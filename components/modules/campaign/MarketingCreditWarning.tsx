@@ -18,6 +18,7 @@ const EMAIL_RATE_INR = 1;
 
 const normalizeAmount = (value: number) =>
   Number.isFinite(value) ? Math.max(0, Math.ceil(value)) : 0;
+const formatCredit = (value: number) => inrFormat(value, { decimals: 2 });
 
 export const MarketingCreditWarning = ({
   estimatedCost,
@@ -65,9 +66,9 @@ export const MarketingCreditWarning = ({
 
   const recipientsCopy =
     audienceCount && audienceCount > 0
-      ? ` for ${audienceCount.toLocaleString("en-IN")} recipients at ${inrFormat(
-          EMAIL_RATE_INR
-        )}/email`
+      ? ` for ${audienceCount.toLocaleString(
+          "en-IN"
+        )} recipients at ${formatCredit(EMAIL_RATE_INR)}/email`
       : "";
 
   return (
@@ -80,11 +81,11 @@ export const MarketingCreditWarning = ({
         </span>
         <div>
           <p className="text-[14px] font-semibold">
-            {inrFormat(shortfall)} more marketing credit needed
+            {formatCredit(shortfall)} more marketing credit needed
           </p>
           <p className="mt-1 text-[13px] text-owner-fg-3">
-            Estimated cost for {label} is {inrFormat(normalizedEstimate)}
-            {recipientsCopy}. Current balance is {inrFormat(balance)}.
+            Estimated cost for {label} is {formatCredit(normalizedEstimate)}
+            {recipientsCopy}. Current balance is {formatCredit(balance)}.
           </p>
         </div>
       </div>

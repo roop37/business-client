@@ -1,13 +1,22 @@
 "use client";
 
 import ReusableModal from "@/components/common/modal/modal";
+import { defaultTemplates } from "@/components/modules/campaignOnboarding/defaultTemplates/defaultTemplate";
+import {
+  applyTemplateMergeTags,
+  stripHeaderFooterFromHtml,
+  stripHeaderFooterFromJson,
+} from "@/components/modules/campaignOnboarding/templateUtils";
 import { sdk } from "@/utils/graphqlClient";
 import { extractErrorMessage } from "@/utils/utilFUncs";
 import useGlobalStore from "@/store/global";
+import useHostsStore from "@/store/host";
 import {
   Bell,
+  ChevronRight,
   Coins,
   Instagram,
+  Loader2,
   Mail,
   MessageCircle,
   MessageSquare,
@@ -16,7 +25,7 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import { useRouter } from "next/router";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 type Channel = {
   id: "email" | "push" | "whatsapp" | "sms" | "instagram" | "meta";
@@ -29,35 +38,35 @@ type Channel = {
 const CHANNELS: Channel[] = [
   {
     id: "email",
-    label: "Email",
-    description: "Send a designed email to your audience.",
+    label: "Email campaign",
+    description: "Designed email blast — opens the builder with your event preloaded.",
     Icon: Mail,
     available: true,
   },
   {
     id: "push",
-    label: "Push",
-    description: "Mobile + web push to your customer base.",
+    label: "Push notifications",
+    description: "Mobile + web push to your followers.",
     Icon: Bell,
     available: false,
   },
   {
     id: "whatsapp",
-    label: "WhatsApp",
+    label: "WhatsApp broadcast",
     description: "1:1 broadcasts via your WhatsApp Business number.",
     Icon: MessageCircle,
     available: false,
   },
   {
     id: "sms",
-    label: "SMS",
+    label: "SMS blast",
     description: "Short, high-deliverability SMS to verified phones.",
     Icon: MessageSquare,
     available: false,
   },
   {
     id: "instagram",
-    label: "Instagram",
+    label: "Instagram post",
     description: "Auto-post the event flyer + caption to your handle.",
     Icon: Instagram,
     available: false,
@@ -75,8 +84,13 @@ const inrFormat = (value: number) =>
   new Intl.NumberFormat("en-IN", {
     style: "currency",
     currency: "INR",
-    maximumFractionDigits: 0,
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
   }).format(value);
+
+const findCleanSlateTemplate = () =>
+  defaultTemplates.find((t) => t.name.toLowerCase() === "clean slate") ??
+  defaultTemplates[0];
 
 const RunCampaignModal = () => {
   const router = useRouter();
@@ -86,8 +100,11 @@ const RunCampaignModal = () => {
     openTopUpModal,
     setToastData,
   } = useGlobalStore();
+  const { selectedHost, hostLogo, hostAddress } = useHostsStore();
+  const businessAddress = hostAddress?.addressLine1 || "";
   const [balance, setBalance] = useState<number | null>(null);
   const [loading, setLoading] = useState(false);
+  const [creating, setCreating] = useState<"email" | null>(null);
 
   useEffect(() => {
     if (!runCampaignModalEvent) return;
@@ -103,7 +120,6 @@ const RunCampaignModal = () => {
         setBalance(typeof next === "number" ? next : Number(next ?? 0));
       })
       .catch(() => {
-        // Best-effort — the modal still works without a balance.
         if (!cancelled) setBalance(null);
       })
       .finally(() => {
@@ -114,8 +130,91 @@ const RunCampaignModal = () => {
     };
   }, [runCampaignModalEvent]);
 
+  // Clean Slate template prepared once (strip + merge-tag substitute).
+  // Re-runs when the host or event changes so the editor preview shows
+  // the right brand context out of the gate.
+  const startingTemplate = useMemo(() => {
+    if (!runCampaignModalEvent) return null;
+    const base = findCleanSlateTemplate();
+    if (!base) return null;
+    const strippedJson = stripHeaderFooterFromJson(base.template.designJson);
+    const strippedHtml = stripHeaderFooterFromHtml(base.template.html ?? "");
+    const merged = applyTemplateMergeTags(strippedHtml, strippedJson, {
+      hostName: selectedHost || "",
+      hostLogo: hostLogo || "",
+      hostAddress: businessAddress,
+      eventTitle: runCampaignModalEvent.title,
+    });
+    return {
+      content: base.template.content ?? "",
+      html: merged.html,
+      designJson: merged.designJson,
+    };
+  }, [
+    businessAddress,
+    hostLogo,
+    runCampaignModalEvent,
+    selectedHost,
+  ]);
+
+  const handleEmail = async () => {
+    if (!runCampaignModalEvent || !startingTemplate || creating) return;
+    setCreating("email");
+    try {
+      const newId = await sdk
+        .createHostEmailCampaign({
+          input: {
+            campaignName: runCampaignModalEvent.title || "Untitled campaign",
+            emailSubject: runCampaignModalEvent.title || "",
+            emailTemplate: {
+              content: startingTemplate.content,
+              designJson: JSON.stringify(startingTemplate.designJson),
+              html: startingTemplate.html,
+            },
+          },
+        })
+        .then((res) => res?.createHostEmailCampaign);
+
+      if (!newId) {
+        throw new Error("Campaign creation returned no id");
+      }
+
+      // Attach the source event so the worker (and any audience filters
+      // that key on event) can resolve recipients later. Failure here
+      // doesn't block the user — the editor will still open and they
+      // can pick the event manually on the audience step.
+      try {
+        await sdk.updateHostEmailCampaign({
+          input: {
+            campaignId: newId,
+            eventId: runCampaignModalEvent.eventId,
+          },
+        });
+      } catch (error) {
+        setToastData({
+          type: "warning",
+          message:
+            "Created the campaign — couldn't auto-link the event, pick it on the audience step.",
+        });
+      }
+
+      closeRunCampaignModal();
+      router.push(
+        `/campaigns/onboarding/template-edit?editId=${encodeURIComponent(newId)}`,
+      );
+    } catch (error) {
+      setToastData({ type: "error", message: extractErrorMessage(error) });
+    } finally {
+      setCreating(null);
+    }
+  };
+
   const handleChannel = (channel: Channel) => {
     if (!runCampaignModalEvent) return;
+    if (channel.id === "email") {
+      void handleEmail();
+      return;
+    }
     if (!channel.available) {
       setToastData({
         type: "warning",
@@ -123,21 +222,12 @@ const RunCampaignModal = () => {
       });
       return;
     }
-    if (channel.id === "email") {
-      const { eventId, title } = runCampaignModalEvent;
-      const params = new URLSearchParams({
-        eventId,
-        title,
-      });
-      closeRunCampaignModal();
-      router.push(`/campaigns/onboarding/template-select?${params.toString()}`);
-    }
   };
 
   return (
     <ReusableModal
       isOpen={Boolean(runCampaignModalEvent)}
-      onClose={closeRunCampaignModal}
+      onClose={creating ? () => undefined : closeRunCampaignModal}
       title="Run a campaign"
       width="ml"
     >
@@ -148,77 +238,98 @@ const RunCampaignModal = () => {
         </span>
       </p>
 
-      <div className="mb-5 flex items-center justify-between gap-3 rounded-owner-md border border-owner-border bg-owner-bg-subtle px-4 py-3">
-        <div className="flex items-center gap-3">
-          <div className="grid h-9 w-9 place-items-center rounded-owner-md bg-owner-blue-050 text-owner-blue-500">
-            <Coins size={18} />
-          </div>
-          <div className="min-w-0">
-            <p className="text-[11.5px] font-medium uppercase tracking-[0.08em] text-owner-fg-3">
-              Marketing credit
-            </p>
-            <p className="text-[15px] font-semibold tabular-nums text-owner-fg-1">
-              {loading
-                ? "…"
-                : balance === null
-                  ? "Unknown"
-                  : inrFormat(balance)}
-            </p>
-          </div>
-        </div>
-        <button
-          type="button"
-          onClick={() => openTopUpModal()}
-          className="owner-btn owner-btn--secondary owner-btn--sm"
-        >
-          <Plus size={14} />
-          Buy credit
-        </button>
-      </div>
+      <ul className="flex flex-col gap-2.5">
+        {/* Marketing credit — first horizontal card. Clicking the whole
+            row opens the top-up modal so the host can refill without
+            leaving the run-campaign flow. */}
+        <li>
+          <button
+            type="button"
+            onClick={() => openTopUpModal()}
+            className="group flex w-full items-center gap-3 rounded-owner-md border border-owner-border bg-owner-bg-subtle px-4 py-3 text-left transition hover:border-owner-blue-200 hover:bg-owner-bg"
+          >
+            <span className="grid h-11 w-11 shrink-0 place-items-center rounded-owner-md bg-owner-blue-050 text-owner-blue-500">
+              <Coins size={20} />
+            </span>
+            <div className="min-w-0 flex-1">
+              <p className="text-[11.5px] font-semibold uppercase tracking-[0.08em] text-owner-fg-3">
+                Marketing credit
+              </p>
+              <p className="text-[15.5px] font-semibold tabular-nums text-owner-fg-1">
+                {loading
+                  ? "…"
+                  : balance === null
+                    ? "Unknown"
+                    : inrFormat(balance)}
+              </p>
+              <p className="mt-0.5 text-[12px] leading-[1.4] text-owner-fg-3">
+                Tap to top up — used for emails, push, WhatsApp, and
+                paid boosts.
+              </p>
+            </div>
+            <span className="inline-flex shrink-0 items-center gap-1.5 rounded-full bg-owner-blue-500 px-3 py-1.5 text-[12.5px] font-semibold text-white shadow-sm transition group-hover:bg-owner-blue-600">
+              <Plus size={13} />
+              Top up
+            </span>
+          </button>
+        </li>
 
-      <div className="grid gap-3 sm:grid-cols-2">
         {CHANNELS.map((channel) => {
-          const disabled = !channel.available;
+          const isEmail = channel.id === "email";
+          const isCreating = creating === "email" && isEmail;
           return (
-            <button
-              key={channel.id}
-              type="button"
-              onClick={() => handleChannel(channel)}
-              disabled={disabled && false /* keep clickable so we toast */}
-              className={`group relative flex items-start gap-3 rounded-owner-md border bg-owner-bg p-3 text-left transition ${
-                channel.available
-                  ? "border-owner-border hover:-translate-y-0.5 hover:border-owner-blue-200 hover:shadow-sm"
-                  : "cursor-not-allowed border-dashed border-owner-border opacity-70 hover:border-owner-border"
-              }`}
-            >
-              <span
-                className={`grid h-9 w-9 shrink-0 place-items-center rounded-owner-md ${
+            <li key={channel.id}>
+              <button
+                type="button"
+                onClick={() => handleChannel(channel)}
+                disabled={isCreating}
+                aria-disabled={!channel.available && !isEmail}
+                className={`group flex w-full items-center gap-3 rounded-owner-md border bg-owner-bg px-4 py-3 text-left transition ${
                   channel.available
-                    ? "bg-owner-blue-050 text-owner-blue-500"
-                    : "bg-owner-bg-subtle text-owner-fg-3"
-                }`}
+                    ? "border-owner-border hover:border-owner-blue-200 hover:shadow-sm"
+                    : "border-dashed border-owner-border opacity-80 hover:border-owner-border"
+                } ${isCreating ? "cursor-wait opacity-80" : ""}`}
               >
-                <channel.Icon size={17} />
-              </span>
-              <div className="min-w-0 flex-1">
-                <div className="flex items-center justify-between gap-2">
-                  <span className="text-[14px] font-semibold text-owner-fg-1">
-                    {channel.label}
-                  </span>
-                  {!channel.available ? (
-                    <span className="rounded-full bg-owner-bg-subtle px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.08em] text-owner-fg-3">
-                      Soon
+                <span
+                  className={`grid h-11 w-11 shrink-0 place-items-center rounded-owner-md ${
+                    channel.available
+                      ? "bg-owner-blue-050 text-owner-blue-500"
+                      : "bg-owner-bg-subtle text-owner-fg-3"
+                  }`}
+                >
+                  <channel.Icon size={20} />
+                </span>
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-center gap-2">
+                    <span className="text-[14.5px] font-semibold text-owner-fg-1">
+                      {channel.label}
                     </span>
-                  ) : null}
+                    {!channel.available ? (
+                      <span className="rounded-full bg-owner-bg-subtle px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.08em] text-owner-fg-3">
+                        Soon
+                      </span>
+                    ) : null}
+                  </div>
+                  <p className="mt-0.5 text-[12.5px] leading-[1.4] text-owner-fg-3">
+                    {channel.description}
+                  </p>
                 </div>
-                <p className="mt-0.5 text-[12.5px] leading-5 text-owner-fg-3">
-                  {channel.description}
-                </p>
-              </div>
-            </button>
+                {isCreating ? (
+                  <Loader2
+                    size={18}
+                    className="shrink-0 animate-spin text-owner-fg-3"
+                  />
+                ) : channel.available ? (
+                  <ChevronRight
+                    size={18}
+                    className="shrink-0 text-owner-fg-4 transition group-hover:text-owner-fg-2"
+                  />
+                ) : null}
+              </button>
+            </li>
           );
         })}
-      </div>
+      </ul>
     </ReusableModal>
   );
 };

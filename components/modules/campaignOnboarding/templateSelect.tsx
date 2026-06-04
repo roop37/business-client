@@ -8,6 +8,11 @@ import { CircleCheckIcon } from "lucide-react";
 import { useRouter } from "next/router";
 import React, { useEffect, useState } from "react";
 import { defaultTemplates } from "./defaultTemplates/defaultTemplate";
+import {
+  applyTemplateMergeTags,
+  stripHeaderFooterFromHtml,
+  stripHeaderFooterFromJson,
+} from "./templateUtils";
 
 type EventOption = {
   _id: string;
@@ -38,119 +43,6 @@ interface ITemplate {
 // at apply time — the host's editor opens on body-only content and the
 // worker owns the chrome at send time.
 // ───────────────────────────────────────────────────────────────────
-
-const LOGO_TAG_REGEX = /\{\{(business|host|restaurant)Logo\}\}/i;
-const UNSUBSCRIBE_REGEX = /emailUnsubscribeLink|\bunsubscribe\b/i;
-const HELP_REGEX = /need help.*contact@hoizr/i;
-const ADDRESS_BLOCK_REGEX =
-  /\{\{(business|host|restaurant)Name\}\}[\s\S]{0,40}\{\{(business|host|restaurant)Address\}\}/i;
-
-const shouldDropContent = (content: any): boolean => {
-  const type = content?.type;
-  const values = content?.values ?? {};
-  if (type === "image") {
-    const url = values?.src?.url ?? "";
-    return LOGO_TAG_REGEX.test(url);
-  }
-  if (type === "social") return true;
-  if (type === "text") {
-    const text: string = values?.text ?? "";
-    return (
-      UNSUBSCRIBE_REGEX.test(text) ||
-      HELP_REGEX.test(text) ||
-      ADDRESS_BLOCK_REGEX.test(text)
-    );
-  }
-  return false;
-};
-
-const stripHeaderFooterFromJson = (designJson: any): any => {
-  if (!designJson || typeof designJson !== "object") return designJson;
-  const json = JSON.parse(JSON.stringify(designJson));
-  const rows = json.body?.rows ?? [];
-  for (const row of rows) {
-    for (const col of row.columns ?? []) {
-      col.contents = (col.contents ?? []).filter(
-        (c: any) => !shouldDropContent(c)
-      );
-    }
-  }
-  json.body.rows = rows.filter((row: any) =>
-    (row.columns ?? []).some((col: any) => (col.contents?.length ?? 0) > 0)
-  );
-  return json;
-};
-
-// Surgical HTML strip. Unlayer emits each content cell (image, divider,
-// social, text…) as its own `<table style="font-family:..." role="presentation">`
-// wrapper inside the row container. We walk these wrappers and drop only
-// the ones whose markup matches a header/footer marker — body cells
-// (greeting text, CTA button, body copy) sharing the same row are kept.
-//
-// This mirrors `stripHeaderFooterFromJson`, which is also surgical
-// (filters individual `contents[]` items). Aligning both keeps the
-// preview HTML in sync with the JSON Unlayer loads into the editor;
-// otherwise the host sees one layout in the right-pane preview and a
-// different one the moment they open the editor.
-const findMatchingTableClose = (html: string, startIdx: number): number => {
-  const tagEnd = html.indexOf(">", startIdx);
-  if (tagEnd === -1) return -1;
-  let pos = tagEnd + 1;
-  let depth = 1;
-  while (pos < html.length && depth > 0) {
-    const nextOpen = html.indexOf("<table", pos);
-    const nextClose = html.indexOf("</table>", pos);
-    if (nextClose === -1) return -1;
-    if (nextOpen !== -1 && nextOpen < nextClose) {
-      depth += 1;
-      pos = nextOpen + 6;
-    } else {
-      depth -= 1;
-      pos = nextClose + 8;
-    }
-  }
-  return depth === 0 ? pos : -1;
-};
-
-const HTML_MARKERS: RegExp[] = [
-  /src="\{\{(business|host|restaurant)Logo\}\}"/i,
-  /\{\{emailUnsubscribeLink\}\}/i,
-  /href="mailto:contact@hoizr\.com"/i,
-  /Need help\?.*contact@hoizr\.com/i,
-  /cdn\.tools\.unlayer\.com\/social\/icons/i,
-  /\{\{(business|host|restaurant)Name\}\}<br\s*\/?>\s*\{\{(business|host|restaurant)Address\}\}/i,
-];
-
-// Unlayer content-wrapper tables have a stable signature: `<table style="font-family:'...'"`
-// followed soon by `role="presentation"`. Match the opening tag with a
-// regex so we don't depend on the specific font (templates ship with
-// Source Sans Pro today but Unlayer can swap that per-design).
-const CONTENT_WRAPPER_OPEN = /<table style="font-family:[^"]+;" role="presentation"/g;
-
-const stripHeaderFooterFromHtml = (html: string): string => {
-  if (!html) return html;
-  let result = html;
-  let cursor = 0;
-  let iterations = 0;
-  while (iterations++ < 500) {
-    CONTENT_WRAPPER_OPEN.lastIndex = cursor;
-    const match = CONTENT_WRAPPER_OPEN.exec(result);
-    if (!match) break;
-    const startIdx = match.index;
-    const endIdx = findMatchingTableClose(result, startIdx);
-    if (endIdx === -1) break;
-    const block = result.substring(startIdx, endIdx);
-    if (HTML_MARKERS.some((m) => m.test(block))) {
-      result =
-        result.substring(0, startIdx) +
-        result.substring(endIdx).replace(/^\s+/, "");
-      cursor = startIdx;
-    } else {
-      cursor = endIdx;
-    }
-  }
-  return result;
-};
 
 const TemplateCard = ({
   template,
