@@ -45,6 +45,57 @@ const UserBasicInformationForm: React.FC = () => {
     setUpdatedPreferences(accountPreferences);
   }, [firstName, lastName, accountPreferences]);
 
+  const [loadError, setLoadError] = useState<string | null>(null);
+
+  // Hydrate the basic profile store from `MeUserforProfile`. Before this,
+  // nothing hydrated `useBasicProfileStore` on mount — only `useUserStore`
+  // and `useAuthStore` were populated by mainBodyLayout's MeUser call —
+  // which is why the form rendered "No first name / No phone number /
+  // No last name" even for fully-onboarded accounts. `MeUserforProfile`
+  // also returns `accountPreferences` which the user-store query doesn't.
+  //
+  // On failure we surface the error: silently catching would degrade
+  // back into the exact "No X" placeholders that the user reported as
+  // the original bug, with no signal that anything went wrong.
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        setLoadError(null);
+        const res = await sdk.MeUserforProfile();
+        const u = res?.meUser;
+        if (!u || cancelled) return;
+        useBasicProfileStore.setState({
+          _id: u._id,
+          email: u.email ?? "",
+          firstName: u.firstName ?? "",
+          lastName: u.lastName ?? "",
+          phone: u.phone ?? "",
+          twoFactorAuth: Boolean(u.enable2FA),
+          accountPreferences: {
+            sms: Boolean(u.accountPreferences?.sms),
+            email: Boolean(u.accountPreferences?.email),
+            whatsapp: Boolean(u.accountPreferences?.whatsapp),
+          },
+        });
+      } catch (error) {
+        if (cancelled) return;
+        const msg = extractErrorMessage(error);
+        console.error("Failed to load account profile:", error);
+        setLoadError(msg);
+        // Read the toast setter from the store directly so this effect
+        // doesn't depend on the destructured `setToastData` further down
+        // in component body (TDZ guard).
+        useGlobalStore.getState().setToastData({ type: "error", message: msg });
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+    // Toast setter from a Zustand store is stable; safe to omit.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   const handleInputChange = (
     field: "firstName" | "lastName",
     value: string
@@ -121,6 +172,11 @@ const UserBasicInformationForm: React.FC = () => {
 
   return (
     <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-300  w-full ">
+      {loadError ? (
+        <div className="mb-4 rounded-md border border-red-200 bg-red-50 px-3 py-2 text-[12.5px] text-red-700">
+          Couldn&rsquo;t load your account info — {loadError}
+        </div>
+      ) : null}
       <div className="space-y-2">
         <div className="flex justify-between items-center ">
           <div>

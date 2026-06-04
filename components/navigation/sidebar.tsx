@@ -101,7 +101,12 @@ const BrandMark = ({
           alt={host.name ?? "Business logo"}
           width={size}
           height={size}
-          className="h-full w-full object-cover"
+          // `object-contain` (not `cover`) — many hosts upload wide
+          // wordmark lockups; `cover` was cropping the sides off so the
+          // brand was unrecognisable in the sidebar. The white wrapper
+          // already gives the logo a clean frame when the aspect ratio
+          // doesn't match the square slot.
+          className="h-full w-full object-contain"
           onError={() => setImageBroken(true)}
           unoptimized
         />

@@ -397,25 +397,76 @@ body,
    Self-contained colour values (no Owner tokens) so the card looks
    identical on any background.
    ============================================================================= */
+/* Light-theme fluid-glass card used by EventCard.tsx (host-facing
+   list / preview-screen cards). Cream-paper surface, soft gradient
+   sheen, hover lift + deeper shadow. Mirrors the spirit of
+   hoizr-client `.h-tile` translated to the warm Owner theme. */
+.owner-glass-card {
+  background:
+    linear-gradient(155deg, rgba(255, 255, 255, 0.78), rgba(255, 255, 255, 0.42) 55%),
+    rgba(255, 255, 255, 0.65);
+  backdrop-filter: blur(22px) saturate(160%);
+  -webkit-backdrop-filter: blur(22px) saturate(160%);
+  box-shadow:
+    0 14px 36px rgba(43, 35, 25, 0.10),
+    inset 0 1px 0 rgba(255, 255, 255, 0.85);
+  transition:
+    transform 0.22s cubic-bezier(0.2, 0.8, 0.2, 1),
+    box-shadow 0.22s ease,
+    border-color 0.22s ease;
+}
+.owner-glass-card:hover {
+  box-shadow:
+    0 22px 48px rgba(43, 35, 25, 0.14),
+    inset 0 1px 0 rgba(255, 255, 255, 0.92);
+}
+
 .cust-tile {
+  /* Mirrors hoizr-client `.h-tile` — fluid-glass surface with diagonal
+     sheen + brightened inner edge. Keep in sync with
+     hoizr-client/src/app/globals.css when that file changes. */
+  position: relative;
   display: flex;
   flex-direction: column;
   width: 100%;
   align-self: start;
   text-decoration: none;
   color: #fff;
-  border-radius: 18px;
+  border-radius: 20px;
   overflow: hidden;
   isolation: isolate;
-  background: rgba(255, 255, 255, 0.04);
-  backdrop-filter: blur(22px) saturate(170%);
-  -webkit-backdrop-filter: blur(22px) saturate(170%);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  background:
+    linear-gradient(155deg, rgba(255, 255, 255, 0.10), rgba(255, 255, 255, 0.02) 55%),
+    rgba(255, 255, 255, 0.04);
+  backdrop-filter: blur(26px) saturate(180%) brightness(1.04);
+  -webkit-backdrop-filter: blur(26px) saturate(180%) brightness(1.04);
+  border: 1px solid rgba(255, 255, 255, 0.10);
   box-shadow:
-    0 16px 32px rgba(0, 0, 0, 0.42),
-    inset 0 1px 0 rgba(255, 255, 255, 0.08);
+    0 18px 40px rgba(0, 0, 0, 0.46),
+    inset 0 1px 0 rgba(255, 255, 255, 0.14),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.02);
   font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Inter",
     system-ui, sans-serif;
+}
+.cust-tile::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(
+    125deg,
+    rgba(255, 255, 255, 0.10) 0%,
+    rgba(255, 255, 255, 0) 38%,
+    rgba(255, 255, 255, 0) 62%,
+    rgba(255, 255, 255, 0.05) 100%
+  );
+  opacity: 0.55;
+  mix-blend-mode: overlay;
+  z-index: 1;
+}
+.cust-tile > * {
+  position: relative;
+  z-index: 2;
 }
 .cust-tile-flyer {
   display: block;
@@ -438,14 +489,20 @@ body,
   justify-content: center;
 }
 .cust-tile-info {
+  /* Brighter, gradient-tinged glass footer matching hoizr-client
+     `.h-tile-info`. The wet refraction edge at the top reads as the
+     same surface language across both apps. */
   padding: 16px 18px 18px;
   display: flex;
   flex-direction: column;
   gap: 4px;
-  background: rgba(255, 255, 255, 0.04);
-  border-top: 1px solid rgba(255, 255, 255, 0.06);
-  backdrop-filter: blur(14px) saturate(160%);
-  -webkit-backdrop-filter: blur(14px) saturate(160%);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.09), rgba(255, 255, 255, 0.025) 60%),
+    rgba(20, 20, 26, 0.42);
+  border-top: 1px solid rgba(255, 255, 255, 0.12);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.10);
+  backdrop-filter: blur(20px) saturate(170%);
+  -webkit-backdrop-filter: blur(20px) saturate(170%);
 }
 .cust-tile-date {
   color: #c5ff3d;
