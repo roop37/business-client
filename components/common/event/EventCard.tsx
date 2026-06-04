@@ -54,7 +54,13 @@ const EventCard = ({
       tabIndex={interactive ? 0 : undefined}
       onClick={onClick}
       onKeyDown={handleKeyDown}
-      className={`group relative overflow-hidden rounded-owner-lg border bg-owner-bg shadow-owner-sm transition focus-visible:outline-none focus-visible:ring-4 ${
+      // `owner-glass-card` (defined in styles/globals.css) gives the
+      // light-theme fluid-glass surface — gradient sheen, brightened
+      // inner highlight, and a hover shadow that wouldn't fire if we
+      // mixed inline style with Tailwind `hover:shadow-*` (inline wins
+      // on specificity). Keep the visual contract in CSS so hover and
+      // base states share the same declaration site.
+      className={`owner-glass-card group relative overflow-hidden rounded-owner-lg border transition focus-visible:outline-none focus-visible:ring-4 hover:-translate-y-0.5 ${
         interactive ? "cursor-pointer" : ""
       } ${borderClass} ${className}`}
     >

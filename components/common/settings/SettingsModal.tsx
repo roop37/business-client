@@ -1,26 +1,29 @@
 "use client";
 
 import ReusableModal from "@/components/common/modal/modal";
+import { RichTextEditor } from "@/components/common/RichTextEditor";
 import { useHostTypeLabel } from "@/hooks/useHostTypeLabel";
 import UserBasicInformationForm from "@/components/modules/profile/forms/userBasicInformationForm";
 import IdentityVerificationForm from "@/components/modules/profile/forms/identityVerificationForm";
 import useGlobalStore from "@/store/global";
 import useHostsStore from "@/store/host";
-import useUserStore from "@/store/user";
 import { uploadHostAsset } from "@/utils/cloudinaryUpload";
 import { sdk } from "@/utils/graphqlClient";
 import { extractErrorMessage } from "@/utils/utilFUncs";
 import {
   Bell,
   Building2,
+  MapPin,
   ShieldCheck,
+  Sliders,
   Upload,
   UserCircle2,
   type LucideIcon,
 } from "lucide-react";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 type SettingsTab = "account" | "security" | "brand" | "alerts";
+type BrandSection = "org" | "address" | "additional";
 
 type TabDef = {
   id: SettingsTab;
@@ -36,12 +39,24 @@ const TABS: TabDef[] = [
 ];
 
 type BrandForm = {
+  // Organisation
   name: string;
   description: string;
   email: string;
   phone: string;
   logo: string;
   websiteUrl: string;
+  venueType: string;
+  // Address
+  addressLine1: string;
+  addressLine2: string;
+  city: string;
+  state: string;
+  pincode: string;
+  // Additional
+  businessRegistrationNumber: string;
+  gstNumber: string;
+  averageEventSize: string;
 };
 
 const emptyBrand: BrandForm = {
@@ -51,6 +66,15 @@ const emptyBrand: BrandForm = {
   phone: "",
   logo: "",
   websiteUrl: "",
+  venueType: "",
+  addressLine1: "",
+  addressLine2: "",
+  city: "",
+  state: "",
+  pincode: "",
+  businessRegistrationNumber: "",
+  gstNumber: "",
+  averageEventSize: "",
 };
 
 const SettingsModal = () => {
@@ -63,17 +87,14 @@ const SettingsModal = () => {
   } = useGlobalStore();
   const hostLabel = useHostTypeLabel();
   const { selectedHostId, setHostLogo, setSelectedHost } = useHostsStore();
-  const { meUser } = useUserStore();
   const [activeTab, setActiveTab] = useState<SettingsTab>(settingsModalTab);
+  const [brandSection, setBrandSection] = useState<BrandSection>("org");
   const [brand, setBrand] = useState<BrandForm>(emptyBrand);
   const [brandLoading, setBrandLoading] = useState(false);
   const [brandSaving, setBrandSaving] = useState(false);
   const [logoUploading, setLogoUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
-  // Sync the active tab when the modal is (re)opened. Pinning to a
-  // ref-captured value means subsequent setActiveTab calls aren't
-  // overwritten if `settingsModalTab` in the store changes underneath.
   useEffect(() => {
     if (settingsModalOpen) {
       setActiveTab(settingsModalTab);
@@ -84,16 +105,31 @@ const SettingsModal = () => {
     if (!selectedHostId) return;
     setBrandLoading(true);
     try {
-      const res = await sdk.restaurantDetails();
-      const d = res?.restaurantDetails as any;
-      if (!d) return;
+      // Source of truth is `getHostsByBusiness`. The previous code path
+      // (`sdk.restaurantDetails`) doesn't exist in the current SDK — it
+      // was a legacy method cast through `(sdk as any)`, which is why
+      // this tab silently failed to load until now.
+      const res = await sdk.getHostsByBusiness();
+      const host = (res?.getHostsByBusiness ?? []).find(
+        (h) => h._id === selectedHostId,
+      );
+      if (!host) return;
       setBrand({
-        name: d.name ?? "",
-        description: d.description ?? "",
-        email: d.email ?? "",
-        phone: d.phone ?? "",
-        logo: d.logo ?? "",
-        websiteUrl: d.website ?? d.websiteUrl ?? "",
+        name: host.name ?? "",
+        description: host.description ?? "",
+        email: host.email ?? "",
+        phone: host.phone ?? "",
+        logo: host.logo ?? "",
+        websiteUrl: host.websiteUrl ?? "",
+        venueType: host.venueType ?? "",
+        addressLine1: host.address?.addressLine1 ?? "",
+        addressLine2: host.address?.addressLine2 ?? "",
+        city: host.address?.city ?? "",
+        state: host.address?.state ?? "",
+        pincode: host.address?.pincode ?? "",
+        businessRegistrationNumber: host.businessRegistrationNumber ?? "",
+        gstNumber: host.gstNumber ?? "",
+        averageEventSize: host.averageEventSize ?? "",
       });
     } catch (error) {
       setToastData({ type: "error", message: extractErrorMessage(error) });
@@ -137,15 +173,25 @@ const SettingsModal = () => {
     if (!selectedHostId) return;
     setBrandSaving(true);
     try {
-      await (sdk as any).updateHostBasicInformation({
+      await sdk.updateHost({
         input: {
-          _id: selectedHostId,
           name: brand.name,
           description: brand.description,
           email: brand.email,
           phone: brand.phone,
           logo: brand.logo,
-          website: brand.websiteUrl,
+          websiteUrl: brand.websiteUrl,
+          venueType: brand.venueType,
+          businessRegistrationNumber: brand.businessRegistrationNumber,
+          gstNumber: brand.gstNumber,
+          averageEventSize: brand.averageEventSize,
+          address: {
+            addressLine1: brand.addressLine1,
+            addressLine2: brand.addressLine2,
+            city: brand.city,
+            state: brand.state,
+            pincode: brand.pincode,
+          },
         },
       });
       setSelectedHost(brand.name);
@@ -157,11 +203,6 @@ const SettingsModal = () => {
     }
   };
 
-  const headerSubtitle = useMemo(() => {
-    const greeting = meUser?.firstName ? `Hi ${meUser.firstName}` : "Welcome";
-    return `${greeting} · ${hostLabel.noun} workspace`;
-  }, [hostLabel.noun, meUser?.firstName]);
-
   return (
     <ReusableModal
       isOpen={settingsModalOpen}
@@ -169,7 +210,6 @@ const SettingsModal = () => {
       title="Settings"
       width="lg"
     >
-      <p className="mb-4 text-[12.5px] text-owner-fg-3">{headerSubtitle}</p>
       <div className="flex w-full flex-col gap-4 md:flex-row md:gap-5">
         <nav
           aria-label="Settings sections"
@@ -184,9 +224,6 @@ const SettingsModal = () => {
                   type="button"
                   onClick={() => {
                     setActiveTab(tab.id);
-                    // Keep the store in sync so the next time the modal
-                    // opens via a different trigger it remembers where
-                    // the user was.
                     openSettingsModal(tab.id);
                   }}
                   className={`inline-flex items-center gap-2 rounded-owner-md px-3 py-2 text-left text-[13.5px] font-medium transition ${
@@ -208,86 +245,225 @@ const SettingsModal = () => {
           {activeTab === "security" ? <IdentityVerificationForm /> : null}
           {activeTab === "brand" ? (
             <div className="space-y-4">
-              <h3 className="text-[15px] font-semibold text-owner-fg-1">
-                {hostLabel.noun} brand
-              </h3>
+              {/* Sub-tab strip: mirrors the business onboarding step
+                  structure — Organisation basics, then Address, then
+                  Additional settings. Each section saves into the same
+                  `brand` form and shares the single Save button at the
+                  bottom so the user isn't tempted to commit partial state. */}
+              <div className="flex gap-1 rounded-[12px] bg-owner-bg-subtle p-1">
+                {(
+                  [
+                    { id: "org", label: "Organisation", Icon: Building2 },
+                    { id: "address", label: "Address", Icon: MapPin },
+                    {
+                      id: "additional",
+                      label: "Additional",
+                      Icon: Sliders,
+                    },
+                  ] as const
+                ).map((s) => {
+                  const active = brandSection === s.id;
+                  return (
+                    <button
+                      key={s.id}
+                      type="button"
+                      onClick={() => setBrandSection(s.id)}
+                      className={`flex flex-1 items-center justify-center gap-1.5 rounded-[10px] px-2.5 py-1.5 text-[12.5px] font-medium transition ${
+                        active
+                          ? "bg-owner-bg text-owner-fg-1 shadow-[0_1px_2px_rgba(0,0,0,0.08)]"
+                          : "text-owner-fg-3 hover:text-owner-fg-1"
+                      }`}
+                    >
+                      <s.Icon size={13} />
+                      {s.label}
+                    </button>
+                  );
+                })}
+              </div>
+
               {brandLoading ? (
                 <p className="text-sm text-owner-fg-3">Loading…</p>
               ) : (
                 <>
-                  <div className="flex items-center gap-3">
-                    {brand.logo ? (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img
-                        src={brand.logo}
-                        alt="Logo"
-                        className="h-14 w-14 rounded-owner-md border border-owner-border object-cover"
-                      />
-                    ) : (
-                      <div className="grid h-14 w-14 place-items-center rounded-owner-md border border-dashed border-owner-border text-owner-fg-4">
-                        <Building2 size={20} />
+                  {brandSection === "org" ? (
+                    <div className="space-y-4">
+                      <div className="flex items-center gap-3">
+                        {brand.logo ? (
+                          // eslint-disable-next-line @next/next/no-img-element
+                          <img
+                            src={brand.logo}
+                            alt="Logo"
+                            // `object-contain` — see sidebar BrandMark
+                            // comment; wide wordmark logos shouldn't get
+                            // cropped to a square when uploaded.
+                            className="h-14 w-14 rounded-owner-md border border-owner-border bg-white object-contain"
+                          />
+                        ) : (
+                          <div className="grid h-14 w-14 place-items-center rounded-owner-md border border-dashed border-owner-border text-owner-fg-4">
+                            <Building2 size={20} />
+                          </div>
+                        )}
+                        <div className="flex flex-col gap-1">
+                          <button
+                            type="button"
+                            onClick={() => fileInputRef.current?.click()}
+                            disabled={logoUploading}
+                            className="owner-btn owner-btn--secondary owner-btn--sm"
+                          >
+                            <Upload size={14} />
+                            {logoUploading ? "Uploading…" : "Replace logo"}
+                          </button>
+                          <span className="text-[11px] text-owner-fg-4">
+                            PNG, JPG · 512×512 or larger
+                          </span>
+                        </div>
+                        <input
+                          ref={fileInputRef}
+                          type="file"
+                          accept="image/png,image/jpeg,image/webp"
+                          onChange={handleLogoSelect}
+                          className="hidden"
+                        />
                       </div>
-                    )}
-                    <div className="flex flex-col gap-1">
-                      <button
-                        type="button"
-                        onClick={() => fileInputRef.current?.click()}
-                        disabled={logoUploading}
-                        className="owner-btn owner-btn--secondary owner-btn--sm"
-                      >
-                        <Upload size={14} />
-                        {logoUploading ? "Uploading…" : "Replace logo"}
-                      </button>
-                      <span className="text-[11px] text-owner-fg-4">
-                        PNG, JPG · 512×512 or larger
-                      </span>
+
+                      <BrandField
+                        label={`${hostLabel.noun} name`}
+                        value={brand.name}
+                        onChange={(v) =>
+                          setBrand((p) => ({ ...p, name: v }))
+                        }
+                      />
+
+                      <div>
+                        {/* Not a <label> — contentEditable divs aren't
+                            labelable elements and clicking the text
+                            wouldn't focus the editor. The RichTextEditor
+                            handles its own label slot via its `label`
+                            prop. */}
+                        <RichTextEditor
+                          label="Bio / description"
+                          value={brand.description}
+                          onChange={(v) =>
+                            setBrand((p) => ({ ...p, description: v }))
+                          }
+                          minHeight={140}
+                        />
+                      </div>
+
+                      <div className="grid gap-3 sm:grid-cols-2">
+                        <BrandField
+                          label="Public email"
+                          value={brand.email}
+                          onChange={(v) =>
+                            setBrand((p) => ({ ...p, email: v }))
+                          }
+                          type="email"
+                        />
+                        <BrandField
+                          label="Phone"
+                          value={brand.phone}
+                          onChange={(v) =>
+                            setBrand((p) => ({ ...p, phone: v }))
+                          }
+                        />
+                      </div>
+                      <BrandField
+                        label="Website"
+                        value={brand.websiteUrl}
+                        onChange={(v) =>
+                          setBrand((p) => ({ ...p, websiteUrl: v }))
+                        }
+                        type="url"
+                        placeholder="https://"
+                      />
                     </div>
-                    <input
-                      ref={fileInputRef}
-                      type="file"
-                      accept="image/png,image/jpeg,image/webp"
-                      onChange={handleLogoSelect}
-                      className="hidden"
-                    />
-                  </div>
+                  ) : null}
 
-                  <BrandField
-                    label={`${hostLabel.noun} name`}
-                    value={brand.name}
-                    onChange={(v) => setBrand((p) => ({ ...p, name: v }))}
-                  />
-                  <BrandField
-                    label="Bio / description"
-                    value={brand.description}
-                    onChange={(v) =>
-                      setBrand((p) => ({ ...p, description: v }))
-                    }
-                    multiline
-                  />
-                  <div className="grid gap-3 sm:grid-cols-2">
-                    <BrandField
-                      label="Public email"
-                      value={brand.email}
-                      onChange={(v) => setBrand((p) => ({ ...p, email: v }))}
-                      type="email"
-                    />
-                    <BrandField
-                      label="Phone"
-                      value={brand.phone}
-                      onChange={(v) => setBrand((p) => ({ ...p, phone: v }))}
-                    />
-                  </div>
-                  <BrandField
-                    label="Website"
-                    value={brand.websiteUrl}
-                    onChange={(v) =>
-                      setBrand((p) => ({ ...p, websiteUrl: v }))
-                    }
-                    type="url"
-                    placeholder="https://"
-                  />
+                  {brandSection === "address" ? (
+                    <div className="space-y-3">
+                      <BrandField
+                        label="Address line 1"
+                        value={brand.addressLine1}
+                        onChange={(v) =>
+                          setBrand((p) => ({ ...p, addressLine1: v }))
+                        }
+                      />
+                      <BrandField
+                        label="Address line 2"
+                        value={brand.addressLine2}
+                        onChange={(v) =>
+                          setBrand((p) => ({ ...p, addressLine2: v }))
+                        }
+                        placeholder="(optional)"
+                      />
+                      <div className="grid gap-3 sm:grid-cols-3">
+                        <BrandField
+                          label="City"
+                          value={brand.city}
+                          onChange={(v) =>
+                            setBrand((p) => ({ ...p, city: v }))
+                          }
+                        />
+                        <BrandField
+                          label="State"
+                          value={brand.state}
+                          onChange={(v) =>
+                            setBrand((p) => ({ ...p, state: v }))
+                          }
+                        />
+                        <BrandField
+                          label="Pincode"
+                          value={brand.pincode}
+                          onChange={(v) =>
+                            setBrand((p) => ({ ...p, pincode: v }))
+                          }
+                        />
+                      </div>
+                    </div>
+                  ) : null}
 
-                  <div className="flex justify-end pt-2">
+                  {brandSection === "additional" ? (
+                    <div className="space-y-3">
+                      <BrandField
+                        label="Venue type"
+                        value={brand.venueType}
+                        onChange={(v) =>
+                          setBrand((p) => ({ ...p, venueType: v }))
+                        }
+                        placeholder="e.g. Nightclub, Comedy room, Outdoor lawn"
+                      />
+                      <div className="grid gap-3 sm:grid-cols-2">
+                        <BrandField
+                          label="Business registration number"
+                          value={brand.businessRegistrationNumber}
+                          onChange={(v) =>
+                            setBrand((p) => ({
+                              ...p,
+                              businessRegistrationNumber: v,
+                            }))
+                          }
+                        />
+                        <BrandField
+                          label="GST number"
+                          value={brand.gstNumber}
+                          onChange={(v) =>
+                            setBrand((p) => ({ ...p, gstNumber: v }))
+                          }
+                          placeholder="22AAAAA0000A1Z5"
+                        />
+                      </div>
+                      <BrandField
+                        label="Average event size"
+                        value={brand.averageEventSize}
+                        onChange={(v) =>
+                          setBrand((p) => ({ ...p, averageEventSize: v }))
+                        }
+                        placeholder="e.g. 200–400"
+                      />
+                    </div>
+                  ) : null}
+
+                  <div className="flex justify-end pt-3">
                     <button
                       type="button"
                       onClick={handleSaveBrand}
@@ -324,37 +500,25 @@ const BrandField = ({
   value,
   onChange,
   type = "text",
-  multiline,
   placeholder,
 }: {
   label: string;
   value: string;
   onChange: (v: string) => void;
   type?: string;
-  multiline?: boolean;
   placeholder?: string;
 }) => (
   <label className="block">
     <span className="mb-1 block text-[12.5px] font-medium text-owner-fg-2">
       {label}
     </span>
-    {multiline ? (
-      <textarea
-        rows={3}
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        placeholder={placeholder}
-        className="w-full rounded-owner-md border border-owner-border bg-owner-bg px-3 py-2 text-[13.5px] text-owner-fg-1 outline-none focus:border-owner-blue-200 focus:shadow-[0_0_0_3px_var(--owner-blue-050)]"
-      />
-    ) : (
-      <input
-        type={type}
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        placeholder={placeholder}
-        className="h-10 w-full rounded-owner-md border border-owner-border bg-owner-bg px-3 text-[13.5px] text-owner-fg-1 outline-none focus:border-owner-blue-200 focus:shadow-[0_0_0_3px_var(--owner-blue-050)]"
-      />
-    )}
+    <input
+      type={type}
+      value={value}
+      onChange={(e) => onChange(e.target.value)}
+      placeholder={placeholder}
+      className="h-10 w-full rounded-owner-md border border-owner-border bg-owner-bg px-3 text-[13.5px] text-owner-fg-1 outline-none focus:border-owner-blue-200 focus:shadow-[0_0_0_3px_var(--owner-blue-050)]"
+    />
   </label>
 );
 

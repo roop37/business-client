@@ -1,5 +1,6 @@
 import ConfirmModal from "@/components/common/confirm-modal";
 import CustomerEventCard from "@/components/common/event/CustomerEventCard";
+import { PreviewNoise } from "@/components/common/PreviewNoise";
 import { RichTextEditor } from "@/components/common/RichTextEditor";
 import ToggleSettingRow from "@/components/modules/events/ToggleSettingRow";
 import { Calendar } from "@/components/ui/calendar";
@@ -4052,7 +4053,15 @@ const EventJourney = ({
           </div>
         </div>
 
-        <aside className="hidden min-h-0 overflow-y-auto border-l border-[var(--owner-border)] bg-[var(--owner-fg-1)] p-5 text-[var(--owner-bg)] xl:block">
+        <aside className="relative hidden min-h-0 overflow-hidden border-l border-[var(--owner-border)] bg-[var(--owner-fg-1)] text-[var(--owner-bg)] xl:block">
+          {/* Animated film-grain — anchored to the aside frame (not to
+              the scroll content) so it stays visible while the host
+              scrolls through the preview body. Putting overflow:hidden
+              on the aside and moving the scroll into the inner div
+              prevents the absolute-positioned canvas from being clipped
+              past the first viewport. */}
+          <PreviewNoise opacity={0.4} patternAlpha={14} />
+          <div className="relative z-10 flex h-full flex-col overflow-y-auto p-5">
           <div className="flex items-center gap-2 text-sm font-semibold text-[var(--owner-blue-100)]">
             <SparklesIcon size={16} />
             Live Event Preview
@@ -4087,9 +4096,11 @@ const EventJourney = ({
           </div>
 
           <div className="mt-5 rounded-lg border border-white/10 bg-white/5 p-4 text-xs leading-5 text-[var(--owner-blue-100)]">
-            <p className="font-semibold text-white">Need help?</p>
+            <p className="font-semibold text-white">We&apos;d love to help.</p>
             <p className="mt-1">
-              Stuck on a step? Drop us a note and we&apos;ll jump in.
+              Anything tricky here? Reach out — our team can hop on a call,
+              fix it with you, or even onboard your event for you. We&apos;re
+              genuinely happy to roll up our sleeves.
             </p>
             <a
               href="mailto:contact@hoizr.com"
@@ -4103,8 +4114,9 @@ const EventJourney = ({
               rel="noreferrer"
               className="mt-2 inline-flex items-center gap-1.5 font-semibold text-white underline-offset-4 hover:underline"
             >
-              Chat with us now on WhatsApp →
+              WhatsApp us — we usually reply in minutes →
             </a>
+          </div>
           </div>
         </aside>
         {ticketModalOpen ? (

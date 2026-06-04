@@ -1,3 +1,4 @@
+import { PreviewNoise } from "@/components/common/PreviewNoise";
 import RotatingTipsPanel from "@/components/common/RotatingTipsPanel";
 import useGlobalStore from "@/store/global";
 import useMasterStore from "@/store/masters";
@@ -251,11 +252,12 @@ const OnboardingJourneyLayout = ({ children, includeTimezones }: Props) => {
 
           <div className="mt-6 rounded-lg border border-[var(--owner-border)] bg-[var(--owner-bg)] p-4 text-xs leading-5 text-[var(--owner-fg-3)]">
             <p className="font-semibold text-[var(--owner-fg-1)]">
-              Need help?
+              We&apos;d love to help you get set up.
             </p>
             <p className="mt-1">
-              Setup usually takes 4–6 minutes. You can return any time — Hoizr
-              keeps progress against your account.
+              If anything here feels rough, reach out — we can walk you
+              through it, or onboard you ourselves. Setup usually takes 4–6
+              minutes, and Hoizr autosaves so you can return any time.
             </p>
             <Link
               href="mailto:contact@hoizr.com"
@@ -270,7 +272,7 @@ const OnboardingJourneyLayout = ({ children, includeTimezones }: Props) => {
               className="mt-2 inline-flex items-center gap-1.5 font-semibold text-[var(--owner-blue-500)] underline-offset-4 hover:underline"
             >
               <MessageCircle size={13} strokeWidth={2.2} />
-              Chat with us now on WhatsApp
+              WhatsApp us — usually a few-minute reply
             </Link>
           </div>
         </aside>
@@ -305,25 +307,56 @@ const OnboardingJourneyLayout = ({ children, includeTimezones }: Props) => {
           </section>
         </div>
 
-        <aside className="hidden min-h-0 overflow-y-auto border-l border-[var(--owner-border)] bg-[var(--owner-fg-1)] p-5 text-[var(--owner-bg)] xl:block">
-          <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.14em] text-[var(--owner-accent-acid)]">
-            <SparklesIcon size={14} />
-            {activeStep?.helper.eyebrow}
-          </div>
-          <h2 className="mt-3 text-lg font-semibold leading-tight">
-            {activeStep?.helper.headline}
-          </h2>
+        <aside className="relative hidden min-h-0 overflow-hidden border-l border-[var(--owner-border)] bg-[var(--owner-fg-1)] text-[var(--owner-bg)] xl:block">
+          {/* Soft cyan/violet bloom + film grain over a dark surface —
+              matches the EventJourney preview aside so onboarding +
+              event-creation share one visual language. Onboarding can
+              feel transactional (forms, tips, footer); the bloom gives
+              the side rail a sense of place. */}
+          <div
+            aria-hidden
+            className="pointer-events-none absolute inset-0"
+            style={{
+              background:
+                "radial-gradient(120% 60% at 50% -10%, rgba(120, 220, 255, 0.12), transparent 55%), radial-gradient(80% 50% at 110% 100%, rgba(197, 255, 61, 0.08), transparent 60%)",
+            }}
+          />
+          <PreviewNoise opacity={0.35} patternAlpha={12} />
 
-          <div className="mt-5">
-            <RotatingTipsPanel className="!border-white/15 !bg-white/5 [&_p]:!text-white/85 [&_.text-\\[var\\(--owner-fg-3\\)\\]]:!text-white/70 [&_.text-\\[var\\(--owner-fg-1\\)\\]]:!text-white" />
-          </div>
+          <div className="relative z-10 flex h-full flex-col overflow-y-auto p-5">
+            <div className="inline-flex w-fit items-center gap-2 rounded-full bg-white/10 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-[var(--owner-accent-acid)] ring-1 ring-inset ring-white/15">
+              <SparklesIcon size={12} />
+              {activeStep?.helper.eyebrow}
+            </div>
+            <h2 className="mt-3 text-[22px] font-semibold leading-tight tracking-tight">
+              {activeStep?.helper.headline}
+            </h2>
+            {activeStep?.helper.body ? (
+              <p className="mt-2 text-[13px] leading-relaxed text-white/65">
+                {activeStep.helper.body}
+              </p>
+            ) : null}
 
-          <div className="mt-6 border-t border-white/10 pt-4 text-xs leading-5 text-white/55">
-            <p className="font-semibold text-white/80">Saved as you go</p>
-            <p className="mt-1">
-              Hoizr autosaves after each step. Close the tab and come back —
-              your progress is held against this account.
-            </p>
+            <div className="mt-5">
+              <RotatingTipsPanel className="!border-white/15 !bg-white/[0.06] [&_p]:!text-white/85 [&_.text-\\[var\\(--owner-fg-3\\)\\]]:!text-white/70 [&_.text-\\[var\\(--owner-fg-1\\)\\]]:!text-white" />
+            </div>
+
+            <div className="mt-auto" />
+
+            <div className="mt-6 rounded-xl border border-white/12 bg-white/[0.04] p-4 text-[12px] leading-5 text-white/65 shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]">
+              <div className="flex items-center gap-2">
+                <span className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-[var(--owner-accent-acid)]/15 text-[var(--owner-accent-acid)]">
+                  <SparklesIcon size={12} />
+                </span>
+                <p className="text-[12.5px] font-semibold text-white/90">
+                  Saved as you go
+                </p>
+              </div>
+              <p className="mt-2">
+                Hoizr autosaves after each step. Close the tab and come back —
+                your progress is held against this account.
+              </p>
+            </div>
           </div>
         </aside>
       </main>

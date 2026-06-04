@@ -306,6 +306,13 @@ export const DashboardClient = () => {
   const [summary, setSummary] = useState<HostDashboardSummary>(emptySummary);
   const [events, setEvents] = useState<DashboardEvent[]>([]);
   const [checklist, setChecklist] = useState<Checklist | null>(null);
+  // Distinguish "payout submitted" from "payout verified". The
+  // onboarding checklist's `payout` flips true the moment an account is
+  // submitted — admin verification can take hours. The hero copy used
+  // to claim "Payout is verified — list your first event…" even while
+  // the row was still PENDING in the admin queue. We now read the
+  // actual verificationStatus from hostPayoutAccounts.
+  const [payoutVerified, setPayoutVerified] = useState(false);
   const [range, setRange] = useState<DashboardRange>("last30");
   const [loading, setLoading] = useState(true);
 
@@ -336,18 +343,28 @@ export const DashboardClient = () => {
     const load = async () => {
       setLoading(true);
       try {
-        const [summaryResponse, eventsResponse, checklistResponse]: any[] =
-          await Promise.all([
-            sdk.getHostDashboardSummary({ input: { range: toApiRange(range) } }),
-            sdk.getMyEventsForSelector(),
-            sdk.eventOnboardingChecklist(),
-          ]);
+        const [
+          summaryResponse,
+          eventsResponse,
+          checklistResponse,
+          payoutsResponse,
+        ]: any[] = await Promise.all([
+          sdk.getHostDashboardSummary({ input: { range: toApiRange(range) } }),
+          sdk.getMyEventsForSelector(),
+          sdk.eventOnboardingChecklist(),
+          // Tolerant: a failed payout fetch shouldn't block the dashboard.
+          sdk.hostPayoutAccounts().catch(() => null),
+        ]);
         setSummary({
           ...emptySummary,
           ...(summaryResponse?.getHostDashboardSummary ?? {}),
         });
         setEvents(eventsResponse?.getMyEvents ?? []);
         setChecklist(checklistResponse?.eventOnboardingChecklist ?? null);
+        const accounts = payoutsResponse?.hostPayoutAccounts ?? [];
+        setPayoutVerified(
+          accounts.some((a: any) => a?.verificationStatus === "VERIFIED")
+        );
       } catch (error) {
         setToastData({ type: "error", message: extractErrorMessage(error) });
       } finally {
@@ -470,15 +487,26 @@ export const DashboardClient = () => {
   // ₹99 — below that threshold (or with no events at all) the host
   // sees an action-oriented prompt instead of a near-zero revenue
   // headline that reads as failure.
-  const hasPayout = isDone(checklist?.payout);
+  const payoutSubmitted = isDone(checklist?.payout);
   const hasEvent = events.length > 0;
-  const hostStage: "no-payout" | "no-event" | "earning" | "active" = !hasPayout
+  // Three payout phases (in order): none → submitted → verified. The
+  // hero copy + CTAs differ for each. Without this split the dashboard
+  // was claiming verification the moment the host saved their bank
+  // details, even though admin review was still pending.
+  const hostStage:
+    | "no-payout"
+    | "payout-pending"
+    | "no-event"
+    | "earning"
+    | "active" = !payoutSubmitted
     ? "no-payout"
-    : !hasEvent
-      ? "no-event"
-      : displayAverageOrderValue > 99
-        ? "earning"
-        : "active";
+    : !payoutVerified
+      ? "payout-pending"
+      : !hasEvent
+        ? "no-event"
+        : displayAverageOrderValue > 99
+          ? "earning"
+          : "active";
 
   type HeroCta = {
     label: string;
@@ -490,6 +518,8 @@ export const DashboardClient = () => {
     switch (hostStage) {
       case "no-payout":
         return "Add your payout profile to publish exclusive and non-exclusive events. You can run campaigns now to grow your audience before launch.";
+      case "payout-pending":
+        return "Payout details submitted — our team usually verifies within a few hours. While you wait, you can sketch out events as drafts and run campaigns.";
       case "no-event":
         return "Payout is verified — list your first event and start filling tickets through Hoizr campaigns.";
       case "earning":
@@ -505,6 +535,20 @@ export const DashboardClient = () => {
         return [
           {
             label: "Add payout",
+            icon: <Banknote size={15} />,
+            onClick: () => router.push("/payment/payouts"),
+          },
+          {
+            label: "Run campaign",
+            icon: <Megaphone size={15} />,
+            variant: "secondary",
+            onClick: () => router.push("/campaigns"),
+          },
+        ];
+      case "payout-pending":
+        return [
+          {
+            label: "View payout status",
             icon: <Banknote size={15} />,
             onClick: () => router.push("/payment/payouts"),
           },
