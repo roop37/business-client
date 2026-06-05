@@ -207,24 +207,40 @@ const addDays = (date: Date, days: number) => {
   return next;
 };
 
+// Backend buckets the salesSeries on IST calendar days. Compute the
+// range bounds from IST as well so a user on a non-IST browser timezone
+// still sees their orders inside the filtered range. (Without this, an
+// IST-evening shopper viewing the dashboard from a UTC server-rendered
+// preview, or a browser set to a different TZ, would have the day keys
+// drift by one and the chart would render empty.)
+const DASHBOARD_TZ_OFFSET_MS = (5 * 60 + 30) * 60 * 1000;
+const toISTDateKey = (date: Date) => {
+  const shifted = new Date(date.getTime() + DASHBOARD_TZ_OFFSET_MS);
+  const y = shifted.getUTCFullYear();
+  const m = String(shifted.getUTCMonth() + 1).padStart(2, "0");
+  const d = String(shifted.getUTCDate()).padStart(2, "0");
+  return `${y}-${m}-${d}`;
+};
+
 const getRangeKeys = (range: DashboardRange) => {
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
+  const now = new Date();
 
   if (range === "today") {
-    return { from: toDateKey(today), to: toDateKey(today) };
+    return { from: toISTDateKey(now), to: toISTDateKey(now) };
   }
 
   if (range === "yesterday") {
-    const yesterday = addDays(today, -1);
-    return { from: toDateKey(yesterday), to: toDateKey(yesterday) };
+    const yesterday = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+    return { from: toISTDateKey(yesterday), to: toISTDateKey(yesterday) };
   }
 
   if (range === "last7") {
-    return { from: toDateKey(addDays(today, -6)), to: toDateKey(today) };
+    const start = new Date(now.getTime() - 6 * 24 * 60 * 60 * 1000);
+    return { from: toISTDateKey(start), to: toISTDateKey(now) };
   }
 
-  return { from: toDateKey(addDays(today, -29)), to: toDateKey(today) };
+  const start = new Date(now.getTime() - 29 * 24 * 60 * 60 * 1000);
+  return { from: toISTDateKey(start), to: toISTDateKey(now) };
 };
 
 const statusTone = (status?: string | null): BadgeTone => {
@@ -261,7 +277,8 @@ const selectedRangeLabel = (range: DashboardRange, series: DashboardSeriesPoint[
 const rangeSentenceLabel = (range: DashboardRange) => {
   if (range === "today") return "today";
   if (range === "yesterday") return "yesterday";
-  return `in the ${rangeTabs.find((tab) => tab.value === range)?.label.toLowerCase() ?? "selected range"}`;
+  if (range === "last7") return "in the last 7 days";
+  return "in the last 30 days";
 };
 
 const toApiRange = (range: DashboardRange): HostDashboardRange => {
@@ -497,11 +514,11 @@ export const DashboardClient = () => {
   const greetingName = meUser?.firstName?.trim() || "there";
 
   // Hero state machine. The greeting ("Hey {name}") stays fixed; only
-  // the subtitle copy + CTA buttons swap. We surface the "You made ₹X"
-  // earnings sentence only when an event exists AND the AOV is above
-  // ₹99 — below that threshold (or with no events at all) the host
-  // sees an action-oriented prompt instead of a near-zero revenue
-  // headline that reads as failure.
+  // the subtitle copy + CTA buttons swap. The "You earned ₹X" headline
+  // fires as soon as the host has ANY revenue in the selected window —
+  // earlier the trigger was AOV > ₹99 which depended on a working
+  // order-count (the per-day series buckets were silently zero before
+  // the IST date-key fix, so AOV stayed at 0 even on a real sale).
   const payoutSubmitted = isDone(checklist?.payout);
   const hasEvent = events.length > 0;
   // Three payout phases (in order): none → submitted → verified. The
@@ -519,7 +536,7 @@ export const DashboardClient = () => {
       ? "payout-pending"
       : !hasEvent
         ? "no-event"
-        : displayAverageOrderValue > 99
+        : displaySales > 0
           ? "earning"
           : "active";
 
@@ -628,7 +645,7 @@ export const DashboardClient = () => {
             </p>
             {hostStage === "earning" ? (
               <h1 className="mt-3 max-w-[780px] text-[31px] font-semibold leading-[1.18] text-owner-fg-1 sm:text-[38px]">
-                You made{" "}
+                You earned{" "}
                 <span className="text-owner-blue-500">
                   {inrFormat(displaySales)}
                 </span>{" "}
