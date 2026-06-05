@@ -517,12 +517,25 @@ Object.assign(sdk, {
             title
             description
             eventFlyer
+            horizontalFlyer
+            videoSneakPeek
+            gallery {
+              url
+              type
+            }
+            verticalVideo
+            horizontalVideo
+            instagramPost
+            instagramStory
+            tableLayoutImage
             eventType
             status
+            firstStepCompleted
             startDate
             endDate
             markSeparateDays
             isComingSoon
+            genreTagIds
             city
             location {
               addressLine1
@@ -552,6 +565,25 @@ Object.assign(sdk, {
             refundPolicy
             cancellationPolicy
             contactForQueriesTables
+            eventGuide {
+              languageIds
+              minimumEntryAge
+              paidEntryAge
+              venueLayout
+              seatingArrangement
+              kidFriendly
+              petFriendly
+              gatesOpenBeforeEvent
+              gatesOpenLeadHours
+              gatesOpenLeadMinutes
+              youtubeLink
+            }
+            faqs {
+              question
+              answer
+            }
+            eventInstructions
+            prohibitedItems
             expectedEventsDoneTillNow
             selectedPricingPlan
             feeSettlementMode

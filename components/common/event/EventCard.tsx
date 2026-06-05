@@ -65,7 +65,7 @@ const EventCard = ({
       } ${borderClass} ${className}`}
     >
       <div
-        className="relative flex aspect-[4/5] items-center justify-center bg-owner-bg-subtle bg-cover bg-center"
+        className="relative flex aspect-[3/4] items-center justify-center bg-owner-bg-subtle bg-cover bg-center"
         style={flyer ? { backgroundImage: `url(${flyer})` } : undefined}
       >
         {!flyer ? (

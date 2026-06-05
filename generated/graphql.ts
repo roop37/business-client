@@ -1099,6 +1099,15 @@ export type DeviceInfo = {
   uniqueId: Scalars['String']['output'];
 };
 
+export enum EntryAgeBand {
+  Age_13Plus = 'AGE_13_PLUS',
+  Age_16Plus = 'AGE_16_PLUS',
+  Age_18Plus = 'AGE_18_PLUS',
+  Age_21Plus = 'AGE_21_PLUS',
+  Age_25Plus = 'AGE_25_PLUS',
+  AllAges = 'ALL_AGES'
+}
+
 export type Event = {
   __typename?: 'Event';
   _id: Scalars['ID']['output'];
@@ -1136,15 +1145,19 @@ export type Event = {
   eventCategoryId?: Maybe<Scalars['String']['output']>;
   eventCollaborationBusiness?: Maybe<Array<EventBusinessPartner>>;
   eventFlyer?: Maybe<Scalars['String']['output']>;
+  eventGuide?: Maybe<EventGuide>;
+  eventInstructions?: Maybe<Array<Scalars['String']['output']>>;
   eventLocationDecided?: Maybe<Scalars['Boolean']['output']>;
   eventScore?: Maybe<Scalars['Float']['output']>;
   eventType?: Maybe<Array<EventType>>;
   expectedAudience?: Maybe<Scalars['Float']['output']>;
   expectedEventsDoneTillNow?: Maybe<Scalars['Float']['output']>;
   extras?: Maybe<Array<HoizrExtra>>;
+  faqs?: Maybe<Array<EventFaq>>;
   feeSettlementMode?: Maybe<EventFeeSettlementMode>;
   firstSaleAt?: Maybe<Scalars['DateTimeISO']['output']>;
   firstStepCompleted: Scalars['Boolean']['output'];
+  gallery?: Maybe<Array<EventGalleryItem>>;
   genreTagIds?: Maybe<Array<Scalars['String']['output']>>;
   genresPreferred?: Maybe<Array<Genre>>;
   horizontalFlyer?: Maybe<Scalars['String']['output']>;
@@ -1171,6 +1184,7 @@ export type Event = {
   popularityRating?: Maybe<Scalars['Float']['output']>;
   pricingSelectedAt?: Maybe<Scalars['DateTimeISO']['output']>;
   pricingSnapshot?: Maybe<EventPricingSnapshot>;
+  prohibitedItems?: Maybe<Array<Scalars['String']['output']>>;
   publishedAt?: Maybe<Scalars['DateTimeISO']['output']>;
   refundPolicy?: Maybe<Scalars['String']['output']>;
   requiresIDVerification?: Maybe<Scalars['Boolean']['output']>;
@@ -1192,6 +1206,7 @@ export type Event = {
   title?: Maybe<Scalars['String']['output']>;
   updatedAt?: Maybe<Scalars['DateTimeISO']['output']>;
   verticalVideo?: Maybe<Scalars['String']['output']>;
+  videoSneakPeek?: Maybe<Scalars['String']['output']>;
 };
 
 export type EventArtistSearchResult = {
@@ -1274,10 +1289,66 @@ export type EventEvalResultView = {
   suggestedDescription?: Maybe<Scalars['String']['output']>;
 };
 
+export type EventFaq = {
+  __typename?: 'EventFAQ';
+  answer: Scalars['String']['output'];
+  question: Scalars['String']['output'];
+};
+
+export type EventFaqInput = {
+  answer: Scalars['String']['input'];
+  question: Scalars['String']['input'];
+};
+
 export enum EventFeeSettlementMode {
   DeductFromPayout = 'DEDUCT_FROM_PAYOUT',
   PayAfterEvent = 'PAY_AFTER_EVENT'
 }
+
+export type EventGalleryItem = {
+  __typename?: 'EventGalleryItem';
+  type: EventGalleryItemType;
+  url: Scalars['String']['output'];
+};
+
+export type EventGalleryItemInput = {
+  type: EventGalleryItemType;
+  url: Scalars['String']['input'];
+};
+
+export enum EventGalleryItemType {
+  Image = 'IMAGE',
+  Video = 'VIDEO'
+}
+
+export type EventGuide = {
+  __typename?: 'EventGuide';
+  gatesOpenBeforeEvent?: Maybe<Scalars['Boolean']['output']>;
+  gatesOpenLeadHours?: Maybe<Scalars['Float']['output']>;
+  gatesOpenLeadMinutes?: Maybe<Scalars['Float']['output']>;
+  kidFriendly?: Maybe<KidFriendlyPolicy>;
+  languageIds?: Maybe<Array<Scalars['String']['output']>>;
+  minimumEntryAge?: Maybe<EntryAgeBand>;
+  paidEntryAge?: Maybe<EntryAgeBand>;
+  petFriendly?: Maybe<PetFriendlyPolicy>;
+  seatingArrangement?: Maybe<SeatingArrangement>;
+  venueLayout?: Maybe<VenueLayout>;
+  youtubeLink?: Maybe<Scalars['String']['output']>;
+};
+
+export type EventGuideInput = {
+  gatesOpenBeforeEvent?: InputMaybe<Scalars['Boolean']['input']>;
+  gatesOpenLeadHours?: InputMaybe<Scalars['Float']['input']>;
+  gatesOpenLeadMinutes?: InputMaybe<Scalars['Float']['input']>;
+  kidFriendly?: InputMaybe<KidFriendlyPolicy>;
+  languageIds?: InputMaybe<Array<Scalars['String']['input']>>;
+  minimumEntryAge?: InputMaybe<EntryAgeBand>;
+  paidEntryAge?: InputMaybe<EntryAgeBand>;
+  petFriendly?: InputMaybe<PetFriendlyPolicy>;
+  seatingArrangement?: InputMaybe<SeatingArrangement>;
+  venueLayout?: InputMaybe<VenueLayout>;
+  youtubeLink?: InputMaybe<Scalars['String']['input']>;
+};
 
 export type EventInput = {
   allowWalkIns?: InputMaybe<Scalars['Boolean']['input']>;
@@ -1294,10 +1365,14 @@ export type EventInput = {
   eventCategoryId?: InputMaybe<Scalars['String']['input']>;
   eventCollaborationBusiness?: InputMaybe<Array<EventBusinessPartnerInput>>;
   eventFlyer?: InputMaybe<Scalars['String']['input']>;
+  eventGuide?: InputMaybe<EventGuideInput>;
+  eventInstructions?: InputMaybe<Array<Scalars['String']['input']>>;
   eventLocationDecided?: InputMaybe<Scalars['Boolean']['input']>;
   eventType?: InputMaybe<Array<EventType>>;
   expectedEventsDoneTillNow?: InputMaybe<Scalars['Float']['input']>;
   extras?: InputMaybe<Array<HoizrExtraInput>>;
+  faqs?: InputMaybe<Array<EventFaqInput>>;
+  gallery?: InputMaybe<Array<EventGalleryItemInput>>;
   genreTagIds?: InputMaybe<Array<Scalars['String']['input']>>;
   horizontalFlyer?: InputMaybe<Scalars['String']['input']>;
   horizontalVideo?: InputMaybe<Scalars['String']['input']>;
@@ -1315,6 +1390,7 @@ export type EventInput = {
   paymentMethods?: InputMaybe<Array<Scalars['String']['input']>>;
   payoutProfile?: InputMaybe<Scalars['String']['input']>;
   payoutProfileId?: InputMaybe<Scalars['String']['input']>;
+  prohibitedItems?: InputMaybe<Array<Scalars['String']['input']>>;
   refundPolicy?: InputMaybe<Scalars['String']['input']>;
   requiresIDVerification?: InputMaybe<Scalars['Boolean']['input']>;
   showOffer?: InputMaybe<Scalars['Boolean']['input']>;
@@ -1328,6 +1404,7 @@ export type EventInput = {
   tickets?: InputMaybe<Array<EventTicketInput>>;
   title?: InputMaybe<Scalars['String']['input']>;
   verticalVideo?: InputMaybe<Scalars['String']['input']>;
+  videoSneakPeek?: InputMaybe<Scalars['String']['input']>;
 };
 
 export type EventLineupArtist = {
@@ -2297,6 +2374,27 @@ export type IndianCity = {
   state?: Maybe<Scalars['String']['output']>;
   status: Scalars['Boolean']['output'];
   stdCode?: Maybe<Scalars['String']['output']>;
+  updatedAt?: Maybe<Scalars['DateTimeISO']['output']>;
+  updatedBy?: Maybe<Admin>;
+  value: Scalars['String']['output'];
+};
+
+export enum KidFriendlyPolicy {
+  KidsNotAllowed = 'KIDS_NOT_ALLOWED',
+  KidsWelcome = 'KIDS_WELCOME',
+  KidsWithGuardian = 'KIDS_WITH_GUARDIAN'
+}
+
+export type LanguageMaster = {
+  __typename?: 'LanguageMaster';
+  _id: Scalars['ID']['output'];
+  code: Scalars['String']['output'];
+  createdAt?: Maybe<Scalars['DateTimeISO']['output']>;
+  createdBy?: Maybe<Admin>;
+  isIndian: Scalars['Boolean']['output'];
+  nativeName?: Maybe<Scalars['String']['output']>;
+  order: Scalars['Float']['output'];
+  status: Scalars['Boolean']['output'];
   updatedAt?: Maybe<Scalars['DateTimeISO']['output']>;
   updatedBy?: Maybe<Admin>;
   value: Scalars['String']['output'];
@@ -3375,6 +3473,12 @@ export enum PermissionTypeEnum {
   UpdateHost = 'UpdateHost'
 }
 
+export enum PetFriendlyPolicy {
+  PetsNotAllowed = 'PETS_NOT_ALLOWED',
+  PetsWelcome = 'PETS_WELCOME',
+  ServiceAnimalsOnly = 'SERVICE_ANIMALS_ONLY'
+}
+
 export type PhantomArtist = {
   __typename?: 'PhantomArtist';
   _id: Scalars['ID']['output'];
@@ -3421,6 +3525,20 @@ export type Places = {
   __typename?: 'Places';
   displayName: Scalars['String']['output'];
   placeId: Scalars['String']['output'];
+};
+
+export type ProhibitedItemMaster = {
+  __typename?: 'ProhibitedItemMaster';
+  _id: Scalars['ID']['output'];
+  createdAt?: Maybe<Scalars['DateTimeISO']['output']>;
+  createdBy?: Maybe<Admin>;
+  description?: Maybe<Scalars['String']['output']>;
+  order: Scalars['Float']['output'];
+  slug: Scalars['String']['output'];
+  status: Scalars['Boolean']['output'];
+  updatedAt?: Maybe<Scalars['DateTimeISO']['output']>;
+  updatedBy?: Maybe<Admin>;
+  value: Scalars['String']['output'];
 };
 
 export type PublicArtistEvent = {
@@ -3497,7 +3615,9 @@ export type Query = {
   getActiveEventCategories: Array<EventCategory>;
   getActiveGenreTags: Array<GenreTag>;
   getActiveIndianCities: Array<IndianCity>;
+  getActiveLanguages: Array<LanguageMaster>;
   getActivePayout?: Maybe<Payout>;
+  getActiveProhibitedItems: Array<ProhibitedItemMaster>;
   getActivityLogs: ActivityLogPaginatedResponse;
   getAdminAudienceCount: Scalars['Int']['output'];
   /** Returns admin dashboard KPIs. The payload is cached in-memory for 60 seconds per date range. */
@@ -4088,6 +4208,12 @@ export type ScannerUser = {
   updatedAt?: Maybe<Scalars['DateTimeISO']['output']>;
 };
 
+export enum SeatingArrangement {
+  Seated = 'SEATED',
+  SeatedAndStanding = 'SEATED_AND_STANDING',
+  Standing = 'STANDING'
+}
+
 export type SelectAiBoostInput = {
   feeSettlementMode?: InputMaybe<EventFeeSettlementMode>;
   generationId: Scalars['String']['input'];
@@ -4444,6 +4570,12 @@ export type UserStatusChangeInput = {
   block: Scalars['Boolean']['input'];
   id: Scalars['String']['input'];
 };
+
+export enum VenueLayout {
+  Indoor = 'INDOOR',
+  Mixed = 'MIXED',
+  Outdoor = 'OUTDOOR'
+}
 
 export enum VerificationStatus {
   Pending = 'PENDING',
@@ -4841,6 +4973,16 @@ export type GetActiveGenreTagsQueryVariables = Exact<{ [key: string]: never; }>;
 
 
 export type GetActiveGenreTagsQuery = { __typename?: 'Query', getActiveGenreTags: Array<{ __typename?: 'GenreTag', _id: string, value: string }> };
+
+export type GetActiveLanguagesQueryVariables = Exact<{ [key: string]: never; }>;
+
+
+export type GetActiveLanguagesQuery = { __typename?: 'Query', getActiveLanguages: Array<{ __typename?: 'LanguageMaster', _id: string, code: string, value: string, nativeName?: string | null, isIndian: boolean, order: number }> };
+
+export type GetActiveProhibitedItemsQueryVariables = Exact<{ [key: string]: never; }>;
+
+
+export type GetActiveProhibitedItemsQuery = { __typename?: 'Query', getActiveProhibitedItems: Array<{ __typename?: 'ProhibitedItemMaster', _id: string, slug: string, value: string, description?: string | null, order: number }> };
 
 export type GetConfigQueryVariables = Exact<{
   type: ConfigTypeEnum;
@@ -5869,6 +6011,29 @@ export const GetActiveGenreTagsDocument = gql`
   }
 }
     `;
+export const GetActiveLanguagesDocument = gql`
+    query getActiveLanguages {
+  getActiveLanguages {
+    _id
+    code
+    value
+    nativeName
+    isIndian
+    order
+  }
+}
+    `;
+export const GetActiveProhibitedItemsDocument = gql`
+    query getActiveProhibitedItems {
+  getActiveProhibitedItems {
+    _id
+    slug
+    value
+    description
+    order
+  }
+}
+    `;
 export const GetConfigDocument = gql`
     query GetConfig($type: ConfigTypeEnum!) {
   getConfig(type: $type) {
@@ -6372,6 +6537,12 @@ export function getSdk(client: GraphQLClient, withWrapper: SdkFunctionWrapper = 
     },
     getActiveGenreTags(variables?: GetActiveGenreTagsQueryVariables, requestHeaders?: GraphQLClientRequestHeaders): Promise<GetActiveGenreTagsQuery> {
       return withWrapper((wrappedRequestHeaders) => client.request<GetActiveGenreTagsQuery>(GetActiveGenreTagsDocument, variables, {...requestHeaders, ...wrappedRequestHeaders}), 'getActiveGenreTags', 'query', variables);
+    },
+    getActiveLanguages(variables?: GetActiveLanguagesQueryVariables, requestHeaders?: GraphQLClientRequestHeaders): Promise<GetActiveLanguagesQuery> {
+      return withWrapper((wrappedRequestHeaders) => client.request<GetActiveLanguagesQuery>(GetActiveLanguagesDocument, variables, {...requestHeaders, ...wrappedRequestHeaders}), 'getActiveLanguages', 'query', variables);
+    },
+    getActiveProhibitedItems(variables?: GetActiveProhibitedItemsQueryVariables, requestHeaders?: GraphQLClientRequestHeaders): Promise<GetActiveProhibitedItemsQuery> {
+      return withWrapper((wrappedRequestHeaders) => client.request<GetActiveProhibitedItemsQuery>(GetActiveProhibitedItemsDocument, variables, {...requestHeaders, ...wrappedRequestHeaders}), 'getActiveProhibitedItems', 'query', variables);
     },
     GetConfig(variables: GetConfigQueryVariables, requestHeaders?: GraphQLClientRequestHeaders): Promise<GetConfigQuery> {
       return withWrapper((wrappedRequestHeaders) => client.request<GetConfigQuery>(GetConfigDocument, variables, {...requestHeaders, ...wrappedRequestHeaders}), 'GetConfig', 'query', variables);
