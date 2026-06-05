@@ -71,6 +71,7 @@ query getMyEventsForSelector {
   getMyEvents {
     _id
     title
+    description
     eventFlyer
     eventType
     startDate

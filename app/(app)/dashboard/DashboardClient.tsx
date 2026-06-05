@@ -92,6 +92,7 @@ type DashboardEvent = {
   eventFlyer?: string | null;
   status?: string | null;
   startDate?: string | null;
+  endDate?: string | null;
   city?: string | null;
   tickets?: {
     ticketCapacity?: number | null;
@@ -420,9 +421,23 @@ export const DashboardClient = () => {
     const now = Date.now();
     return events
       .filter((event) => {
-        const date = event.startDate ? new Date(event.startDate).getTime() : 0;
         const status = String(event.status ?? "").toUpperCase();
-        return date >= now || status === "DRAFT" || status === "PUBLISHED";
+        // A cancelled / archived event is never "upcoming" — even if its
+        // startDate is in the future, the host doesn't need it on the
+        // dashboard card.
+        if (status === "CANCELLED" || status === "ARCHIVED") return false;
+        // Drafts always show — by definition they haven't been launched
+        // yet, so they belong on the "still to come" list regardless of
+        // whatever date the host typed in.
+        if (status === "DRAFT") return true;
+        // For everything else, compare against endDate so an event that
+        // started yesterday but runs through tomorrow still shows up.
+        // Fall back to startDate when endDate isn't set yet.
+        const reference =
+          (event.endDate ? new Date(event.endDate).getTime() : null) ??
+          (event.startDate ? new Date(event.startDate).getTime() : null);
+        if (reference === null) return true;
+        return reference >= now;
       })
       .sort((a, b) => {
         const aTime = a.startDate ? new Date(a.startDate).getTime() : Number.MAX_SAFE_INTEGER;

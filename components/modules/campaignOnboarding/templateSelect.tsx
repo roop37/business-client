@@ -17,9 +17,24 @@ import {
 type EventOption = {
   _id: string;
   title?: string | null;
+  description?: string | null;
   eventFlyer?: string | null;
   startDate?: string | null;
   slug?: string | null;
+};
+
+const formatEventDateLabel = (iso?: string | null): string => {
+  if (!iso) return "";
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return "";
+  return new Intl.DateTimeFormat("en-IN", {
+    weekday: "short",
+    day: "2-digit",
+    month: "short",
+    hour: "numeric",
+    minute: "2-digit",
+    hour12: true,
+  }).format(d);
 };
 
 interface ITemplate {
@@ -100,6 +115,8 @@ const CampaignSetup = () => {
     selectedEventFlyer,
     selectedEventSlug,
     selectedEventTitle,
+    selectedEventDate,
+    selectedEventAbout,
     setSelectedEvent,
     clearSelectedEvent,
   } = useCampaignStore();
@@ -137,6 +154,7 @@ const CampaignSetup = () => {
           (event) => ({
             _id: event._id,
             title: event.title,
+            description: event.description ?? null,
             eventFlyer: event.eventFlyer,
             startDate: event.startDate ? String(event.startDate) : null,
             slug: event.slug,
@@ -161,7 +179,8 @@ const CampaignSetup = () => {
               id: match._id,
               title: match.title ?? "",
               flyer: match.eventFlyer ?? "",
-              date: match.startDate ?? "",
+              date: formatEventDateLabel(match.startDate),
+              about: match.description ?? "",
               slug: match.slug ?? "",
             });
           }
@@ -197,7 +216,8 @@ const CampaignSetup = () => {
       id: event._id,
       title: event.title ?? "",
       flyer: event.eventFlyer ?? "",
-      date: event.startDate ?? "",
+      date: formatEventDateLabel(event.startDate),
+      about: event.description ?? "",
       slug: event.slug ?? "",
     });
     if (!campaignTitle.trim() && event.title) {
@@ -247,7 +267,11 @@ const CampaignSetup = () => {
         .replace(/{{backgroundColor}}/g, hostBackgroundColor)
         .replace(/{{eventFlyer}}/g, eventFlyerUrl)
         .replace(/{{eventUrl}}/g, eventLinkUrl)
-        .replace(/{{eventTitle}}/g, selectedEventTitle || "");
+        // {{eventName}} is the canonical key, {{eventTitle}} an alias.
+        .replace(/{{eventName}}/g, selectedEventTitle || "")
+        .replace(/{{eventTitle}}/g, selectedEventTitle || "")
+        .replace(/{{eventDate}}/g, selectedEventDate || "")
+        .replace(/{{eventAbout}}/g, selectedEventAbout || "");
 
       processedJson = processedJson
         .replace(/{{businessWebsite}}/g, hostOnlineOrderingLink || "")
@@ -257,7 +281,10 @@ const CampaignSetup = () => {
         .replace(/{{backgroundColor}}/g, hostBackgroundColor)
         .replace(/{{eventFlyer}}/g, eventFlyerUrl)
         .replace(/{{eventUrl}}/g, eventLinkUrl)
-        .replace(/{{eventTitle}}/g, selectedEventTitle || "");
+        .replace(/{{eventName}}/g, selectedEventTitle || "")
+        .replace(/{{eventTitle}}/g, selectedEventTitle || "")
+        .replace(/{{eventDate}}/g, selectedEventDate || "")
+        .replace(/{{eventAbout}}/g, selectedEventAbout || "");
     }
 
     setTemplate(name, JSON.parse(processedJson), processedHtml, content);
