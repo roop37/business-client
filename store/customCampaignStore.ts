@@ -81,12 +81,14 @@ interface CampaignState {
   selectedEventTitle: string;
   selectedEventFlyer: string;
   selectedEventDate: string;
+  selectedEventAbout: string;
   selectedEventSlug: string;
   setSelectedEvent: (event: {
     id?: string;
     title?: string;
     flyer?: string;
     date?: string;
+    about?: string;
     slug?: string;
   }) => void;
   clearSelectedEvent: () => void;
@@ -223,6 +225,7 @@ const useCampaignStore = create<CampaignState>((set) => ({
   selectedEventTitle: "",
   selectedEventFlyer: "",
   selectedEventDate: "",
+  selectedEventAbout: "",
   selectedEventSlug: "",
   setSelectedEvent: (event) =>
     set({
@@ -230,6 +233,7 @@ const useCampaignStore = create<CampaignState>((set) => ({
       selectedEventTitle: event.title ?? "",
       selectedEventFlyer: event.flyer ?? "",
       selectedEventDate: event.date ?? "",
+      selectedEventAbout: event.about ?? "",
       selectedEventSlug: event.slug ?? "",
     }),
   clearSelectedEvent: () =>
@@ -238,6 +242,7 @@ const useCampaignStore = create<CampaignState>((set) => ({
       selectedEventTitle: "",
       selectedEventFlyer: "",
       selectedEventDate: "",
+      selectedEventAbout: "",
       selectedEventSlug: "",
     }),
 }));

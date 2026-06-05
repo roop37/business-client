@@ -119,6 +119,9 @@ export type TemplateMergeContext = {
   primaryColor?: string;
   backgroundColor?: string;
   eventTitle?: string;
+  eventName?: string;
+  eventDate?: string;
+  eventAbout?: string;
   eventFlyer?: string;
   eventUrl?: string;
 };
@@ -144,7 +147,13 @@ const applyMergeTagsToString = (
     .replace(/{{backgroundColor}}/g, ctx.backgroundColor ?? "")
     .replace(/{{eventFlyer}}/g, ctx.eventFlyer ?? "")
     .replace(/{{eventUrl}}/g, ctx.eventUrl ?? "")
-    .replace(/{{eventTitle}}/g, ctx.eventTitle ?? "");
+    // {{eventName}} is the canonical token; {{eventTitle}} is kept as a
+    // synonym so any older drafts still substitute. The two render with
+    // the same value — there's no rationale for two names for one field.
+    .replace(/{{eventName}}/g, ctx.eventName ?? ctx.eventTitle ?? "")
+    .replace(/{{eventTitle}}/g, ctx.eventTitle ?? ctx.eventName ?? "")
+    .replace(/{{eventDate}}/g, ctx.eventDate ?? "")
+    .replace(/{{eventAbout}}/g, ctx.eventAbout ?? "");
 
 export const applyTemplateMergeTags = (
   html: string,

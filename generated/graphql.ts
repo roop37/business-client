@@ -4834,7 +4834,7 @@ export type SelectEventPricingOptionMutation = { __typename?: 'Mutation', select
 export type GetMyEventsForSelectorQueryVariables = Exact<{ [key: string]: never; }>;
 
 
-export type GetMyEventsForSelectorQuery = { __typename?: 'Query', getMyEvents: Array<{ __typename?: 'Event', _id: string, title?: string | null, eventFlyer?: string | null, eventType?: Array<EventType> | null, startDate?: any | null, endDate?: any | null, city?: string | null, slug?: string | null, status: EventStatus, tickets?: Array<{ __typename?: 'EventTicket', ticketCapacity: number, ticketSold: number, ticketPrice: number, ticketVisible?: boolean | null }> | null }> };
+export type GetMyEventsForSelectorQuery = { __typename?: 'Query', getMyEvents: Array<{ __typename?: 'Event', _id: string, title?: string | null, description?: string | null, eventFlyer?: string | null, eventType?: Array<EventType> | null, startDate?: any | null, endDate?: any | null, city?: string | null, slug?: string | null, status: EventStatus, tickets?: Array<{ __typename?: 'EventTicket', ticketCapacity: number, ticketSold: number, ticketPrice: number, ticketVisible?: boolean | null }> | null }> };
 
 export type HostListEventScansQueryVariables = Exact<{
   eventId: Scalars['String']['input'];
@@ -5658,6 +5658,7 @@ export const GetMyEventsForSelectorDocument = gql`
   getMyEvents {
     _id
     title
+    description
     eventFlyer
     eventType
     startDate

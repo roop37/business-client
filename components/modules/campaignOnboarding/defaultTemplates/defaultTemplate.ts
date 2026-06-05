@@ -145,16 +145,16 @@ const lastCallTicketDrop = createTemplateVariant(withEventFlyer(sendAnOffer), [
 ]);
 const weekendTicketRush = createTemplateVariant(eventPromotion, [
   [
-    "We're hosting <strong>Event Name</strong> at {{businessName}}, and we'd love for you to join us!",
+    "We're hosting <strong>{{eventName}}</strong> at {{businessName}}, and we'd love for you to join us!",
     "<strong>{{eventTitle}}</strong> is built for a packed weekend: high-intent fans, one clear flyer, and a direct path to tickets.",
   ],
   ["Event Details:", "Campaign angle:"],
   [
-    "<strong>When:</strong> Event Date &amp; Time",
+    "<strong>When:</strong> {{eventDate}}",
     "<strong>Hook:</strong> Limited-capacity night with a strong reason to book now",
   ],
   [
-    "<strong>What to Expect:</strong> About event",
+    "<strong>What to Expect:</strong> {{eventAbout}}",
     "<strong>Push:</strong> Spotlight the lineup, offer, door policy, or fastest-selling ticket tier.",
   ],
   [
@@ -166,16 +166,16 @@ const weekendTicketRush = createTemplateVariant(eventPromotion, [
 ]);
 const bollywoodNightDrop = createTemplateVariant(eventInvitationWithFlyer, [
   [
-    "We're hosting <strong>Event Name</strong> at {{businessName}}, and we'd love for you to join us!",
+    "We're hosting <strong>{{eventName}}</strong> at {{businessName}}, and we'd love for you to join us!",
     "<strong>{{eventTitle}}</strong> is the Bollywood night your group chat needs: big hooks, bigger sing-alongs, and one easy ticket link.",
   ],
   ["Event Details:", "Drop details:"],
   [
-    "<strong>When:</strong> Event Date &amp; Time",
+    "<strong>When:</strong> {{eventDate}}",
     "<strong>For:</strong> friends planning the weekend, reels-first crews, and fans who book when the vibe is clear",
   ],
   [
-    "<strong>What to Expect:</strong> About event",
+    "<strong>What to Expect:</strong> {{eventAbout}}",
     "<strong>Expect:</strong> dance-floor energy, photo moments, fast guestlist movement, and a strong last-click CTA.",
   ],
   [
