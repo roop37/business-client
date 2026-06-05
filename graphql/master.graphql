@@ -21,6 +21,31 @@ query getActiveGenreTags {
   }
 }
 
+# Languages + prohibited items masters for the Event Guide /
+# Prohibited Items multiselects in EventJourney "Additional details".
+# Both sorted server-side: languages by isIndian → order → value;
+# prohibited by order → value. Spec: docs/EVENT_FIELDS_SPEC.md §4.
+query getActiveLanguages {
+  getActiveLanguages {
+    _id
+    code
+    value
+    nativeName
+    isIndian
+    order
+  }
+}
+
+query getActiveProhibitedItems {
+  getActiveProhibitedItems {
+    _id
+    slug
+    value
+    description
+    order
+  }
+}
+
 query GetConfig($type: ConfigTypeEnum!) {
   getConfig(type: $type) {
     _id

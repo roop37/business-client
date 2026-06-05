@@ -2,6 +2,10 @@ import ConfirmModal from "@/components/common/confirm-modal";
 import CustomerEventCard from "@/components/common/event/CustomerEventCard";
 import { PreviewNoise } from "@/components/common/PreviewNoise";
 import { RichTextEditor } from "@/components/common/RichTextEditor";
+import AdditionalDetailsCards, {
+  type AdditionalDetailsState,
+  type EventGuideValue,
+} from "@/components/modules/events/AdditionalDetailsCards";
 import ToggleSettingRow from "@/components/modules/events/ToggleSettingRow";
 import { Calendar } from "@/components/ui/calendar";
 import {
@@ -194,6 +198,13 @@ type ExtraDraft = {
   linkedTicketTypes?: string[];
 };
 
+type EventGalleryItemTypeValue = "IMAGE" | "VIDEO";
+
+type EventGalleryItemDraft = {
+  url: string;
+  type: EventGalleryItemTypeValue;
+};
+
 type ArtistSearchResult = {
   id?: string;
   source?: "ARTIST" | "PHANTOM" | string;
@@ -260,6 +271,105 @@ type CityOption = {
   state?: string | null;
 };
 
+const emptyAdditionalDetails = (): AdditionalDetailsState => ({
+  eventGuide: {},
+  faqs: [],
+  eventInstructions: [],
+  prohibitedItems: [],
+});
+
+const optionalString = (value: unknown): string | undefined => {
+  const trimmed = typeof value === "string" ? value.trim() : "";
+  return trimmed || undefined;
+};
+
+const optionalNumber = (value: unknown): number | undefined => {
+  const n = Number(value);
+  return Number.isFinite(n) ? n : undefined;
+};
+
+const uniqueNonEmptyStrings = (items: unknown): string[] =>
+  Array.from(
+    new Set(
+      (Array.isArray(items) ? items : [])
+        .map((item) => optionalString(item))
+        .filter((item): item is string => Boolean(item)),
+    ),
+  );
+
+const normalizeAdditionalDetails = (
+  value: AdditionalDetailsState,
+): AdditionalDetailsState => {
+  const guide = value.eventGuide ?? {};
+  const gatesOpenBeforeEvent = Boolean(guide.gatesOpenBeforeEvent);
+  const eventGuide: EventGuideValue = {
+    languageIds: uniqueNonEmptyStrings(guide.languageIds),
+    gatesOpenBeforeEvent,
+  };
+
+  if (guide.minimumEntryAge) eventGuide.minimumEntryAge = guide.minimumEntryAge;
+  if (guide.paidEntryAge) eventGuide.paidEntryAge = guide.paidEntryAge;
+  if (guide.venueLayout) eventGuide.venueLayout = guide.venueLayout;
+  if (guide.seatingArrangement) {
+    eventGuide.seatingArrangement = guide.seatingArrangement;
+  }
+  if (guide.kidFriendly) eventGuide.kidFriendly = guide.kidFriendly;
+  if (guide.petFriendly) eventGuide.petFriendly = guide.petFriendly;
+
+  if (gatesOpenBeforeEvent) {
+    const hours = optionalNumber(guide.gatesOpenLeadHours);
+    const minutes = optionalNumber(guide.gatesOpenLeadMinutes);
+    if (hours !== undefined) {
+      eventGuide.gatesOpenLeadHours = Math.max(0, Math.min(23, hours));
+    }
+    if (minutes !== undefined) {
+      eventGuide.gatesOpenLeadMinutes = Math.max(0, Math.min(59, minutes));
+    }
+  }
+
+  const youtubeLink = optionalString(guide.youtubeLink);
+  if (youtubeLink) eventGuide.youtubeLink = youtubeLink;
+
+  return {
+    eventGuide,
+    faqs: value.faqs
+      .map((faq) => ({
+        question: faq.question.trim(),
+        answer: faq.answer.trim(),
+      }))
+      .filter((faq) => faq.question && faq.answer),
+    eventInstructions: uniqueNonEmptyStrings(value.eventInstructions),
+    prohibitedItems: uniqueNonEmptyStrings(value.prohibitedItems),
+  };
+};
+
+const additionalDetailsFromEvent = (event: any): AdditionalDetailsState =>
+  normalizeAdditionalDetails({
+    eventGuide: {
+      languageIds: uniqueNonEmptyStrings(event?.eventGuide?.languageIds),
+      minimumEntryAge: optionalString(event?.eventGuide?.minimumEntryAge),
+      paidEntryAge: optionalString(event?.eventGuide?.paidEntryAge),
+      venueLayout: optionalString(event?.eventGuide?.venueLayout),
+      seatingArrangement: optionalString(
+        event?.eventGuide?.seatingArrangement,
+      ),
+      kidFriendly: optionalString(event?.eventGuide?.kidFriendly),
+      petFriendly: optionalString(event?.eventGuide?.petFriendly),
+      gatesOpenBeforeEvent: Boolean(event?.eventGuide?.gatesOpenBeforeEvent),
+      gatesOpenLeadHours: optionalNumber(event?.eventGuide?.gatesOpenLeadHours),
+      gatesOpenLeadMinutes: optionalNumber(
+        event?.eventGuide?.gatesOpenLeadMinutes,
+      ),
+      youtubeLink: optionalString(event?.eventGuide?.youtubeLink),
+    },
+    faqs: (Array.isArray(event?.faqs) ? event.faqs : []).map((faq: any) => ({
+      question: faq?.question ?? "",
+      answer: faq?.answer ?? "",
+    })),
+    eventInstructions: uniqueNonEmptyStrings(event?.eventInstructions),
+    prohibitedItems: uniqueNonEmptyStrings(event?.prohibitedItems),
+  });
+
 const steps = [
   "Event Category",
   "Basic Details",
@@ -301,13 +411,18 @@ const eventTypeCards: {
   },
 ];
 
+// Aspect ratios updated 2026-06-04 per docs/EVENT_FIELDS_SPEC.md —
+// portrait moves from 4:5 → 3:4 (900×1200) to match the rest of the
+// market, and the historically-named "horizontal flyer" is now the
+// "landscape image" in all UI copy. The DB field name stays
+// `horizontalFlyer` for back-compat.
 const flyerCropTargets = {
   event: {
-    width: 1200,
-    height: 1500,
+    width: 900,
+    height: 1200,
     title: "Crop event flyer",
     description:
-      "Fixed 4:5 crop. Drag on the image to position the crop and use zoom to adjust the selected area.",
+      "Fixed 3:4 crop (900×1200). Drag on the image to position the crop and use zoom to adjust the selected area.",
     uploadKind: "event-flyer" as const,
     fileName: "event-flyer.jpg",
     successMessage: "Event flyer uploaded",
@@ -315,17 +430,68 @@ const flyerCropTargets = {
   horizontal: {
     width: 1600,
     height: 900,
-    title: "Crop horizontal flyer",
+    title: "Crop landscape image",
     description:
-      "Fixed 16:9 crop. Drag on the image to position the crop and use zoom to adjust the selected area.",
+      "Fixed 16:9 crop (1600×900). Drag on the image to position the crop and use zoom to adjust the selected area.",
     uploadKind: "event-horizontal-flyer" as const,
-    fileName: "horizontal-flyer.jpg",
-    successMessage: "Horizontal flyer uploaded",
+    fileName: "landscape-image.jpg",
+    successMessage: "Landscape image uploaded",
   },
 };
 type FlyerCropMode = keyof typeof flyerCropTargets;
-const flyerMaxFileSizeBytes = 5 * 1024 * 1024;
+const eventImageMaxFileSizeBytes = Math.round(1.5 * 1024 * 1024);
+const eventVideoMaxFileSizeBytes = 5 * 1024 * 1024;
+const eventVideoMinDurationSeconds = 10;
+const eventVideoMaxDurationSeconds = 60;
+const maxEventGalleryItems = 8;
+const verticalMediaRatio = 3 / 4;
+const aspectRatioTolerance = 0.025;
+const flyerMaxFileSizeBytes = eventImageMaxFileSizeBytes;
 const flyerCropScaleFromPercent = (zoomPercent: number) => 1 + zoomPercent / 50;
+
+const imageMimeTypes = new Set(["image/jpeg", "image/png"]);
+const videoMimeTypes = new Set(["video/mp4", "video/quicktime"]);
+
+const isWithinAspectRatio = (
+  width: number,
+  height: number,
+  targetRatio: number,
+) => {
+  if (!width || !height) return false;
+  return Math.abs(width / height - targetRatio) <= aspectRatioTolerance;
+};
+
+const readVideoMetadata = async (file: File) => {
+  const url = URL.createObjectURL(file);
+  try {
+    const video = document.createElement("video");
+    video.preload = "metadata";
+    video.src = url;
+    await new Promise<void>((resolve, reject) => {
+      video.onloadedmetadata = () => resolve();
+      video.onerror = () => reject(new Error("Unable to read video metadata"));
+    });
+    return {
+      width: video.videoWidth,
+      height: video.videoHeight,
+      duration: video.duration,
+    };
+  } finally {
+    URL.revokeObjectURL(url);
+  }
+};
+
+const normalizeGalleryType = (value: unknown): EventGalleryItemTypeValue =>
+  String(value).toUpperCase() === "VIDEO" ? "VIDEO" : "IMAGE";
+
+const galleryFromEvent = (items: unknown): EventGalleryItemDraft[] =>
+  (Array.isArray(items) ? items : [])
+    .map((item: any) => ({
+      url: optionalString(item?.url) ?? "",
+      type: normalizeGalleryType(item?.type),
+    }))
+    .filter((item) => item.url)
+    .slice(0, maxEventGalleryItems);
 
 // MainBodyLayout hydrates `selectedHostId` asynchronously after the page mounts.
 // If the user opens the upload tile before that finishes, the prop reads as ""
@@ -473,7 +639,7 @@ const EventJourney = ({
     () => flyerCropScaleFromPercent(cropZoom),
     [cropZoom],
   );
-  // Largest 4:5 crop window that fits inside the displayed source image,
+  // Largest 3:4 crop window that fits inside the displayed source image,
   // expressed as a % of the displayed image's own dimensions. Multiplied by
   // 1/cropScale so zoom shrinks the window (tighter crop). Both numbers are
   // shared by the preview overlay and the canvas-cut math below.
@@ -515,7 +681,13 @@ const EventJourney = ({
   const [ticketTab, setTicketTab] = useState<"tickets" | "advanced">("tickets");
   const [ticketModalOpen, setTicketModalOpen] = useState(false);
   const [ticketEditIndex, setTicketEditIndex] = useState<number | null>(null);
-  const [ticketAdvancedOpen, setTicketAdvancedOpen] = useState(false);
+  // Advanced settings stays expanded by default. Earlier the modal
+  // opened with the panel collapsed and the toggle below the visible
+  // viewport — hosts on short laptops couldn't scroll past the always-
+  // expanded basic-info block to reach the toggle, so the settings
+  // were effectively unreachable. Opening by default trades a slightly
+  // taller initial modal for actual discoverability.
+  const [ticketAdvancedOpen, setTicketAdvancedOpen] = useState(true);
   const [ticketCategory, setTicketCategory] =
     useState<TicketCategoryValue>("GUESTLIST");
   const [ticketName, setTicketName] = useState("General Entry");
@@ -629,9 +801,17 @@ const EventJourney = ({
   const [instagramStory, setInstagramStory] = useState("");
   const [tableLayoutImage, setTableLayoutImage] = useState("");
   const [horizontalFlyer, setHorizontalFlyer] = useState("");
+  const [videoSneakPeek, setVideoSneakPeek] = useState("");
+  const [uploadingSneakPeek, setUploadingSneakPeek] = useState(false);
+  const [galleryItems, setGalleryItems] = useState<EventGalleryItemDraft[]>(
+    [],
+  );
+  const [uploadingGallery, setUploadingGallery] = useState(false);
   const [verticalVideo, setVerticalVideo] = useState("");
   const [horizontalVideo, setHorizontalVideo] = useState("");
   const [contactForQueriesTables, setContactForQueriesTables] = useState("");
+  const [additionalDetails, setAdditionalDetails] =
+    useState<AdditionalDetailsState>(emptyAdditionalDetails);
   // expectedEventsDoneTillNow input was removed per Roop — the server still
   // accepts the field for backwards compat (pricing calc + AI Boost
   // generator read it), so we send 0 from the client now and a follow-up
@@ -849,7 +1029,7 @@ const EventJourney = ({
     setTicketOnGroundOnly(false);
     setTicketVisible(true);
     setTicketDescription("");
-    setTicketAdvancedOpen(false);
+    setTicketAdvancedOpen(true);
   };
 
   const openTicketModal = (index?: number) => {
@@ -872,7 +1052,7 @@ const EventJourney = ({
       setTicketOnGroundOnly(ticket.markAsOnGroundOnly);
       setTicketVisible(ticket.ticketVisible);
       setTicketDescription(ticket.description ?? "");
-      setTicketAdvancedOpen(false);
+      setTicketAdvancedOpen(true);
     } else {
       setTicketEditIndex(null);
       resetTicketDraft();
@@ -1617,7 +1797,7 @@ const EventJourney = ({
     if (file.size > flyerMaxFileSizeBytes) {
       setToastData({
         type: "error",
-        message: "Event flyer must be 5 MB or smaller.",
+        message: "Event image must be 1.5 MB or smaller.",
       });
       return;
     }
@@ -1663,6 +1843,122 @@ const EventJourney = ({
   const removeHorizontalFlyer = () => {
     clearFlyerSelection();
     setHorizontalFlyer("");
+  };
+
+  const validateVerticalVideoFile = async (file: File, label: string) => {
+    if (!videoMimeTypes.has(file.type)) {
+      throw new Error(`${label} must be an MP4 or MOV file.`);
+    }
+    if (file.size > eventVideoMaxFileSizeBytes) {
+      throw new Error(`${label} must be 5 MB or smaller.`);
+    }
+    const meta = await readVideoMetadata(file);
+    if (
+      !isWithinAspectRatio(meta.width, meta.height, verticalMediaRatio)
+    ) {
+      throw new Error(`${label} must be a vertical 3:4 video.`);
+    }
+    if (
+      meta.duration < eventVideoMinDurationSeconds ||
+      meta.duration > eventVideoMaxDurationSeconds
+    ) {
+      throw new Error(`${label} must be 10 to 60 seconds long.`);
+    }
+  };
+
+  const validateGalleryImageFile = (file: File) => {
+    if (!imageMimeTypes.has(file.type)) {
+      throw new Error("Gallery images must be JPG or PNG files.");
+    }
+    if (file.size > eventImageMaxFileSizeBytes) {
+      throw new Error("Gallery images must be 1.5 MB or smaller.");
+    }
+  };
+
+  const uploadSneakPeekFile = async (file?: File) => {
+    if (!file || uploadingSneakPeek) return;
+    setUploadingSneakPeek(true);
+    try {
+      await validateVerticalVideoFile(file, "Sneak peek video");
+      const hostId = selectedHostId || (await awaitSelectedHostId());
+      if (!hostId) {
+        throw new Error(
+          `We couldn't load your ${hostLabel.lower} context. Refresh the page and try again.`,
+        );
+      }
+      const result = await uploadHostAsset({
+        kind: "event-sneak-peek",
+        hostId,
+        eventId,
+        file,
+        previousUrl: videoSneakPeek,
+        resourceType: "video",
+      });
+      setVideoSneakPeek(result.secureUrl);
+      setToastData({ type: "success", message: "Sneak peek video uploaded" });
+    } catch (error) {
+      setToastData({ type: "error", message: extractErrorMessage(error) });
+    } finally {
+      setUploadingSneakPeek(false);
+    }
+  };
+
+  const uploadGalleryFiles = async (files?: FileList | File[]) => {
+    const selectedFiles = Array.from(files ?? []);
+    if (!selectedFiles.length || uploadingGallery) return;
+    const remainingSlots = maxEventGalleryItems - galleryItems.length;
+    if (selectedFiles.length > remainingSlots) {
+      setToastData({
+        type: "error",
+        message: `Gallery can include up to ${maxEventGalleryItems} items.`,
+      });
+      return;
+    }
+
+    setUploadingGallery(true);
+    try {
+      const hostId = selectedHostId || (await awaitSelectedHostId());
+      if (!hostId) {
+        throw new Error(
+          `We couldn't load your ${hostLabel.lower} context. Refresh the page and try again.`,
+        );
+      }
+
+      const uploaded: EventGalleryItemDraft[] = [];
+      for (const file of selectedFiles) {
+        const isImage = file.type.startsWith("image/");
+        const isVideo = file.type.startsWith("video/");
+        if (!isImage && !isVideo) {
+          throw new Error("Gallery items must be image, MP4, or MOV files.");
+        }
+        if (isImage) validateGalleryImageFile(file);
+        if (isVideo) await validateVerticalVideoFile(file, "Gallery video");
+
+        const result = await uploadHostAsset({
+          kind: "event-gallery",
+          hostId,
+          eventId,
+          file,
+          resourceType: isVideo ? "video" : "image",
+        });
+        uploaded.push({
+          url: result.secureUrl,
+          type: isVideo ? "VIDEO" : "IMAGE",
+        });
+      }
+      setGalleryItems((current) => [...current, ...uploaded]);
+      setToastData({
+        type: "success",
+        message:
+          uploaded.length === 1
+            ? "Gallery item uploaded"
+            : `${uploaded.length} gallery items uploaded`,
+      });
+    } catch (error) {
+      setToastData({ type: "error", message: extractErrorMessage(error) });
+    } finally {
+      setUploadingGallery(false);
+    }
   };
 
   const cropFlyerToBlob = async (file: File): Promise<Blob> => {
@@ -1884,8 +2180,11 @@ const EventJourney = ({
         setInstagramStory(event.instagramStory ?? "");
         setTableLayoutImage(event.tableLayoutImage ?? "");
         setHorizontalFlyer((event as any).horizontalFlyer ?? "");
+        setVideoSneakPeek((event as any).videoSneakPeek ?? "");
+        setGalleryItems(galleryFromEvent((event as any).gallery));
         setVerticalVideo(event.verticalVideo ?? "");
         setHorizontalVideo(event.horizontalVideo ?? "");
+        setAdditionalDetails(additionalDetailsFromEvent(event));
 
         const mappedTickets =
           event.tickets?.map((ticket: any) => ({
@@ -2066,134 +2365,151 @@ const EventJourney = ({
     formScrollRef.current?.scrollTo({ top: 0, behavior: "auto" });
   }, [step]);
 
-  const buildEventInput = () => ({
-    title: title || undefined,
-    description: description || undefined,
-    eventFlyer: eventFlyer || undefined,
-    eventType: [eventType],
-    isComingSoon,
-    startDate: !isComingSoon && startDate ? new Date(startDate) : undefined,
-    endDate: !isComingSoon && endDate ? new Date(endDate) : undefined,
-    markSeparateDays: multiDayEligible ? markSeparateDays : false,
-    isVisible,
-    city: city || undefined,
-    eventLocationDecided,
-    location: eventLocationDecided
-      ? {
-          addressLine1: addressLine1 || undefined,
-          addressLine2: addressLine2 || undefined,
-          city: city || undefined,
-          state: stateName || undefined,
-          pincode: pincode || undefined,
-          formattedAddress: addressLine1 || undefined,
-          coordinate: coords.length
-            ? {
-                type: "Point",
-                coordinates: coords,
-              }
-            : undefined,
-          place: selectedPlace
-            ? {
-                displayName: selectedPlace.label,
-                placeId: selectedPlace.value,
-              }
-            : undefined,
-        }
-      : undefined,
-    ticketingEnabled,
-    allowWalkIns,
-    requiresIDVerification,
-    ticketSalesStartDate: ticketSalesStartDate
-      ? new Date(ticketSalesStartDate)
-      : undefined,
-    ticketSalesEndDate: ticketSalesEndDate
-      ? new Date(ticketSalesEndDate)
-      : undefined,
-    ticketingTerms: ticketingTerms || undefined,
-    refundPolicy: refundPolicy || undefined,
-    instagramPost: instagramPost || undefined,
-    instagramStory: instagramStory || undefined,
-    tableLayoutImage: tableLayoutImage || undefined,
-    horizontalFlyer: horizontalFlyer || undefined,
-    verticalVideo: verticalVideo || undefined,
-    horizontalVideo: horizontalVideo || undefined,
-    contactForQueriesTables: contactForQueriesTables || undefined,
-    expectedEventsDoneTillNow: 0,
-    genreTagIds: selectedGenreIds.length ? selectedGenreIds : undefined,
-    tickets: ticketingEnabled
-      ? ticketInputs().map((ticket) => ({
-          _id: ticket._id,
-          ticketCategory: ticket.ticketCategory,
-          ticketName: ticket.ticketName,
-          ticketType: ticket.ticketType,
-          ticketCapacity: Number(ticket.ticketCapacity),
-          ticketPrice:
-            ticket.ticketCategory === "GUESTLIST"
-              ? 0
-              : Number(ticket.ticketPrice),
-          ticketInfo: ticket.ticketInfo || undefined,
-          maxTicketPerUser: Number(ticket.maxTicketPerUser) || 10,
-          ticketExpiryDateTime: ticket.ticketExpiryDateTime
-            ? new Date(ticket.ticketExpiryDateTime)
-            : undefined,
-          coverType:
-            ticket.ticketCategory === "GUESTLIST"
-              ? undefined
-              : ticket.coverType,
-          ticketGST:
-            ticket.ticketCategory === "GUESTLIST"
-              ? undefined
-              : ticket.ticketGST,
-          gstRate:
-            ticket.ticketGST === "OTHER" ? Number(ticket.gstRate) : undefined,
-          markAsComingSoon: ticket.markAsComingSoon,
-          markAsOnGroundOnly: ticket.markAsOnGroundOnly,
-          groupCapacity:
-            ticket.ticketCategory === "GROUP"
-              ? Number(ticket.groupCapacity)
+  const buildEventInput = (
+    details: AdditionalDetailsState = additionalDetails,
+  ) => {
+    const normalizedAdditionalDetails = normalizeAdditionalDetails(details);
+
+    return {
+      title: title || undefined,
+      description: description || undefined,
+      eventFlyer: eventFlyer || undefined,
+      eventType: [eventType],
+      isComingSoon,
+      startDate: !isComingSoon && startDate ? new Date(startDate) : undefined,
+      endDate: !isComingSoon && endDate ? new Date(endDate) : undefined,
+      markSeparateDays: multiDayEligible ? markSeparateDays : false,
+      isVisible,
+      city: city || undefined,
+      eventLocationDecided,
+      location: eventLocationDecided
+        ? {
+            addressLine1: addressLine1 || undefined,
+            addressLine2: addressLine2 || undefined,
+            city: city || undefined,
+            state: stateName || undefined,
+            pincode: pincode || undefined,
+            formattedAddress: addressLine1 || undefined,
+            coordinate: coords.length
+              ? {
+                  type: "Point",
+                  coordinates: coords,
+                }
               : undefined,
-          ticketVisible: ticket.ticketVisible,
-          description: ticket.description?.trim() || undefined,
-        }))
-      : undefined,
-    lineup:
-      lineupEnabled && artists.length > 0
-        ? artists.map((artist) => ({
-            name: artist.name,
-            picture: artist.picture || undefined,
-            artistLinkId: artist.artistLinkId || undefined,
-            tempArtistId: artist.tempArtistId || undefined,
-            instagramLink: artist.instagramLink || undefined,
-            spotifyLink: artist.spotifyLink || undefined,
-            youtubeLink: artist.youtubeLink || undefined,
+            place: selectedPlace
+              ? {
+                  displayName: selectedPlace.label,
+                  placeId: selectedPlace.value,
+                }
+              : undefined,
+          }
+        : undefined,
+      ticketingEnabled,
+      allowWalkIns,
+      requiresIDVerification,
+      ticketSalesStartDate: ticketSalesStartDate
+        ? new Date(ticketSalesStartDate)
+        : undefined,
+      ticketSalesEndDate: ticketSalesEndDate
+        ? new Date(ticketSalesEndDate)
+        : undefined,
+      ticketingTerms: ticketingTerms || undefined,
+      refundPolicy: refundPolicy || undefined,
+      instagramPost: instagramPost || undefined,
+      instagramStory: instagramStory || undefined,
+      tableLayoutImage: tableLayoutImage || undefined,
+      horizontalFlyer: horizontalFlyer || undefined,
+      videoSneakPeek: videoSneakPeek || null,
+      gallery: galleryItems.map((item) => ({
+        url: item.url,
+        type: item.type,
+      })),
+      verticalVideo: verticalVideo || undefined,
+      horizontalVideo: horizontalVideo || undefined,
+      contactForQueriesTables: contactForQueriesTables || undefined,
+      expectedEventsDoneTillNow: 0,
+      genreTagIds: selectedGenreIds.length ? selectedGenreIds : undefined,
+      tickets: ticketingEnabled
+        ? ticketInputs().map((ticket) => ({
+            _id: ticket._id,
+            ticketCategory: ticket.ticketCategory,
+            ticketName: ticket.ticketName,
+            ticketType: ticket.ticketType,
+            ticketCapacity: Number(ticket.ticketCapacity),
+            ticketPrice:
+              ticket.ticketCategory === "GUESTLIST"
+                ? 0
+                : Number(ticket.ticketPrice),
+            ticketInfo: ticket.ticketInfo || undefined,
+            maxTicketPerUser: Number(ticket.maxTicketPerUser) || 10,
+            ticketExpiryDateTime: ticket.ticketExpiryDateTime
+              ? new Date(ticket.ticketExpiryDateTime)
+              : undefined,
+            coverType:
+              ticket.ticketCategory === "GUESTLIST"
+                ? undefined
+                : ticket.coverType,
+            ticketGST:
+              ticket.ticketCategory === "GUESTLIST"
+                ? undefined
+                : ticket.ticketGST,
+            gstRate:
+              ticket.ticketGST === "OTHER"
+                ? Number(ticket.gstRate)
+                : undefined,
+            markAsComingSoon: ticket.markAsComingSoon,
+            markAsOnGroundOnly: ticket.markAsOnGroundOnly,
+            groupCapacity:
+              ticket.ticketCategory === "GROUP"
+                ? Number(ticket.groupCapacity)
+                : undefined,
+            ticketVisible: ticket.ticketVisible,
+            description: ticket.description?.trim() || undefined,
           }))
         : undefined,
-    lineUpToBeAnnounced,
-    eventCollaborationBusiness:
-      collaborators.length > 0
-        ? collaborators.map((collab) => ({
-            name: collab.name,
-            businessLinkId: collab.businessLinkId || undefined,
-            logo: collab.logo || undefined,
-            requestCustomerListAccess: collab.requestCustomerListAccess,
-            hideOnEventPage: collab.hideOnEventPage,
-            allowIssuingOfflineTickets: collab.allowIssuingOfflineTickets,
-            sendTransactionalMails: collab.sendTransactionalMails,
-            canSeeMetrics: collab.canSeeMetrics,
-            canRunCampaigns: collab.canRunCampaigns,
-            canCreateOffers: collab.canCreateOffers,
-          }))
-        : undefined,
-    extras: extras.map((extra) => ({
-      _id: extra._id,
-      name: extra.name,
-      description: extra.description || undefined,
-      price: Number(extra.price),
-      quantity: Number(extra.quantity),
-      image: extra.image || undefined,
-      type: extra.type,
-    })),
-  });
+      lineup:
+        lineupEnabled && artists.length > 0
+          ? artists.map((artist) => ({
+              name: artist.name,
+              picture: artist.picture || undefined,
+              artistLinkId: artist.artistLinkId || undefined,
+              tempArtistId: artist.tempArtistId || undefined,
+              instagramLink: artist.instagramLink || undefined,
+              spotifyLink: artist.spotifyLink || undefined,
+              youtubeLink: artist.youtubeLink || undefined,
+            }))
+          : undefined,
+      lineUpToBeAnnounced,
+      eventCollaborationBusiness:
+        collaborators.length > 0
+          ? collaborators.map((collab) => ({
+              name: collab.name,
+              businessLinkId: collab.businessLinkId || undefined,
+              logo: collab.logo || undefined,
+              requestCustomerListAccess: collab.requestCustomerListAccess,
+              hideOnEventPage: collab.hideOnEventPage,
+              allowIssuingOfflineTickets: collab.allowIssuingOfflineTickets,
+              sendTransactionalMails: collab.sendTransactionalMails,
+              canSeeMetrics: collab.canSeeMetrics,
+              canRunCampaigns: collab.canRunCampaigns,
+              canCreateOffers: collab.canCreateOffers,
+            }))
+          : undefined,
+      extras: extras.map((extra) => ({
+        _id: extra._id,
+        name: extra.name,
+        description: extra.description || undefined,
+        price: Number(extra.price),
+        quantity: Number(extra.quantity),
+        image: extra.image || undefined,
+        type: extra.type,
+      })),
+      eventGuide: normalizedAdditionalDetails.eventGuide,
+      faqs: normalizedAdditionalDetails.faqs,
+      eventInstructions: normalizedAdditionalDetails.eventInstructions,
+      prohibitedItems: normalizedAdditionalDetails.prohibitedItems,
+    };
+  };
 
   const saveCurrentStep = async (nextStep = step + 1) => {
     const error = validateStep(step);
@@ -2231,6 +2547,27 @@ const EventJourney = ({
     } catch (error) {
       const message = extractErrorMessage(error);
       setToastData({ type: "error", message });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const persistAdditionalDetails = async (next: AdditionalDetailsState) => {
+    setLoading(true);
+    try {
+      await sdk.updateEventStep({
+        id: eventId,
+        step: 6,
+        stepInput: buildEventInput(next),
+      });
+      setToastData({
+        type: "success",
+        message: "Additional details saved",
+      });
+    } catch (error) {
+      const message = extractErrorMessage(error);
+      setToastData({ type: "error", message });
+      throw error;
     } finally {
       setLoading(false);
     }
@@ -2646,7 +2983,7 @@ const EventJourney = ({
       </header>
 
       <main className="grid h-[calc(100dvh-64px)] min-h-0 flex-1 grid-cols-1 grid-rows-[minmax(0,1fr)] overflow-hidden lg:grid-cols-[260px_minmax(0,1fr)_340px]">
-        <aside className="hidden min-h-0 border-r border-[var(--owner-border)] p-4 lg:block">
+        <aside className="hidden min-h-0 flex-col border-r border-[var(--owner-border)] p-4 lg:flex">
           <nav className="space-y-2">
             {visibleSteps.map((label) => {
               const index = steps.indexOf(label);
@@ -2673,6 +3010,36 @@ const EventJourney = ({
               );
             })}
           </nav>
+
+          {/* Help/contact callout — moved here from the right preview
+              aside so it lives in the same column as the step nav and
+              isn't competing for attention with the Live Preview card.
+              Same warm copy as the host-onboarding layout to keep one
+              voice across the dashboard. */}
+          <div className="mt-6 rounded-lg border border-[var(--owner-border)] bg-[var(--owner-bg)] p-4 text-xs leading-5 text-[var(--owner-fg-3)]">
+            <p className="font-semibold text-[var(--owner-fg-1)]">
+              We&apos;d love to help.
+            </p>
+            <p className="mt-1">
+              Anything tricky here? Reach out — our team can hop on a call,
+              fix it with you, or even onboard your event for you. We&apos;re
+              genuinely happy to roll up our sleeves.
+            </p>
+            <a
+              href="mailto:contact@hoizr.com"
+              className="mt-3 inline-flex font-semibold text-[var(--owner-fg-1)] underline-offset-4 hover:underline"
+            >
+              contact@hoizr.com →
+            </a>
+            <a
+              href="https://wa.me/918910385523"
+              target="_blank"
+              rel="noreferrer"
+              className="mt-2 inline-flex items-center gap-1.5 font-semibold text-[var(--owner-blue-500)] underline-offset-4 hover:underline"
+            >
+              WhatsApp us — we usually reply in minutes →
+            </a>
+          </div>
         </aside>
 
         {/* Middle column is a flex column: scrolling form on top, action bar
@@ -2880,8 +3247,8 @@ const EventJourney = ({
                                 Event Flyer *
                               </span>
                               <span className="mt-1 block text-xs leading-5 text-[var(--owner-fg-3)]">
-                                Drop an image or click to crop a 4:5 event
-                                poster. JPG, PNG, or WebP up to 5 MB.
+                                Drop a 900×1200 (3:4) event poster or click
+                                to crop one. JPG, PNG, or WebP up to 1.5 MB.
                               </span>
                               {eventFlyer ? (
                                 <span className="mt-2 inline-flex items-center gap-1 text-xs font-semibold text-[var(--owner-blue-500)]">
@@ -3825,6 +4192,15 @@ const EventJourney = ({
                       </div>
                     </section>
 
+                    <div className="mt-5">
+                      <AdditionalDetailsCards
+                        value={additionalDetails}
+                        onChange={setAdditionalDetails}
+                        onPersist={persistAdditionalDetails}
+                        saving={loading}
+                      />
+                    </div>
+
                     {/* Group 2 — Promotional assets */}
                     <section className="mt-5 rounded-xl border border-[var(--owner-border)] bg-white p-5">
                       <header className="mb-4">
@@ -3840,7 +4216,7 @@ const EventJourney = ({
                         </p>
                       </header>
 
-                      {/* Featured: horizontal flyer */}
+                      {/* Featured: landscape image (DB field: horizontalFlyer) */}
                       <div className="rounded-lg border border-[var(--owner-blue-200)] bg-[var(--owner-blue-050)] p-4">
                         <div className="mb-2 flex items-center gap-2">
                           <span className="rounded-full bg-[var(--owner-blue-500)] px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-white">
@@ -3876,11 +4252,11 @@ const EventJourney = ({
                               )}
                               <span className="min-w-0 text-left">
                                 <span className="block font-semibold text-[var(--owner-fg-1)]">
-                                  Horizontal flyer (16:9)
+                                  Landscape image (16:9)
                                 </span>
                                 <span className="mt-1 block text-xs leading-5 text-[var(--owner-fg-3)]">
-                                  Drop an image or click to crop a 16:9 flyer.
-                                  JPG, PNG, or WebP up to 5 MB.
+                                  Drop a 1600×900 image or click to crop one.
+                                  JPG, PNG, or WebP up to 1.5 MB.
                                 </span>
                                 {horizontalFlyer ? (
                                   <span className="mt-2 inline-flex items-center gap-1 text-xs font-semibold text-[var(--owner-blue-500)]">
@@ -3972,10 +4348,163 @@ const EventJourney = ({
                         />
                       </div>
 
-                      {/* Coming-soon note (collapsed into a single line) */}
-                      <p className="mt-5 rounded-md bg-[var(--owner-bg-subtle)] px-3 py-2 text-[11px] text-[var(--owner-fg-3)]">
-                        🎬 Video uploads (vertical & horizontal) — coming soon.
-                      </p>
+                      {/* Video sneak peek */}
+                      <div className="mt-5 rounded-lg border border-[var(--owner-border)] bg-white p-4 shadow-sm">
+                        <div className="flex flex-col gap-3 sm:flex-row sm:items-stretch">
+                          <label
+                            className="flex min-h-[140px] flex-1 cursor-pointer items-center gap-4 rounded-lg border border-dashed border-[var(--owner-border)] bg-[var(--owner-bg)] px-4 py-4 text-sm transition hover:border-[var(--owner-blue-500)] hover:bg-[var(--owner-bg-subtle)]"
+                            onDragOver={(event) => event.preventDefault()}
+                            onDrop={(event) => {
+                              event.preventDefault();
+                              uploadSneakPeekFile(
+                                event.dataTransfer.files?.[0],
+                              );
+                            }}
+                          >
+                            {videoSneakPeek ? (
+                              <video
+                                className="h-28 w-20 shrink-0 rounded-lg bg-black object-cover shadow-sm"
+                                src={videoSneakPeek}
+                                muted
+                                playsInline
+                                loop
+                              />
+                            ) : (
+                              <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-white text-[var(--owner-fg-3)] shadow-sm">
+                                <UploadCloudIcon size={22} />
+                              </span>
+                            )}
+                            <span className="min-w-0 text-left">
+                              <span className="block font-semibold text-[var(--owner-fg-1)]">
+                                Sneak peek video
+                              </span>
+                              <span className="mt-1 block text-xs leading-5 text-[var(--owner-fg-3)]">
+                                Vertical 3:4 MP4 or MOV, 10-60 seconds, up
+                                to 5 MB.
+                              </span>
+                              {videoSneakPeek ? (
+                                <span className="mt-2 inline-flex items-center gap-1 text-xs font-semibold text-[var(--owner-blue-500)]">
+                                  <ImagePlusIcon size={14} />
+                                  Replace video
+                                </span>
+                              ) : null}
+                            </span>
+                            <input
+                              type="file"
+                              accept=".mp4,.mov,video/mp4,video/quicktime"
+                              className="sr-only"
+                              disabled={uploadingSneakPeek}
+                              onChange={(event) => {
+                                uploadSneakPeekFile(
+                                  event.target.files?.[0],
+                                );
+                                event.currentTarget.value = "";
+                              }}
+                            />
+                          </label>
+                          {videoSneakPeek ? (
+                            <button
+                              type="button"
+                              onClick={() => setVideoSneakPeek("")}
+                              className="inline-flex shrink-0 items-center justify-center gap-2 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-xs font-semibold text-red-700 transition hover:bg-red-100 sm:w-28"
+                            >
+                              <XIcon size={14} />
+                              Remove
+                            </button>
+                          ) : null}
+                        </div>
+                        {uploadingSneakPeek ? (
+                          <p className="mt-2 text-xs text-[var(--owner-fg-3)]">
+                            Uploading sneak peek...
+                          </p>
+                        ) : null}
+                      </div>
+
+                      {/* Gallery */}
+                      <div className="mt-5 rounded-lg border border-[var(--owner-border)] bg-white p-4 shadow-sm">
+                        <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+                          <div>
+                            <div className="text-xs font-semibold text-[var(--owner-fg-2)]">
+                              Gallery
+                            </div>
+                            <p className="mt-0.5 text-xs text-[var(--owner-fg-3)]">
+                              Up to 8 images or vertical videos. Images: JPG/PNG
+                              up to 1.5 MB. Videos: 3:4 MP4/MOV, 10-60 seconds,
+                              up to 5 MB.
+                            </p>
+                          </div>
+                          <span className="rounded-md bg-[var(--owner-bg-subtle)] px-2.5 py-1 text-xs font-semibold text-[var(--owner-fg-3)]">
+                            {galleryItems.length}/{maxEventGalleryItems}
+                          </span>
+                        </div>
+                        <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+                          {galleryItems.map((item) => (
+                            <div
+                              key={item.url}
+                              className="group relative aspect-[3/4] overflow-hidden rounded-lg border border-[var(--owner-border)] bg-[var(--owner-bg)]"
+                            >
+                              {item.type === "VIDEO" ? (
+                                <video
+                                  src={item.url}
+                                  className="h-full w-full object-cover"
+                                  muted
+                                  playsInline
+                                  loop
+                                />
+                              ) : (
+                                <span
+                                  className="block h-full w-full bg-cover bg-center"
+                                  style={{ backgroundImage: `url(${item.url})` }}
+                                />
+                              )}
+                              <button
+                                type="button"
+                                onClick={() =>
+                                  setGalleryItems((current) =>
+                                    current.filter(
+                                      (entry) => entry.url !== item.url,
+                                    ),
+                                  )
+                                }
+                                className="absolute right-2 top-2 inline-flex h-7 w-7 items-center justify-center rounded-full bg-black/70 text-white opacity-100 transition hover:bg-black sm:opacity-0 sm:group-hover:opacity-100"
+                                aria-label="Remove gallery item"
+                              >
+                                <XIcon size={14} />
+                              </button>
+                            </div>
+                          ))}
+                          {galleryItems.length < maxEventGalleryItems ? (
+                            <label
+                              className="flex aspect-[3/4] cursor-pointer flex-col items-center justify-center gap-2 rounded-lg border border-dashed border-[var(--owner-border)] bg-[var(--owner-bg)] text-center text-xs font-semibold text-[var(--owner-fg-3)] transition hover:border-[var(--owner-blue-500)] hover:bg-[var(--owner-bg-subtle)]"
+                              onDragOver={(event) => event.preventDefault()}
+                              onDrop={(event) => {
+                                event.preventDefault();
+                                uploadGalleryFiles(event.dataTransfer.files);
+                              }}
+                            >
+                              <UploadCloudIcon size={22} />
+                              <span>
+                                {uploadingGallery
+                                  ? "Uploading..."
+                                  : "Add media"}
+                              </span>
+                              <input
+                                type="file"
+                                accept=".jpg,.jpeg,.png,.mp4,.mov,image/jpeg,image/png,video/mp4,video/quicktime"
+                                className="sr-only"
+                                multiple
+                                disabled={uploadingGallery}
+                                onChange={(event) => {
+                                  uploadGalleryFiles(
+                                    event.target.files ?? undefined,
+                                  );
+                                  event.currentTarget.value = "";
+                                }}
+                              />
+                            </label>
+                          ) : null}
+                        </div>
+                      </div>
                     </section>
 
                     {/* Group 3 — Event behaviour */}
@@ -4095,28 +4624,6 @@ const EventJourney = ({
             />
           </div>
 
-          <div className="mt-5 rounded-lg border border-white/10 bg-white/5 p-4 text-xs leading-5 text-[var(--owner-blue-100)]">
-            <p className="font-semibold text-white">We&apos;d love to help.</p>
-            <p className="mt-1">
-              Anything tricky here? Reach out — our team can hop on a call,
-              fix it with you, or even onboard your event for you. We&apos;re
-              genuinely happy to roll up our sleeves.
-            </p>
-            <a
-              href="mailto:contact@hoizr.com"
-              className="mt-3 inline-flex font-semibold text-white underline-offset-4 hover:underline"
-            >
-              contact@hoizr.com →
-            </a>
-            <a
-              href="https://wa.me/918910385523"
-              target="_blank"
-              rel="noreferrer"
-              className="mt-2 inline-flex items-center gap-1.5 font-semibold text-white underline-offset-4 hover:underline"
-            >
-              WhatsApp us — we usually reply in minutes →
-            </a>
-          </div>
           </div>
         </aside>
         {ticketModalOpen ? (
@@ -5812,7 +6319,7 @@ const ImageUrlInput = ({
     if (file.size > flyerMaxFileSizeBytes) {
       setToastData({
         type: "error",
-        message: "Image must be 5 MB or smaller.",
+        message: "Image must be 1.5 MB or smaller.",
       });
       return;
     }

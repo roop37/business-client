@@ -1026,7 +1026,7 @@ const CompactDashboardEventCard = ({
       onClick={onClick}
       className="group w-[214px] shrink-0 overflow-hidden rounded-owner-lg border border-owner-border bg-owner-bg text-left shadow-owner-sm transition hover:-translate-y-0.5 hover:border-owner-blue-200 hover:shadow-[0_16px_34px_rgba(15,15,15,0.12)]"
     >
-      <div className="relative aspect-[4/5] overflow-hidden bg-owner-bg-subtle">
+      <div className="relative aspect-[3/4] overflow-hidden bg-owner-bg-subtle">
         {event.eventFlyer ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img
