@@ -4561,7 +4561,7 @@ const EventJourney = ({
                   type="button"
                   disabled={loading}
                   onClick={
-                    step === lastStepIndex
+                    step === lastStepIndex && !isPublished
                       ? requestPublishFlow
                       : () => saveCurrentStep()
                   }
@@ -4570,9 +4570,11 @@ const EventJourney = ({
                   {loading
                     ? "Saving..."
                     : step === lastStepIndex
-                      ? isPaid
-                        ? "Review & publish"
-                        : "Publish free event"
+                      ? isPublished
+                        ? "Save changes"
+                        : isPaid
+                          ? "Review & publish"
+                          : "Publish free event"
                       : mode === "update"
                         ? "Update"
                         : "Save and continue"}

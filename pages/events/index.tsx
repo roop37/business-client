@@ -12,6 +12,7 @@ import {
   CheckCircle2Icon,
   ChevronDownIcon,
   CircleDashedIcon,
+  CopyIcon,
   DownloadIcon,
   type LucideIcon,
   MegaphoneIcon,
@@ -449,6 +450,31 @@ const EventsPage = () => {
     }
   };
 
+  /**
+   * Clone the event into a fresh draft under the same host. Mirrors
+   * the email-campaign duplicate flow — fastest path to launching a
+   * recurring night without re-uploading flyer + lineup + tickets.
+   * Lands in the events list (with a refresh) where the new draft
+   * sits at the top of the list ready to edit.
+   */
+  const duplicateEvent = async (event: EventCardData) => {
+    try {
+      const response = await sdk.duplicateEvent({ id: event._id });
+      const newId = response?.duplicateEvent?._id;
+      setToastData({
+        type: "success",
+        message: "Event duplicated as a draft.",
+      });
+      if (newId) {
+        router.push(`/events/${newId}/create`);
+      } else {
+        fetchData();
+      }
+    } catch (error) {
+      setToastData({ type: "error", message: extractErrorMessage(error) });
+    }
+  };
+
   const requestDeleteEvent = (event: EventCardData) => {
     setConfirmAction({
       title: "Delete event?",
@@ -710,6 +736,7 @@ const EventsPage = () => {
                 event={event}
                 onDelete={() => requestDeleteEvent(event)}
                 onLeaveCollab={() => requestLeaveCollab(event)}
+                onDuplicate={() => duplicateEvent(event)}
               />
             ))}
             <div ref={sentinelRef} className="h-4" />
@@ -772,10 +799,12 @@ const EventListCard = ({
   event,
   onDelete,
   onLeaveCollab,
+  onDuplicate,
 }: {
   event: EventCardData;
   onDelete: () => void;
   onLeaveCollab: () => void;
+  onDuplicate: () => void;
 }) => {
   const router = useRouter();
   const openRunCampaignModal = useGlobalStore((s) => s.openRunCampaignModal);
@@ -864,6 +893,11 @@ const EventListCard = ({
                 onClick={() => router.push(`/events/${event._id}/create`)}
               />
               <ActionButton
+                label="Duplicate"
+                Icon={CopyIcon}
+                onClick={onDuplicate}
+              />
+              <ActionButton
                 label="Delete"
                 Icon={Trash2Icon}
                 onClick={onDelete}
@@ -896,6 +930,11 @@ const EventListCard = ({
                     title: event.title || "Untitled Event",
                   })
                 }
+              />
+              <ActionButton
+                label="Duplicate"
+                Icon={CopyIcon}
+                onClick={onDuplicate}
               />
               <ActionButton label="Delete" Icon={Trash2Icon} onClick={onDelete} />
               <ActionButton label="Find Promoters" Icon={UsersRoundIcon} disabled />

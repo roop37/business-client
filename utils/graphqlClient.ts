@@ -490,7 +490,50 @@ Object.assign(sdk, {
             selectedCommissionRate
             selectedAiBoostCode
             scannersCount
+            pricingSnapshot {
+              optionId
+              plan
+              label
+              commissionRate
+              customerPlatformFeeRate
+              upfrontFee
+              expectedPaidTickets
+              expectedGrossSales
+              hostPayout
+            }
+            pricingOptions {
+              optionId
+              plan
+              label
+              commissionRate
+              customerPlatformFeeRate
+              upfrontFee
+              expectedPaidTickets
+              expectedGrossSales
+              hostPayout
+            }
+            feeSettlementMode
           }
+        }
+      `,
+      variables
+    ),
+  /**
+   * Switch the fee-settlement mode on a published event. Offer +
+   * commission stay snapshotted on the event; only the reconcile
+   * mechanic flips.
+   */
+  updateEventFeeSettlementMode: async (variables: {
+    id: string;
+    mode: "DeductFromPayout" | "PayAfterEvent";
+  }) =>
+    graphQLClient.request(
+      `
+        mutation updateEventFeeSettlementMode(
+          $id: String!
+          $mode: EventFeeSettlementMode!
+        ) {
+          updateEventFeeSettlementMode(id: $id, mode: $mode)
         }
       `,
       variables

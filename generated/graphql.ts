@@ -1438,8 +1438,11 @@ export type EventManageOverview = {
   city?: Maybe<Scalars['String']['output']>;
   endDate?: Maybe<Scalars['DateTimeISO']['output']>;
   eventFlyer?: Maybe<Scalars['String']['output']>;
+  feeSettlementMode?: Maybe<EventFeeSettlementMode>;
   isCollaboratorView?: Maybe<Scalars['Boolean']['output']>;
   isVisible: Scalars['Boolean']['output'];
+  pricingOptions?: Maybe<Array<EventPricingSnapshot>>;
+  pricingSnapshot?: Maybe<EventPricingSnapshot>;
   scannersCount: Scalars['Int']['output'];
   selectedAiBoostCode?: Maybe<Scalars['String']['output']>;
   selectedCommissionRate?: Maybe<Scalars['Float']['output']>;
@@ -2684,6 +2687,7 @@ export type Mutation = {
   deleteHostPushCampaign: Scalars['Boolean']['output'];
   deleteScanner: Scalars['Boolean']['output'];
   duplicateAdminEmailCampaign: Scalars['String']['output'];
+  duplicateEvent: Event;
   duplicateHostEmailCampaign: Scalars['String']['output'];
   exportAdminCampaignsReportCSV: Scalars['String']['output'];
   exportAdminCustomersReportCSV: Scalars['String']['output'];
@@ -2712,6 +2716,7 @@ export type Mutation = {
   updateConfig: Scalars['Boolean']['output'];
   updateEvent: Event;
   updateEventCategoryStatus: Scalars['Boolean']['output'];
+  updateEventFeeSettlementMode: EventFeeSettlementMode;
   updateEventStep: Event;
   updateEventTag: Scalars['Boolean']['output'];
   updateEventTagStatus: Scalars['Boolean']['output'];
@@ -3043,6 +3048,11 @@ export type MutationDuplicateAdminEmailCampaignArgs = {
 };
 
 
+export type MutationDuplicateEventArgs = {
+  id: Scalars['String']['input'];
+};
+
+
 export type MutationDuplicateHostEmailCampaignArgs = {
   campaignId: Scalars['String']['input'];
 };
@@ -3174,6 +3184,12 @@ export type MutationUpdateEventArgs = {
 
 export type MutationUpdateEventCategoryStatusArgs = {
   id: Scalars['String']['input'];
+};
+
+
+export type MutationUpdateEventFeeSettlementModeArgs = {
+  id: Scalars['String']['input'];
+  mode: EventFeeSettlementMode;
 };
 
 
@@ -4801,6 +4817,13 @@ export type EventOnboardingChecklistQueryVariables = Exact<{ [key: string]: neve
 
 export type EventOnboardingChecklistQuery = { __typename?: 'Query', eventOnboardingChecklist: { __typename?: 'EventOnboardingChecklist', logo: number, adminverification: number, payout: number, event: number, Scanner: number, nextSteps: Array<{ __typename?: 'EventOnboardingStep', key: string, title: string, description: string, actionHref?: string | null, blocksEventCreation: boolean, blocksPaidEvent: boolean }> } };
 
+export type DuplicateEventMutationVariables = Exact<{
+  id: Scalars['String']['input'];
+}>;
+
+
+export type DuplicateEventMutation = { __typename?: 'Mutation', duplicateEvent: { __typename?: 'Event', _id: string, title?: string | null, slug?: string | null, status: EventStatus } };
+
 export type CreateEventMutationVariables = Exact<{
   input: CreateEventInput;
 }>;
@@ -5599,6 +5622,16 @@ export const EventOnboardingChecklistDocument = gql`
       blocksEventCreation
       blocksPaidEvent
     }
+  }
+}
+    `;
+export const DuplicateEventDocument = gql`
+    mutation duplicateEvent($id: String!) {
+  duplicateEvent(id: $id) {
+    _id
+    title
+    slug
+    status
   }
 }
     `;
@@ -6460,6 +6493,9 @@ export function getSdk(client: GraphQLClient, withWrapper: SdkFunctionWrapper = 
     },
     eventOnboardingChecklist(variables?: EventOnboardingChecklistQueryVariables, requestHeaders?: GraphQLClientRequestHeaders): Promise<EventOnboardingChecklistQuery> {
       return withWrapper((wrappedRequestHeaders) => client.request<EventOnboardingChecklistQuery>(EventOnboardingChecklistDocument, variables, {...requestHeaders, ...wrappedRequestHeaders}), 'eventOnboardingChecklist', 'query', variables);
+    },
+    duplicateEvent(variables: DuplicateEventMutationVariables, requestHeaders?: GraphQLClientRequestHeaders): Promise<DuplicateEventMutation> {
+      return withWrapper((wrappedRequestHeaders) => client.request<DuplicateEventMutation>(DuplicateEventDocument, variables, {...requestHeaders, ...wrappedRequestHeaders}), 'duplicateEvent', 'mutation', variables);
     },
     createEvent(variables: CreateEventMutationVariables, requestHeaders?: GraphQLClientRequestHeaders): Promise<CreateEventMutation> {
       return withWrapper((wrappedRequestHeaders) => client.request<CreateEventMutation>(CreateEventDocument, variables, {...requestHeaders, ...wrappedRequestHeaders}), 'createEvent', 'mutation', variables);
