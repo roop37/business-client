@@ -2415,10 +2415,14 @@ const EventJourney = ({
         : undefined,
       ticketingTerms: ticketingTerms || undefined,
       refundPolicy: refundPolicy || undefined,
-      instagramPost: instagramPost || undefined,
-      instagramStory: instagramStory || undefined,
-      tableLayoutImage: tableLayoutImage || undefined,
-      horizontalFlyer: horizontalFlyer || undefined,
+      instagramPost: instagramPost || null,
+      instagramStory: instagramStory || null,
+      tableLayoutImage: tableLayoutImage || null,
+      // `|| null` (not undefined) so the server actually clears the
+      // field — buildEventUpdateFromInput drops keys with `undefined`
+      // values, which silently no-ops a "host removed the image"
+      // edit. videoSneakPeek already does this; the others matched.
+      horizontalFlyer: horizontalFlyer || null,
       videoSneakPeek: videoSneakPeek || null,
       gallery: galleryItems.map((item) => ({
         url: item.url,
