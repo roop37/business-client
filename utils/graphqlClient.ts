@@ -477,6 +477,7 @@ Object.assign(sdk, {
             canRunCampaigns
             canCreateOffers
             canAccessCustomerList
+            viewerTeamRole
             totals { capacity sold grossRevenue }
             tickets {
               _id

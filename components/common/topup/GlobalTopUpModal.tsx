@@ -5,6 +5,7 @@ import { sdk } from "@/utils/graphqlClient";
 import { extractErrorMessage } from "@/utils/utilFUncs";
 import { CheckCircle2, CreditCard, Loader2, Wallet, X } from "lucide-react";
 import { useCallback, useEffect, useMemo, useState } from "react";
+import ReactDOM from "react-dom";
 
 /**
  * App-level top-up modal for marketing credit. Mounted once at the app
@@ -229,8 +230,18 @@ const GlobalTopUpModal = () => {
 
   if (!topUpModalOpen) return null;
 
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/55 px-4 py-6">
+  // Portal to body + z-[1100]. Top-up is a secondary modal that can be
+  // launched from inside other modals (RunCampaignModal, EventJourney
+  // pricing CTAs). Both other surfaces use ReactDOM.createPortal and
+  // sit at z-50 or z-[1000] (ReusableModal's isHighIndex). Rendering
+  // top-up inline at z-50 meant the parent modal's portal stacked on
+  // top, and the user reported it "opens behind" Run a campaign.
+  // Portaling + higher z keeps top-up reliably on top regardless of
+  // who launched it.
+  if (typeof window === "undefined") return null;
+
+  return ReactDOM.createPortal(
+    <div className="fixed inset-0 z-[1100] flex items-center justify-center bg-black/55 px-4 py-6">
       <div className="flex max-h-[92dvh] w-full max-w-md flex-col overflow-hidden rounded-lg bg-[var(--owner-bg)] shadow-2xl">
         <div className="flex shrink-0 items-center justify-between gap-3 border-b border-[var(--owner-border)] px-5 py-4">
           <div>
@@ -397,7 +408,8 @@ const GlobalTopUpModal = () => {
           )}
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 };
 

@@ -1441,8 +1441,8 @@ export type EventManageOverview = {
   feeSettlementMode?: Maybe<EventFeeSettlementMode>;
   isCollaboratorView?: Maybe<Scalars['Boolean']['output']>;
   isVisible: Scalars['Boolean']['output'];
-  pricingOptions?: Maybe<Array<EventPricingSnapshot>>;
-  pricingSnapshot?: Maybe<EventPricingSnapshot>;
+  pricingOptions?: Maybe<Array<EventManageOverviewPricingOption>>;
+  pricingSnapshot?: Maybe<EventManageOverviewPricingOption>;
   scannersCount: Scalars['Int']['output'];
   selectedAiBoostCode?: Maybe<Scalars['String']['output']>;
   selectedCommissionRate?: Maybe<Scalars['Float']['output']>;
@@ -1453,6 +1453,28 @@ export type EventManageOverview = {
   tickets: Array<EventManageTicketRow>;
   title?: Maybe<Scalars['String']['output']>;
   totals: TicketTotals;
+  viewerTeamRole?: Maybe<TeamRole>;
+};
+
+export type EventManageOverviewPricingOption = {
+  __typename?: 'EventManageOverviewPricingOption';
+  badge?: Maybe<Scalars['String']['output']>;
+  commissionRate?: Maybe<Scalars['Float']['output']>;
+  customerPlatformFeeRate?: Maybe<Scalars['Float']['output']>;
+  expectedGrossSales?: Maybe<Scalars['Float']['output']>;
+  expectedPaidTickets?: Maybe<Scalars['Float']['output']>;
+  hoizrGrossRevenue?: Maybe<Scalars['Float']['output']>;
+  hoizrNetContribution?: Maybe<Scalars['Float']['output']>;
+  hostPayout?: Maybe<Scalars['Float']['output']>;
+  label: Scalars['String']['output'];
+  opsBuffer?: Maybe<Scalars['Float']['output']>;
+  optionId: Scalars['String']['output'];
+  paymentGatewayCost?: Maybe<Scalars['Float']['output']>;
+  payoutCycleDaysMax?: Maybe<Scalars['Float']['output']>;
+  payoutCycleDaysMin?: Maybe<Scalars['Float']['output']>;
+  plan?: Maybe<Scalars['String']['output']>;
+  riskTier?: Maybe<EventPricingRiskTier>;
+  upfrontFee?: Maybe<Scalars['Float']['output']>;
 };
 
 export type EventManageTicketRow = {
