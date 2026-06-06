@@ -110,6 +110,16 @@ const EventOperations = ({
   const canSeeMetrics = !isCollaboratorView || overview?.canSeeMetrics === true;
   const canRunCampaigns =
     !isCollaboratorView || overview?.canRunCampaigns === true;
+  // Commercial-terms data (offer + reconcile mode) only flows to Owner
+  // / Manager seats. Marketing and Staff team members on the same host
+  // should never see the commission breakdown or the payout-reconcile
+  // switch — those are business-decision surfaces, not operational
+  // ones. Collaborators (cross-host) are gated separately via
+  // isCollaboratorView.
+  const viewerTeamRole = overview?.viewerTeamRole ?? null;
+  const canSeeOfferSettlement =
+    !isCollaboratorView &&
+    (viewerTeamRole === "Owner" || viewerTeamRole === "Manager");
 
   return (
     <EventShell title={title} status={overview?.status}>
@@ -217,9 +227,13 @@ const EventOperations = ({
 
             {/* Offer plan + reconcile mode. Offers are read-only once
                 published (commission + customer price snapshot is
-                immutable) but the reconcile mechanic can still flip. */}
-            {overview?.pricingOptions?.length ||
-            overview?.pricingSnapshot ? (
+                immutable) but the reconcile mechanic can still flip.
+                Visible to Owner / Manager only — Marketing and Staff
+                seats see the rest of Manage Event without the
+                commercial-terms block. */}
+            {canSeeOfferSettlement &&
+            (overview?.pricingOptions?.length ||
+              overview?.pricingSnapshot) ? (
               <ManagePricingPanel
                 pricingOptions={overview?.pricingOptions ?? []}
                 pricingSnapshot={overview?.pricingSnapshot ?? null}
