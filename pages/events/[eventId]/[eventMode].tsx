@@ -215,6 +215,40 @@ const EventOperations = ({
               />
             </div>
 
+            {/* Offer plan + reconcile mode. Offers are read-only once
+                published (commission + customer price snapshot is
+                immutable) but the reconcile mechanic can still flip. */}
+            {overview?.pricingOptions?.length ||
+            overview?.pricingSnapshot ? (
+              <ManagePricingPanel
+                pricingOptions={overview?.pricingOptions ?? []}
+                pricingSnapshot={overview?.pricingSnapshot ?? null}
+                feeSettlementMode={overview?.feeSettlementMode ?? null}
+                disabled={busy || isCollaboratorView}
+                onChangeMode={async (mode) => {
+                  setBusy(true);
+                  try {
+                    await sdk.updateEventFeeSettlementMode({
+                      id: eventId,
+                      mode,
+                    });
+                    setToastData({
+                      type: "success",
+                      message: "Settlement mode updated",
+                    });
+                    await loadOverview();
+                  } catch (error) {
+                    setToastData({
+                      type: "error",
+                      message: extractErrorMessage(error),
+                    });
+                  } finally {
+                    setBusy(false);
+                  }
+                }}
+              />
+            ) : null}
+
             {/* Per-ticket table */}
             <div className="rounded-lg border border-[var(--owner-border)] bg-[var(--owner-bg)]">
               <div className="border-b border-[var(--owner-border)] px-5 py-3 text-sm font-semibold">
@@ -293,6 +327,155 @@ const EventOperations = ({
         )}
       </div>
     </EventShell>
+  );
+};
+
+/**
+ * Read-only review of the offer set the host was shown at publish +
+ * which one they accepted, plus an editor for the fee-settlement
+ * mode (the only post-publish-mutable piece of the pricing config).
+ */
+const ManagePricingPanel = ({
+  pricingOptions,
+  pricingSnapshot,
+  feeSettlementMode,
+  disabled,
+  onChangeMode,
+}: {
+  pricingOptions: Array<{
+    optionId: string;
+    label: string;
+    plan?: string;
+    commissionRate?: number;
+    customerPlatformFeeRate?: number;
+    upfrontFee?: number;
+  }>;
+  pricingSnapshot: {
+    optionId: string;
+    label: string;
+    commissionRate?: number;
+    customerPlatformFeeRate?: number;
+    upfrontFee?: number;
+  } | null;
+  feeSettlementMode: "DeductFromPayout" | "PayAfterEvent" | null;
+  disabled: boolean;
+  onChangeMode: (mode: "DeductFromPayout" | "PayAfterEvent") => void;
+}) => {
+  const selectedId = pricingSnapshot?.optionId ?? null;
+  return (
+    <div className="rounded-lg border border-[var(--owner-border)] bg-[var(--owner-bg)]">
+      <div className="border-b border-[var(--owner-border)] px-5 py-3 text-sm font-semibold">
+        Offer & settlement
+      </div>
+      <div className="grid gap-5 p-5 md:grid-cols-2">
+        <section>
+          <p className="mb-3 text-xs font-semibold uppercase tracking-[0.12em] text-[var(--owner-fg-3)]">
+            Offers shown at publish
+          </p>
+          {pricingOptions.length ? (
+            <ul className="space-y-2">
+              {pricingOptions.map((option) => {
+                const isSelected = option.optionId === selectedId;
+                return (
+                  <li
+                    key={option.optionId}
+                    className={`rounded-md border px-3 py-2.5 text-sm ${
+                      isSelected
+                        ? "border-[var(--owner-blue-500)] bg-[var(--owner-blue-500)]/[0.06]"
+                        : "border-[var(--owner-border)]"
+                    }`}
+                  >
+                    <div className="flex items-baseline justify-between gap-2">
+                      <span className="font-semibold">{option.label}</span>
+                      {isSelected ? (
+                        <span className="rounded-full bg-[var(--owner-blue-500)] px-2 py-0.5 text-[10px] font-bold uppercase tracking-[0.12em] text-[var(--owner-bg)]">
+                          Selected
+                        </span>
+                      ) : null}
+                    </div>
+                    <div className="mt-1 text-xs text-[var(--owner-fg-3)]">
+                      {option.commissionRate != null
+                        ? `${option.commissionRate}% commission`
+                        : "—"}
+                      {option.customerPlatformFeeRate != null
+                        ? ` · ${option.customerPlatformFeeRate}% customer fee`
+                        : ""}
+                      {option.upfrontFee
+                        ? ` · ₹${option.upfrontFee.toLocaleString("en-IN")} upfront`
+                        : ""}
+                    </div>
+                  </li>
+                );
+              })}
+            </ul>
+          ) : pricingSnapshot ? (
+            <p className="text-sm text-[var(--owner-fg-3)]">
+              <span className="font-semibold text-[var(--owner-fg-1)]">
+                {pricingSnapshot.label}
+              </span>{" "}
+              · {pricingSnapshot.commissionRate ?? 0}% commission
+            </p>
+          ) : (
+            <p className="text-sm text-[var(--owner-fg-3)]">
+              No offer set was recorded for this event.
+            </p>
+          )}
+          <p className="mt-3 text-[11px] text-[var(--owner-fg-3)]">
+            Once published, the offer is locked. Contact support to change
+            commission or customer fee.
+          </p>
+        </section>
+
+        <section>
+          <p className="mb-3 text-xs font-semibold uppercase tracking-[0.12em] text-[var(--owner-fg-3)]">
+            Reconcile platform fee
+          </p>
+          <div className="space-y-2">
+            {(
+              [
+                {
+                  value: "DeductFromPayout" as const,
+                  label: "Direct from payout",
+                  hint: "Hoizr nets the platform fee out of each settlement automatically.",
+                },
+                {
+                  value: "PayAfterEvent" as const,
+                  label: "Pay via payment link",
+                  hint: "Host receives the full payout; Hoizr sends a separate invoice + payment link.",
+                },
+              ]
+            ).map((option) => {
+              const checked = feeSettlementMode === option.value;
+              return (
+                <label
+                  key={option.value}
+                  className={`flex cursor-pointer items-start gap-3 rounded-md border px-3 py-2.5 text-sm ${
+                    checked
+                      ? "border-[var(--owner-blue-500)] bg-[var(--owner-blue-500)]/[0.06]"
+                      : "border-[var(--owner-border)]"
+                  } ${disabled ? "pointer-events-none opacity-60" : ""}`}
+                >
+                  <input
+                    type="radio"
+                    name="fee-settlement-mode"
+                    className="mt-1"
+                    checked={checked}
+                    disabled={disabled}
+                    onChange={() => onChangeMode(option.value)}
+                  />
+                  <span>
+                    <span className="font-semibold">{option.label}</span>
+                    <span className="mt-0.5 block text-xs text-[var(--owner-fg-3)]">
+                      {option.hint}
+                    </span>
+                  </span>
+                </label>
+              );
+            })}
+          </div>
+        </section>
+      </div>
+    </div>
   );
 };
 
