@@ -1,0 +1,193 @@
+query getAllHostWhatsAppCampaigns(
+  $pagination: PaginationInput
+  $filter: [FilterDataInput!]
+  $sort: SortDataInput
+  $search: String
+) {
+  getAllHostWhatsAppCampaigns(
+    pagination: $pagination
+    filter: $filter
+    sort: $sort
+    search: $search
+  ) {
+    total
+    items {
+      _id
+      businessId
+      hostId
+      campaignName
+      objectiveTag
+      templateId
+      templateSlugSnapshot
+      templateLanguageSnapshot
+      templateVariables {
+        position
+        value
+      }
+      headerMediaUrl
+      ctaSlug
+      target
+      eventId
+      csvDataUrl
+      filters
+      targetCount
+      status
+      publicationStatus
+      scheduleType
+      scheduleTime
+      createdAt
+      updatedAt
+      statusChangeHistory {
+        status
+        timestamp
+      }
+      stats {
+        messagesSent
+        messagesSyncFailed
+        messagesDelivered
+        messagesRead
+        messagesFailed
+        messagesClicked {
+          phone
+          date
+        }
+        failureCodeSamples
+      }
+    }
+  }
+}
+
+query fetchHostWhatsAppCampaignById($campaignId: String!) {
+  fetchHostWhatsAppCampaignById(campaignId: $campaignId) {
+    _id
+    businessId
+    hostId
+    campaignName
+    objectiveTag
+    templateId
+    templateSlugSnapshot
+    templateLanguageSnapshot
+    templateVariables {
+      position
+      value
+    }
+    headerMediaUrl
+    ctaSlug
+    target
+    eventId
+    csvDataUrl
+    filters
+    targetCount
+    status
+    publicationStatus
+    scheduleType
+    scheduleTime
+    createdAt
+    updatedAt
+    statusChangeHistory {
+      status
+      timestamp
+    }
+    stats {
+      messagesSent
+      messagesSyncFailed
+      messagesDelivered
+      messagesRead
+      messagesFailed
+      messagesClicked {
+        phone
+        date
+      }
+      failureCodeSamples
+    }
+  }
+}
+
+mutation createHostWhatsAppCampaign($input: AddHostWhatsAppCampaignInput!) {
+  createHostWhatsAppCampaign(input: $input)
+}
+
+mutation updateHostWhatsAppCampaign($input: UpdateHostWhatsAppCampaignInput!) {
+  updateHostWhatsAppCampaign(input: $input)
+}
+
+mutation deleteHostWhatsAppCampaign($campaignId: String!) {
+  deleteHostWhatsAppCampaign(campaignId: $campaignId)
+}
+
+mutation duplicateHostWhatsAppCampaign($campaignId: String!) {
+  duplicateHostWhatsAppCampaign(campaignId: $campaignId)
+}
+
+query getHostWhatsAppAttendeesTargetCount(
+  $target: HostEmailTargetType
+  $eventId: String
+  $filters: [HostCampaignAudienceFilter!]
+) {
+  getHostWhatsAppAttendeesTargetCount(
+    target: $target
+    eventId: $eventId
+    filters: $filters
+  )
+}
+
+# ─── Template library (host-side, approved only) ────────────────────
+
+query approvedWhatsAppTemplates($pagination: PaginationInput) {
+  approvedWhatsAppTemplates(pagination: $pagination) {
+    total
+    items {
+      _id
+      slug
+      name
+      description
+      category
+      language
+      metaStatus
+      headerType
+      headerText
+      headerSampleMediaUrl
+      bodyText
+      variables {
+        position
+        label
+        hint
+        example
+      }
+      footerText
+      buttonType
+      buttonUrl
+      buttonLabel
+      buttonPhone
+      isActive
+    }
+  }
+}
+
+query whatsAppTemplateById($templateId: String!) {
+  whatsAppTemplateById(templateId: $templateId) {
+    _id
+    slug
+    name
+    description
+    category
+    language
+    metaStatus
+    headerType
+    headerText
+    headerSampleMediaUrl
+    bodyText
+    variables {
+      position
+      label
+      hint
+      example
+    }
+    footerText
+    buttonType
+    buttonUrl
+    buttonLabel
+    buttonPhone
+    isActive
+  }
+}

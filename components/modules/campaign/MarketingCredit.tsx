@@ -10,14 +10,11 @@ import useGlobalStore from "@/store/global";
 import { sdk } from "@/utils/graphqlClient";
 import { extractErrorMessage } from "@/utils/utilFUncs";
 import {
-  Bell,
   CreditCard,
   Mail,
   MessageCircle,
-  MessageCircleMore,
-  Send,
+  Sparkles,
   Wallet,
-  Zap,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { useRouter } from "next/router";
@@ -69,21 +66,9 @@ const buildRateCard = (pricing: MarketingPricingShape): RateCardItem[] => [
     divisor: pricing.whatsappRate || undefined,
   },
   {
-    channel: "SMS",
-    Icon: Zap,
-    rate: formatRate(pricing.smsRate, "SMS"),
-    divisor: pricing.smsRate || undefined,
-  },
-  {
-    channel: "Email",
-    Icon: Mail,
-    rate: formatRate(pricing.emailRate, "email"),
-    divisor: pricing.emailRate || undefined,
-  },
-  {
-    channel: "Push",
-    Icon: Bell,
-    rate: pricing.pushRate <= 0 ? "Free" : formatRate(pricing.pushRate, "push"),
+    channel: "Meta x Hoizr",
+    Icon: Sparkles,
+    rate: "Ad cost + 8%",
   },
 ];
 
@@ -207,24 +192,22 @@ export const MarketingCredit = () => {
     const whatsappDivisor = rateCard.find(
       (rate) => rate.channel === "WhatsApp"
     )?.divisor;
-    const emailDivisor = rateCard.find((rate) => rate.channel === "Email")
-      ?.divisor;
 
     return {
       whatsapp:
         whatsappDivisor && balance > 0 ? Math.floor(balance / whatsappDivisor) : 0,
-      email: emailDivisor && balance > 0 ? Math.floor(balance / emailDivisor) : 0,
     };
   }, [balance, rateCard]);
 
-  const handleAddEmailCampaign = () => {
-    router.push("/campaigns/onboarding/template-select");
+  const handleAddWhatsAppCampaign = () => {
+    router.push("/campaigns/whatsapp/onboarding/basic");
   };
 
-  const handleWhatsAppComingSoon = () => {
+  const handleMetaHoizr = () => {
     setToastData({
       type: "warning",
-      message: "WhatsApp campaigns coming soon.",
+      message:
+        "Meta x Hoizr campaigns will run through Hoizr's Meta account and debit ad cost + 8%.",
     });
   };
 
@@ -253,8 +236,7 @@ export const MarketingCredit = () => {
             {formatCredit(balance)}
           </div>
           <p className="mt-2 text-[12.5px] text-white/70">
-            ~{messageCapacity.whatsapp.toLocaleString("en-IN")} WhatsApp ·
-            ~{messageCapacity.email.toLocaleString("en-IN")} emails
+            ~{messageCapacity.whatsapp.toLocaleString("en-IN")} WhatsApp sends
           </p>
           <button
             type="button"
@@ -269,41 +251,41 @@ export const MarketingCredit = () => {
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-1">
           <button
             type="button"
-            onClick={handleAddEmailCampaign}
+            onClick={handleAddWhatsAppCampaign}
             className="group flex items-start gap-3 rounded-owner-lg border border-owner-border bg-owner-bg p-4 text-left shadow-owner-sm transition hover:border-owner-blue-200 hover:bg-owner-bg-subtle"
           >
-            <span className="grid h-10 w-10 shrink-0 place-items-center rounded-owner-md bg-owner-blue-050 text-owner-blue-500">
-              <Send size={18} />
+            <span className="grid h-10 w-10 shrink-0 place-items-center rounded-owner-md bg-owner-success-bg text-owner-success-text">
+              <MessageCircle size={18} />
             </span>
             <div className="min-w-0">
               <p className="text-[14px] font-semibold text-owner-fg-1">
-                Add email campaign
+                Add WhatsApp campaign
               </p>
               <p className="mt-0.5 text-[12.5px] text-owner-fg-4">
-                Reach attendees and your wider audience with a single send.
+                Reach event buyers and opted-in customers.
               </p>
             </div>
           </button>
 
           <button
             type="button"
-            onClick={handleWhatsAppComingSoon}
+            onClick={handleMetaHoizr}
             className="group flex items-start gap-3 rounded-owner-lg border border-dashed border-owner-border bg-owner-bg p-4 text-left shadow-owner-sm transition hover:bg-owner-bg-subtle"
           >
-            <span className="grid h-10 w-10 shrink-0 place-items-center rounded-owner-md bg-owner-success-bg text-owner-success-text">
-              <MessageCircleMore size={18} />
+            <span className="grid h-10 w-10 shrink-0 place-items-center rounded-owner-md bg-owner-blue-050 text-owner-blue-500">
+              <Sparkles size={18} />
             </span>
             <div className="min-w-0">
               <div className="flex items-center gap-2">
                 <p className="text-[14px] font-semibold text-owner-fg-1">
-                  Add WhatsApp campaign
+                  Add Meta x Hoizr campaign
                 </p>
                 <span className="rounded-full bg-owner-bg-subtle px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-owner-fg-3">
-                  Soon
+                  Hoizr-run
                 </span>
               </div>
               <p className="mt-0.5 text-[12.5px] text-owner-fg-4">
-                Send broadcast lists straight from your buyer CRM.
+                Hoizr pays Meta; credit covers ad cost + 8%.
               </p>
             </div>
           </button>

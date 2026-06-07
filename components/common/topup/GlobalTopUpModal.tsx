@@ -247,7 +247,7 @@ const GlobalTopUpModal = () => {
           <div>
             <div className="text-sm font-semibold">Top up Marketing Credit</div>
             <p className="mt-1 text-xs text-[var(--owner-fg-3)]">
-              Pre-funded balance for WhatsApp, SMS, Email and Push campaigns.
+              Pre-funded balance for WhatsApp and Meta x Hoizr campaigns.
             </p>
           </div>
           <button
