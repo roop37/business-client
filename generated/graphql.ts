@@ -135,6 +135,15 @@ export type AddHostEmailTemplateInput = {
   html: Scalars['String']['input'];
 };
 
+export type AddHostWhatsAppCampaignInput = {
+  campaignName: Scalars['String']['input'];
+  ctaSlug?: InputMaybe<Scalars['String']['input']>;
+  headerMediaUrl?: InputMaybe<Scalars['String']['input']>;
+  objectiveTag?: InputMaybe<Scalars['String']['input']>;
+  templateId: Scalars['String']['input'];
+  templateVariables?: InputMaybe<Array<HostWhatsAppCampaignVariableInput>>;
+};
+
 export type AddIndianCityInput = {
   state?: InputMaybe<Scalars['String']['input']>;
   value: Scalars['String']['input'];
@@ -462,6 +471,16 @@ export type AdminLoginVerificationInput = {
   email: Scalars['String']['input'];
   otp: Scalars['String']['input'];
   otpId: Scalars['String']['input'];
+};
+
+export type AdminMetaAdsRejectInput = {
+  campaignId: Scalars['ID']['input'];
+  rejectionReason: Scalars['String']['input'];
+};
+
+export type AdminMetaAdsReviewInput = {
+  campaignId: Scalars['ID']['input'];
+  reviewNote?: InputMaybe<Scalars['String']['input']>;
 };
 
 export type AdminPaginatedResponse = {
@@ -959,6 +978,10 @@ export enum ConfigTypeEnum {
   MaxAiBoostComissionForNonExclEvent = 'maxAiBoostComissionForNonExclEvent',
   /** Outer ceiling on the AI Boost upfront fee in rupees, applied at the EXCLUSIVE / NON-EXCLUSIVE corridor level. Per-template bands scale to event GTV inside this cap. Locked: 500000 (₹5L max). */
   MaxOfferChargeAmount = 'maxOfferChargeAmount',
+  /** Markup percent on ad spend for Meta × Hoizr campaigns (V1 single flavour — campaigns publish from Hoizr's own ad account and Hoizr pays Meta). Host pays Hoizr from marketing credit at estimatedSpend × (1 + markup/100). Locked: 8. */
+  MetaAdsHoizrMarkupPercent = 'metaAdsHoizrMarkupPercent',
+  /** Service-level objective for internal admin review of Meta × Hoizr (Tab 2) campaign submissions. Surfaced as a countdown banner on the host's pending campaign and on the admin review queue. Locked: 6. */
+  MetaAdsReviewSlaHours = 'metaAdsReviewSlaHours',
   /** Floor on the AI Boost upfront fee in rupees. Locked: 0 — the AI may legitimately propose zero upfront for some templates. */
   MinOfferChargeAmount = 'minOfferChargeAmount',
   /** Customer-facing platform fee percent, charged on top of the ticket taxable value at checkout. Locked: 5. */
@@ -981,7 +1004,9 @@ export enum ConfigTypeEnum {
   SacMarketingCredit = 'sacMarketingCredit',
   /** Credits debited per outbound SMS. Locked: 0.2 (₹0.20 per SMS). */
   SmsMarketingCost = 'smsMarketingCost',
-  /** Credits debited per outbound WhatsApp message. Locked: 0.5 (₹0.50 per WhatsApp). */
+  /** Display name shown to customers in WhatsApp. Mirrors the Meta-approved display name on the WABA number. Locked: 'Hoizr'. Change ONLY after Meta approves a new display name for the underlying number. */
+  WhatsappFromDisplayName = 'whatsappFromDisplayName',
+  /** Credits debited per outbound WhatsApp template message — per accepted attempt (Meta returns sync 2xx). Locked: 1 (₹1 per accepted WhatsApp send). Sync 4xx failures are refunded; async webhook failures stay charged because Meta still bills the conversation slot. */
   WhatsappMarketingCost = 'whatsappMarketingCost'
 }
 
@@ -1062,6 +1087,15 @@ export type CreateHostInput = {
   websiteUrl?: InputMaybe<Scalars['String']['input']>;
 };
 
+export type CreateHostMetaHoizrCampaignInput = {
+  audience: MetaAdsAudienceInput;
+  budget: MetaAdsBudgetInput;
+  campaignName: Scalars['String']['input'];
+  creative: MetaAdsCreativeInput;
+  eventId?: InputMaybe<Scalars['String']['input']>;
+  objective: MetaAdsObjective;
+};
+
 export type CreateHostPushCampaignInput = {
   campaignName: Scalars['String']['input'];
   csvDataUrl?: InputMaybe<Scalars['String']['input']>;
@@ -1083,6 +1117,24 @@ export type CreateScannerInput = {
   phone?: InputMaybe<Scalars['String']['input']>;
   scannerName?: InputMaybe<Scalars['String']['input']>;
   scannerType?: InputMaybe<Scalars['String']['input']>;
+};
+
+export type CreateWhatsAppTemplateInput = {
+  bodyText: Scalars['String']['input'];
+  buttonLabel?: InputMaybe<Scalars['String']['input']>;
+  buttonPhone?: InputMaybe<Scalars['String']['input']>;
+  buttonType: WhatsAppTemplateButtonType;
+  buttonUrl?: InputMaybe<Scalars['String']['input']>;
+  category: WhatsAppTemplateCategory;
+  description?: InputMaybe<Scalars['String']['input']>;
+  footerText?: InputMaybe<Scalars['String']['input']>;
+  headerSampleMediaUrl?: InputMaybe<Scalars['String']['input']>;
+  headerText?: InputMaybe<Scalars['String']['input']>;
+  headerType: WhatsAppTemplateHeaderType;
+  language?: InputMaybe<Scalars['String']['input']>;
+  name: Scalars['String']['input'];
+  slug: Scalars['String']['input'];
+  variables?: InputMaybe<Array<WhatsAppTemplateVariableInput>>;
 };
 
 export type CsvExportInput = {
@@ -2248,6 +2300,91 @@ export enum HostMarketingReputationTier {
   Unlimited = 'UNLIMITED'
 }
 
+export type HostMetaAdsCampaign = {
+  __typename?: 'HostMetaAdsCampaign';
+  _id: Scalars['ID']['output'];
+  actualSpendInr: Scalars['Float']['output'];
+  audience: MetaAdsAudience;
+  budget: MetaAdsBudget;
+  businessId: Scalars['String']['output'];
+  campaignName: Scalars['String']['output'];
+  createdAt?: Maybe<Scalars['DateTimeISO']['output']>;
+  createdBy?: Maybe<Scalars['String']['output']>;
+  creative: MetaAdsCreative;
+  estimatedSpendInr?: Maybe<Scalars['Float']['output']>;
+  eventId?: Maybe<Scalars['String']['output']>;
+  hostId?: Maybe<Scalars['String']['output']>;
+  isDeleted: Scalars['Boolean']['output'];
+  markupPercentSnapshot?: Maybe<Scalars['Float']['output']>;
+  metaAdAccountIdSnapshot?: Maybe<Scalars['String']['output']>;
+  metaAdId?: Maybe<Scalars['String']['output']>;
+  metaAdSetId?: Maybe<Scalars['String']['output']>;
+  metaCampaignId?: Maybe<Scalars['String']['output']>;
+  metaCreativeId?: Maybe<Scalars['String']['output']>;
+  metaInstagramActorIdSnapshot?: Maybe<Scalars['String']['output']>;
+  metaPageIdSnapshot?: Maybe<Scalars['String']['output']>;
+  objective: MetaAdsObjective;
+  refundedAmountInr?: Maybe<Scalars['Float']['output']>;
+  rejectionReason?: Maybe<Scalars['String']['output']>;
+  reservedAmountInr?: Maybe<Scalars['Float']['output']>;
+  reviewNote?: Maybe<Scalars['String']['output']>;
+  reviewedAt?: Maybe<Scalars['DateTimeISO']['output']>;
+  reviewedBy?: Maybe<Scalars['String']['output']>;
+  scheduleTime?: Maybe<Scalars['DateTimeISO']['output']>;
+  scheduleType?: Maybe<HostMetaAdsCampaignScheduleType>;
+  source: HostMetaAdsCampaignSource;
+  stats?: Maybe<MetaAdsStats>;
+  status?: Maybe<HostMetaAdsCampaignStatus>;
+  statusChangeHistory?: Maybe<Array<HostMetaAdsCampaignStatusHistoryItem>>;
+  updatedAt?: Maybe<Scalars['DateTimeISO']['output']>;
+  updatedBy?: Maybe<Scalars['String']['output']>;
+};
+
+export enum HostMetaAdsCampaignScheduleType {
+  Later = 'later',
+  Now = 'now'
+}
+
+export enum HostMetaAdsCampaignSource {
+  HoizrRun = 'HOIZR_RUN'
+}
+
+export enum HostMetaAdsCampaignStatus {
+  Approved = 'approved',
+  Completed = 'completed',
+  Draft = 'draft',
+  Failed = 'failed',
+  Live = 'live',
+  Paused = 'paused',
+  Rejected = 'rejected',
+  Scheduled = 'scheduled',
+  Submitted = 'submitted',
+  UnderReview = 'under_review'
+}
+
+export type HostMetaAdsCampaignStatusHistoryItem = {
+  __typename?: 'HostMetaAdsCampaignStatusHistoryItem';
+  note?: Maybe<Scalars['String']['output']>;
+  status: HostMetaAdsCampaignStatus;
+  timestamp?: Maybe<Scalars['DateTimeISO']['output']>;
+};
+
+export type HostMetaHoizrCampaignsPaginatedResponse = {
+  __typename?: 'HostMetaHoizrCampaignsPaginatedResponse';
+  items: Array<HostMetaAdsCampaign>;
+  total: Scalars['Int']['output'];
+};
+
+export type HostMetaHoizrSpendEstimate = {
+  __typename?: 'HostMetaHoizrSpendEstimate';
+  currentBalanceInr: Scalars['Float']['output'];
+  estimatedSpendInr: Scalars['Float']['output'];
+  hasSufficientCredit: Scalars['Boolean']['output'];
+  markupPercent: Scalars['Float']['output'];
+  reservedAmountInr: Scalars['Float']['output'];
+  shortfallInr: Scalars['Float']['output'];
+};
+
 export type HostPaginatedResponse = {
   __typename?: 'HostPaginatedResponse';
   items: Array<Host>;
@@ -2380,6 +2517,95 @@ export enum HostType {
   EventOrg = 'EVENT_ORG',
   Venue = 'VENUE'
 }
+
+export type HostWhatsAppCampaign = {
+  __typename?: 'HostWhatsAppCampaign';
+  _id: Scalars['ID']['output'];
+  businessId: Scalars['String']['output'];
+  campaignName: Scalars['String']['output'];
+  createdAt?: Maybe<Scalars['DateTimeISO']['output']>;
+  createdBy?: Maybe<Scalars['String']['output']>;
+  csvDataUrl?: Maybe<Scalars['String']['output']>;
+  ctaSlug?: Maybe<Scalars['String']['output']>;
+  eventId?: Maybe<Scalars['String']['output']>;
+  filters?: Maybe<Array<HostCampaignAudienceFilter>>;
+  headerMediaUrl?: Maybe<Scalars['String']['output']>;
+  hostId?: Maybe<Scalars['String']['output']>;
+  isDeleted: Scalars['Boolean']['output'];
+  objectiveTag?: Maybe<Scalars['String']['output']>;
+  publicationStatus?: Maybe<HostWhatsAppCampaignPublicationStatus>;
+  scheduleTime?: Maybe<Scalars['DateTimeISO']['output']>;
+  scheduleType?: Maybe<HostWhatsAppCampaignScheduleType>;
+  stats?: Maybe<HostWhatsAppCampaignStats>;
+  status?: Maybe<HostWhatsAppCampaignStatus>;
+  statusChangeHistory?: Maybe<Array<HostWhatsAppCampaignStatusHistoryItem>>;
+  target?: Maybe<HostEmailTargetType>;
+  targetCount?: Maybe<Scalars['Int']['output']>;
+  templateId: Scalars['String']['output'];
+  templateLanguageSnapshot?: Maybe<Scalars['String']['output']>;
+  templateSlugSnapshot?: Maybe<Scalars['String']['output']>;
+  templateVariables: Array<HostWhatsAppCampaignVariable>;
+  updatedAt?: Maybe<Scalars['DateTimeISO']['output']>;
+  updatedBy?: Maybe<Scalars['String']['output']>;
+};
+
+export enum HostWhatsAppCampaignPublicationStatus {
+  Active = 'Active',
+  Drafted = 'Drafted'
+}
+
+export enum HostWhatsAppCampaignScheduleType {
+  Later = 'later',
+  Now = 'now'
+}
+
+export type HostWhatsAppCampaignStats = {
+  __typename?: 'HostWhatsAppCampaignStats';
+  failureCodeSamples: Array<Scalars['String']['output']>;
+  messagesClicked: Array<HostWhatsAppStatEntry>;
+  messagesDelivered: Scalars['Int']['output'];
+  messagesFailed: Scalars['Int']['output'];
+  messagesRead: Scalars['Int']['output'];
+  messagesSent: Scalars['Int']['output'];
+  messagesSyncFailed: Scalars['Int']['output'];
+};
+
+export enum HostWhatsAppCampaignStatus {
+  Completed = 'completed',
+  Draft = 'draft',
+  Failed = 'failed',
+  Processing = 'processing',
+  Scheduled = 'scheduled'
+}
+
+export type HostWhatsAppCampaignStatusHistoryItem = {
+  __typename?: 'HostWhatsAppCampaignStatusHistoryItem';
+  status: HostWhatsAppCampaignStatus;
+  timestamp?: Maybe<Scalars['DateTimeISO']['output']>;
+};
+
+export type HostWhatsAppCampaignVariable = {
+  __typename?: 'HostWhatsAppCampaignVariable';
+  position: Scalars['Int']['output'];
+  value: Scalars['String']['output'];
+};
+
+export type HostWhatsAppCampaignVariableInput = {
+  position: Scalars['Int']['input'];
+  value: Scalars['String']['input'];
+};
+
+export type HostWhatsAppCampaignsPaginatedResponse = {
+  __typename?: 'HostWhatsAppCampaignsPaginatedResponse';
+  items: Array<HostWhatsAppCampaign>;
+  total: Scalars['Int']['output'];
+};
+
+export type HostWhatsAppStatEntry = {
+  __typename?: 'HostWhatsAppStatEntry';
+  date: Scalars['DateTimeISO']['output'];
+  phone: Scalars['String']['output'];
+};
 
 export type IndianCity = {
   __typename?: 'IndianCity';
@@ -2643,6 +2869,115 @@ export enum MerchCurrency {
   Usd = 'USD'
 }
 
+export type MetaAdsAudience = {
+  __typename?: 'MetaAdsAudience';
+  ageMax?: Maybe<Scalars['Int']['output']>;
+  ageMin?: Maybe<Scalars['Int']['output']>;
+  cities: Array<Scalars['String']['output']>;
+  customAudienceFromHostCRM: Scalars['Boolean']['output'];
+  genders?: Maybe<Array<Scalars['String']['output']>>;
+  interestPresets?: Maybe<Array<Scalars['String']['output']>>;
+};
+
+export type MetaAdsAudienceInput = {
+  ageMax?: InputMaybe<Scalars['Int']['input']>;
+  ageMin?: InputMaybe<Scalars['Int']['input']>;
+  cities?: InputMaybe<Array<Scalars['String']['input']>>;
+  customAudienceFromHostCRM?: InputMaybe<Scalars['Boolean']['input']>;
+  genders?: InputMaybe<Array<Scalars['String']['input']>>;
+  interestPresets?: InputMaybe<Array<Scalars['String']['input']>>;
+};
+
+export type MetaAdsBudget = {
+  __typename?: 'MetaAdsBudget';
+  amountInr: Scalars['Float']['output'];
+  endDate?: Maybe<Scalars['DateTimeISO']['output']>;
+  startDate: Scalars['DateTimeISO']['output'];
+  type: MetaAdsBudgetType;
+};
+
+export type MetaAdsBudgetInput = {
+  amountInr: Scalars['Float']['input'];
+  endDate?: InputMaybe<Scalars['DateTimeISO']['input']>;
+  startDate: Scalars['DateTimeISO']['input'];
+  type: MetaAdsBudgetType;
+};
+
+export enum MetaAdsBudgetType {
+  Daily = 'DAILY',
+  Lifetime = 'LIFETIME'
+}
+
+export type MetaAdsCarouselItem = {
+  __typename?: 'MetaAdsCarouselItem';
+  description?: Maybe<Scalars['String']['output']>;
+  destinationUrl?: Maybe<Scalars['String']['output']>;
+  headline?: Maybe<Scalars['String']['output']>;
+  imageUrl: Scalars['String']['output'];
+};
+
+export type MetaAdsCarouselItemInput = {
+  description?: InputMaybe<Scalars['String']['input']>;
+  destinationUrl?: InputMaybe<Scalars['String']['input']>;
+  headline?: InputMaybe<Scalars['String']['input']>;
+  imageUrl: Scalars['String']['input'];
+};
+
+export type MetaAdsCreative = {
+  __typename?: 'MetaAdsCreative';
+  body?: Maybe<Scalars['String']['output']>;
+  carouselItems?: Maybe<Array<MetaAdsCarouselItem>>;
+  ctaDestinationUrl?: Maybe<Scalars['String']['output']>;
+  ctaType?: Maybe<MetaAdsCtaType>;
+  format: MetaAdsCreativeFormat;
+  headline?: Maybe<Scalars['String']['output']>;
+  primaryImageUrl?: Maybe<Scalars['String']['output']>;
+  videoUrl?: Maybe<Scalars['String']['output']>;
+};
+
+export enum MetaAdsCreativeFormat {
+  Carousel = 'CAROUSEL',
+  SingleImage = 'SINGLE_IMAGE',
+  Video = 'VIDEO'
+}
+
+export type MetaAdsCreativeInput = {
+  body?: InputMaybe<Scalars['String']['input']>;
+  carouselItems?: InputMaybe<Array<MetaAdsCarouselItemInput>>;
+  ctaDestinationUrl?: InputMaybe<Scalars['String']['input']>;
+  ctaType?: InputMaybe<MetaAdsCtaType>;
+  format: MetaAdsCreativeFormat;
+  headline?: InputMaybe<Scalars['String']['input']>;
+  primaryImageUrl?: InputMaybe<Scalars['String']['input']>;
+  videoUrl?: InputMaybe<Scalars['String']['input']>;
+};
+
+export enum MetaAdsCtaType {
+  BookNow = 'BOOK_NOW',
+  GetOffer = 'GET_OFFER',
+  GetTickets = 'GET_TICKETS',
+  LearnMore = 'LEARN_MORE',
+  SignUp = 'SIGN_UP',
+  WatchMore = 'WATCH_MORE'
+}
+
+export enum MetaAdsObjective {
+  OutcomeAwareness = 'OUTCOME_AWARENESS',
+  OutcomeEngagement = 'OUTCOME_ENGAGEMENT',
+  OutcomeTraffic = 'OUTCOME_TRAFFIC'
+}
+
+export type MetaAdsStats = {
+  __typename?: 'MetaAdsStats';
+  clicks: Scalars['Int']['output'];
+  conversions: Scalars['Int']['output'];
+  costPerClickInr: Scalars['Float']['output'];
+  ctr: Scalars['Float']['output'];
+  impressions: Scalars['Int']['output'];
+  reach: Scalars['Int']['output'];
+  syncedAt?: Maybe<Scalars['DateTimeISO']['output']>;
+};
+
 export type Mutation = {
   __typename?: 'Mutation';
   activityLogCsvExport: Scalars['String']['output'];
@@ -2657,9 +2992,13 @@ export type Mutation = {
   addPermission: Scalars['Boolean']['output'];
   addTeamMember: Scalars['Boolean']['output'];
   addWaitListUser: Scalars['Boolean']['output'];
+  adminApproveMetaHoizrCampaign: Scalars['Boolean']['output'];
   adminClearOfferGenerationNegative: EventOfferGeneration;
+  adminCreateWhatsAppTemplate: WhatsAppMessageTemplate;
+  adminDeleteWhatsAppTemplate: Scalars['Boolean']['output'];
   adminForceReleasePayout: PayoutSettlement;
   adminInstantPayout: PayoutSettlement;
+  adminMarkMetaHoizrCampaignUnderReview: Scalars['Boolean']['output'];
   adminMarkOfferGenerationNegative: EventOfferGeneration;
   adminOverrideHostMarketingReputation: HostMarketingLimitObject;
   adminPauseHostCampaign: Scalars['Boolean']['output'];
@@ -2667,11 +3006,14 @@ export type Mutation = {
   adminRecordMarketingCreditTopUp: MarketingCreditLedgerEntry;
   adminRefreshPayoutSettlement: PayoutSettlement;
   adminRefundLateCapture: LateCaptureRefundResponse;
+  adminRejectMetaHoizrCampaign: Scalars['Boolean']['output'];
   adminRejectPayout: Payout;
   adminResumePayoutSettlement: PayoutSettlement;
+  adminSubmitWhatsAppTemplateToMeta: WhatsAppTemplateSubmissionResult;
   adminTriggerRazorpaySettlementReconcile: RazorpayReconcileSummary;
   adminUpdateEvent: Event;
   adminUpdateHost: Host;
+  adminUpdateWhatsAppTemplate: WhatsAppMessageTemplate;
   adminVerifyPayout: Payout;
   artistCreateLink: ArtistLink;
   artistCreateMerch: ArtistMerch;
@@ -2692,6 +3034,7 @@ export type Mutation = {
   artistVerifyOtp: ArtistAuthResult;
   autoGenerateEventDescription: EventEvalResultView;
   blockUnblockAdmin: Scalars['Boolean']['output'];
+  cancelHostMetaHoizrCampaign: Scalars['Boolean']['output'];
   changeAdminRole: Scalars['Boolean']['output'];
   completeHostOnboarding: Scalars['Boolean']['output'];
   createAdminEmailCampaign: Scalars['String']['output'];
@@ -2699,18 +3042,23 @@ export type Mutation = {
   createEvent: Event;
   createHost: Scalars['Boolean']['output'];
   createHostEmailCampaign: Scalars['String']['output'];
+  createHostMetaHoizrCampaign: Scalars['String']['output'];
   createHostPushCampaign: HostPushCampaign;
+  createHostWhatsAppCampaign: Scalars['String']['output'];
   createMarketingCreditTopUpOrder: MarketingCreditTopUpOrder;
   createScanner: ScannerCreateResponse;
   deleteAdminEmailCampaign: Scalars['Boolean']['output'];
   deleteEvent: Scalars['Boolean']['output'];
   deleteHostCloudinaryAsset: Scalars['Boolean']['output'];
   deleteHostEmailCampaign: Scalars['Boolean']['output'];
+  deleteHostMetaHoizrCampaign: Scalars['Boolean']['output'];
   deleteHostPushCampaign: Scalars['Boolean']['output'];
+  deleteHostWhatsAppCampaign: Scalars['Boolean']['output'];
   deleteScanner: Scalars['Boolean']['output'];
   duplicateAdminEmailCampaign: Scalars['String']['output'];
   duplicateEvent: Event;
   duplicateHostEmailCampaign: Scalars['String']['output'];
+  duplicateHostWhatsAppCampaign: Scalars['String']['output'];
   exportAdminCampaignsReportCSV: Scalars['String']['output'];
   exportAdminCustomersReportCSV: Scalars['String']['output'];
   exportAdminEventsReportCSV: Scalars['String']['output'];
@@ -2732,6 +3080,7 @@ export type Mutation = {
   setPrimaryHostPayoutAccount: HostPayoutAccount;
   setPrimaryPayout: Payout;
   startNewHostOnboarding: Scalars['Boolean']['output'];
+  submitHostMetaHoizrCampaign: Scalars['Boolean']['output'];
   tokensRefresh: Scalars['Boolean']['output'];
   updateAdmin: Scalars['Boolean']['output'];
   updateAdminEmailCampaign: Scalars['Boolean']['output'];
@@ -2745,7 +3094,9 @@ export type Mutation = {
   updateGenreTagStatus: Scalars['Boolean']['output'];
   updateHost: Scalars['Boolean']['output'];
   updateHostEmailCampaign: Scalars['Boolean']['output'];
+  updateHostMetaHoizrCampaign: Scalars['Boolean']['output'];
   updateHostPushCampaign: HostPushCampaign;
+  updateHostWhatsAppCampaign: Scalars['Boolean']['output'];
   updateIndianCityStatus: Scalars['Boolean']['output'];
   updatePermissionPreselect: Scalars['Boolean']['output'];
   updateScanner: ScannerUser;
@@ -2818,8 +3169,23 @@ export type MutationAddWaitListUserArgs = {
 };
 
 
+export type MutationAdminApproveMetaHoizrCampaignArgs = {
+  input: AdminMetaAdsReviewInput;
+};
+
+
 export type MutationAdminClearOfferGenerationNegativeArgs = {
   generationId: Scalars['String']['input'];
+};
+
+
+export type MutationAdminCreateWhatsAppTemplateArgs = {
+  input: CreateWhatsAppTemplateInput;
+};
+
+
+export type MutationAdminDeleteWhatsAppTemplateArgs = {
+  templateId: Scalars['String']['input'];
 };
 
 
@@ -2830,6 +3196,11 @@ export type MutationAdminForceReleasePayoutArgs = {
 
 export type MutationAdminInstantPayoutArgs = {
   settlementId: Scalars['String']['input'];
+};
+
+
+export type MutationAdminMarkMetaHoizrCampaignUnderReviewArgs = {
+  campaignId: Scalars['String']['input'];
 };
 
 
@@ -2871,6 +3242,11 @@ export type MutationAdminRefundLateCaptureArgs = {
 };
 
 
+export type MutationAdminRejectMetaHoizrCampaignArgs = {
+  input: AdminMetaAdsRejectInput;
+};
+
+
 export type MutationAdminRejectPayoutArgs = {
   id: Scalars['String']['input'];
   reason: Scalars['String']['input'];
@@ -2879,6 +3255,11 @@ export type MutationAdminRejectPayoutArgs = {
 
 export type MutationAdminResumePayoutSettlementArgs = {
   settlementId: Scalars['String']['input'];
+};
+
+
+export type MutationAdminSubmitWhatsAppTemplateToMetaArgs = {
+  templateId: Scalars['String']['input'];
 };
 
 
@@ -2897,6 +3278,11 @@ export type MutationAdminUpdateHostArgs = {
   hostId: Scalars['String']['input'];
   isAdminVerified?: InputMaybe<Scalars['Boolean']['input']>;
   status?: InputMaybe<HostStatus>;
+};
+
+
+export type MutationAdminUpdateWhatsAppTemplateArgs = {
+  input: UpdateWhatsAppTemplateInput;
 };
 
 
@@ -2990,6 +3376,11 @@ export type MutationBlockUnblockAdminArgs = {
 };
 
 
+export type MutationCancelHostMetaHoizrCampaignArgs = {
+  campaignId: Scalars['String']['input'];
+};
+
+
 export type MutationChangeAdminRoleArgs = {
   input: ChangeAdminRoleInput;
 };
@@ -3020,8 +3411,18 @@ export type MutationCreateHostEmailCampaignArgs = {
 };
 
 
+export type MutationCreateHostMetaHoizrCampaignArgs = {
+  input: CreateHostMetaHoizrCampaignInput;
+};
+
+
 export type MutationCreateHostPushCampaignArgs = {
   input: CreateHostPushCampaignInput;
+};
+
+
+export type MutationCreateHostWhatsAppCampaignArgs = {
+  input: AddHostWhatsAppCampaignInput;
 };
 
 
@@ -3055,7 +3456,17 @@ export type MutationDeleteHostEmailCampaignArgs = {
 };
 
 
+export type MutationDeleteHostMetaHoizrCampaignArgs = {
+  campaignId: Scalars['String']['input'];
+};
+
+
 export type MutationDeleteHostPushCampaignArgs = {
+  campaignId: Scalars['String']['input'];
+};
+
+
+export type MutationDeleteHostWhatsAppCampaignArgs = {
   campaignId: Scalars['String']['input'];
 };
 
@@ -3076,6 +3487,11 @@ export type MutationDuplicateEventArgs = {
 
 
 export type MutationDuplicateHostEmailCampaignArgs = {
+  campaignId: Scalars['String']['input'];
+};
+
+
+export type MutationDuplicateHostWhatsAppCampaignArgs = {
   campaignId: Scalars['String']['input'];
 };
 
@@ -3182,6 +3598,11 @@ export type MutationSetPrimaryPayoutArgs = {
 };
 
 
+export type MutationSubmitHostMetaHoizrCampaignArgs = {
+  input: SubmitHostMetaHoizrCampaignInput;
+};
+
+
 export type MutationUpdateAdminArgs = {
   input: UpdateAdminInput;
 };
@@ -3248,8 +3669,18 @@ export type MutationUpdateHostEmailCampaignArgs = {
 };
 
 
+export type MutationUpdateHostMetaHoizrCampaignArgs = {
+  input: UpdateHostMetaHoizrCampaignInput;
+};
+
+
 export type MutationUpdateHostPushCampaignArgs = {
   input: UpdateHostPushCampaignInput;
+};
+
+
+export type MutationUpdateHostWhatsAppCampaignArgs = {
+  input: UpdateHostWhatsAppCampaignInput;
 };
 
 
@@ -3625,14 +4056,18 @@ export type Query = {
   adminListOfferGenerations: EventOfferGenerationPaginatedResponse;
   adminListPayoutReleaseReadiness: Array<PayoutReleaseReadiness>;
   adminListPayoutSettlements: PayoutSettlementPaginatedResponse;
+  adminListPendingMetaHoizrCampaigns: HostMetaHoizrCampaignsPaginatedResponse;
+  adminListWhatsAppTemplates: WhatsAppTemplatesPaginatedResponse;
   adminLogin: Scalars['String']['output'];
   adminLoginVerification: Scalars['String']['output'];
   adminLogout: Scalars['Boolean']['output'];
+  adminMetaHoizrCampaignById: HostMetaAdsCampaign;
   adminPayoutsReport: AdminPayoutsReport;
   adminTicketsReport: AdminTicketsReport;
   allAdmins: AdminPaginatedResponse;
   allHostPayoutAccounts: HostPayoutAccountPaginatedResponse;
   allUsers: UserPaginatedResponse;
+  approvedWhatsAppTemplates: WhatsAppTemplatesPaginatedResponse;
   artistDashboardSummary: ArtistDashboardSummary;
   artistMe: Artist;
   artistMyLinks: Array<ArtistLink>;
@@ -3645,11 +4080,14 @@ export type Query = {
   deleteTeamMember: Scalars['Boolean']['output'];
   disable2FA: Scalars['Boolean']['output'];
   enable2FA: Scalars['String']['output'];
+  estimateHostMetaHoizrCampaignSpend: HostMetaHoizrSpendEstimate;
   eventOnboardingChecklist: EventOnboardingChecklist;
   eventPricingOptions: Array<EventPricingOptionResponse>;
   fetchAdminCampaignById: AdminEmailCampaignsObject;
   fetchHostCampaignById: HostEmailCampaignsObject;
+  fetchHostMetaHoizrCampaignById: HostMetaAdsCampaign;
   fetchHostPushCampaignById?: Maybe<HostPushCampaign>;
+  fetchHostWhatsAppCampaignById: HostWhatsAppCampaign;
   getActiveEventCategories: Array<EventCategory>;
   getActiveGenreTags: Array<GenreTag>;
   getActiveIndianCities: Array<IndianCity>;
@@ -3666,7 +4104,9 @@ export type Query = {
   getAllEventTags: Array<EventTag>;
   getAllGenreTags: Array<GenreTag>;
   getAllHostEmailCampaigns: HostEmailCampaignsPaginatedResponse;
+  getAllHostMetaHoizrCampaigns: HostMetaHoizrCampaignsPaginatedResponse;
   getAllHostPushCampaigns: HostPushCampaignsPaginatedResponse;
+  getAllHostWhatsAppCampaigns: HostWhatsAppCampaignsPaginatedResponse;
   getAllIndianCities: Array<IndianCity>;
   getAllPermissions: Array<Permission>;
   getConfig: Config;
@@ -3680,6 +4120,7 @@ export type Query = {
   getHost?: Maybe<Host>;
   getHostAttendeesTargetCount: Scalars['Int']['output'];
   getHostDashboardSummary: HostDashboardSummary;
+  getHostWhatsAppAttendeesTargetCount: Scalars['Int']['output'];
   getHostsByBusiness: Array<Host>;
   getLatestAiBoostGeneration?: Maybe<EventOfferGeneration>;
   getMarketingPricing: MarketingPricing;
@@ -3731,6 +4172,7 @@ export type Query = {
   userSignup: Scalars['String']['output'];
   userSignupVerification: Scalars['Boolean']['output'];
   verify2FASetup: Scalars['Boolean']['output'];
+  whatsAppTemplateById: WhatsAppMessageTemplate;
 };
 
 
@@ -3827,6 +4269,16 @@ export type QueryAdminListPayoutSettlementsArgs = {
 };
 
 
+export type QueryAdminListPendingMetaHoizrCampaignsArgs = {
+  pagination?: InputMaybe<PaginationInput>;
+};
+
+
+export type QueryAdminListWhatsAppTemplatesArgs = {
+  pagination?: InputMaybe<PaginationInput>;
+};
+
+
 export type QueryAdminLoginArgs = {
   email: Scalars['String']['input'];
 };
@@ -3834,6 +4286,11 @@ export type QueryAdminLoginArgs = {
 
 export type QueryAdminLoginVerificationArgs = {
   input: AdminLoginVerificationInput;
+};
+
+
+export type QueryAdminMetaHoizrCampaignByIdArgs = {
+  campaignId: Scalars['String']['input'];
 };
 
 
@@ -3868,6 +4325,11 @@ export type QueryAllUsersArgs = {
 };
 
 
+export type QueryApprovedWhatsAppTemplatesArgs = {
+  pagination?: InputMaybe<PaginationInput>;
+};
+
+
 export type QueryArtistSlugAvailableArgs = {
   slug: Scalars['String']['input'];
 };
@@ -3893,6 +4355,11 @@ export type QueryDisable2FaArgs = {
 };
 
 
+export type QueryEstimateHostMetaHoizrCampaignSpendArgs = {
+  budget: MetaAdsBudgetInput;
+};
+
+
 export type QueryEventPricingOptionsArgs = {
   input: EventPricingCalculatorInput;
 };
@@ -3908,7 +4375,17 @@ export type QueryFetchHostCampaignByIdArgs = {
 };
 
 
+export type QueryFetchHostMetaHoizrCampaignByIdArgs = {
+  campaignId: Scalars['String']['input'];
+};
+
+
 export type QueryFetchHostPushCampaignByIdArgs = {
+  campaignId: Scalars['String']['input'];
+};
+
+
+export type QueryFetchHostWhatsAppCampaignByIdArgs = {
   campaignId: Scalars['String']['input'];
 };
 
@@ -3954,8 +4431,24 @@ export type QueryGetAllHostEmailCampaignsArgs = {
 };
 
 
+export type QueryGetAllHostMetaHoizrCampaignsArgs = {
+  filter?: InputMaybe<Array<FilterDataInput>>;
+  pagination?: InputMaybe<PaginationInput>;
+  search?: InputMaybe<Scalars['String']['input']>;
+  sort?: InputMaybe<SortDataInput>;
+};
+
+
 export type QueryGetAllHostPushCampaignsArgs = {
   pagination?: InputMaybe<PaginationInput>;
+};
+
+
+export type QueryGetAllHostWhatsAppCampaignsArgs = {
+  filter?: InputMaybe<Array<FilterDataInput>>;
+  pagination?: InputMaybe<PaginationInput>;
+  search?: InputMaybe<Scalars['String']['input']>;
+  sort?: InputMaybe<SortDataInput>;
 };
 
 
@@ -4004,6 +4497,13 @@ export type QueryGetHostAttendeesTargetCountArgs = {
 
 export type QueryGetHostDashboardSummaryArgs = {
   input?: InputMaybe<HostDashboardSummaryInput>;
+};
+
+
+export type QueryGetHostWhatsAppAttendeesTargetCountArgs = {
+  eventId?: InputMaybe<Scalars['String']['input']>;
+  filters?: InputMaybe<Array<HostCampaignAudienceFilter>>;
+  target?: InputMaybe<HostEmailTargetType>;
 };
 
 
@@ -4173,6 +4673,11 @@ export type QueryVerify2FaSetupArgs = {
   authCode: Scalars['String']['input'];
 };
 
+
+export type QueryWhatsAppTemplateByIdArgs = {
+  templateId: Scalars['String']['input'];
+};
+
 export type RazorpayReconcileSummary = {
   __typename?: 'RazorpayReconcileSummary';
   posted: Scalars['Int']['output'];
@@ -4304,6 +4809,12 @@ export type SubUser = {
   role: Scalars['String']['output'];
   status: UserStatus;
   updatedAt: Scalars['DateTimeISO']['output'];
+};
+
+export type SubmitHostMetaHoizrCampaignInput = {
+  campaignId: Scalars['ID']['input'];
+  scheduleTime?: InputMaybe<Scalars['DateTimeISO']['input']>;
+  scheduleType: HostMetaAdsCampaignScheduleType;
 };
 
 export enum TeamRole {
@@ -4463,6 +4974,18 @@ export type UpdateHostInput = {
   websiteUrl?: InputMaybe<Scalars['String']['input']>;
 };
 
+export type UpdateHostMetaHoizrCampaignInput = {
+  audience?: InputMaybe<MetaAdsAudienceInput>;
+  budget?: InputMaybe<MetaAdsBudgetInput>;
+  campaignId: Scalars['ID']['input'];
+  campaignName?: InputMaybe<Scalars['String']['input']>;
+  creative?: InputMaybe<MetaAdsCreativeInput>;
+  eventId?: InputMaybe<Scalars['String']['input']>;
+  objective?: InputMaybe<MetaAdsObjective>;
+  scheduleTime?: InputMaybe<Scalars['DateTimeISO']['input']>;
+  scheduleType?: InputMaybe<HostMetaAdsCampaignScheduleType>;
+};
+
 export type UpdateHostPushCampaignInput = {
   _id: Scalars['String']['input'];
   campaignName?: InputMaybe<Scalars['String']['input']>;
@@ -4476,6 +4999,24 @@ export type UpdateHostPushCampaignInput = {
   scheduleTime?: InputMaybe<Scalars['DateTimeISO']['input']>;
   scheduleType?: InputMaybe<HostPushCampaignScheduleType>;
   target?: InputMaybe<HostEmailTargetType>;
+};
+
+export type UpdateHostWhatsAppCampaignInput = {
+  campaignId: Scalars['ID']['input'];
+  campaignName?: InputMaybe<Scalars['String']['input']>;
+  csvDataUrl?: InputMaybe<Scalars['String']['input']>;
+  ctaSlug?: InputMaybe<Scalars['String']['input']>;
+  eventId?: InputMaybe<Scalars['String']['input']>;
+  filters?: InputMaybe<Array<HostCampaignAudienceFilter>>;
+  headerMediaUrl?: InputMaybe<Scalars['String']['input']>;
+  objectiveTag?: InputMaybe<Scalars['String']['input']>;
+  publicationStatus?: InputMaybe<HostWhatsAppCampaignPublicationStatus>;
+  scheduleTime?: InputMaybe<Scalars['DateTimeISO']['input']>;
+  scheduleType?: InputMaybe<HostWhatsAppCampaignScheduleType>;
+  target?: InputMaybe<HostEmailTargetType>;
+  targetCount?: InputMaybe<Scalars['Int']['input']>;
+  templateId?: InputMaybe<Scalars['String']['input']>;
+  templateVariables?: InputMaybe<Array<HostWhatsAppCampaignVariableInput>>;
 };
 
 export type UpdateScannerInput = {
@@ -4502,6 +5043,21 @@ export type UpdateUserInput = {
   firstName?: InputMaybe<Scalars['String']['input']>;
   lastName?: InputMaybe<Scalars['String']['input']>;
   phone?: InputMaybe<Scalars['String']['input']>;
+};
+
+export type UpdateWhatsAppTemplateInput = {
+  bodyText?: InputMaybe<Scalars['String']['input']>;
+  buttonLabel?: InputMaybe<Scalars['String']['input']>;
+  buttonPhone?: InputMaybe<Scalars['String']['input']>;
+  buttonUrl?: InputMaybe<Scalars['String']['input']>;
+  description?: InputMaybe<Scalars['String']['input']>;
+  footerText?: InputMaybe<Scalars['String']['input']>;
+  headerSampleMediaUrl?: InputMaybe<Scalars['String']['input']>;
+  headerText?: InputMaybe<Scalars['String']['input']>;
+  isActive?: InputMaybe<Scalars['Boolean']['input']>;
+  name?: InputMaybe<Scalars['String']['input']>;
+  templateId: Scalars['ID']['input'];
+  variables?: InputMaybe<Array<WhatsAppTemplateVariableInput>>;
 };
 
 export type UpsertPhantomArtistInput = {
@@ -4640,6 +5196,94 @@ export enum WalkthroughKey {
   Payments = 'PAYMENTS',
   Teams = 'TEAMS'
 }
+
+export type WhatsAppMessageTemplate = {
+  __typename?: 'WhatsAppMessageTemplate';
+  _id: Scalars['ID']['output'];
+  approvedAt?: Maybe<Scalars['DateTimeISO']['output']>;
+  bodyText: Scalars['String']['output'];
+  buttonLabel?: Maybe<Scalars['String']['output']>;
+  buttonPhone?: Maybe<Scalars['String']['output']>;
+  buttonType: WhatsAppTemplateButtonType;
+  buttonUrl?: Maybe<Scalars['String']['output']>;
+  category: WhatsAppTemplateCategory;
+  createdAt?: Maybe<Scalars['DateTimeISO']['output']>;
+  createdBy?: Maybe<Scalars['String']['output']>;
+  description?: Maybe<Scalars['String']['output']>;
+  footerText?: Maybe<Scalars['String']['output']>;
+  headerSampleMediaUrl?: Maybe<Scalars['String']['output']>;
+  headerText?: Maybe<Scalars['String']['output']>;
+  headerType: WhatsAppTemplateHeaderType;
+  isActive: Scalars['Boolean']['output'];
+  language: Scalars['String']['output'];
+  metaStatus: WhatsAppTemplateStatus;
+  metaTemplateId?: Maybe<Scalars['String']['output']>;
+  name: Scalars['String']['output'];
+  rejectionReason?: Maybe<Scalars['String']['output']>;
+  slug: Scalars['String']['output'];
+  submittedAt?: Maybe<Scalars['DateTimeISO']['output']>;
+  updatedAt?: Maybe<Scalars['DateTimeISO']['output']>;
+  updatedBy?: Maybe<Scalars['String']['output']>;
+  variables: Array<WhatsAppTemplateVariable>;
+};
+
+export enum WhatsAppTemplateButtonType {
+  None = 'NONE',
+  Phone = 'PHONE',
+  QuickReply = 'QUICK_REPLY',
+  Url = 'URL'
+}
+
+export enum WhatsAppTemplateCategory {
+  Authentication = 'AUTHENTICATION',
+  Marketing = 'MARKETING',
+  Utility = 'UTILITY'
+}
+
+export enum WhatsAppTemplateHeaderType {
+  Document = 'DOCUMENT',
+  Image = 'IMAGE',
+  None = 'NONE',
+  Text = 'TEXT',
+  Video = 'VIDEO'
+}
+
+export enum WhatsAppTemplateStatus {
+  Approved = 'APPROVED',
+  Disabled = 'DISABLED',
+  InAppeal = 'IN_APPEAL',
+  Paused = 'PAUSED',
+  Pending = 'PENDING',
+  Rejected = 'REJECTED'
+}
+
+export type WhatsAppTemplateSubmissionResult = {
+  __typename?: 'WhatsAppTemplateSubmissionResult';
+  metaStatus: Scalars['String']['output'];
+  metaTemplateId?: Maybe<Scalars['String']['output']>;
+  templateId: Scalars['String']['output'];
+};
+
+export type WhatsAppTemplateVariable = {
+  __typename?: 'WhatsAppTemplateVariable';
+  example?: Maybe<Scalars['String']['output']>;
+  hint?: Maybe<Scalars['String']['output']>;
+  label: Scalars['String']['output'];
+  position: Scalars['Int']['output'];
+};
+
+export type WhatsAppTemplateVariableInput = {
+  example?: InputMaybe<Scalars['String']['input']>;
+  hint?: InputMaybe<Scalars['String']['input']>;
+  label: Scalars['String']['input'];
+  position: Scalars['Int']['input'];
+};
+
+export type WhatsAppTemplatesPaginatedResponse = {
+  __typename?: 'WhatsAppTemplatesPaginatedResponse';
+  items: Array<WhatsAppMessageTemplate>;
+  total: Scalars['Int']['output'];
+};
 
 export type UserLogoutQueryVariables = Exact<{ [key: string]: never; }>;
 
@@ -4965,6 +5609,74 @@ export type PublishHostPushCampaignMutationVariables = Exact<{
 
 
 export type PublishHostPushCampaignMutation = { __typename?: 'Mutation', publishHostPushCampaign: { __typename?: 'HostPushCampaign', _id: string, status?: HostPushCampaignStatus | null, publicationStatus?: HostPushCampaignPublicationStatus | null } };
+
+export type GetAllHostWhatsAppCampaignsQueryVariables = Exact<{
+  pagination?: InputMaybe<PaginationInput>;
+  filter?: InputMaybe<Array<FilterDataInput> | FilterDataInput>;
+  sort?: InputMaybe<SortDataInput>;
+  search?: InputMaybe<Scalars['String']['input']>;
+}>;
+
+
+export type GetAllHostWhatsAppCampaignsQuery = { __typename?: 'Query', getAllHostWhatsAppCampaigns: { __typename?: 'HostWhatsAppCampaignsPaginatedResponse', total: number, items: Array<{ __typename?: 'HostWhatsAppCampaign', _id: string, businessId: string, hostId?: string | null, campaignName: string, objectiveTag?: string | null, templateId: string, templateSlugSnapshot?: string | null, templateLanguageSnapshot?: string | null, headerMediaUrl?: string | null, ctaSlug?: string | null, target?: HostEmailTargetType | null, eventId?: string | null, csvDataUrl?: string | null, filters?: Array<HostCampaignAudienceFilter> | null, targetCount?: number | null, status?: HostWhatsAppCampaignStatus | null, publicationStatus?: HostWhatsAppCampaignPublicationStatus | null, scheduleType?: HostWhatsAppCampaignScheduleType | null, scheduleTime?: any | null, createdAt?: any | null, updatedAt?: any | null, templateVariables: Array<{ __typename?: 'HostWhatsAppCampaignVariable', position: number, value: string }>, statusChangeHistory?: Array<{ __typename?: 'HostWhatsAppCampaignStatusHistoryItem', status: HostWhatsAppCampaignStatus, timestamp?: any | null }> | null, stats?: { __typename?: 'HostWhatsAppCampaignStats', messagesSent: number, messagesSyncFailed: number, messagesDelivered: number, messagesRead: number, messagesFailed: number, failureCodeSamples: Array<string>, messagesClicked: Array<{ __typename?: 'HostWhatsAppStatEntry', phone: string, date: any }> } | null }> } };
+
+export type FetchHostWhatsAppCampaignByIdQueryVariables = Exact<{
+  campaignId: Scalars['String']['input'];
+}>;
+
+
+export type FetchHostWhatsAppCampaignByIdQuery = { __typename?: 'Query', fetchHostWhatsAppCampaignById: { __typename?: 'HostWhatsAppCampaign', _id: string, businessId: string, hostId?: string | null, campaignName: string, objectiveTag?: string | null, templateId: string, templateSlugSnapshot?: string | null, templateLanguageSnapshot?: string | null, headerMediaUrl?: string | null, ctaSlug?: string | null, target?: HostEmailTargetType | null, eventId?: string | null, csvDataUrl?: string | null, filters?: Array<HostCampaignAudienceFilter> | null, targetCount?: number | null, status?: HostWhatsAppCampaignStatus | null, publicationStatus?: HostWhatsAppCampaignPublicationStatus | null, scheduleType?: HostWhatsAppCampaignScheduleType | null, scheduleTime?: any | null, createdAt?: any | null, updatedAt?: any | null, templateVariables: Array<{ __typename?: 'HostWhatsAppCampaignVariable', position: number, value: string }>, statusChangeHistory?: Array<{ __typename?: 'HostWhatsAppCampaignStatusHistoryItem', status: HostWhatsAppCampaignStatus, timestamp?: any | null }> | null, stats?: { __typename?: 'HostWhatsAppCampaignStats', messagesSent: number, messagesSyncFailed: number, messagesDelivered: number, messagesRead: number, messagesFailed: number, failureCodeSamples: Array<string>, messagesClicked: Array<{ __typename?: 'HostWhatsAppStatEntry', phone: string, date: any }> } | null } };
+
+export type CreateHostWhatsAppCampaignMutationVariables = Exact<{
+  input: AddHostWhatsAppCampaignInput;
+}>;
+
+
+export type CreateHostWhatsAppCampaignMutation = { __typename?: 'Mutation', createHostWhatsAppCampaign: string };
+
+export type UpdateHostWhatsAppCampaignMutationVariables = Exact<{
+  input: UpdateHostWhatsAppCampaignInput;
+}>;
+
+
+export type UpdateHostWhatsAppCampaignMutation = { __typename?: 'Mutation', updateHostWhatsAppCampaign: boolean };
+
+export type DeleteHostWhatsAppCampaignMutationVariables = Exact<{
+  campaignId: Scalars['String']['input'];
+}>;
+
+
+export type DeleteHostWhatsAppCampaignMutation = { __typename?: 'Mutation', deleteHostWhatsAppCampaign: boolean };
+
+export type DuplicateHostWhatsAppCampaignMutationVariables = Exact<{
+  campaignId: Scalars['String']['input'];
+}>;
+
+
+export type DuplicateHostWhatsAppCampaignMutation = { __typename?: 'Mutation', duplicateHostWhatsAppCampaign: string };
+
+export type GetHostWhatsAppAttendeesTargetCountQueryVariables = Exact<{
+  target?: InputMaybe<HostEmailTargetType>;
+  eventId?: InputMaybe<Scalars['String']['input']>;
+  filters?: InputMaybe<Array<HostCampaignAudienceFilter> | HostCampaignAudienceFilter>;
+}>;
+
+
+export type GetHostWhatsAppAttendeesTargetCountQuery = { __typename?: 'Query', getHostWhatsAppAttendeesTargetCount: number };
+
+export type ApprovedWhatsAppTemplatesQueryVariables = Exact<{
+  pagination?: InputMaybe<PaginationInput>;
+}>;
+
+
+export type ApprovedWhatsAppTemplatesQuery = { __typename?: 'Query', approvedWhatsAppTemplates: { __typename?: 'WhatsAppTemplatesPaginatedResponse', total: number, items: Array<{ __typename?: 'WhatsAppMessageTemplate', _id: string, slug: string, name: string, description?: string | null, category: WhatsAppTemplateCategory, language: string, metaStatus: WhatsAppTemplateStatus, headerType: WhatsAppTemplateHeaderType, headerText?: string | null, headerSampleMediaUrl?: string | null, bodyText: string, footerText?: string | null, buttonType: WhatsAppTemplateButtonType, buttonUrl?: string | null, buttonLabel?: string | null, buttonPhone?: string | null, isActive: boolean, variables: Array<{ __typename?: 'WhatsAppTemplateVariable', position: number, label: string, hint?: string | null, example?: string | null }> }> } };
+
+export type WhatsAppTemplateByIdQueryVariables = Exact<{
+  templateId: Scalars['String']['input'];
+}>;
+
+
+export type WhatsAppTemplateByIdQuery = { __typename?: 'Query', whatsAppTemplateById: { __typename?: 'WhatsAppMessageTemplate', _id: string, slug: string, name: string, description?: string | null, category: WhatsAppTemplateCategory, language: string, metaStatus: WhatsAppTemplateStatus, headerType: WhatsAppTemplateHeaderType, headerText?: string | null, headerSampleMediaUrl?: string | null, bodyText: string, footerText?: string | null, buttonType: WhatsAppTemplateButtonType, buttonUrl?: string | null, buttonLabel?: string | null, buttonPhone?: string | null, isActive: boolean, variables: Array<{ __typename?: 'WhatsAppTemplateVariable', position: number, label: string, hint?: string | null, example?: string | null }> } };
 
 export type GetHostsByBusinessQueryVariables = Exact<{ [key: string]: never; }>;
 
@@ -5919,6 +6631,198 @@ export const PublishHostPushCampaignDocument = gql`
   }
 }
     `;
+export const GetAllHostWhatsAppCampaignsDocument = gql`
+    query getAllHostWhatsAppCampaigns($pagination: PaginationInput, $filter: [FilterDataInput!], $sort: SortDataInput, $search: String) {
+  getAllHostWhatsAppCampaigns(
+    pagination: $pagination
+    filter: $filter
+    sort: $sort
+    search: $search
+  ) {
+    total
+    items {
+      _id
+      businessId
+      hostId
+      campaignName
+      objectiveTag
+      templateId
+      templateSlugSnapshot
+      templateLanguageSnapshot
+      templateVariables {
+        position
+        value
+      }
+      headerMediaUrl
+      ctaSlug
+      target
+      eventId
+      csvDataUrl
+      filters
+      targetCount
+      status
+      publicationStatus
+      scheduleType
+      scheduleTime
+      createdAt
+      updatedAt
+      statusChangeHistory {
+        status
+        timestamp
+      }
+      stats {
+        messagesSent
+        messagesSyncFailed
+        messagesDelivered
+        messagesRead
+        messagesFailed
+        messagesClicked {
+          phone
+          date
+        }
+        failureCodeSamples
+      }
+    }
+  }
+}
+    `;
+export const FetchHostWhatsAppCampaignByIdDocument = gql`
+    query fetchHostWhatsAppCampaignById($campaignId: String!) {
+  fetchHostWhatsAppCampaignById(campaignId: $campaignId) {
+    _id
+    businessId
+    hostId
+    campaignName
+    objectiveTag
+    templateId
+    templateSlugSnapshot
+    templateLanguageSnapshot
+    templateVariables {
+      position
+      value
+    }
+    headerMediaUrl
+    ctaSlug
+    target
+    eventId
+    csvDataUrl
+    filters
+    targetCount
+    status
+    publicationStatus
+    scheduleType
+    scheduleTime
+    createdAt
+    updatedAt
+    statusChangeHistory {
+      status
+      timestamp
+    }
+    stats {
+      messagesSent
+      messagesSyncFailed
+      messagesDelivered
+      messagesRead
+      messagesFailed
+      messagesClicked {
+        phone
+        date
+      }
+      failureCodeSamples
+    }
+  }
+}
+    `;
+export const CreateHostWhatsAppCampaignDocument = gql`
+    mutation createHostWhatsAppCampaign($input: AddHostWhatsAppCampaignInput!) {
+  createHostWhatsAppCampaign(input: $input)
+}
+    `;
+export const UpdateHostWhatsAppCampaignDocument = gql`
+    mutation updateHostWhatsAppCampaign($input: UpdateHostWhatsAppCampaignInput!) {
+  updateHostWhatsAppCampaign(input: $input)
+}
+    `;
+export const DeleteHostWhatsAppCampaignDocument = gql`
+    mutation deleteHostWhatsAppCampaign($campaignId: String!) {
+  deleteHostWhatsAppCampaign(campaignId: $campaignId)
+}
+    `;
+export const DuplicateHostWhatsAppCampaignDocument = gql`
+    mutation duplicateHostWhatsAppCampaign($campaignId: String!) {
+  duplicateHostWhatsAppCampaign(campaignId: $campaignId)
+}
+    `;
+export const GetHostWhatsAppAttendeesTargetCountDocument = gql`
+    query getHostWhatsAppAttendeesTargetCount($target: HostEmailTargetType, $eventId: String, $filters: [HostCampaignAudienceFilter!]) {
+  getHostWhatsAppAttendeesTargetCount(
+    target: $target
+    eventId: $eventId
+    filters: $filters
+  )
+}
+    `;
+export const ApprovedWhatsAppTemplatesDocument = gql`
+    query approvedWhatsAppTemplates($pagination: PaginationInput) {
+  approvedWhatsAppTemplates(pagination: $pagination) {
+    total
+    items {
+      _id
+      slug
+      name
+      description
+      category
+      language
+      metaStatus
+      headerType
+      headerText
+      headerSampleMediaUrl
+      bodyText
+      variables {
+        position
+        label
+        hint
+        example
+      }
+      footerText
+      buttonType
+      buttonUrl
+      buttonLabel
+      buttonPhone
+      isActive
+    }
+  }
+}
+    `;
+export const WhatsAppTemplateByIdDocument = gql`
+    query whatsAppTemplateById($templateId: String!) {
+  whatsAppTemplateById(templateId: $templateId) {
+    _id
+    slug
+    name
+    description
+    category
+    language
+    metaStatus
+    headerType
+    headerText
+    headerSampleMediaUrl
+    bodyText
+    variables {
+      position
+      label
+      hint
+      example
+    }
+    footerText
+    buttonType
+    buttonUrl
+    buttonLabel
+    buttonPhone
+    isActive
+  }
+}
+    `;
 export const GetHostsByBusinessDocument = gql`
     query getHostsByBusiness {
   getHostsByBusiness {
@@ -6569,6 +7473,33 @@ export function getSdk(client: GraphQLClient, withWrapper: SdkFunctionWrapper = 
     },
     publishHostPushCampaign(variables: PublishHostPushCampaignMutationVariables, requestHeaders?: GraphQLClientRequestHeaders): Promise<PublishHostPushCampaignMutation> {
       return withWrapper((wrappedRequestHeaders) => client.request<PublishHostPushCampaignMutation>(PublishHostPushCampaignDocument, variables, {...requestHeaders, ...wrappedRequestHeaders}), 'publishHostPushCampaign', 'mutation', variables);
+    },
+    getAllHostWhatsAppCampaigns(variables?: GetAllHostWhatsAppCampaignsQueryVariables, requestHeaders?: GraphQLClientRequestHeaders): Promise<GetAllHostWhatsAppCampaignsQuery> {
+      return withWrapper((wrappedRequestHeaders) => client.request<GetAllHostWhatsAppCampaignsQuery>(GetAllHostWhatsAppCampaignsDocument, variables, {...requestHeaders, ...wrappedRequestHeaders}), 'getAllHostWhatsAppCampaigns', 'query', variables);
+    },
+    fetchHostWhatsAppCampaignById(variables: FetchHostWhatsAppCampaignByIdQueryVariables, requestHeaders?: GraphQLClientRequestHeaders): Promise<FetchHostWhatsAppCampaignByIdQuery> {
+      return withWrapper((wrappedRequestHeaders) => client.request<FetchHostWhatsAppCampaignByIdQuery>(FetchHostWhatsAppCampaignByIdDocument, variables, {...requestHeaders, ...wrappedRequestHeaders}), 'fetchHostWhatsAppCampaignById', 'query', variables);
+    },
+    createHostWhatsAppCampaign(variables: CreateHostWhatsAppCampaignMutationVariables, requestHeaders?: GraphQLClientRequestHeaders): Promise<CreateHostWhatsAppCampaignMutation> {
+      return withWrapper((wrappedRequestHeaders) => client.request<CreateHostWhatsAppCampaignMutation>(CreateHostWhatsAppCampaignDocument, variables, {...requestHeaders, ...wrappedRequestHeaders}), 'createHostWhatsAppCampaign', 'mutation', variables);
+    },
+    updateHostWhatsAppCampaign(variables: UpdateHostWhatsAppCampaignMutationVariables, requestHeaders?: GraphQLClientRequestHeaders): Promise<UpdateHostWhatsAppCampaignMutation> {
+      return withWrapper((wrappedRequestHeaders) => client.request<UpdateHostWhatsAppCampaignMutation>(UpdateHostWhatsAppCampaignDocument, variables, {...requestHeaders, ...wrappedRequestHeaders}), 'updateHostWhatsAppCampaign', 'mutation', variables);
+    },
+    deleteHostWhatsAppCampaign(variables: DeleteHostWhatsAppCampaignMutationVariables, requestHeaders?: GraphQLClientRequestHeaders): Promise<DeleteHostWhatsAppCampaignMutation> {
+      return withWrapper((wrappedRequestHeaders) => client.request<DeleteHostWhatsAppCampaignMutation>(DeleteHostWhatsAppCampaignDocument, variables, {...requestHeaders, ...wrappedRequestHeaders}), 'deleteHostWhatsAppCampaign', 'mutation', variables);
+    },
+    duplicateHostWhatsAppCampaign(variables: DuplicateHostWhatsAppCampaignMutationVariables, requestHeaders?: GraphQLClientRequestHeaders): Promise<DuplicateHostWhatsAppCampaignMutation> {
+      return withWrapper((wrappedRequestHeaders) => client.request<DuplicateHostWhatsAppCampaignMutation>(DuplicateHostWhatsAppCampaignDocument, variables, {...requestHeaders, ...wrappedRequestHeaders}), 'duplicateHostWhatsAppCampaign', 'mutation', variables);
+    },
+    getHostWhatsAppAttendeesTargetCount(variables?: GetHostWhatsAppAttendeesTargetCountQueryVariables, requestHeaders?: GraphQLClientRequestHeaders): Promise<GetHostWhatsAppAttendeesTargetCountQuery> {
+      return withWrapper((wrappedRequestHeaders) => client.request<GetHostWhatsAppAttendeesTargetCountQuery>(GetHostWhatsAppAttendeesTargetCountDocument, variables, {...requestHeaders, ...wrappedRequestHeaders}), 'getHostWhatsAppAttendeesTargetCount', 'query', variables);
+    },
+    approvedWhatsAppTemplates(variables?: ApprovedWhatsAppTemplatesQueryVariables, requestHeaders?: GraphQLClientRequestHeaders): Promise<ApprovedWhatsAppTemplatesQuery> {
+      return withWrapper((wrappedRequestHeaders) => client.request<ApprovedWhatsAppTemplatesQuery>(ApprovedWhatsAppTemplatesDocument, variables, {...requestHeaders, ...wrappedRequestHeaders}), 'approvedWhatsAppTemplates', 'query', variables);
+    },
+    whatsAppTemplateById(variables: WhatsAppTemplateByIdQueryVariables, requestHeaders?: GraphQLClientRequestHeaders): Promise<WhatsAppTemplateByIdQuery> {
+      return withWrapper((wrappedRequestHeaders) => client.request<WhatsAppTemplateByIdQuery>(WhatsAppTemplateByIdDocument, variables, {...requestHeaders, ...wrappedRequestHeaders}), 'whatsAppTemplateById', 'query', variables);
     },
     getHostsByBusiness(variables?: GetHostsByBusinessQueryVariables, requestHeaders?: GraphQLClientRequestHeaders): Promise<GetHostsByBusinessQuery> {
       return withWrapper((wrappedRequestHeaders) => client.request<GetHostsByBusinessQuery>(GetHostsByBusinessDocument, variables, {...requestHeaders, ...wrappedRequestHeaders}), 'getHostsByBusiness', 'query', variables);

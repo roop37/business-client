@@ -12,7 +12,7 @@ import { SidebarTrigger } from "../ui/sidebar";
  *   - Mobile sidebar trigger (lg:hidden)
  *   - Notifications bell
  *   - Primary action button — context-aware:
- *       /campaigns/*  → "Add email campaign"
+ *       /campaigns/*  → "Add campaign"
  *       /events sub-routes,/dashboard → "Add event"
  *       elsewhere → hidden
  *
@@ -36,9 +36,9 @@ const Navbar = () => {
     (pathname.startsWith("/events") && !onEventsRoot) ||
     onCampaigns;
 
-  const primaryLabel = onCampaigns ? "Add email campaign" : "Add event";
+  const primaryLabel = onCampaigns ? "Add campaign" : "Add event";
   const primaryHref = onCampaigns
-    ? "/campaigns/onboarding/template-select"
+    ? "/campaigns/whatsapp/onboarding/basic"
     : "/events?create=1";
 
   return (

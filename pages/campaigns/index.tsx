@@ -2,7 +2,7 @@ import type { GetServerSideProps } from "next";
 
 export const getServerSideProps: GetServerSideProps = async () => ({
   redirect: {
-    destination: "/campaigns/email",
+    destination: "/campaigns/marketing-credit",
     permanent: false,
   },
 });

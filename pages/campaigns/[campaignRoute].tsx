@@ -10,7 +10,7 @@ import { sdk } from "@/utils/graphqlClient";
 import { GetServerSideProps } from "next";
 import { useRouter } from "next/router";
 import { useEffect } from "react";
-import { Bell, Instagram, Mail, MessageCircle, Send } from "lucide-react";
+import { Bell, Instagram, MessageCircle, Send } from "lucide-react";
 
 type UserRepo = {
   pagePath: string;
@@ -26,14 +26,21 @@ const channelCopy: Record<
   whatsapp: {
     title: "WhatsApp campaigns",
     subtitle:
-      "WhatsApp sending will use Marketing Credit once the delivery worker and pricing ledger are fully wired.",
+      "Reach opted-in customers and event buyers through Hoizr's WhatsApp campaign flow.",
     icon: <MessageCircle size={20} />,
     accent: "bg-owner-success-bg text-owner-success-text",
+  },
+  "meta-hoizr": {
+    title: "Meta x Hoizr campaigns",
+    subtitle:
+      "Paid Facebook and Instagram campaigns run from Hoizr's Meta account. Marketing credit covers the ad cost plus 8%.",
+    icon: <Instagram size={20} />,
+    accent: "bg-owner-blue-050 text-owner-blue-500",
   },
   sms: {
     title: "SMS campaigns",
     subtitle:
-      "SMS campaigns share the same audience, credit, and reporting model as email campaigns.",
+      "SMS campaigns are not part of the current Hoizr campaign launch set.",
     icon: <Send size={20} />,
     accent: "bg-owner-blue-050 text-owner-blue-500",
   },
@@ -65,10 +72,10 @@ const ChannelPlaceholder = ({ route }: { route: string }) => {
         actions={
           <OwnerButton
             variant="secondary"
-            leadingIcon={<Mail size={16} />}
-            onClick={() => router.push("/campaigns/email")}
+            leadingIcon={<MessageCircle size={16} />}
+            onClick={() => router.push("/campaigns/whatsapp")}
           >
-            Use email campaign
+            Use WhatsApp campaign
           </OwnerButton>
         }
       />
@@ -84,10 +91,9 @@ const ChannelPlaceholder = ({ route }: { route: string }) => {
               Channel setup pending
             </h2>
             <p className="owner-body mt-2">
-              This page is intentionally not showing fake campaign rows. Email
-              campaigns are now the real wired flow; this channel should be
-              enabled after the channel-specific sender, opt-in rules, and
-              Marketing Credit deduction are implemented.
+              This page is intentionally not showing fake campaign rows. The
+              channel will be enabled here once the host-facing builder is
+              wired to the approved Hoizr-run campaign contract.
             </p>
           </div>
         </div>
@@ -110,11 +116,15 @@ const CampaignPage = ({ repo }: { repo?: UserRepo }) => {
     case "custom-campaigns":
       childComponent = <CustomCampaigns />;
       break;
-    case "whatsapp":
     case "sms":
     case "instagram":
       childComponent = <ChannelPlaceholder route={repo.pagePath} />;
       break;
+    case "meta-hoizr":
+      childComponent = <ChannelPlaceholder route={repo.pagePath} />;
+      break;
+    // whatsapp is served by the static page at /pages/campaigns/whatsapp.tsx
+    // which takes precedence over this dynamic route in the Pages Router.
     case "push":
       childComponent = <PushCampaigns />;
       break;
