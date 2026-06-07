@@ -57,8 +57,13 @@ export const getSidebarList = (): TSidebarItem[] => [
     id: "sidebar-campaigns",
     subItems: [
       { title: "Marketing Credit", href: "/campaigns/marketing-credit" },
-      { title: "WhatsApp", href: "/campaigns/whatsapp" },
-      { title: "Meta x Hoizr", href: "/campaigns/meta-hoizr", comingSoon: true },
+      { title: "Email", href: "/campaigns/email" },
+      // v1.5 channels — surfaced as "Coming Soon" so hosts can see
+      // what's planned. Click handler is no-op in the sidebar renderer.
+      { title: "WhatsApp", href: "/campaigns/whatsapp", comingSoon: true },
+      { title: "Push Notification", href: "/campaigns/push", comingSoon: true },
+      { title: "SMS", href: "/campaigns/sms", comingSoon: true },
+      { title: "Instagram", href: "/campaigns/instagram", comingSoon: true },
     ],
   },
   {
