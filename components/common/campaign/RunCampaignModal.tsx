@@ -1,22 +1,34 @@
 "use client";
 
 import ReusableModal from "@/components/common/modal/modal";
-import { CustomEmailTargetType } from "@/generated/graphql";
-import { sdk } from "@/utils/graphqlClient";
-import useGlobalStore from "@/store/global";
-import useWhatsAppCampaignStore from "@/store/whatsappCampaignStore";
+import { defaultTemplates } from "@/components/modules/campaignOnboarding/defaultTemplates/defaultTemplate";
 import {
+  applyTemplateMergeTags,
+  stripHeaderFooterFromHtml,
+  stripHeaderFooterFromJson,
+} from "@/components/modules/campaignOnboarding/templateUtils";
+import { sdk } from "@/utils/graphqlClient";
+import { extractErrorMessage } from "@/utils/utilFUncs";
+import useGlobalStore from "@/store/global";
+import useHostsStore from "@/store/host";
+import {
+  Bell,
   ChevronRight,
   Coins,
+  Instagram,
+  Loader2,
+  Mail,
   MessageCircle,
+  MessageSquare,
+  Plus,
   Sparkles,
   type LucideIcon,
 } from "lucide-react";
 import { useRouter } from "next/router";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 type Channel = {
-  id: "whatsapp" | "meta";
+  id: "email" | "push" | "whatsapp" | "sms" | "instagram" | "meta";
   label: string;
   description: string;
   Icon: LucideIcon;
@@ -25,16 +37,44 @@ type Channel = {
 
 const CHANNELS: Channel[] = [
   {
-    id: "whatsapp",
-    label: "WhatsApp campaign",
-    description: "Broadcast to event buyers and opted-in customers.",
-    Icon: MessageCircle,
+    id: "email",
+    label: "Email campaign",
+    description: "Designed email blast — opens the builder with your event preloaded.",
+    Icon: Mail,
     available: true,
   },
   {
+    id: "push",
+    label: "Push notifications",
+    description: "Mobile + web push to your followers.",
+    Icon: Bell,
+    available: false,
+  },
+  {
+    id: "whatsapp",
+    label: "WhatsApp broadcast",
+    description: "1:1 broadcasts via your WhatsApp Business number.",
+    Icon: MessageCircle,
+    available: false,
+  },
+  {
+    id: "sms",
+    label: "SMS blast",
+    description: "Short, high-deliverability SMS to verified phones.",
+    Icon: MessageSquare,
+    available: false,
+  },
+  {
+    id: "instagram",
+    label: "Instagram post",
+    description: "Auto-post the event flyer + caption to your handle.",
+    Icon: Instagram,
+    available: false,
+  },
+  {
     id: "meta",
-    label: "Meta x Hoizr campaign",
-    description: "Hoizr runs the Meta ad account and charges ad cost + 8%.",
+    label: "Meta Ads",
+    description: "Boost the event flyer as a paid ad with Meta.",
     Icon: Sparkles,
     available: false,
   },
@@ -48,6 +88,10 @@ const inrFormat = (value: number) =>
     maximumFractionDigits: 2,
   }).format(value);
 
+const findCleanSlateTemplate = () =>
+  defaultTemplates.find((t) => t.name.toLowerCase() === "clean slate") ??
+  defaultTemplates[0];
+
 const RunCampaignModal = () => {
   const router = useRouter();
   const {
@@ -56,10 +100,11 @@ const RunCampaignModal = () => {
     openTopUpModal,
     setToastData,
   } = useGlobalStore();
-  const hydrateWhatsAppCampaign = useWhatsAppCampaignStore((s) => s.hydrate);
-  const resetWhatsAppCampaign = useWhatsAppCampaignStore((s) => s.reset);
+  const { selectedHost, hostLogo, hostAddress } = useHostsStore();
+  const businessAddress = hostAddress?.addressLine1 || "";
   const [balance, setBalance] = useState<number | null>(null);
   const [loading, setLoading] = useState(false);
+  const [creating, setCreating] = useState<"email" | null>(null);
 
   useEffect(() => {
     if (!runCampaignModalEvent) return;
@@ -85,24 +130,95 @@ const RunCampaignModal = () => {
     };
   }, [runCampaignModalEvent]);
 
+  // Clean Slate template prepared once (strip + merge-tag substitute).
+  // Re-runs when the host or event changes so the editor preview shows
+  // the right brand context out of the gate.
+  const startingTemplate = useMemo(() => {
+    if (!runCampaignModalEvent) return null;
+    const base = findCleanSlateTemplate();
+    if (!base) return null;
+    const strippedJson = stripHeaderFooterFromJson(base.template.designJson);
+    const strippedHtml = stripHeaderFooterFromHtml(base.template.html ?? "");
+    const merged = applyTemplateMergeTags(strippedHtml, strippedJson, {
+      hostName: selectedHost || "",
+      hostLogo: hostLogo || "",
+      hostAddress: businessAddress,
+      eventTitle: runCampaignModalEvent.title,
+    });
+    return {
+      content: base.template.content ?? "",
+      html: merged.html,
+      designJson: merged.designJson,
+    };
+  }, [
+    businessAddress,
+    hostLogo,
+    runCampaignModalEvent,
+    selectedHost,
+  ]);
+
+  const handleEmail = async () => {
+    if (!runCampaignModalEvent || !startingTemplate || creating) return;
+    setCreating("email");
+    try {
+      const newId = await sdk
+        .createHostEmailCampaign({
+          input: {
+            campaignName: runCampaignModalEvent.title || "Untitled campaign",
+            emailSubject: runCampaignModalEvent.title || "",
+            emailTemplate: {
+              content: startingTemplate.content,
+              designJson: JSON.stringify(startingTemplate.designJson),
+              html: startingTemplate.html,
+            },
+          },
+        })
+        .then((res) => res?.createHostEmailCampaign);
+
+      if (!newId) {
+        throw new Error("Campaign creation returned no id");
+      }
+
+      // Attach the source event so the worker (and any audience filters
+      // that key on event) can resolve recipients later. Failure here
+      // doesn't block the user — the editor will still open and they
+      // can pick the event manually on the audience step.
+      try {
+        await sdk.updateHostEmailCampaign({
+          input: {
+            campaignId: newId,
+            eventId: runCampaignModalEvent.eventId,
+          },
+        });
+      } catch (error) {
+        setToastData({
+          type: "warning",
+          message:
+            "Created the campaign — couldn't auto-link the event, pick it on the audience step.",
+        });
+      }
+
+      closeRunCampaignModal();
+      router.push(
+        `/campaigns/onboarding/template-edit?editId=${encodeURIComponent(newId)}`,
+      );
+    } catch (error) {
+      setToastData({ type: "error", message: extractErrorMessage(error) });
+    } finally {
+      setCreating(null);
+    }
+  };
+
   const handleChannel = (channel: Channel) => {
     if (!runCampaignModalEvent) return;
-    if (channel.id === "whatsapp") {
-      resetWhatsAppCampaign();
-      hydrateWhatsAppCampaign({
-        campaignName: runCampaignModalEvent.title || "Untitled campaign",
-        eventId: runCampaignModalEvent.eventId,
-        targetType: CustomEmailTargetType.EventSpecific,
-      });
-      closeRunCampaignModal();
-      router.push("/campaigns/whatsapp/onboarding/basic");
+    if (channel.id === "email") {
+      void handleEmail();
       return;
     }
     if (!channel.available) {
       setToastData({
         type: "warning",
-        message:
-          "Meta x Hoizr campaigns will run through Hoizr's Meta account and debit ad cost + 8%.",
+        message: `${channel.label} campaigns are coming soon.`,
       });
       return;
     }
@@ -111,7 +227,7 @@ const RunCampaignModal = () => {
   return (
     <ReusableModal
       isOpen={Boolean(runCampaignModalEvent)}
-      onClose={closeRunCampaignModal}
+      onClose={creating ? () => undefined : closeRunCampaignModal}
       title="Run a campaign"
       width="ml"
     >
@@ -147,24 +263,32 @@ const RunCampaignModal = () => {
                     : inrFormat(balance)}
               </p>
               <p className="mt-0.5 text-[12px] leading-[1.4] text-owner-fg-3">
-                Tap to top up — used for WhatsApp and Meta x Hoizr campaigns.
+                Tap to top up — used for emails, push, WhatsApp, and
+                paid boosts.
               </p>
             </div>
+            <span className="inline-flex shrink-0 items-center gap-1.5 rounded-full bg-owner-blue-500 px-3 py-1.5 text-[12.5px] font-semibold text-white shadow-sm transition group-hover:bg-owner-blue-600">
+              <Plus size={13} />
+              Top up
+            </span>
           </button>
         </li>
 
         {CHANNELS.map((channel) => {
+          const isEmail = channel.id === "email";
+          const isCreating = creating === "email" && isEmail;
           return (
             <li key={channel.id}>
               <button
                 type="button"
                 onClick={() => handleChannel(channel)}
-                aria-disabled={!channel.available}
+                disabled={isCreating}
+                aria-disabled={!channel.available && !isEmail}
                 className={`group flex w-full items-center gap-3 rounded-owner-md border bg-owner-bg px-4 py-3 text-left transition ${
                   channel.available
                     ? "border-owner-border hover:border-owner-blue-200 hover:shadow-sm"
                     : "border-dashed border-owner-border opacity-80 hover:border-owner-border"
-                }`}
+                } ${isCreating ? "cursor-wait opacity-80" : ""}`}
               >
                 <span
                   className={`grid h-11 w-11 shrink-0 place-items-center rounded-owner-md ${
@@ -182,7 +306,7 @@ const RunCampaignModal = () => {
                     </span>
                     {!channel.available ? (
                       <span className="rounded-full bg-owner-bg-subtle px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.08em] text-owner-fg-3">
-                        Hoizr-run
+                        Soon
                       </span>
                     ) : null}
                   </div>
@@ -190,7 +314,12 @@ const RunCampaignModal = () => {
                     {channel.description}
                   </p>
                 </div>
-                {channel.available ? (
+                {isCreating ? (
+                  <Loader2
+                    size={18}
+                    className="shrink-0 animate-spin text-owner-fg-3"
+                  />
+                ) : channel.available ? (
                   <ChevronRight
                     size={18}
                     className="shrink-0 text-owner-fg-4 transition group-hover:text-owner-fg-2"
