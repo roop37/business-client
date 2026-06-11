@@ -196,20 +196,20 @@ export const SignupClient: FC = () => {
 
   return (
     <div className="min-h-screen bg-[var(--owner-bg)] text-[var(--owner-fg-1)] lg:h-screen lg:overflow-hidden">
-      <div className="grid min-h-screen lg:h-screen lg:min-h-0 lg:grid-cols-[66%_34%]">
-        <div className="relative flex min-h-screen overflow-y-auto bg-[var(--owner-bg)] px-6 py-6 md:px-10 lg:h-screen lg:min-h-0 xl:px-16">
-          <div className="relative z-10 mx-auto flex w-full max-w-[600px] flex-col">
+      <div className="grid min-h-screen lg:h-screen lg:min-h-0 lg:grid-cols-[57%_43%]">
+        <div className="relative flex min-h-screen overflow-y-auto bg-[var(--owner-bg)] px-6 py-6 md:px-10 lg:h-screen lg:min-h-0 xl:px-14">
+          <div className="relative z-10 mx-auto flex w-full max-w-[440px] flex-col">
             <div className="lg:hidden">
               <Link href="/" aria-label="Go to Hoizr landing page">
-                <AuthLogo width={148} />
+                <AuthLogo width={132} />
               </Link>
             </div>
 
             <div className="my-auto py-0">
-              <h1 className="max-w-[520px] text-[31px] font-semibold leading-tight tracking-[-0.02em]">
+              <h1 className="max-w-[520px] text-[26px] font-semibold leading-tight tracking-[-0.02em]">
                 Create your Hoizr account
               </h1>
-              <p className="mt-2.5 max-w-[540px] text-[15.5px] leading-6 text-[var(--owner-fg-3)]">
+              <p className="mt-2.5 max-w-[540px] text-[14.5px] leading-6 text-[var(--owner-fg-3)]">
                 Start with your event rate, then use one dashboard for
                 marketing, tracking, collaborators, and revenue operations.
               </p>

@@ -10,6 +10,7 @@ const CustomJoyrideTooltip = ({
   index,
   isLastStep,
   primaryProps,
+  skipProps,
   step,
   tooltipProps,
 }: TooltipRenderProps) => {
@@ -42,21 +43,34 @@ const CustomJoyrideTooltip = ({
         <div className="mt-2 text-[14.5px] font-medium leading-6 text-black/62">
           {step.content}
         </div>
-        <div className="mt-5 flex w-full flex-row justify-end gap-2">
-          {index > 0 ? (
+        <div className="mt-5 flex w-full flex-row items-center justify-between gap-2">
+          {/* Skip the whole walkthrough — primary-coloured text button. */}
+          {!isLastStep ? (
             <button
-              {...backProps}
-              className="rounded-xl bg-transparent px-4 py-2 text-sm font-semibold text-primary/80 transition-all enabled:hover:text-primary"
+              {...skipProps}
+              className="rounded-xl bg-transparent px-1 py-2 text-sm font-semibold text-primary transition-all enabled:hover:text-primary/70"
             >
-              <span>Back</span>
+              <span>Skip walkthrough</span>
             </button>
-          ) : null}
-          <button
-            {...primaryProps}
-            className="rounded-xl bg-primary px-4 py-2 text-sm font-semibold text-secondary transition-all enabled:hover:bg-primary/80"
-          >
-            <span>{isLastStep ? "Done" : "Next"}</span>
-          </button>
+          ) : (
+            <span />
+          )}
+          <div className="flex flex-row gap-2">
+            {index > 0 ? (
+              <button
+                {...backProps}
+                className="rounded-xl bg-transparent px-4 py-2 text-sm font-semibold text-primary/80 transition-all enabled:hover:text-primary"
+              >
+                <span>Back</span>
+              </button>
+            ) : null}
+            <button
+              {...primaryProps}
+              className="rounded-xl bg-primary px-4 py-2 text-sm font-semibold text-secondary transition-all enabled:hover:bg-primary/80"
+            >
+              <span>{isLastStep ? "Done" : "Next"}</span>
+            </button>
+          </div>
         </div>
       </div>
     </div>
