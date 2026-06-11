@@ -1,0 +1,140 @@
+query getAllHostWhatsAppCampaigns(
+  $pagination: PaginationInput
+  $filter: [FilterDataInput!]
+  $sort: SortDataInput
+  $search: String
+) {
+  getAllHostWhatsAppCampaigns(
+    pagination: $pagination
+    filter: $filter
+    sort: $sort
+    search: $search
+  ) {
+    total
+    items {
+      _id
+      businessId
+      hostId
+      campaignName
+      objectiveTag
+      templateId
+      templateSlugSnapshot
+      templateLanguageSnapshot
+      headerMediaUrl
+      ctaSlug
+      target
+      eventId
+      csvDataUrl
+      filters
+      targetCount
+      status
+      publicationStatus
+      scheduleType
+      scheduleTime
+      createdAt
+      updatedAt
+      templateVariables {
+        position
+        value
+      }
+      stats {
+        messagesSent
+        messagesSyncFailed
+        messagesDelivered
+        messagesRead
+        messagesFailed
+      }
+      statusChangeHistory {
+        status
+        timestamp
+      }
+    }
+  }
+}
+
+query fetchHostWhatsAppCampaignById($campaignId: String!) {
+  fetchHostWhatsAppCampaignById(campaignId: $campaignId) {
+    _id
+    campaignName
+    objectiveTag
+    templateId
+    templateSlugSnapshot
+    templateLanguageSnapshot
+    headerMediaUrl
+    ctaSlug
+    target
+    eventId
+    csvDataUrl
+    filters
+    targetCount
+    status
+    publicationStatus
+    scheduleType
+    scheduleTime
+    templateVariables {
+      position
+      value
+    }
+    stats {
+      messagesSent
+      messagesSyncFailed
+      messagesDelivered
+      messagesRead
+      messagesFailed
+    }
+  }
+}
+
+query getHostWhatsAppAttendeesTargetCount(
+  $target: HostEmailTargetType
+  $eventId: String
+  $filters: [HostCampaignAudienceFilter!]
+) {
+  getHostWhatsAppAttendeesTargetCount(
+    target: $target
+    eventId: $eventId
+    filters: $filters
+  )
+}
+
+mutation createHostWhatsAppCampaign($input: AddHostWhatsAppCampaignInput!) {
+  createHostWhatsAppCampaign(input: $input)
+}
+
+mutation updateHostWhatsAppCampaign($input: UpdateHostWhatsAppCampaignInput!) {
+  updateHostWhatsAppCampaign(input: $input)
+}
+
+mutation deleteHostWhatsAppCampaign($campaignId: String!) {
+  deleteHostWhatsAppCampaign(campaignId: $campaignId)
+}
+
+mutation duplicateHostWhatsAppCampaign($campaignId: String!) {
+  duplicateHostWhatsAppCampaign(campaignId: $campaignId)
+}
+
+mutation resumeHostWhatsAppCampaign($campaignId: String!) {
+  resumeHostWhatsAppCampaign(campaignId: $campaignId)
+}
+
+query approvedWhatsAppTemplates {
+  approvedWhatsAppTemplates {
+    total
+    items {
+      _id
+      slug
+      name
+      category
+      language
+      headerType
+      bodyText
+      buttonType
+      metaStatus
+      isActive
+      variables {
+        position
+        example
+      }
+    }
+  }
+}

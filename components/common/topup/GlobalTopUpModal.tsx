@@ -96,23 +96,26 @@ const GlobalTopUpModal = () => {
 
   const [amount, setAmount] = useState<number>(MIN_TOP_UP_INR);
   const [gstPercent, setGstPercent] = useState<number>(DEFAULT_GST_PERCENT);
-  const [platformFeePercent, setPlatformFeePercent] = useState<number>(0);
   const [balance, setBalance] = useState<number>(0);
   const [status, setStatus] = useState<Status>("idle");
   const [errorMessage, setErrorMessage] = useState<string>("");
 
+  // AUDIT-020: marketing-credit top-up is GST-only — NO platform fee — per
+  // HOIZR_FINANCE_SOURCE_OF_TRUTH §12/D9, which is exactly what the server
+  // charges (marketing-credit.service hardcodes platformFeeAmount=0). The
+  // modal previously also added `platformFeePercent` to the *displayed*
+  // total, so if that config were ever set non-zero the "You pay" line
+  // would overstate the actual Razorpay charge (which derives from the
+  // server's order.payableAmount, not this number). Display GST-only to
+  // keep the shown total equal to what's charged.
   const gstFraction = gstPercent / 100;
   const gstAmount = useMemo(
     () => roundCurrency(Math.max(0, amount) * gstFraction),
     [amount, gstFraction]
   );
-  const platformFeeAmount = useMemo(
-    () => roundCurrency(Math.max(0, amount) * (platformFeePercent / 100)),
-    [amount, platformFeePercent]
-  );
   const payable = useMemo(
-    () => roundCurrency(Math.max(0, amount) + gstAmount + platformFeeAmount),
-    [amount, gstAmount, platformFeeAmount]
+    () => roundCurrency(Math.max(0, amount) + gstAmount),
+    [amount, gstAmount]
   );
   const belowMin = amount < MIN_TOP_UP_INR;
   const submitDisabled = belowMin || status === "paying" || status === "verifying";
@@ -130,12 +133,6 @@ const GlobalTopUpModal = () => {
       if (pricingRes?.getMarketingPricing?.gstPercent !== undefined) {
         const pct = Number(pricingRes.getMarketingPricing.gstPercent);
         if (Number.isFinite(pct) && pct >= 0) setGstPercent(pct);
-      }
-      if (
-        pricingRes?.getMarketingPricing?.platformFeePercent !== undefined
-      ) {
-        const pct = Number(pricingRes.getMarketingPricing.platformFeePercent);
-        if (Number.isFinite(pct) && pct >= 0) setPlatformFeePercent(pct);
       }
       if (ledgerRes?.myMarketingCreditLedger?.balance !== undefined) {
         setBalance(Number(ledgerRes.myMarketingCreditLedger.balance) || 0);
@@ -347,14 +344,6 @@ const GlobalTopUpModal = () => {
                   <span>GST ({gstPercent}%)</span>
                   <span className="tabular-nums">{inrFormat(gstAmount)}</span>
                 </div>
-                {platformFeePercent > 0 ? (
-                  <div className="mt-1 flex items-center justify-between text-[var(--owner-fg-3)]">
-                    <span>Payment adjustment ({platformFeePercent}%)</span>
-                    <span className="tabular-nums">
-                      {inrFormat(platformFeeAmount)}
-                    </span>
-                  </div>
-                ) : null}
                 <div className="mt-2 flex items-center justify-between border-t border-[var(--owner-border-soft)] pt-2 text-sm font-semibold">
                   <span>You pay</span>
                   <span className="tabular-nums">{inrFormat(payable)}</span>

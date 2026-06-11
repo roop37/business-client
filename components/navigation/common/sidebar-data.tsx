@@ -5,10 +5,12 @@ import {
   CreditCard,
   LayoutDashboard,
   MegaphoneIcon,
+  MessageSquareHeart,
   QrCode,
   SettingsIcon,
   ShoppingBag,
   UsersRoundIcon,
+  Workflow,
   type LucideIcon,
 } from "lucide-react";
 
@@ -87,6 +89,13 @@ export const getSidebarList = (): TSidebarItem[] => [
     ],
   },
   {
+    title: "Automations",
+    href: "/automations",
+    icon: Workflow,
+    active: true,
+    id: "sidebar-automations",
+  },
+  {
     title: "Customers",
     href: "/customer",
     icon: UsersRoundIcon,
@@ -94,11 +103,18 @@ export const getSidebarList = (): TSidebarItem[] => [
     id: "sidebar-customers",
   },
   {
-    title: "Tickets",
-    href: "/tickets",
+    title: "Feedbacks",
+    href: "/feedbacks",
+    icon: MessageSquareHeart,
+    active: true,
+    id: "sidebar-feedbacks",
+  },
+  {
+    title: "Orders",
+    href: "/orders",
     icon: ShoppingBag,
     active: true,
-    id: "sidebar-ticket-sales",
+    id: "sidebar-orders",
   },
   {
     title: "Scanners",

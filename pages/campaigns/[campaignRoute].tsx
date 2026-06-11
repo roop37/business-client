@@ -4,6 +4,7 @@ import CampaignLayout from "@/components/layouts/campaignNestedLayout";
 import MainLayout from "@/components/layouts/mainBodyLayout";
 import CustomCampaigns from "@/components/modules/campaign/table/customCampaign";
 import PushCampaigns from "@/components/modules/campaign/push/PushCampaigns";
+import WhatsAppCampaigns from "@/components/modules/whatsappCampaign/WhatsAppCampaigns";
 import useGlobalStore from "@/store/global";
 import { sdk } from "@/utils/graphqlClient";
 
@@ -111,6 +112,8 @@ const CampaignPage = ({ repo }: { repo?: UserRepo }) => {
       childComponent = <CustomCampaigns />;
       break;
     case "whatsapp":
+      childComponent = <WhatsAppCampaigns />;
+      break;
     case "sms":
     case "instagram":
       childComponent = <ChannelPlaceholder route={repo.pagePath} />;

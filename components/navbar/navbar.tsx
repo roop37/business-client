@@ -1,9 +1,11 @@
 "use client";
 
 import useGlobalStore from "@/store/global";
-import { Bell, Plus, Search } from "lucide-react";
+import { Bell, Plus, Search, TicketPlus } from "lucide-react";
 import { usePathname, useRouter } from "next/navigation";
+import { useState } from "react";
 import { SidebarTrigger } from "../ui/sidebar";
+import { IssueOfflineTicketModal } from "../modules/offlineTicket/IssueOfflineTicketModal";
 
 /**
  * Top bar (Owner design system).
@@ -25,6 +27,7 @@ const Navbar = () => {
   const router = useRouter();
   const pathname = usePathname() ?? "";
   const { setToastData } = useGlobalStore();
+  const [offlineOpen, setOfflineOpen] = useState(false);
 
   const onCampaigns =
     pathname.startsWith("/campaigns/") &&
@@ -69,6 +72,16 @@ const Navbar = () => {
 
         <button
           type="button"
+          onClick={() => setOfflineOpen(true)}
+          title="Issue offline ticket"
+          className="inline-flex h-9 items-center gap-1.5 rounded-owner-md border border-owner-border bg-owner-bg px-2.5 text-[13px] font-medium text-owner-fg-2 shadow-owner-sm transition hover:bg-owner-bg-subtle sm:px-3"
+        >
+          <TicketPlus size={16} />
+          <span className="hidden md:inline">Issue offline ticket</span>
+        </button>
+
+        <button
+          type="button"
           aria-label="Notifications"
           className="grid h-9 w-9 place-items-center rounded-owner-md border border-owner-border bg-owner-bg text-owner-fg-2 shadow-owner-sm transition hover:bg-owner-bg-subtle"
           onClick={() =>
@@ -94,6 +107,11 @@ const Navbar = () => {
           </button>
         ) : null}
       </div>
+
+      <IssueOfflineTicketModal
+        open={offlineOpen}
+        onClose={() => setOfflineOpen(false)}
+      />
     </header>
   );
 };

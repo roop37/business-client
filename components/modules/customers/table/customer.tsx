@@ -357,8 +357,10 @@ const CustomerRecord: React.FC = () => {
                   <th scope="col">Last event</th>
                   <th scope="col">Phone</th>
                   <th scope="col">Email</th>
-                  <th scope="col" className="num">Events</th>
+                  <th scope="col" className="num">Shows</th>
                   <th scope="col" className="num">Spent</th>
+                  <th scope="col" className="num">AOV</th>
+                  <th scope="col">Customer since</th>
                   <th scope="col">Tier</th>
                   <th scope="col">Marketing</th>
                 </tr>
@@ -402,6 +404,14 @@ const CustomerRecord: React.FC = () => {
                         {customer.orderHistory.length.toLocaleString("en-IN")}
                       </td>
                       <td className="num">{inrFormat(customer.ltv)}</td>
+                      <td className="num tabular-nums">
+                        {inrFormat(customer.aov)}
+                      </td>
+                      <td className="text-owner-fg-3">
+                        {customer.firstOrderDate
+                          ? format(new Date(customer.firstOrderDate), "MMM yyyy")
+                          : "—"}
+                      </td>
                       <td>
                         <Badge
                           tone={
