@@ -1,5 +1,6 @@
 import EventJourney from "@/components/modules/events/EventJourney";
 import { EventScanners } from "@/components/modules/events/EventScanners";
+import { IssueOfflineTicketModal } from "@/components/modules/offlineTicket/IssueOfflineTicketModal";
 import useGlobalStore from "@/store/global";
 import { sdk } from "@/utils/graphqlClient";
 import { extractErrorMessage } from "@/utils/utilFUncs";
@@ -73,6 +74,7 @@ const EventOperations = ({
   const { setToastData, openRunCampaignModal } = useGlobalStore();
   const [overview, setOverview] = useState<any>(null);
   const [busy, setBusy] = useState(false);
+  const [offlineOpen, setOfflineOpen] = useState(false);
 
   const loadOverview = async () => {
     try {
@@ -153,20 +155,32 @@ const EventOperations = ({
                 </p>
               </div>
             </div>
-            {mode !== "scanners" && !isCollaboratorView ? (
-              <button
-                type="button"
-                onClick={() => router.push(`/events/${eventId}/update`)}
-                className="inline-flex items-center justify-center gap-2 rounded-lg bg-[var(--owner-blue-500)] px-4 py-2 text-sm font-semibold text-[var(--owner-bg)]"
-              >
-                <PencilIcon size={16} />
-                Edit Event
-              </button>
-            ) : isCollaboratorView ? (
-              <span className="rounded-full bg-[#1B0B3D]/10 px-3 py-1.5 text-xs font-semibold uppercase tracking-[0.12em] text-[#7E2BD6]">
-                Collaborator · read-only
-              </span>
-            ) : null}
+            <div className="flex items-center gap-2">
+              {mode !== "scanners" ? (
+                <button
+                  type="button"
+                  onClick={() => setOfflineOpen(true)}
+                  className="inline-flex items-center justify-center gap-2 rounded-lg border border-[var(--owner-border)] bg-[var(--owner-bg)] px-3.5 py-2 text-sm font-semibold text-[var(--owner-fg-2)] hover:bg-[var(--owner-bg-subtle)]"
+                >
+                  <TicketIcon size={16} />
+                  Offline ticket
+                </button>
+              ) : null}
+              {mode !== "scanners" && !isCollaboratorView ? (
+                <button
+                  type="button"
+                  onClick={() => router.push(`/events/${eventId}/update`)}
+                  className="inline-flex items-center justify-center gap-2 rounded-lg bg-[var(--owner-blue-500)] px-4 py-2 text-sm font-semibold text-[var(--owner-bg)]"
+                >
+                  <PencilIcon size={16} />
+                  Edit Event
+                </button>
+              ) : isCollaboratorView ? (
+                <span className="rounded-full bg-[#1B0B3D]/10 px-3 py-1.5 text-xs font-semibold uppercase tracking-[0.12em] text-[#7E2BD6]">
+                  Collaborator · read-only
+                </span>
+              ) : null}
+            </div>
           </div>
         </div>
 
@@ -340,6 +354,12 @@ const EventOperations = ({
           </>
         )}
       </div>
+
+      <IssueOfflineTicketModal
+        open={offlineOpen}
+        onClose={() => setOfflineOpen(false)}
+        presetEventId={eventId}
+      />
     </EventShell>
   );
 };
