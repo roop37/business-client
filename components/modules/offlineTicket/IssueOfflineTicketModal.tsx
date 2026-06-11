@@ -76,10 +76,11 @@ export const IssueOfflineTicketModal = ({
     [events, eventId]
   );
 
-  const visibleTickets = (selectedEvent?.tickets ?? []).filter(
-    (t) => t.ticketVisible !== false
+  const visibleTickets = useMemo(
+    () => (selectedEvent?.tickets ?? []).filter((t) => t.ticketVisible !== false),
+    [selectedEvent]
   );
-  const extras = selectedEvent?.extras ?? [];
+  const extras = useMemo(() => selectedEvent?.extras ?? [], [selectedEvent]);
 
   const lines: OfflineTicketLineInput[] = useMemo(() => {
     const out: OfflineTicketLineInput[] = [];
@@ -212,7 +213,7 @@ export const IssueOfflineTicketModal = ({
                   </h3>
                   <p className="mt-1 text-sm text-owner-fg-3">
                     The ticket + QR has been created and emailed to the guest.
-                    It's now scannable at the door.
+                    It&apos;s now scannable at the door.
                   </p>
                 </>
               ) : (
