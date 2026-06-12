@@ -8,6 +8,7 @@ import {
 } from "@/components/common/owner";
 import type { BadgeTone } from "@/components/common/owner";
 import MainLayout from "@/components/layouts/mainBodyLayout";
+import useGlobalStore from "@/store/global";
 import { PermissionTypeEnum } from "@/generated/graphql";
 import { sdk } from "@/utils/graphqlClient";
 import { hasAccess } from "@/utils/hasAccess";
@@ -72,6 +73,7 @@ const sourceLabel = (s: string) =>
       : "Online";
 
 const OrdersPage = () => {
+  const openOrderReceipt = useGlobalStore((s) => s.openOrderReceipt);
   const [tab, setTab] = useState<TopTab>("orders");
   const [events, setEvents] = useState<OfflineEvent[]>([]);
   const [eventId, setEventId] = useState<string>("");
@@ -224,7 +226,11 @@ const OrdersPage = () => {
                   ordersFiltered.map((o) => {
                     const st = orderStatusLabel(o.status);
                     return (
-                      <tr key={o.orderId}>
+                      <tr
+                        key={o.orderId}
+                        onClick={() => openOrderReceipt(o.orderId)}
+                        className="cursor-pointer transition hover:bg-owner-bg-subtle"
+                      >
                         <td>
                           <div className="font-medium text-owner-fg-1">
                             {o.customerName}

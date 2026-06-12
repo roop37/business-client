@@ -77,6 +77,14 @@ type MenuState = {
   runCampaignModalEvent: { eventId: string; title: string } | null;
   openRunCampaignModal: (event: { eventId: string; title: string }) => void;
   closeRunCampaignModal: () => void;
+
+  // Order receipt modal — mounted globally so the orders page (or any
+  // surface) can open a full receipt by id via openOrderReceipt(orderId).
+  // The modal fetches the detail itself on open.
+  orderReceiptModalOpen: boolean;
+  orderReceiptId: string | null;
+  openOrderReceipt: (orderId: string) => void;
+  closeOrderReceipt: () => void;
 };
 
 const useGlobalStore = create<MenuState>((set) => ({
@@ -141,6 +149,13 @@ const useGlobalStore = create<MenuState>((set) => ({
   runCampaignModalEvent: null,
   openRunCampaignModal: (event) => set({ runCampaignModalEvent: event }),
   closeRunCampaignModal: () => set({ runCampaignModalEvent: null }),
+
+  orderReceiptModalOpen: false,
+  orderReceiptId: null,
+  openOrderReceipt: (orderId: string) =>
+    set({ orderReceiptModalOpen: true, orderReceiptId: orderId }),
+  closeOrderReceipt: () =>
+    set({ orderReceiptModalOpen: false, orderReceiptId: null }),
 }));
 
 export default useGlobalStore;

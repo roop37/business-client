@@ -93,6 +93,31 @@ export const setAutomationChannel = async (
   return data.setAutomationChannel;
 };
 
+export type AutomationEventBreakdownRow = {
+  eventId: string;
+  eventTitle: string;
+  emailsSent: number;
+  whatsappSent: number;
+  conversions: number;
+  attributedRevenue: number;
+};
+
+export const fetchAutomationEventBreakdown = async (
+  key: string
+): Promise<AutomationEventBreakdownRow[]> => {
+  const data = await client.request<{
+    automationEventBreakdown: AutomationEventBreakdownRow[];
+  }>(
+    `query ($key: String!) {
+       automationEventBreakdown(key: $key) {
+         eventId eventTitle emailsSent whatsappSent conversions attributedRevenue
+       }
+     }`,
+    { key }
+  );
+  return data.automationEventBreakdown ?? [];
+};
+
 // No DB store yet — a host-scoped suggestion log + admin review needs a
 // hoizr-shared schema / INTERNAL_* email-type republish (tracked follow-up).
 // For now the idea goes straight to the product team's inbox via the host's

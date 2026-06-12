@@ -9,8 +9,10 @@ import MainLayout from "@/components/layouts/mainBodyLayout";
 import { sdk } from "@/utils/graphqlClient";
 import {
   fetchAutomation,
+  fetchAutomationEventBreakdown,
   setAutomationActive,
   setAutomationChannel,
+  type AutomationEventBreakdownRow,
   type AutomationView,
 } from "@/utils/automationClient";
 import { ArrowLeft, Loader2, Mail, MessageCircle, Bell } from "lucide-react";
@@ -43,6 +45,7 @@ const AutomationDetailPage = () => {
   const [a, setA] = useState<AutomationView | null>(null);
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState<string | null>(null);
+  const [breakdown, setBreakdown] = useState<AutomationEventBreakdownRow[]>([]);
   const { setToastData } = useGlobalStore();
 
   useEffect(() => {
@@ -51,6 +54,9 @@ const AutomationDetailPage = () => {
       .then(setA)
       .catch(() => setA(null))
       .finally(() => setLoading(false));
+    fetchAutomationEventBreakdown(key)
+      .then(setBreakdown)
+      .catch(() => setBreakdown([]));
   }, [key]);
 
   const toggleActive = async (next: boolean) => {
@@ -122,6 +128,56 @@ const AutomationDetailPage = () => {
         <StatTile label="Revenue attributed" value={inrFormat(a.attributedRevenue)} />
         <StatTile label="Last sent" value={fmtDate(a.lastSentAt)} />
       </div>
+
+      {breakdown.length > 0 ? (
+        <Card className="mb-6 flex flex-col gap-1">
+          <h3 className="text-sm font-semibold text-owner-fg-1">
+            Performance by event
+          </h3>
+          <p className="mb-3 text-[13px] text-owner-fg-3">
+            How this automation performed for each event. Sent counts are tracked
+            from when this view was added; conversions &amp; revenue are computed
+            from attributed orders.
+          </p>
+          <div className="overflow-x-auto">
+            <table className="w-full text-left text-[13px]">
+              <thead>
+                <tr className="border-b border-owner-border text-[12px] text-owner-fg-4">
+                  <th className="py-2 pr-3 font-medium">Event</th>
+                  <th className="py-2 px-3 text-right font-medium">Emails</th>
+                  <th className="py-2 px-3 text-right font-medium">WhatsApp</th>
+                  <th className="py-2 px-3 text-right font-medium">Conversions</th>
+                  <th className="py-2 pl-3 text-right font-medium">Revenue</th>
+                </tr>
+              </thead>
+              <tbody>
+                {breakdown.map((r) => (
+                  <tr
+                    key={r.eventId}
+                    className="border-b border-owner-border-soft last:border-0"
+                  >
+                    <td className="py-2 pr-3 font-medium text-owner-fg-1">
+                      {r.eventTitle}
+                    </td>
+                    <td className="py-2 px-3 text-right text-owner-fg-2">
+                      {r.emailsSent.toLocaleString("en-IN")}
+                    </td>
+                    <td className="py-2 px-3 text-right text-owner-fg-2">
+                      {r.whatsappSent.toLocaleString("en-IN")}
+                    </td>
+                    <td className="py-2 px-3 text-right text-owner-fg-2">
+                      {r.conversions.toLocaleString("en-IN")}
+                    </td>
+                    <td className="py-2 pl-3 text-right font-medium text-owner-fg-1">
+                      {inrFormat(r.attributedRevenue)}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </Card>
+      ) : null}
 
       <Card className="flex flex-col gap-1">
         <h3 className="text-sm font-semibold text-owner-fg-1">Channels</h3>

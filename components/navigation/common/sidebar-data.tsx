@@ -10,6 +10,7 @@ import {
   QrCode,
   SettingsIcon,
   ShoppingBag,
+  TicketPercent,
   UsersRoundIcon,
   Workflow,
   type LucideIcon,
@@ -66,6 +67,13 @@ export const getSidebarList = (): TSidebarItem[] => [
       { title: "SMS", href: "/campaigns/sms", comingSoon: true },
       { title: "Instagram", href: "/campaigns/instagram", comingSoon: true },
     ],
+  },
+  {
+    title: "Coupons",
+    href: "/coupons",
+    icon: TicketPercent,
+    active: true,
+    id: "sidebar-coupons",
   },
   {
     title: "Rewards & Loyalties",

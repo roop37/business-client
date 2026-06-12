@@ -45,6 +45,9 @@ export enum AccountType {
 
 /** Types of actions performed in the system */
 export enum ActivityActionType {
+  CouponCreated = 'COUPON_CREATED',
+  CouponDeleted = 'COUPON_DELETED',
+  CouponUpdated = 'COUPON_UPDATED',
   EventCancelled = 'EVENT_CANCELLED',
   EventCreated = 'EVENT_CREATED',
   EventPublished = 'EVENT_PUBLISHED',
@@ -236,6 +239,18 @@ export type Admin = {
   role: AdminRole;
   status: AdminStatus;
   updatedAt?: Maybe<Scalars['DateTimeISO']['output']>;
+};
+
+export type AdminAutomationTemplateView = {
+  __typename?: 'AdminAutomationTemplateView';
+  channels: Array<Scalars['String']['output']>;
+  description: Scalars['String']['output'];
+  key: Scalars['String']['output'];
+  supportsWhatsApp: Scalars['Boolean']['output'];
+  title: Scalars['String']['output'];
+  whatsappTemplateId?: Maybe<Scalars['String']['output']>;
+  whatsappTemplateName?: Maybe<Scalars['String']['output']>;
+  whatsappTemplateReady: Scalars['Boolean']['output'];
 };
 
 /** Multi-select filter chip for admin Custom-target campaigns */
@@ -901,6 +916,16 @@ export enum AudienceAvailability {
   Public = 'PUBLIC'
 }
 
+export type AutomationEventBreakdownRow = {
+  __typename?: 'AutomationEventBreakdownRow';
+  attributedRevenue: Scalars['Float']['output'];
+  conversions: Scalars['Int']['output'];
+  emailsSent: Scalars['Int']['output'];
+  eventId: Scalars['String']['output'];
+  eventTitle: Scalars['String']['output'];
+  whatsappSent: Scalars['Int']['output'];
+};
+
 export type AutomationView = {
   __typename?: 'AutomationView';
   active: Scalars['Boolean']['output'];
@@ -1051,6 +1076,58 @@ export type CoordinatePointInput = {
   type: Scalars['String']['input'];
 };
 
+export type Coupon = {
+  __typename?: 'Coupon';
+  _id: Scalars['ID']['output'];
+  applicableDays?: Maybe<Array<Day>>;
+  applicableTickets?: Maybe<Array<Scalars['String']['output']>>;
+  code: Scalars['String']['output'];
+  couponUsageSalesLimit?: Maybe<Scalars['Float']['output']>;
+  couponUsageType: CouponUsageType;
+  createdAt?: Maybe<Scalars['DateTimeISO']['output']>;
+  createdBy?: Maybe<Scalars['String']['output']>;
+  description?: Maybe<Scalars['String']['output']>;
+  discountValue?: Maybe<Scalars['Float']['output']>;
+  endDate: Scalars['DateTimeISO']['output'];
+  eventId?: Maybe<Scalars['String']['output']>;
+  host: Scalars['String']['output'];
+  isActive: Scalars['Boolean']['output'];
+  maxUsage?: Maybe<Scalars['Int']['output']>;
+  maxUsagePerCustomer?: Maybe<Scalars['Int']['output']>;
+  minCartValue?: Maybe<Scalars['Float']['output']>;
+  promoCodeDiscountType: PromoDiscountType;
+  showToCustomers: Scalars['Boolean']['output'];
+  startDate: Scalars['DateTimeISO']['output'];
+  totalSalesUsed: Scalars['Float']['output'];
+  updatedAt?: Maybe<Scalars['DateTimeISO']['output']>;
+  updatedBy?: Maybe<Scalars['String']['output']>;
+  uptoAmount?: Maybe<Scalars['Float']['output']>;
+  usage: Array<CouponUsage>;
+};
+
+export type CouponUsage = {
+  __typename?: 'CouponUsage';
+  customer?: Maybe<Scalars['String']['output']>;
+  discountApplied?: Maybe<Scalars['Float']['output']>;
+  email?: Maybe<Scalars['String']['output']>;
+  name?: Maybe<Scalars['String']['output']>;
+  orderId?: Maybe<Scalars['String']['output']>;
+  phone?: Maybe<Scalars['String']['output']>;
+  saleAmount?: Maybe<Scalars['Float']['output']>;
+  usedAt: Scalars['DateTimeISO']['output'];
+};
+
+export enum CouponUsageType {
+  EntireSale = 'EntireSale',
+  FirstSignedOrder = 'FirstSignedOrder'
+}
+
+export type CouponsPaginatedResponse = {
+  __typename?: 'CouponsPaginatedResponse';
+  items: Array<Coupon>;
+  total: Scalars['Int']['output'];
+};
+
 export enum CoverType {
   CoverWithoutDrink = 'COVER_WITHOUT_DRINK',
   CoverWithDrink = 'COVER_WITH_DRINK',
@@ -1084,6 +1161,25 @@ export type CreateArtistRiderInput = {
   isPublic?: InputMaybe<Scalars['Boolean']['input']>;
   riderType: RiderType;
   title: Scalars['String']['input'];
+};
+
+export type CreateCouponInput = {
+  applicableDays?: InputMaybe<Array<Day>>;
+  applicableTickets?: InputMaybe<Array<Scalars['String']['input']>>;
+  code: Scalars['String']['input'];
+  couponUsageSalesLimit?: InputMaybe<Scalars['Float']['input']>;
+  couponUsageType?: InputMaybe<CouponUsageType>;
+  description?: InputMaybe<Scalars['String']['input']>;
+  discountValue?: InputMaybe<Scalars['Float']['input']>;
+  endDate: Scalars['DateTimeISO']['input'];
+  eventId?: InputMaybe<Scalars['String']['input']>;
+  maxUsage?: InputMaybe<Scalars['Int']['input']>;
+  maxUsagePerCustomer?: InputMaybe<Scalars['Int']['input']>;
+  minCartValue?: InputMaybe<Scalars['Float']['input']>;
+  promoCodeDiscountType: PromoDiscountType;
+  showToCustomers?: InputMaybe<Scalars['Boolean']['input']>;
+  startDate: Scalars['DateTimeISO']['input'];
+  uptoAmount?: InputMaybe<Scalars['Float']['input']>;
 };
 
 export type CreateEventInput = {
@@ -1170,6 +1266,16 @@ export type CsvExportInput = {
   fileName: Scalars['String']['input'];
   selectedRows?: InputMaybe<Array<Scalars['String']['input']>>;
 };
+
+export enum Day {
+  Friday = 'Friday',
+  Monday = 'Monday',
+  Saturday = 'Saturday',
+  Sunday = 'Sunday',
+  Thursday = 'Thursday',
+  Tuesday = 'Tuesday',
+  Wednesday = 'Wednesday'
+}
 
 export type DeviceInfo = {
   __typename?: 'DeviceInfo';
@@ -2391,6 +2497,60 @@ export enum HostMarketingReputationTier {
   Unlimited = 'UNLIMITED'
 }
 
+export type HostOrderDetail = {
+  __typename?: 'HostOrderDetail';
+  checkedIn: Scalars['Boolean']['output'];
+  couponCode?: Maybe<Scalars['String']['output']>;
+  createdAt?: Maybe<Scalars['DateTimeISO']['output']>;
+  customer: HostOrderDetailCustomer;
+  event: HostOrderDetailEvent;
+  money: HostOrderDetailMoney;
+  orderId: Scalars['String']['output'];
+  refundable: Scalars['Boolean']['output'];
+  refundedAt?: Maybe<Scalars['DateTimeISO']['output']>;
+  source: Scalars['String']['output'];
+  status: OrderStatus;
+  tickets: Array<HostOrderDetailTicketLine>;
+};
+
+export type HostOrderDetailCustomer = {
+  __typename?: 'HostOrderDetailCustomer';
+  email?: Maybe<Scalars['String']['output']>;
+  isGuest: Scalars['Boolean']['output'];
+  name?: Maybe<Scalars['String']['output']>;
+  phone?: Maybe<Scalars['String']['output']>;
+};
+
+export type HostOrderDetailEvent = {
+  __typename?: 'HostOrderDetailEvent';
+  city?: Maybe<Scalars['String']['output']>;
+  flyer?: Maybe<Scalars['String']['output']>;
+  id: Scalars['String']['output'];
+  location?: Maybe<Scalars['String']['output']>;
+  startDate?: Maybe<Scalars['DateTimeISO']['output']>;
+  title?: Maybe<Scalars['String']['output']>;
+};
+
+export type HostOrderDetailMoney = {
+  __typename?: 'HostOrderDetailMoney';
+  discount?: Maybe<Scalars['Float']['output']>;
+  platformFee: Scalars['Float']['output'];
+  platformFeeGst: Scalars['Float']['output'];
+  refundAmount?: Maybe<Scalars['Float']['output']>;
+  subtotal: Scalars['Float']['output'];
+  taxes: Scalars['Float']['output'];
+  taxesAndFees: Scalars['Float']['output'];
+  totalAmount: Scalars['Float']['output'];
+};
+
+export type HostOrderDetailTicketLine = {
+  __typename?: 'HostOrderDetailTicketLine';
+  lineTotal: Scalars['Float']['output'];
+  name: Scalars['String']['output'];
+  price: Scalars['Float']['output'];
+  qty: Scalars['Int']['output'];
+};
+
 export type HostOrderRow = {
   __typename?: 'HostOrderRow';
   checkedIn: Scalars['Boolean']['output'];
@@ -2532,6 +2692,14 @@ export type HostPushNotificationStatEntry = {
   __typename?: 'HostPushNotificationStatEntry';
   customerId: Scalars['String']['output'];
   date: Scalars['DateTimeISO']['output'];
+};
+
+export type HostRefundResult = {
+  __typename?: 'HostRefundResult';
+  orderId: Scalars['String']['output'];
+  refundAmount: Scalars['Float']['output'];
+  refundedAt?: Maybe<Scalars['DateTimeISO']['output']>;
+  status: OrderStatus;
 };
 
 export enum HostStatus {
@@ -2914,6 +3082,7 @@ export type Mutation = {
   addTeamMember: Scalars['Boolean']['output'];
   addWaitListUser: Scalars['Boolean']['output'];
   adminApproveWhatsAppTemplateReview: WhatsAppMessageTemplate;
+  adminClearAutomationTemplate: Array<AdminAutomationTemplateView>;
   adminClearOfferGenerationNegative: EventOfferGeneration;
   adminCreateWhatsAppTemplate: WhatsAppMessageTemplate;
   adminDeleteWhatsAppTemplate: Scalars['Boolean']['output'];
@@ -2930,6 +3099,7 @@ export type Mutation = {
   adminRejectPayout: Payout;
   adminRejectWhatsAppTemplateReview: WhatsAppMessageTemplate;
   adminResumePayoutSettlement: PayoutSettlement;
+  adminSetAutomationTemplate: Array<AdminAutomationTemplateView>;
   adminSubmitWhatsAppTemplateToMeta: WhatsAppTemplateSubmissionResult;
   adminTriggerRazorpaySettlementReconcile: RazorpayReconcileSummary;
   adminUpdateEvent: Event;
@@ -2960,6 +3130,7 @@ export type Mutation = {
   completeHostOnboarding: Scalars['Boolean']['output'];
   createAdminEmailCampaign: Scalars['String']['output'];
   createAiBoostPaymentOrder: AiBoostRazorpayOrderResponse;
+  createCoupon: Coupon;
   createEvent: Event;
   createHost: Scalars['Boolean']['output'];
   createHostEmailCampaign: Scalars['String']['output'];
@@ -2970,6 +3141,7 @@ export type Mutation = {
   createOfflinePaymentLink: OfflinePaymentLinkResponse;
   createScanner: ScannerCreateResponse;
   deleteAdminEmailCampaign: Scalars['Boolean']['output'];
+  deleteCoupon: Scalars['Boolean']['output'];
   deleteEvent: Scalars['Boolean']['output'];
   deleteHostCloudinaryAsset: Scalars['Boolean']['output'];
   deleteHostEmailCampaign: Scalars['Boolean']['output'];
@@ -2987,6 +3159,7 @@ export type Mutation = {
   exportAdminPayoutsReportCSV: Scalars['String']['output'];
   exportAdminTicketsReportCSV: Scalars['String']['output'];
   generateAiBoostsForEvent: EventOfferGeneration;
+  hostRefundOrder: HostRefundResult;
   hostReverseCheckIn: Scalars['Boolean']['output'];
   hostRevokeAllScannersForEvent: Scalars['Int']['output'];
   issueOfflineTicket: OfflineOrder;
@@ -3009,11 +3182,13 @@ export type Mutation = {
   startNewHostOnboarding: Scalars['Boolean']['output'];
   submitHostFeedback: Scalars['Boolean']['output'];
   submitMyWhatsAppTemplateForReview: WhatsAppMessageTemplate;
+  toggleCouponActive: Coupon;
   tokensRefresh: Scalars['Boolean']['output'];
   unbookmarkWhatsAppTemplate: Scalars['Boolean']['output'];
   updateAdmin: Scalars['Boolean']['output'];
   updateAdminEmailCampaign: Scalars['Boolean']['output'];
   updateConfig: Scalars['Boolean']['output'];
+  updateCoupon: Coupon;
   updateEvent: Event;
   updateEventCategoryStatus: Scalars['Boolean']['output'];
   updateEventFeeSettlementMode: EventFeeSettlementMode;
@@ -3103,6 +3278,11 @@ export type MutationAdminApproveWhatsAppTemplateReviewArgs = {
 };
 
 
+export type MutationAdminClearAutomationTemplateArgs = {
+  automationKey: Scalars['String']['input'];
+};
+
+
 export type MutationAdminClearOfferGenerationNegativeArgs = {
   generationId: Scalars['String']['input'];
 };
@@ -3185,6 +3365,12 @@ export type MutationAdminRejectWhatsAppTemplateReviewArgs = {
 
 export type MutationAdminResumePayoutSettlementArgs = {
   settlementId: Scalars['String']['input'];
+};
+
+
+export type MutationAdminSetAutomationTemplateArgs = {
+  automationKey: Scalars['String']['input'];
+  whatsappTemplateId: Scalars['String']['input'];
 };
 
 
@@ -3326,6 +3512,11 @@ export type MutationCreateAiBoostPaymentOrderArgs = {
 };
 
 
+export type MutationCreateCouponArgs = {
+  input: CreateCouponInput;
+};
+
+
 export type MutationCreateEventArgs = {
   input: CreateEventInput;
 };
@@ -3373,6 +3564,11 @@ export type MutationCreateScannerArgs = {
 
 export type MutationDeleteAdminEmailCampaignArgs = {
   campaignId: Scalars['String']['input'];
+};
+
+
+export type MutationDeleteCouponArgs = {
+  couponId: Scalars['String']['input'];
 };
 
 
@@ -3458,6 +3654,11 @@ export type MutationExportAdminTicketsReportCsvArgs = {
 
 export type MutationGenerateAiBoostsForEventArgs = {
   input: GenerateAiBoostsInput;
+};
+
+
+export type MutationHostRefundOrderArgs = {
+  orderId: Scalars['String']['input'];
 };
 
 
@@ -3574,6 +3775,12 @@ export type MutationSubmitMyWhatsAppTemplateForReviewArgs = {
 };
 
 
+export type MutationToggleCouponActiveArgs = {
+  active: Scalars['Boolean']['input'];
+  couponId: Scalars['String']['input'];
+};
+
+
 export type MutationUnbookmarkWhatsAppTemplateArgs = {
   templateId: Scalars['String']['input'];
 };
@@ -3592,6 +3799,11 @@ export type MutationUpdateAdminEmailCampaignArgs = {
 export type MutationUpdateConfigArgs = {
   id: Scalars['String']['input'];
   input: UpdateConfigInput;
+};
+
+
+export type MutationUpdateCouponArgs = {
+  input: UpdateCouponInput;
 };
 
 
@@ -4078,6 +4290,12 @@ export type ProhibitedItemMaster = {
   value: Scalars['String']['output'];
 };
 
+export enum PromoDiscountType {
+  FixedAmount = 'FixedAmount',
+  Free = 'Free',
+  Percentage = 'Percentage'
+}
+
 export type PublicArtistEvent = {
   __typename?: 'PublicArtistEvent';
   city?: Maybe<Scalars['String']['output']>;
@@ -4106,6 +4324,7 @@ export type PublicArtistListResponse = {
 
 export type Query = {
   __typename?: 'Query';
+  adminAutomationTemplates: Array<AdminAutomationTemplateView>;
   adminCampaignsReport: AdminCampaignsReport;
   adminCsvExport: Scalars['String']['output'];
   adminCustomersReport: AdminCustomersReport;
@@ -4146,7 +4365,9 @@ export type Query = {
   artistSlugAvailable: Scalars['Boolean']['output'];
   artistSuggestSlug: Scalars['String']['output'];
   automation: AutomationView;
+  automationEventBreakdown: Array<AutomationEventBreakdownRow>;
   changeUserStatus: Scalars['Boolean']['output'];
+  couponById: Coupon;
   deleteTeamMember: Scalars['Boolean']['output'];
   disable2FA: Scalars['Boolean']['output'];
   enable2FA: Scalars['String']['output'];
@@ -4209,6 +4430,7 @@ export type Query = {
   hostGetPayoutStatementUrl: SignedPdfUrl;
   hostListEventScans: HostEventScansPaginatedResponse;
   hostListPayoutSettlements: PayoutSettlementPaginatedResponse;
+  hostOrderDetail: HostOrderDetail;
   hostOrders: HostOrdersResponse;
   hostPayoutAccounts: Array<HostPayoutAccount>;
   isMultiAccountUser: Scalars['Boolean']['output'];
@@ -4219,6 +4441,7 @@ export type Query = {
   meUser?: Maybe<User>;
   meUserJourney: UserJourney;
   myAutomations: AutomationsResponse;
+  myCoupons: CouponsPaginatedResponse;
   myMarketingCreditLedger: MarketingCreditLedgerResponse;
   myMarketingReputation: HostMarketingLimitObject;
   myOfflineOrders: OfflineOrdersPaginatedResponse;
@@ -4427,8 +4650,18 @@ export type QueryAutomationArgs = {
 };
 
 
+export type QueryAutomationEventBreakdownArgs = {
+  key: Scalars['String']['input'];
+};
+
+
 export type QueryChangeUserStatusArgs = {
   input: UserStatusChangeInput;
+};
+
+
+export type QueryCouponByIdArgs = {
+  couponId: Scalars['String']['input'];
 };
 
 
@@ -4641,6 +4874,11 @@ export type QueryHostListPayoutSettlementsArgs = {
 };
 
 
+export type QueryHostOrderDetailArgs = {
+  orderId: Scalars['String']['input'];
+};
+
+
 export type QueryHostOrdersArgs = {
   eventId?: InputMaybe<Scalars['String']['input']>;
   page?: InputMaybe<Scalars['Int']['input']>;
@@ -4655,6 +4893,11 @@ export type QueryListScannersForEventArgs = {
 
 export type QueryMarkWalkthroughDoneArgs = {
   input: MarkWalkthroughDoneInput;
+};
+
+
+export type QueryMyCouponsArgs = {
+  pagination?: InputMaybe<PaginationInput>;
 };
 
 
@@ -5051,6 +5294,26 @@ export type UpdateConfigInput = {
   numVal?: InputMaybe<Scalars['Float']['input']>;
   textVal?: InputMaybe<Scalars['String']['input']>;
   valueType: ConfigValueEnum;
+};
+
+export type UpdateCouponInput = {
+  applicableDays?: InputMaybe<Array<Day>>;
+  applicableTickets?: InputMaybe<Array<Scalars['String']['input']>>;
+  couponId: Scalars['ID']['input'];
+  couponUsageSalesLimit?: InputMaybe<Scalars['Float']['input']>;
+  couponUsageType?: InputMaybe<CouponUsageType>;
+  description?: InputMaybe<Scalars['String']['input']>;
+  discountValue?: InputMaybe<Scalars['Float']['input']>;
+  endDate?: InputMaybe<Scalars['DateTimeISO']['input']>;
+  eventId?: InputMaybe<Scalars['String']['input']>;
+  isActive?: InputMaybe<Scalars['Boolean']['input']>;
+  maxUsage?: InputMaybe<Scalars['Int']['input']>;
+  maxUsagePerCustomer?: InputMaybe<Scalars['Int']['input']>;
+  minCartValue?: InputMaybe<Scalars['Float']['input']>;
+  promoCodeDiscountType?: InputMaybe<PromoDiscountType>;
+  showToCustomers?: InputMaybe<Scalars['Boolean']['input']>;
+  startDate?: InputMaybe<Scalars['DateTimeISO']['input']>;
+  uptoAmount?: InputMaybe<Scalars['Float']['input']>;
 };
 
 export type UpdateEventTagInput = {

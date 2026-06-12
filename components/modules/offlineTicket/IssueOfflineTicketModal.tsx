@@ -109,7 +109,8 @@ export const IssueOfflineTicketModal = ({
   }, [visibleTickets, extras, ticketQty, extraQty]);
 
   const total = lines.reduce((s, l) => s + (l.unitPrice ?? 0) * l.quantity, 0);
-  const validPhone = phone.trim().length >= 8;
+  // Indian mobile — exactly 10 digits, same as login / signup.
+  const validPhone = /^\d{10}$/.test(phone.trim());
   const canSubmit = !!eventId && lines.length > 0 && validPhone && !submitting;
 
   const reset = () => {
@@ -326,7 +327,17 @@ export const IssueOfflineTicketModal = ({
                 <Input value={email} onChange={setEmail} placeholder="guest@email.com" type="email" />
               </Field>
               <Field label="Phone">
-                <Input value={phone} onChange={setPhone} placeholder="98765 43210" type="tel" />
+                <input
+                  type="tel"
+                  inputMode="numeric"
+                  maxLength={10}
+                  value={phone}
+                  placeholder="9876543210"
+                  onChange={(e) =>
+                    setPhone(e.target.value.replace(/\D/g, "").slice(0, 10))
+                  }
+                  className="h-10 w-full rounded-owner-md border border-owner-border bg-owner-bg px-3 text-sm text-owner-fg-1 outline-none transition focus:border-owner-blue-200"
+                />
               </Field>
 
               {/* Mode */}
