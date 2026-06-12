@@ -51,6 +51,8 @@ export enum ActivityActionType {
   EventUpdated = 'EVENT_UPDATED',
   HostSettingsUpdated = 'HOST_SETTINGS_UPDATED',
   LoyaltySettingsUpdated = 'LOYALTY_SETTINGS_UPDATED',
+  OfflinePaymentLinkCreated = 'OFFLINE_PAYMENT_LINK_CREATED',
+  OfflineTicketIssued = 'OFFLINE_TICKET_ISSUED',
   PayoutAdded = 'PAYOUT_ADDED',
   PayoutRejected = 'PAYOUT_REJECTED',
   PayoutVerified = 'PAYOUT_VERIFIED',
@@ -140,7 +142,7 @@ export type AddHostWhatsAppCampaignInput = {
   ctaSlug?: InputMaybe<Scalars['String']['input']>;
   headerMediaUrl?: InputMaybe<Scalars['String']['input']>;
   objectiveTag?: InputMaybe<Scalars['String']['input']>;
-  templateId: Scalars['String']['input'];
+  templateId?: InputMaybe<Scalars['String']['input']>;
   templateVariables?: InputMaybe<Array<HostWhatsAppCampaignVariableInput>>;
 };
 
@@ -1507,6 +1509,22 @@ export type EventLineupArtistInput = {
   youtubeLink?: InputMaybe<Scalars['String']['input']>;
 };
 
+export type EventManageCollaborator = {
+  __typename?: 'EventManageCollaborator';
+  allowIssuingOfflineTickets?: Maybe<Scalars['Boolean']['output']>;
+  businessLinkId?: Maybe<Scalars['String']['output']>;
+  canCreateOffers?: Maybe<Scalars['Boolean']['output']>;
+  canRunCampaigns?: Maybe<Scalars['Boolean']['output']>;
+  canSeeMetrics?: Maybe<Scalars['Boolean']['output']>;
+  collaborationStatus?: Maybe<Scalars['String']['output']>;
+  customerListShared?: Maybe<Scalars['Boolean']['output']>;
+  hideOnEventPage?: Maybe<Scalars['Boolean']['output']>;
+  logo?: Maybe<Scalars['String']['output']>;
+  name: Scalars['String']['output'];
+  requestCustomerListAccess?: Maybe<Scalars['Boolean']['output']>;
+  sendTransactionalMails?: Maybe<Scalars['Boolean']['output']>;
+};
+
 export type EventManageOverview = {
   __typename?: 'EventManageOverview';
   _id: Scalars['String']['output'];
@@ -1515,6 +1533,7 @@ export type EventManageOverview = {
   canRunCampaigns?: Maybe<Scalars['Boolean']['output']>;
   canSeeMetrics?: Maybe<Scalars['Boolean']['output']>;
   city?: Maybe<Scalars['String']['output']>;
+  collaborators?: Maybe<Array<EventManageCollaborator>>;
   endDate?: Maybe<Scalars['DateTimeISO']['output']>;
   eventFlyer?: Maybe<Scalars['String']['output']>;
   feeSettlementMode?: Maybe<EventFeeSettlementMode>;
@@ -2551,7 +2570,7 @@ export type HostWhatsAppCampaign = {
   statusChangeHistory?: Maybe<Array<HostWhatsAppCampaignStatusHistoryItem>>;
   target?: Maybe<HostEmailTargetType>;
   targetCount?: Maybe<Scalars['Int']['output']>;
-  templateId: Scalars['String']['output'];
+  templateId?: Maybe<Scalars['String']['output']>;
   templateLanguageSnapshot?: Maybe<Scalars['String']['output']>;
   templateSlugSnapshot?: Maybe<Scalars['String']['output']>;
   templateVariables: Array<HostWhatsAppCampaignVariable>;
@@ -6019,14 +6038,14 @@ export type GetAllHostWhatsAppCampaignsQueryVariables = Exact<{
 }>;
 
 
-export type GetAllHostWhatsAppCampaignsQuery = { __typename?: 'Query', getAllHostWhatsAppCampaigns: { __typename?: 'HostWhatsAppCampaignsPaginatedResponse', total: number, items: Array<{ __typename?: 'HostWhatsAppCampaign', _id: string, businessId: string, hostId?: string | null, campaignName: string, objectiveTag?: string | null, templateId: string, templateSlugSnapshot?: string | null, templateLanguageSnapshot?: string | null, headerMediaUrl?: string | null, ctaSlug?: string | null, target?: HostEmailTargetType | null, eventId?: string | null, csvDataUrl?: string | null, filters?: Array<HostCampaignAudienceFilter> | null, targetCount?: number | null, status?: HostWhatsAppCampaignStatus | null, publicationStatus?: HostWhatsAppCampaignPublicationStatus | null, scheduleType?: HostWhatsAppCampaignScheduleType | null, scheduleTime?: any | null, createdAt?: any | null, updatedAt?: any | null, templateVariables: Array<{ __typename?: 'HostWhatsAppCampaignVariable', position: number, value: string }>, stats?: { __typename?: 'HostWhatsAppCampaignStats', messagesSent: number, messagesSyncFailed: number, messagesDelivered: number, messagesRead: number, messagesFailed: number } | null, statusChangeHistory?: Array<{ __typename?: 'HostWhatsAppCampaignStatusHistoryItem', status: HostWhatsAppCampaignStatus, timestamp?: any | null }> | null }> } };
+export type GetAllHostWhatsAppCampaignsQuery = { __typename?: 'Query', getAllHostWhatsAppCampaigns: { __typename?: 'HostWhatsAppCampaignsPaginatedResponse', total: number, items: Array<{ __typename?: 'HostWhatsAppCampaign', _id: string, businessId: string, hostId?: string | null, campaignName: string, objectiveTag?: string | null, templateId?: string | null, templateSlugSnapshot?: string | null, templateLanguageSnapshot?: string | null, headerMediaUrl?: string | null, ctaSlug?: string | null, target?: HostEmailTargetType | null, eventId?: string | null, csvDataUrl?: string | null, filters?: Array<HostCampaignAudienceFilter> | null, targetCount?: number | null, status?: HostWhatsAppCampaignStatus | null, publicationStatus?: HostWhatsAppCampaignPublicationStatus | null, scheduleType?: HostWhatsAppCampaignScheduleType | null, scheduleTime?: any | null, createdAt?: any | null, updatedAt?: any | null, templateVariables: Array<{ __typename?: 'HostWhatsAppCampaignVariable', position: number, value: string }>, stats?: { __typename?: 'HostWhatsAppCampaignStats', messagesSent: number, messagesSyncFailed: number, messagesDelivered: number, messagesRead: number, messagesFailed: number } | null, statusChangeHistory?: Array<{ __typename?: 'HostWhatsAppCampaignStatusHistoryItem', status: HostWhatsAppCampaignStatus, timestamp?: any | null }> | null }> } };
 
 export type FetchHostWhatsAppCampaignByIdQueryVariables = Exact<{
   campaignId: Scalars['String']['input'];
 }>;
 
 
-export type FetchHostWhatsAppCampaignByIdQuery = { __typename?: 'Query', fetchHostWhatsAppCampaignById: { __typename?: 'HostWhatsAppCampaign', _id: string, campaignName: string, objectiveTag?: string | null, templateId: string, templateSlugSnapshot?: string | null, templateLanguageSnapshot?: string | null, headerMediaUrl?: string | null, ctaSlug?: string | null, target?: HostEmailTargetType | null, eventId?: string | null, csvDataUrl?: string | null, filters?: Array<HostCampaignAudienceFilter> | null, targetCount?: number | null, status?: HostWhatsAppCampaignStatus | null, publicationStatus?: HostWhatsAppCampaignPublicationStatus | null, scheduleType?: HostWhatsAppCampaignScheduleType | null, scheduleTime?: any | null, templateVariables: Array<{ __typename?: 'HostWhatsAppCampaignVariable', position: number, value: string }>, stats?: { __typename?: 'HostWhatsAppCampaignStats', messagesSent: number, messagesSyncFailed: number, messagesDelivered: number, messagesRead: number, messagesFailed: number } | null } };
+export type FetchHostWhatsAppCampaignByIdQuery = { __typename?: 'Query', fetchHostWhatsAppCampaignById: { __typename?: 'HostWhatsAppCampaign', _id: string, campaignName: string, objectiveTag?: string | null, templateId?: string | null, templateSlugSnapshot?: string | null, templateLanguageSnapshot?: string | null, headerMediaUrl?: string | null, ctaSlug?: string | null, target?: HostEmailTargetType | null, eventId?: string | null, csvDataUrl?: string | null, filters?: Array<HostCampaignAudienceFilter> | null, targetCount?: number | null, status?: HostWhatsAppCampaignStatus | null, publicationStatus?: HostWhatsAppCampaignPublicationStatus | null, scheduleType?: HostWhatsAppCampaignScheduleType | null, scheduleTime?: any | null, templateVariables: Array<{ __typename?: 'HostWhatsAppCampaignVariable', position: number, value: string }>, stats?: { __typename?: 'HostWhatsAppCampaignStats', messagesSent: number, messagesSyncFailed: number, messagesDelivered: number, messagesRead: number, messagesFailed: number } | null } };
 
 export type GetHostWhatsAppAttendeesTargetCountQueryVariables = Exact<{
   target?: InputMaybe<HostEmailTargetType>;

@@ -766,6 +766,11 @@ const CustomCampaigns: NextPageWithLayout = () => {
                   setSearchFilter(e);
                 }}
               />
+              <div className="rounded-owner-md border border-[var(--owner-border)] bg-[var(--owner-bg)] p-3.5 text-[12px] leading-5 text-[var(--owner-fg-3)]">
+                A paused campaign ran out of marketing credit mid-send. Top up
+                your balance and hit <strong>Resume</strong> — only the customers
+                who haven&apos;t been messaged yet will receive it.
+              </div>
             </div>
           ) : (
             <div className="bg-white text-black rounded-xl p-8 flex flex-col items-center justify-center min-h-[300px] space-y-4 border border-gray-300 shadow-sm">

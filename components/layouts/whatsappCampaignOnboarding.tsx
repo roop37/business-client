@@ -10,6 +10,7 @@ import {
   updateWhatsAppCampaign,
 } from "@/utils/whatsappCampaignClient";
 import { fetchWhatsAppTemplateById } from "@/utils/whatsappTemplateClient";
+import { previewLabelForValue } from "@/utils/whatsappMergeTags";
 import { extractErrorMessage } from "@/utils/utilFUncs";
 import { Loader2 } from "lucide-react";
 import { useRouter } from "next/router";
@@ -48,11 +49,14 @@ const WhatsAppCampaignOnboardingLayout = ({
     (s) => s.setOriginalCampaign
   );
 
-  const [submitting, setSubmitting] = useState(false);
+  const [submitting, setSubmitting] = useState<null | "next" | "draft">(null);
   const [confirmOpen, setConfirmOpen] = useState(false);
   const hydratedFor = useRef<string | null>(null);
 
-  // ── Edit hydration ────────────────────────────────────────────────
+  // ── Edit / refresh hydration ──────────────────────────────────────
+  // The campaign id lives in the URL (`?editId=`) from step 1 onward, so a
+  // back/forward navigation or a full page reload rehydrates the journey from
+  // the server — state is never lost. Mirrors the email journey.
   useEffect(() => {
     if (!editId || hydratedFor.current === editId) return;
     if (store.campaignId === editId) {
@@ -74,12 +78,8 @@ const WhatsAppCampaignOnboardingLayout = ({
         store.setEventId(c.eventId ?? "");
         store.setFilters(c.filters ?? []);
         store.setTargetCount(c.targetCount ?? 0);
-        store.setScheduleType(
-          (c.scheduleType as "Now" | "Later") ?? "Now"
-        );
-        store.setScheduleDate(
-          c.scheduleTime ? new Date(c.scheduleTime) : null
-        );
+        store.setScheduleType((c.scheduleType as "Now" | "Later") ?? "Now");
+        store.setScheduleDate(c.scheduleTime ? new Date(c.scheduleTime) : null);
         store.setPublicationStatus(
           (c.publicationStatus as "Drafted" | "Active") ?? "Drafted"
         );
@@ -94,8 +94,9 @@ const WhatsAppCampaignOnboardingLayout = ({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [editId]);
 
+  const idForUrl = editId ?? store.campaignId ?? undefined;
   const goTo = (id: StepId) => {
-    const q = editId ? `?editId=${encodeURIComponent(editId)}` : "";
+    const q = idForUrl ? `?editId=${encodeURIComponent(idForUrl)}` : "";
     router.push(`/campaigns/whatsapp/onboarding/${id}${q}`);
   };
 
@@ -114,37 +115,76 @@ const WhatsAppCampaignOnboardingLayout = ({
     return (t.variables ?? []).every((v) => (byPos.get(v.position) ?? "").trim());
   }, [store.selectedTemplate, store.templateVariables]);
 
-  // Ensure a campaign row exists (created at the Content step, where a
-  // template — required by the backend — is finally known).
+  // Create the Drafted campaign as soon as it has a name (step 1), so it gets
+  // a persisted id immediately and the journey is keyed to a real document.
   const ensureCampaign = useCallback(async (): Promise<string> => {
     if (store.campaignId) return store.campaignId;
     const id = await createWhatsAppCampaign({
       campaignName: store.campaignName.trim(),
-      templateId: store.templateId,
-      templateVariables: store.templateVariables,
-      headerMediaUrl: store.headerMediaUrl.trim() || undefined,
       objectiveTag: store.objectiveTag.trim() || undefined,
     });
     store.setCampaignId(id);
     return id;
   }, [store]);
 
+  // Persist whatever the current step owns. Disjoint per step, so we send only
+  // that step's fields — no risk of clobbering other steps.
+  const saveCurrentStep = useCallback(
+    async (id: string): Promise<void> => {
+      if (step === "basics") {
+        await updateWhatsAppCampaign({
+          campaignId: id,
+          campaignName: store.campaignName.trim(),
+          objectiveTag: store.objectiveTag.trim() || undefined,
+        });
+      } else if (step === "content") {
+        await updateWhatsAppCampaign({
+          campaignId: id,
+          templateId: store.templateId || undefined,
+          templateVariables: store.templateVariables,
+          headerMediaUrl: store.headerMediaUrl.trim() || undefined,
+        });
+      } else if (step === "audience") {
+        await updateWhatsAppCampaign({
+          campaignId: id,
+          target: store.target,
+          eventId:
+            store.target === "EventSpecific" ? store.eventId.trim() : undefined,
+          filters: store.target === "CustomCustomer" ? store.filters : [],
+          targetCount: store.targetCount,
+        });
+      } else if (step === "schedule") {
+        await updateWhatsAppCampaign({
+          campaignId: id,
+          scheduleType: store.scheduleType,
+          scheduleTime:
+            store.scheduleType === "Later" && store.scheduleDate
+              ? store.scheduleDate.toISOString()
+              : undefined,
+        });
+      }
+    },
+    [step, store]
+  );
+
   const handleContinue = async () => {
-    setSubmitting(true);
+    setSubmitting("next");
     try {
       if (step === "basics") {
         if (!store.campaignName.trim()) {
           setToastData({ type: "error", message: "Name your campaign first." });
           return;
         }
-        if (store.campaignId) {
-          await updateWhatsAppCampaign({
-            campaignId: store.campaignId,
-            campaignName: store.campaignName.trim(),
-            objectiveTag: store.objectiveTag.trim() || undefined,
-          });
+        const id = await ensureCampaign();
+        await saveCurrentStep(id);
+        // Thread the id into the URL so back/forward/reload rehydrate.
+        if (!editId) {
+          router.replace(
+            `/campaigns/whatsapp/onboarding/content?editId=${encodeURIComponent(id)}`
+          );
+        } else {
+          goTo("content");
         }
-        goTo("content");
         return;
       }
 
@@ -161,14 +201,7 @@ const WhatsAppCampaignOnboardingLayout = ({
           return;
         }
         const id = await ensureCampaign();
-        if (store.campaignId) {
-          await updateWhatsAppCampaign({
-            campaignId: id,
-            templateId: store.templateId,
-            templateVariables: store.templateVariables,
-            headerMediaUrl: store.headerMediaUrl.trim() || undefined,
-          });
-        }
+        await saveCurrentStep(id);
         goTo("audience");
         return;
       }
@@ -179,19 +212,11 @@ const WhatsAppCampaignOnboardingLayout = ({
           return;
         }
         const id = await ensureCampaign();
-        await updateWhatsAppCampaign({
-          campaignId: id,
-          target: store.target,
-          eventId:
-            store.target === "EventSpecific" ? store.eventId.trim() : undefined,
-          filters: store.target === "CustomCustomer" ? store.filters : [],
-          targetCount: store.targetCount,
-        });
+        await saveCurrentStep(id);
         goTo("schedule");
         return;
       }
 
-      // schedule → open confirm
       if (step === "schedule") {
         if (store.scheduleType === "Later" && !store.scheduleDate) {
           setToastData({
@@ -205,12 +230,34 @@ const WhatsAppCampaignOnboardingLayout = ({
     } catch (err) {
       setToastData({ type: "error", message: extractErrorMessage(err) });
     } finally {
-      setSubmitting(false);
+      setSubmitting(null);
+    }
+  };
+
+  const saveDraft = async () => {
+    if (!store.campaignName.trim()) {
+      setToastData({
+        type: "error",
+        message: "Add a campaign name before saving a draft.",
+      });
+      return;
+    }
+    setSubmitting("draft");
+    try {
+      const id = await ensureCampaign();
+      await saveCurrentStep(id);
+      setToastData({ type: "success", message: "Draft saved." });
+      store.resetState();
+      router.push("/campaigns/whatsapp");
+    } catch (err) {
+      setToastData({ type: "error", message: extractErrorMessage(err) });
+    } finally {
+      setSubmitting(null);
     }
   };
 
   const publish = async () => {
-    setSubmitting(true);
+    setSubmitting("next");
     try {
       const id = await ensureCampaign();
       await updateWhatsAppCampaign({
@@ -239,8 +286,8 @@ const WhatsAppCampaignOnboardingLayout = ({
     } catch (err) {
       const message = extractErrorMessage(err);
       setConfirmOpen(false);
-      // Insufficient marketing credit → open the global top-up modal
-      // (mounted at app root) pre-filled with the shortfall the server quoted.
+      // Insufficient credit → open the global top-up modal pre-filled with the
+      // shortfall the server quoted (the modal is mounted at app root).
       if (/insufficient marketing credit/i.test(message)) {
         const m = message.match(/top up ₹([\d,.]+)\s*more/i);
         const shortfall = m ? Number(m[1].replace(/,/g, "")) : 0;
@@ -254,7 +301,7 @@ const WhatsAppCampaignOnboardingLayout = ({
         setToastData({ type: "error", message });
       }
     } finally {
-      setSubmitting(false);
+      setSubmitting(null);
     }
   };
 
@@ -266,9 +313,9 @@ const WhatsAppCampaignOnboardingLayout = ({
       : "Continue";
 
   return (
-    <div className="min-h-screen bg-owner-bg-subtle font-owner">
+    <div className="flex h-screen flex-col bg-owner-bg-subtle font-owner">
       {/* Header */}
-      <div className="sticky top-0 z-10 border-b border-owner-border bg-owner-bg">
+      <div className="shrink-0 border-b border-owner-border bg-owner-bg">
         <div className="mx-auto flex max-w-6xl items-center gap-4 px-6 py-3">
           <button
             type="button"
@@ -277,7 +324,7 @@ const WhatsAppCampaignOnboardingLayout = ({
           >
             <LuArrowLeft size={16} /> Back
           </button>
-          <div className="ml-2 flex items-center gap-2">
+          <div className="ml-2 hidden items-center gap-2 md:flex">
             {STEPS.map((s, i) => (
               <div key={s.id} className="flex items-center gap-2">
                 <div
@@ -298,7 +345,7 @@ const WhatsAppCampaignOnboardingLayout = ({
                   >
                     {i + 1}
                   </span>
-                  <span className="hidden sm:inline">{s.title}</span>
+                  <span>{s.title}</span>
                 </div>
                 {i < STEPS.length - 1 ? (
                   <span className="h-px w-4 bg-owner-border" />
@@ -312,34 +359,55 @@ const WhatsAppCampaignOnboardingLayout = ({
         </div>
       </div>
 
-      {/* Body: form + live preview */}
-      <div className="mx-auto grid max-w-6xl gap-6 px-6 py-6 lg:grid-cols-[1fr_360px]">
-        <div className="rounded-owner-lg border border-owner-border bg-owner-bg p-5">
-          {children}
-        </div>
-        <div className="lg:sticky lg:top-20 lg:self-start">
-          <WhatsAppTemplatePreview
-            template={store.selectedTemplate}
-            variables={store.templateVariables}
-            headerMediaUrl={store.headerMediaUrl}
-          />
+      {/* Body: scrollable form + live preview */}
+      <div className="min-h-0 flex-1 overflow-y-auto">
+        <div className="mx-auto grid max-w-6xl gap-6 px-6 py-6 lg:grid-cols-[1fr_360px]">
+          <div className="rounded-owner-lg border border-owner-border bg-owner-bg p-5">
+            {children}
+          </div>
+          <div className="lg:sticky lg:top-0 lg:self-start">
+            <WhatsAppTemplatePreview
+              template={store.selectedTemplate}
+              // Show friendly labels for dynamic customer tokens (e.g.
+              // "Customer first name") instead of the raw {{...}} token.
+              variables={store.templateVariables.map((v) => ({
+                ...v,
+                value: previewLabelForValue(v.value),
+              }))}
+              headerMediaUrl={store.headerMediaUrl}
+            />
+          </div>
         </div>
       </div>
 
-      {/* Footer nav */}
-      <div className="sticky bottom-0 border-t border-owner-border bg-owner-bg">
-        <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-3">
-          <OwnerButton variant="secondary" onClick={back} disabled={submitting}>
+      {/* Footer nav — pinned to the viewport bottom */}
+      <div className="shrink-0 border-t border-owner-border bg-owner-bg">
+        <div className="mx-auto flex max-w-6xl items-center justify-between gap-2 px-6 py-3">
+          <OwnerButton variant="secondary" onClick={back} disabled={!!submitting}>
             {stepIndex === 0 ? "Cancel" : "Back"}
           </OwnerButton>
-          <OwnerButton
-            variant="primary"
-            onClick={handleContinue}
-            disabled={submitting}
-          >
-            {submitting ? <Loader2 size={14} className="animate-spin" /> : null}
-            {continueLabel}
-          </OwnerButton>
+          <div className="flex items-center gap-2">
+            <OwnerButton
+              variant="secondary"
+              onClick={saveDraft}
+              disabled={!!submitting}
+            >
+              {submitting === "draft" ? (
+                <Loader2 size={14} className="animate-spin" />
+              ) : null}
+              Save as draft
+            </OwnerButton>
+            <OwnerButton
+              variant="primary"
+              onClick={handleContinue}
+              disabled={!!submitting}
+            >
+              {submitting === "next" ? (
+                <Loader2 size={14} className="animate-spin" />
+              ) : null}
+              {continueLabel}
+            </OwnerButton>
+          </div>
         </div>
       </div>
 
@@ -362,12 +430,16 @@ const WhatsAppCampaignOnboardingLayout = ({
               <OwnerButton
                 variant="secondary"
                 onClick={() => setConfirmOpen(false)}
-                disabled={submitting}
+                disabled={!!submitting}
               >
                 Not yet
               </OwnerButton>
-              <OwnerButton variant="primary" onClick={publish} disabled={submitting}>
-                {submitting ? (
+              <OwnerButton
+                variant="primary"
+                onClick={publish}
+                disabled={!!submitting}
+              >
+                {submitting === "next" ? (
                   <Loader2 size={14} className="animate-spin" />
                 ) : null}
                 {store.scheduleType === "Now" ? "Send now" : "Schedule"}

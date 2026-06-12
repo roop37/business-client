@@ -3,6 +3,7 @@ import {
   CalendarDaysIcon,
   ChartColumn,
   CreditCard,
+  History,
   LayoutDashboard,
   MegaphoneIcon,
   MessageSquareHeart,
@@ -146,6 +147,13 @@ export const getSidebarList = (): TSidebarItem[] => [
     icon: UsersRoundIcon,
     active: true,
     id: "sidebar-team",
+  },
+  {
+    title: "Activity Log",
+    href: "/teams/activity-log",
+    icon: History,
+    active: true,
+    id: "sidebar-activity-log",
   },
   {
     title: "Settings",

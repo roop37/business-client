@@ -514,6 +514,20 @@ Object.assign(sdk, {
               hostPayout
             }
             feeSettlementMode
+            collaborators {
+              name
+              businessLinkId
+              logo
+              collaborationStatus
+              canSeeMetrics
+              canRunCampaigns
+              canCreateOffers
+              requestCustomerListAccess
+              customerListShared
+              hideOnEventPage
+              allowIssuingOfflineTickets
+              sendTransactionalMails
+            }
           }
         }
       `,
