@@ -106,7 +106,9 @@ export type WhatsAppCampaign = {
 
 export type AddWhatsAppCampaignInput = {
   campaignName: string;
-  templateId: string;
+  // Optional: the journey creates the Drafted campaign with just a name at
+  // step 1 (so it gets a persisted id), then attaches the template at Content.
+  templateId?: string;
   templateVariables?: WhatsAppCampaignVariable[];
   headerMediaUrl?: string;
   ctaSlug?: string;

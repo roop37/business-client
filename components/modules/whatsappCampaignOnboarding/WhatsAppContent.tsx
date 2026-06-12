@@ -1,44 +1,32 @@
 "use client";
 
-import { Badge, type BadgeTone, OwnerButton } from "@/components/common/owner";
-import useWhatsappCampaignStore from "@/store/whatsappCampaignStore";
+import { Badge, OwnerButton } from "@/components/common/owner";
 import useGlobalStore from "@/store/global";
+import useWhatsappCampaignStore from "@/store/whatsappCampaignStore";
 import { extractErrorMessage } from "@/utils/utilFUncs";
 import {
   bookmarkWhatsAppTemplate,
+  fetchMyPublishedEvents,
   fetchMyWhatsAppTemplateBookmarkIds,
-  fetchMyWhatsAppTemplateBookmarks,
-  fetchMyWhatsAppTemplates,
   fetchSelectableWhatsAppTemplates,
   unbookmarkWhatsAppTemplate,
   type WhatsAppMessageTemplate,
+  type WhatsAppPrefillEvent,
 } from "@/utils/whatsappTemplateClient";
-import { PencilLine, Sparkles, Star } from "lucide-react";
+import {
+  CUSTOM_TAG_KEY,
+  MERGE_TAGS,
+  resolveTagValue,
+  tagKeyForValue,
+} from "@/utils/whatsappMergeTags";
+import { Star } from "lucide-react";
 import { useCallback, useEffect, useMemo, useState } from "react";
-import WhatsAppTemplateAuthorForm from "./WhatsAppTemplateAuthorForm";
-import WhatsAppTemplateRequestForm from "./WhatsAppTemplateRequestForm";
-
-type Tab = "library" | "mine" | "bookmarked";
-type Mode = "picker" | "author" | "request";
+import WhatsAppMediaUpload from "./WhatsAppMediaUpload";
 
 const inputCls =
   "h-10 w-full rounded-owner-md border border-owner-border bg-owner-bg px-3 text-[13px] outline-none focus:border-owner-blue-200 focus:ring-2 focus:ring-owner-blue-050";
 
-const reviewTone = (s?: string | null): BadgeTone => {
-  switch (s) {
-    case "APPROVED_INTERNAL":
-      return "success";
-    case "PENDING_REVIEW":
-      return "warning";
-    case "REJECTED_INTERNAL":
-      return "danger";
-    default:
-      return "neutral";
-  }
-};
-
-const isSendable = (t: WhatsAppMessageTemplate) =>
-  t.isActive && t.metaStatus === "APPROVED";
+type VarUi = { tagKey: string; custom: string };
 
 const WhatsAppContent = () => {
   const { setToastData } = useGlobalStore();
@@ -51,52 +39,68 @@ const WhatsAppContent = () => {
     setHeaderMediaUrl,
   } = useWhatsappCampaignStore();
 
-  const [mode, setMode] = useState<Mode>("picker");
-  const [tab, setTab] = useState<Tab>("library");
   const [items, setItems] = useState<WhatsAppMessageTemplate[]>([]);
   const [loading, setLoading] = useState(true);
   const [bookmarkIds, setBookmarkIds] = useState<Set<string>>(new Set());
+  const [bookmarkedOnly, setBookmarkedOnly] = useState(false);
 
-  const loadBookmarkIds = useCallback(async () => {
-    try {
-      setBookmarkIds(new Set(await fetchMyWhatsAppTemplateBookmarkIds()));
-    } catch {
-      /* non-fatal: stars just won't pre-fill */
-    }
-  }, []);
+  const [events, setEvents] = useState<WhatsAppPrefillEvent[]>([]);
+  const [eventId, setEventId] = useState("");
+  const selectedEvent = useMemo(
+    () => events.find((e) => e._id === eventId) ?? null,
+    [events, eventId]
+  );
 
-  const loadTab = useCallback(
-    async (which: Tab) => {
+  // Per-variable UI state (tag choice + custom text). Stored campaign value is
+  // derived from this + the selected event.
+  const [varUi, setVarUi] = useState<Record<number, VarUi>>({});
+
+  useEffect(() => {
+    (async () => {
       setLoading(true);
       try {
-        const res =
-          which === "library"
-            ? await fetchSelectableWhatsAppTemplates()
-            : which === "mine"
-            ? await fetchMyWhatsAppTemplates()
-            : await fetchMyWhatsAppTemplateBookmarks();
+        const [res, ids, evs] = await Promise.all([
+          fetchSelectableWhatsAppTemplates(),
+          fetchMyWhatsAppTemplateBookmarkIds().catch(() => [] as string[]),
+          fetchMyPublishedEvents().catch(() => [] as WhatsAppPrefillEvent[]),
+        ]);
         setItems(res.items ?? []);
+        setBookmarkIds(new Set(ids));
+        setEvents(evs);
       } catch (err) {
         setToastData({ type: "error", message: extractErrorMessage(err) });
-        setItems([]);
       } finally {
         setLoading(false);
       }
-    },
-    [setToastData]
-  );
+    })();
+  }, [setToastData]);
 
+  // Seed per-variable UI from the store (covers edit rehydrate + reselection).
   useEffect(() => {
-    if (mode === "picker") loadTab(tab);
-  }, [tab, mode, loadTab]);
+    if (!selectedTemplate) {
+      setVarUi({});
+      return;
+    }
+    const byPos = new Map(templateVariables.map((v) => [v.position, v.value]));
+    const seeded: Record<number, VarUi> = {};
+    for (const v of selectedTemplate.variables ?? []) {
+      const stored = byPos.get(v.position) ?? "";
+      const key = tagKeyForValue(stored);
+      seeded[v.position] = {
+        tagKey: key,
+        custom: key === CUSTOM_TAG_KEY ? stored : "",
+      };
+    }
+    setVarUi(seeded);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedTemplate?._id]);
 
-  useEffect(() => {
-    loadBookmarkIds();
-  }, [loadBookmarkIds]);
+  const visible = bookmarkedOnly
+    ? items.filter((t) => bookmarkIds.has(t._id))
+    : items;
 
   const toggleBookmark = async (t: WhatsAppMessageTemplate) => {
     const has = bookmarkIds.has(t._id);
-    // optimistic
     setBookmarkIds((prev) => {
       const next = new Set(prev);
       if (has) next.delete(t._id);
@@ -106,9 +110,7 @@ const WhatsAppContent = () => {
     try {
       if (has) await unbookmarkWhatsAppTemplate(t._id);
       else await bookmarkWhatsAppTemplate(t._id);
-      if (tab === "bookmarked") loadTab("bookmarked");
     } catch (err) {
-      // revert
       setBookmarkIds((prev) => {
         const next = new Set(prev);
         if (has) next.add(t._id);
@@ -120,56 +122,57 @@ const WhatsAppContent = () => {
   };
 
   const select = (t: WhatsAppMessageTemplate) => {
-    if (!isSendable(t)) {
-      setToastData({
-        type: "error",
-        message:
-          t.reviewStatus === "PENDING_REVIEW"
-            ? "This template is still in review. You can send it once it's approved."
-            : "This template isn't approved for sending yet.",
-      });
-      return;
-    }
     setSelectedTemplate(t);
-    setTemplateVariables((t.variables ?? []).map((v) => ({ position: v.position, value: "" })));
+    setTemplateVariables(
+      (t.variables ?? []).map((v) => ({ position: v.position, value: "" }))
+    );
     setHeaderMediaUrl("");
   };
 
-  const valueByPos = useMemo(
-    () => new Map(templateVariables.map((v) => [v.position, v.value])),
-    [templateVariables]
+  // Write a variable's resolved value into the store.
+  const writeVar = useCallback(
+    (position: number, value: string) =>
+      setTemplateVariables(
+        useWhatsappCampaignStore
+          .getState()
+          .templateVariables.map((v) =>
+            v.position === position ? { ...v, value } : v
+          )
+      ),
+    [setTemplateVariables]
   );
-  const setVar = (position: number, value: string) =>
-    setTemplateVariables(
-      templateVariables.map((v) => (v.position === position ? { ...v, value } : v))
-    );
+
+  const onTagChange = (position: number, tagKey: string) => {
+    const custom = varUi[position]?.custom ?? "";
+    setVarUi((prev) => ({ ...prev, [position]: { tagKey, custom } }));
+    writeVar(position, resolveTagValue(tagKey, selectedEvent, custom));
+  };
+  const onCustomChange = (position: number, custom: string) => {
+    setVarUi((prev) => ({
+      ...prev,
+      [position]: { tagKey: CUSTOM_TAG_KEY, custom },
+    }));
+    writeVar(position, resolveTagValue(CUSTOM_TAG_KEY, selectedEvent, custom));
+  };
+
+  // When the prefill event changes, re-resolve any event-scoped variable.
+  useEffect(() => {
+    if (!selectedTemplate) return;
+    for (const [posStr, ui] of Object.entries(varUi)) {
+      const pos = Number(posStr);
+      const tag = MERGE_TAGS.find((t) => t.key === ui.tagKey);
+      if (tag?.scope === "event") {
+        writeVar(pos, resolveTagValue(ui.tagKey, selectedEvent, ui.custom));
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [eventId]);
 
   const needsMedia =
     selectedTemplate &&
     (selectedTemplate.headerType === "IMAGE" ||
       selectedTemplate.headerType === "VIDEO" ||
       selectedTemplate.headerType === "DOCUMENT");
-
-  if (mode === "author") {
-    return (
-      <WhatsAppTemplateAuthorForm
-        onCancel={() => setMode("picker")}
-        onDone={() => {
-          setMode("picker");
-          setTab("mine");
-          loadTab("mine");
-        }}
-      />
-    );
-  }
-  if (mode === "request") {
-    return (
-      <WhatsAppTemplateRequestForm
-        onCancel={() => setMode("picker")}
-        onDone={() => setMode("picker")}
-      />
-    );
-  }
 
   return (
     <div className="flex flex-col gap-5">
@@ -178,75 +181,45 @@ const WhatsAppContent = () => {
           Choose your message
         </h1>
         <p className="text-[13px] text-owner-fg-3">
-          Pick an approved template, create your own, or ask us to build one.
+          Pick an approved template, then personalise it. Need a new one? Create
+          or request it under the <strong>Templates</strong> tab.
         </p>
       </div>
 
-      {/* Tabs */}
-      <div className="flex items-center gap-2 border-b border-owner-border">
-        {(
-          [
-            { id: "library", label: "Template library" },
-            { id: "mine", label: "My templates" },
-            { id: "bookmarked", label: "★ Bookmarked" },
-          ] as { id: Tab; label: string }[]
-        ).map((t) => (
-          <button
-            key={t.id}
-            type="button"
-            onClick={() => setTab(t.id)}
-            className={
-              tab === t.id
-                ? "border-b-2 border-owner-blue-500 px-1 pb-2 text-[13px] font-semibold text-owner-blue-500"
-                : "px-1 pb-2 text-[13px] text-owner-fg-3 hover:text-owner-fg-1"
-            }
-          >
-            {t.label}
-          </button>
-        ))}
-        <div className="ml-auto flex items-center gap-2 pb-1.5">
-          <OwnerButton
-            variant="secondary"
-            size="sm"
-            leadingIcon={<PencilLine size={12} />}
-            onClick={() => setMode("author")}
-          >
-            Create your own
-          </OwnerButton>
-          <OwnerButton
-            variant="secondary"
-            size="sm"
-            leadingIcon={<Sparkles size={12} />}
-            onClick={() => setMode("request")}
-          >
-            Request a template
-          </OwnerButton>
-        </div>
+      {/* Bookmarked filter */}
+      <div className="flex items-center justify-between">
+        <span className="text-[12px] font-semibold text-owner-fg-2">
+          Available templates
+        </span>
+        <label className="flex items-center gap-1.5 text-[12px] text-owner-fg-3">
+          <input
+            type="checkbox"
+            checked={bookmarkedOnly}
+            onChange={(e) => setBookmarkedOnly(e.target.checked)}
+          />
+          Bookmarked only
+        </label>
       </div>
 
-      {/* List */}
       <div className="flex flex-col gap-2">
         {loading ? (
           <div className="py-8 text-center text-[13px] text-owner-fg-4">
             Loading templates…
           </div>
-        ) : items.length === 0 ? (
+        ) : visible.length === 0 ? (
           <div className="rounded-owner-md border border-dashed border-owner-border py-8 text-center text-[13px] text-owner-fg-4">
-            {tab === "mine"
-              ? "You haven't created any templates yet."
-              : tab === "bookmarked"
-              ? "No bookmarks yet. Tap the ★ on a template to save it here."
-              : "No approved templates yet."}
+            {bookmarkedOnly
+              ? "No bookmarked templates yet."
+              : "No approved templates yet. Create one under the Templates tab."}
           </div>
         ) : (
-          items.map((t) => {
-            const selected = selectedTemplate?._id === t._id;
-            const sendable = isSendable(t);
+          visible.map((t) => {
+            const isSel = selectedTemplate?._id === t._id;
             return (
               <div
                 key={t._id}
                 className={`flex items-start gap-3 rounded-owner-md border p-3 ${
-                  selected
+                  isSel
                     ? "border-owner-blue-500 bg-owner-blue-050"
                     : "border-owner-border bg-owner-bg"
                 }`}
@@ -273,30 +246,19 @@ const WhatsAppContent = () => {
                     </span>
                     <Badge tone="neutral">{t.category.toLowerCase()}</Badge>
                     {t.source === "HOST" ? (
-                      <Badge tone={reviewTone(t.reviewStatus)}>
-                        {t.metaStatus === "APPROVED"
-                          ? "approved"
-                          : (t.reviewStatus ?? "").toLowerCase().replace("_", " ")}
-                      </Badge>
+                      <Badge tone="info">yours</Badge>
                     ) : null}
                   </div>
                   <div className="mt-0.5 line-clamp-2 text-[12px] text-owner-fg-3">
                     {t.bodyText}
                   </div>
-                  {t.reviewStatus === "REJECTED_INTERNAL" &&
-                  t.reviewRejectionReason ? (
-                    <div className="mt-1 text-[11px] text-owner-danger-text">
-                      Rejected: {t.reviewRejectionReason}
-                    </div>
-                  ) : null}
                 </div>
                 <OwnerButton
-                  variant={selected ? "primary" : "secondary"}
+                  variant={isSel ? "primary" : "secondary"}
                   size="sm"
-                  disabled={!sendable}
                   onClick={() => select(t)}
                 >
-                  {selected ? "Selected" : sendable ? "Use" : "In review"}
+                  {isSel ? "Selected" : "Use"}
                 </OwnerButton>
               </div>
             );
@@ -304,51 +266,101 @@ const WhatsAppContent = () => {
         )}
       </div>
 
-      {/* Selected template — variable fill + media */}
+      {/* Personalise the selected template */}
       {selectedTemplate ? (
         <div className="flex flex-col gap-3 rounded-owner-md border border-owner-border-soft bg-owner-bg-subtle p-3">
           <div className="text-[12px] font-semibold text-owner-fg-2">
             Personalise “{selectedTemplate.name}”
           </div>
+
           {needsMedia ? (
-            <label className="block">
-              <span className="text-[12px] font-semibold text-owner-fg-2">
-                Header {selectedTemplate.headerType.toLowerCase()} URL
-              </span>
-              <input
-                className={`${inputCls} mt-1`}
-                value={headerMediaUrl}
-                onChange={(e) => setHeaderMediaUrl(e.target.value)}
-                placeholder="https://…"
-              />
-            </label>
+            <WhatsAppMediaUpload
+              value={headerMediaUrl}
+              onChange={setHeaderMediaUrl}
+              label={`Header ${selectedTemplate.headerType.toLowerCase()}`}
+              hint="Shown at the top of the message."
+            />
           ) : null}
-          {(selectedTemplate.variables ?? []).length === 0 ? (
-            <div className="text-[12px] text-owner-fg-4">
-              This template has no variables — nothing to fill in.
-            </div>
-          ) : (
-            (selectedTemplate.variables ?? [])
-              .slice()
-              .sort((a, b) => a.position - b.position)
-              .map((v) => (
-                <label key={v.position} className="block">
+
+          {(selectedTemplate.variables ?? []).length > 0 ? (
+            <>
+              {events.length > 0 ? (
+                <label className="block">
                   <span className="text-[12px] font-semibold text-owner-fg-2">
-                    {`{{${v.position}}} ${v.label ?? ""}`.trim()}
-                  </span>
-                  <input
-                    className={`${inputCls} mt-1`}
-                    value={valueByPos.get(v.position) ?? ""}
-                    onChange={(e) => setVar(v.position, e.target.value)}
-                    placeholder={v.example ?? `Value for {{${v.position}}}`}
-                  />
-                  {v.hint ? (
-                    <span className="mt-1 block text-[11px] text-owner-fg-4">
-                      {v.hint}
+                    Prefill from an event{" "}
+                    <span className="font-normal text-owner-fg-4">
+                      (optional)
                     </span>
-                  ) : null}
+                  </span>
+                  <select
+                    className={`${inputCls} mt-1`}
+                    value={eventId}
+                    onChange={(e) => setEventId(e.target.value)}
+                  >
+                    <option value="">No event</option>
+                    {events.map((e) => (
+                      <option key={e._id} value={e._id}>
+                        {e.title}
+                      </option>
+                    ))}
+                  </select>
                 </label>
-              ))
+              ) : null}
+
+              {(selectedTemplate.variables ?? [])
+                .slice()
+                .sort((a, b) => a.position - b.position)
+                .map((v) => {
+                  const ui = varUi[v.position] ?? {
+                    tagKey: CUSTOM_TAG_KEY,
+                    custom: "",
+                  };
+                  const tag = MERGE_TAGS.find((t) => t.key === ui.tagKey);
+                  const needsEvent = tag?.scope === "event" && !selectedEvent;
+                  return (
+                    <div key={v.position} className="flex flex-col gap-1">
+                      <span className="text-[12px] font-semibold text-owner-fg-2">
+                        {`{{${v.position}}} ${v.label ?? ""}`.trim()}
+                      </span>
+                      <select
+                        className={inputCls}
+                        value={ui.tagKey}
+                        onChange={(e) => onTagChange(v.position, e.target.value)}
+                      >
+                        {MERGE_TAGS.map((t) => (
+                          <option key={t.key} value={t.key}>
+                            {t.label}
+                          </option>
+                        ))}
+                      </select>
+                      {ui.tagKey === CUSTOM_TAG_KEY ? (
+                        <input
+                          className={inputCls}
+                          value={ui.custom}
+                          onChange={(e) =>
+                            onCustomChange(v.position, e.target.value)
+                          }
+                          placeholder={v.example ?? `Value for {{${v.position}}}`}
+                        />
+                      ) : null}
+                      {needsEvent ? (
+                        <span className="text-[11px] text-owner-warning-text">
+                          Pick an event above to fill this in.
+                        </span>
+                      ) : null}
+                      {v.hint ? (
+                        <span className="text-[11px] text-owner-fg-4">
+                          {v.hint}
+                        </span>
+                      ) : null}
+                    </div>
+                  );
+                })}
+            </>
+          ) : (
+            <div className="text-[12px] text-owner-fg-4">
+              This template has no variables — nothing to personalise.
+            </div>
           )}
         </div>
       ) : null}

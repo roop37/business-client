@@ -14,6 +14,7 @@ import {
 } from "@/utils/whatsappTemplateClient";
 import { Loader2, Plus, Trash2 } from "lucide-react";
 import { useState } from "react";
+import WhatsAppMediaUpload from "./WhatsAppMediaUpload";
 
 const inputCls =
   "h-10 w-full rounded-owner-md border border-owner-border bg-owner-bg px-3 text-[13px] outline-none focus:border-owner-blue-200 focus:ring-2 focus:ring-owner-blue-050";
@@ -202,9 +203,15 @@ const WhatsAppTemplateAuthorForm = ({
           />
         </Field>
       ) : null}
-      {headerType === "IMAGE" ||
-      headerType === "VIDEO" ||
-      headerType === "DOCUMENT" ? (
+      {headerType === "IMAGE" ? (
+        <WhatsAppMediaUpload
+          value={headerSampleMediaUrl}
+          onChange={setHeaderSampleMediaUrl}
+          label="Sample header image"
+          hint="A sample image so reviewers can see the header."
+        />
+      ) : null}
+      {headerType === "VIDEO" || headerType === "DOCUMENT" ? (
         <Field
           label={`Sample ${headerType.toLowerCase()} URL`}
           hint="A public HTTPS sample so reviewers can see the media."

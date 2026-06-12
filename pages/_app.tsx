@@ -3,6 +3,7 @@ import Toast from "@/components/common/toast/toast";
 import GlobalTopUpModal from "@/components/common/topup/GlobalTopUpModal";
 import SettingsModal from "@/components/common/settings/SettingsModal";
 import RunCampaignModal from "@/components/common/campaign/RunCampaignModal";
+import OrderReceiptModal from "@/components/common/orders/OrderReceiptModal";
 import useGlobalStore from "@/store/global";
 import { NextPage } from "next";
 import { DefaultSeo } from "next-seo";
@@ -132,6 +133,7 @@ function MyApp({ Component, pageProps }: AppPropsWithLayout) {
         <GlobalTopUpModal />
         <SettingsModal />
         <RunCampaignModal />
+        <OrderReceiptModal />
         {toastData && (
           <Toast message={toastData.message} type={toastData.type} />
         )}

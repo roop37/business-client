@@ -266,6 +266,35 @@ export const fetchWhatsAppTemplateById = async (
   return data.whatsAppTemplateById ?? null;
 };
 
+// ── Published events (for the merge-tag prefill picker) ───────────────────────
+
+export type WhatsAppPrefillEvent = {
+  _id: string;
+  title?: string | null;
+  slug?: string | null;
+  status?: string | null;
+  startDate?: string | null;
+  city?: string | null;
+  location?: {
+    formattedAddress?: string | null;
+    city?: string | null;
+  } | null;
+};
+
+export const fetchMyPublishedEvents = async (): Promise<
+  WhatsAppPrefillEvent[]
+> => {
+  const data = await client.request<{ getMyEvents: WhatsAppPrefillEvent[] }>(
+    `query {
+       getMyEvents {
+         _id title slug status startDate city
+         location { formattedAddress city }
+       }
+     }`
+  );
+  return (data.getMyEvents ?? []).filter((e) => e.status === "PUBLISHED");
+};
+
 // ── Authoring + request ──────────────────────────────────────────────────────
 
 export const createMyWhatsAppTemplate = async (

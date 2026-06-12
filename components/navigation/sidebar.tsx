@@ -211,7 +211,7 @@ const WorkspaceSwitcher = ({
       </button>
 
       {open ? (
-        <div className="absolute left-0 right-0 top-[calc(100%+8px)] z-40 overflow-hidden rounded-[14px] border border-owner-border bg-owner-bg shadow-owner-dropdown">
+        <div className="absolute left-0 right-0 top-[calc(100%+8px)] z-[70] overflow-hidden rounded-[14px] border border-owner-border bg-[#FFFFFF] shadow-owner-dropdown">
           <div className="px-3.5 pb-1 pt-3 text-[11px] font-semibold uppercase tracking-[0.08em] text-owner-fg-4">
             Switch business
           </div>

@@ -103,25 +103,36 @@ const AutomationsPage = () => {
         subtitle="Always-on flows that grow your sales while you focus on the event."
       />
 
-      {/* Explainer → marketing product page. Whole card is the link. */}
-      <a href="/product/automations" className="mb-4 block">
-        <Card className="flex items-start gap-3 transition hover:border-owner-blue-200">
-          <span className="grid h-10 w-10 shrink-0 place-items-center rounded-owner-md bg-owner-blue-050 text-owner-blue-500">
-            <Sparkles size={18} />
-          </span>
-          <div className="min-w-0">
-            <div className="flex items-center gap-1 font-semibold text-owner-fg-1">
-              Recipes that run the boring stuff
-              <ArrowUpRight size={14} />
+      {/* Wide marketing-style explainer → product page. Whole card is the link. */}
+      <a href="/product/automations" className="mb-6 block">
+        <div
+          className="flex flex-col items-stretch gap-5 overflow-hidden rounded-owner-lg p-6 text-white transition hover:opacity-95 md:flex-row md:items-center"
+          style={{ background: "linear-gradient(135deg, #0f1729 0%, #1f2a44 100%)" }}
+        >
+          <div className="min-w-0 flex-1">
+            <div className="text-[11px] font-semibold uppercase tracking-wider text-white/55">
+              Automations
             </div>
-            <p className="mt-0.5 text-[13px] text-owner-fg-3">
+            <h2 className="mt-1 text-xl font-semibold leading-tight md:text-2xl">
+              Recipes that run the boring stuff
+            </h2>
+            <p className="mt-2 max-w-2xl text-[13.5px] leading-6 text-white/80">
               Auto-open Phase 2 when Phase 1 sells out. Auto-send 24-hour
-              reminders. Auto-recycle a refunded ticket to the waitlist. Set
-              once, never again.{" "}
-              <span className="font-medium text-owner-blue-500">Learn more →</span>
+              reminders. Auto-recycle a refunded ticket to the waitlist.{" "}
+              <span className="font-medium text-white/95">
+                Set once, never again.
+              </span>
             </p>
+            <span className="mt-3 inline-flex items-center gap-1 text-[13px] font-semibold text-[#bef264]">
+              Learn more <ArrowUpRight size={14} />
+            </span>
           </div>
-        </Card>
+          <div className="hidden shrink-0 md:block">
+            <span className="grid h-20 w-20 place-items-center rounded-2xl bg-white/10 text-[#bef264]">
+              <Sparkles size={34} />
+            </span>
+          </div>
+        </div>
       </a>
 
       {loading ? (

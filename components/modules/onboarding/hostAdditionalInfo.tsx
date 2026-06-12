@@ -127,18 +127,8 @@ const HostAdditionalInformation = () => {
           className="flex min-h-0 flex-1 flex-col"
           onSubmit={handleSubmit(onSubmit)}
         >
-          <div className="min-h-0 flex-1 space-y-3.5 overflow-y-auto px-4 py-4 md:px-5">
-          <div className="rounded-xl border border-[var(--owner-border)] bg-[var(--owner-bg-subtle)] px-4 py-3 text-left">
-            <p className="text-sm font-medium text-gray-900">
-              These details are optional.
-            </p>
-            <p className="mt-1 text-sm text-gray-600">
-              You can skip this step and add or update these details later from
-              settings.
-            </p>
-          </div>
-
-          <div className="col-span-2">
+          <div className="min-h-0 flex-1 space-y-5 overflow-y-auto px-4 py-5 md:px-5">
+          <div>
             <label
               htmlFor="businessRegistrationNumber"
               className="block mb-2 text-sm font-medium text-left text-gray-700"
@@ -156,7 +146,7 @@ const HostAdditionalInformation = () => {
             />
           </div>
 
-          <div className="col-span-2">
+          <div>
             <label
               htmlFor="averageEventSize"
               className="block mb-2 text-sm font-medium text-left text-gray-700"
@@ -182,7 +172,7 @@ const HostAdditionalInformation = () => {
             )}
           </div>
 
-          <div className="col-span-2">
+          <div>
             <label
               htmlFor="gstNumber"
               className="block mb-2 text-sm font-medium text-left text-gray-700"
@@ -208,7 +198,7 @@ const HostAdditionalInformation = () => {
             )}
           </div>
 
-          <div className="col-span-2">
+          <div>
             <label
               htmlFor="websiteUrl"
               className="block mb-2 text-sm font-medium text-left text-gray-700"

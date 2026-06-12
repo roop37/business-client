@@ -6,16 +6,19 @@ import { sdk } from "@/utils/graphqlClient";
 import { extractErrorMessage } from "@/utils/utilFUncs";
 import {
   CalendarDaysIcon,
+  CheckIcon,
   DoorOpenIcon,
   EyeIcon,
   EyeOffIcon,
   type LucideIcon,
   MegaphoneIcon,
+  MinusIcon,
   PencilIcon,
   QrCodeIcon,
   SettingsIcon,
   TicketIcon,
   UsersRoundIcon,
+  XIcon,
 } from "lucide-react";
 import { GetServerSideProps } from "next";
 import { useRouter } from "next/router";
@@ -75,6 +78,7 @@ const EventOperations = ({
   const [overview, setOverview] = useState<any>(null);
   const [busy, setBusy] = useState(false);
   const [offlineOpen, setOfflineOpen] = useState(false);
+  const [collaboratorsOpen, setCollaboratorsOpen] = useState(false);
 
   const loadOverview = async () => {
     try {
@@ -122,6 +126,14 @@ const EventOperations = ({
   const canSeeOfferSettlement =
     !isCollaboratorView &&
     (viewerTeamRole === "Owner" || viewerTeamRole === "Manager");
+  // Collaborating hosts / promoters configured during event edit.
+  // Server only populates this for the owner view (it returns [] to a
+  // collaborator viewer), so the card stays hidden whenever the viewer
+  // is themselves a collaborator.
+  const collaborators: any[] = Array.isArray(overview?.collaborators)
+    ? overview.collaborators
+    : [];
+  const showCollaboratorsCard = !isCollaboratorView && collaborators.length > 0;
 
   return (
     <EventShell title={title} status={overview?.status}>
@@ -321,6 +333,54 @@ const EventOperations = ({
               </div>
             </div>
 
+            {/* Collaborators & promoters */}
+            {showCollaboratorsCard ? (
+              <button
+                type="button"
+                onClick={() => setCollaboratorsOpen(true)}
+                className="w-full rounded-lg border border-[var(--owner-border)] bg-[var(--owner-bg)] p-5 text-left transition hover:border-[#c89d75]"
+              >
+                <div className="flex items-center justify-between gap-4">
+                  <div className="flex min-w-0 items-start gap-3">
+                    <span className="grid h-10 w-10 shrink-0 place-items-center rounded-lg bg-[var(--owner-bg-subtle)] text-[var(--owner-blue-500)]">
+                      <UsersRoundIcon size={18} />
+                    </span>
+                    <div className="min-w-0">
+                      <p className="font-semibold">Collaborators &amp; promoters</p>
+                      <p className="text-xs text-[var(--owner-fg-3)]">
+                        {collaborators.length}{" "}
+                        {collaborators.length === 1
+                          ? "organizer"
+                          : "organizers"}{" "}
+                        on this event. Tap to view their settings.
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex shrink-0 -space-x-2">
+                    {collaborators.slice(0, 5).map((c: any, index: number) => (
+                      <span
+                        key={c.businessLinkId ?? `${c.name}-${index}`}
+                        title={c.name}
+                        className="grid h-9 w-9 place-items-center rounded-full border-2 border-[var(--owner-bg)] bg-[var(--owner-bg-subtle)] bg-cover bg-center text-xs font-semibold uppercase text-[var(--owner-fg-3)]"
+                        style={
+                          c.logo
+                            ? { backgroundImage: `url(${c.logo})` }
+                            : undefined
+                        }
+                      >
+                        {!c.logo ? (c.name ?? "?").slice(0, 1) : null}
+                      </span>
+                    ))}
+                    {collaborators.length > 5 ? (
+                      <span className="grid h-9 w-9 place-items-center rounded-full border-2 border-[var(--owner-bg)] bg-[var(--owner-bg-subtle)] text-xs font-semibold text-[var(--owner-fg-3)]">
+                        +{collaborators.length - 5}
+                      </span>
+                    ) : null}
+                  </div>
+                </div>
+              </button>
+            ) : null}
+
             {/* Action cards */}
             <div className="grid gap-4 md:grid-cols-3">
               {!isCollaboratorView ? (
@@ -360,9 +420,227 @@ const EventOperations = ({
         onClose={() => setOfflineOpen(false)}
         presetEventId={eventId}
       />
+
+      <CollaboratorsModal
+        open={collaboratorsOpen}
+        collaborators={collaborators}
+        onClose={() => setCollaboratorsOpen(false)}
+        onManage={() => {
+          setCollaboratorsOpen(false);
+          router.push(`/events/${eventId}/update`);
+        }}
+      />
     </EventShell>
   );
 };
+
+const COLLAB_STATUS_BADGE: Record<
+  string,
+  { label: string; className: string }
+> = {
+  CONFIRMED: {
+    label: "Confirmed",
+    className:
+      "bg-[var(--owner-blue-500)]/[0.10] text-[var(--owner-blue-500)]",
+  },
+  INVITED: {
+    label: "Invited",
+    className: "bg-amber-500/10 text-amber-600",
+  },
+  DECLINED: {
+    label: "Declined",
+    className: "bg-red-500/10 text-red-600",
+  },
+};
+
+/**
+ * Read-only review of the collaborating hosts / promoters configured
+ * for an event and their per-collaboration access settings. Mirrors
+ * the grouping + labels of the EventJourney collaborator modal ("What
+ * this collaborator can do" + "Display & operations") but renders every
+ * flag as a static On/Off row — editing happens in the event edit flow.
+ */
+const CollaboratorsModal = ({
+  open,
+  collaborators,
+  onClose,
+  onManage,
+}: {
+  open: boolean;
+  collaborators: any[];
+  onClose: () => void;
+  onManage: () => void;
+}) => {
+  if (!open) return null;
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/55 px-4 py-6">
+      <div className="flex max-h-[92dvh] w-full max-w-2xl flex-col overflow-hidden rounded-lg bg-[var(--owner-bg)] shadow-2xl">
+        <div className="flex shrink-0 items-center justify-between gap-3 border-b border-[var(--owner-border)] px-5 py-4">
+          <div>
+            <div className="text-sm font-semibold">
+              Collaborators &amp; promoters
+            </div>
+            <p className="mt-1 text-xs text-[var(--owner-fg-3)]">
+              Read-only view of the collaborating organizers and what each
+              can do on this event. Edit these in the event settings.
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={onClose}
+            className="inline-flex h-9 w-9 items-center justify-center rounded-md border border-[var(--owner-border)]"
+          >
+            <XIcon size={16} />
+          </button>
+        </div>
+        <div className="min-h-0 flex-1 space-y-4 overflow-y-auto p-5">
+          {collaborators.map((c: any, index: number) => {
+            const badge =
+              COLLAB_STATUS_BADGE[String(c.collaborationStatus ?? "")] ?? null;
+            return (
+              <div
+                key={c.businessLinkId ?? `${c.name}-${index}`}
+                className="rounded-lg border border-[var(--owner-border)] bg-[var(--owner-bg)] p-4"
+              >
+                <div className="flex items-center gap-3">
+                  <span
+                    className="grid h-10 w-10 shrink-0 place-items-center rounded-md bg-[var(--owner-bg-subtle)] bg-cover bg-center text-sm font-semibold uppercase text-[var(--owner-fg-3)]"
+                    style={
+                      c.logo ? { backgroundImage: `url(${c.logo})` } : undefined
+                    }
+                  >
+                    {!c.logo ? (c.name ?? "?").slice(0, 1) : null}
+                  </span>
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate font-semibold">
+                      {c.name ?? "Unnamed organizer"}
+                    </p>
+                    <p className="truncate text-xs text-[var(--owner-fg-3)]">
+                      Collaborating organizer
+                    </p>
+                  </div>
+                  {badge ? (
+                    <span
+                      className={`shrink-0 rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.12em] ${badge.className}`}
+                    >
+                      {badge.label}
+                    </span>
+                  ) : null}
+                </div>
+
+                <div className="mt-4">
+                  <div className="text-xs font-semibold uppercase tracking-[0.08em] text-[var(--owner-fg-3)]">
+                    What this collaborator can do
+                  </div>
+                  <div className="mt-3 grid gap-3 md:grid-cols-2">
+                    <ReadOnlySettingRow
+                      title="See event metrics"
+                      subtitle="Sales, attendance, conversion."
+                      enabled={c.canSeeMetrics !== false}
+                    />
+                    <ReadOnlySettingRow
+                      title="Run campaigns for this event"
+                      subtitle="Email blasts targeting attendees."
+                      enabled={c.canRunCampaigns !== false}
+                    />
+                    <ReadOnlySettingRow
+                      title="Create offers / discount codes"
+                      subtitle="Promo codes that apply at checkout."
+                      enabled={c.canCreateOffers !== false}
+                    />
+                    <ReadOnlySettingRow
+                      title="Access customer list"
+                      subtitle="Download buyer contact details."
+                      enabled={c.requestCustomerListAccess !== false}
+                    />
+                  </div>
+                </div>
+
+                <div className="mt-4">
+                  <div className="text-xs font-semibold uppercase tracking-[0.08em] text-[var(--owner-fg-3)]">
+                    Display &amp; operations
+                  </div>
+                  <div className="mt-3 grid gap-3 md:grid-cols-2">
+                    <ReadOnlySettingRow
+                      title="Hide on Event Page"
+                      subtitle="Don't show as a co-organizer publicly."
+                      enabled={Boolean(c.hideOnEventPage)}
+                    />
+                    <ReadOnlySettingRow
+                      title="Allow Offline Tickets"
+                      subtitle="Can issue tickets at the door."
+                      enabled={Boolean(c.allowIssuingOfflineTickets)}
+                    />
+                    <ReadOnlySettingRow
+                      title="Send Transactional Emails"
+                      subtitle="Cc'd on ticket purchase emails."
+                      enabled={Boolean(c.sendTransactionalMails)}
+                    />
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+        <div className="flex shrink-0 items-center justify-end gap-2 border-t border-[var(--owner-border)] px-5 py-3">
+          <button
+            type="button"
+            onClick={onClose}
+            className="rounded-lg border border-[var(--owner-border-strong)] bg-white px-3 py-2 text-sm font-semibold"
+          >
+            Close
+          </button>
+          <button
+            type="button"
+            onClick={onManage}
+            className="rounded-lg bg-[var(--owner-blue-500)] px-3 py-2 text-sm font-semibold text-[var(--owner-bg)]"
+          >
+            Manage collaborators
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+/**
+ * Static (non-interactive) twin of EventJourney's `ToggleSettingRow` —
+ * same card shell + labels, but the right-hand control is a fixed
+ * On/Off pill instead of a toggle, signalling that this surface is
+ * read-only.
+ */
+const ReadOnlySettingRow = ({
+  title,
+  subtitle,
+  enabled,
+}: {
+  title: string;
+  subtitle?: string;
+  enabled: boolean;
+}) => (
+  <div className="flex min-h-[64px] items-center justify-between gap-4 rounded-lg border border-[var(--owner-border)] bg-white px-4 py-3 text-left">
+    <span className="min-w-0">
+      <span className="block text-sm font-semibold text-[var(--owner-fg-1)]">
+        {title}
+      </span>
+      {subtitle ? (
+        <span className="mt-1 block text-xs leading-5 text-[var(--owner-fg-3)]">
+          {subtitle}
+        </span>
+      ) : null}
+    </span>
+    <span
+      className={`inline-flex shrink-0 items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-semibold ${
+        enabled
+          ? "bg-[var(--owner-blue-500)]/[0.10] text-[var(--owner-blue-500)]"
+          : "bg-[var(--owner-bg-subtle)] text-[var(--owner-fg-3)]"
+      }`}
+    >
+      {enabled ? <CheckIcon size={13} /> : <MinusIcon size={13} />}
+      {enabled ? "On" : "Off"}
+    </span>
+  </div>
+);
 
 /**
  * Read-only review of the offer set the host was shown at publish +

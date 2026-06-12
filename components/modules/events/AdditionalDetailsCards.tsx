@@ -780,6 +780,15 @@ const ProhibitedModal = ({
     onChange(Array.from(next));
   };
 
+  // Select all / clear all act on the MASTER items only — any custom
+  // free-text items the host added stay untouched.
+  const masterSelectedCount = options.filter((o) =>
+    selected.has(o.slug)
+  ).length;
+  const selectAllMaster = () =>
+    onChange([...options.map((o) => o.slug), ...customItems]);
+  const clearAllMaster = () => onChange(customItems);
+
   const addCustom = () => {
     const trimmed = customDraft.trim();
     if (!trimmed || selected.has(trimmed)) return;
@@ -803,6 +812,32 @@ const ProhibitedModal = ({
           will appear on the event page so customers know before they
           arrive.
         </p>
+
+        {options.length > 0 ? (
+          <div className="flex items-center justify-between">
+            <span className="text-[11.5px] text-[var(--owner-fg-4)]">
+              {masterSelectedCount} of {options.length} selected
+            </span>
+            <div className="flex items-center gap-3">
+              <button
+                type="button"
+                onClick={selectAllMaster}
+                disabled={masterSelectedCount === options.length}
+                className="text-[12px] font-semibold text-[var(--owner-blue-500)] hover:underline disabled:cursor-not-allowed disabled:opacity-40"
+              >
+                Select all
+              </button>
+              <button
+                type="button"
+                onClick={clearAllMaster}
+                disabled={masterSelectedCount === 0}
+                className="text-[12px] font-semibold text-[var(--owner-fg-3)] hover:underline disabled:cursor-not-allowed disabled:opacity-40"
+              >
+                Clear all
+              </button>
+            </div>
+          </div>
+        ) : null}
 
         <div className="flex flex-wrap gap-1.5">
           {options.map((opt) => {
