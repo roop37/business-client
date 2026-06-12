@@ -8,6 +8,8 @@ import {
   OwnerTable,
 } from "@/components/common/owner";
 import useGlobalStore from "@/store/global";
+import useOriginalWhatsappCampaignStore from "@/store/originalWhatsappCampaignStore";
+import useWhatsappCampaignStore from "@/store/whatsappCampaignStore";
 import { extractErrorMessage } from "@/utils/utilFUncs";
 import {
   duplicateWhatsAppCampaign,
@@ -15,9 +17,9 @@ import {
   resumeWhatsAppCampaign,
   type WhatsAppCampaign,
 } from "@/utils/whatsappCampaignClient";
-import { Copy, Play, Plus, RefreshCcw } from "lucide-react";
+import { Copy, Pencil, Play, Plus, RefreshCcw } from "lucide-react";
+import { useRouter } from "next/router";
 import { useCallback, useEffect, useState } from "react";
-import { WhatsAppCampaignBuilder } from "./WhatsAppCampaignBuilder";
 
 const statusTone = (status?: string | null): BadgeTone => {
   switch (status) {
@@ -50,10 +52,14 @@ const dateFmt = (v?: string | null) => {
 
 export const WhatsAppCampaigns = () => {
   const { setToastData } = useGlobalStore();
+  const router = useRouter();
+  const resetWorking = useWhatsappCampaignStore((s) => s.resetState);
+  const resetOriginal = useOriginalWhatsappCampaignStore(
+    (s) => s.resetOriginalState
+  );
   const [rows, setRows] = useState<WhatsAppCampaign[]>([]);
   const [loading, setLoading] = useState(true);
   const [busyId, setBusyId] = useState<string | null>(null);
-  const [creating, setCreating] = useState(false);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -68,8 +74,20 @@ export const WhatsAppCampaigns = () => {
   }, [setToastData]);
 
   useEffect(() => {
-    if (!creating) load();
-  }, [creating, load]);
+    load();
+  }, [load]);
+
+  const startNew = () => {
+    resetWorking();
+    resetOriginal();
+    router.push("/campaigns/whatsapp/onboarding/basics");
+  };
+
+  const editDraft = (id: string) => {
+    resetWorking();
+    resetOriginal();
+    router.push(`/campaigns/whatsapp/onboarding/basics?editId=${id}`);
+  };
 
   const resume = async (id: string) => {
     setBusyId(id);
@@ -97,28 +115,6 @@ export const WhatsAppCampaigns = () => {
     }
   };
 
-  if (creating) {
-    return (
-      <div className="flex flex-col gap-4 font-owner">
-        <div className="flex items-center justify-between">
-          <div>
-            <div className="text-[16px] font-semibold text-owner-fg-1">
-              New WhatsApp campaign
-            </div>
-            <div className="text-[12.5px] text-owner-fg-3">
-              Pick a template, fill the variables, and preview exactly what the
-              customer receives.
-            </div>
-          </div>
-          <OwnerButton variant="secondary" onClick={() => setCreating(false)}>
-            Back to campaigns
-          </OwnerButton>
-        </div>
-        <WhatsAppCampaignBuilder onDone={() => setCreating(false)} />
-      </div>
-    );
-  }
-
   return (
     <div className="flex flex-col gap-4 font-owner">
       <OwnerTable
@@ -143,7 +139,7 @@ export const WhatsAppCampaigns = () => {
               variant="primary"
               size="sm"
               leadingIcon={<Plus size={13} />}
-              onClick={() => setCreating(true)}
+              onClick={startNew}
             >
               New campaign
             </OwnerButton>
@@ -193,6 +189,17 @@ export const WhatsAppCampaigns = () => {
                       onClick={() => resume(c._id)}
                     >
                       Resume
+                    </OwnerButton>
+                  ) : null}
+                  {!c.status || c.status === "Draft" ? (
+                    <OwnerButton
+                      variant="secondary"
+                      size="sm"
+                      leadingIcon={<Pencil size={12} />}
+                      disabled={busyId === c._id}
+                      onClick={() => editDraft(c._id)}
+                    >
+                      Edit
                     </OwnerButton>
                   ) : null}
                   <OwnerButton

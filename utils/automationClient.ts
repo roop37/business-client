@@ -92,3 +92,16 @@ export const setAutomationChannel = async (
   );
   return data.setAutomationChannel;
 };
+
+// No DB store yet — a host-scoped suggestion log + admin review needs a
+// hoizr-shared schema / INTERNAL_* email-type republish (tracked follow-up).
+// For now the idea goes straight to the product team's inbox via the host's
+// mail client, which keeps the feature live with zero backend surface.
+export const suggestAutomation = async (text: string): Promise<boolean> => {
+  if (typeof window !== "undefined") {
+    const subject = encodeURIComponent("Automation suggestion from a host");
+    const body = encodeURIComponent(text);
+    window.location.href = `mailto:tech@hoizr.com?subject=${subject}&body=${body}`;
+  }
+  return true;
+};

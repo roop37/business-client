@@ -17,6 +17,9 @@ import { ArrowLeft, Loader2, Mail, MessageCircle, Bell } from "lucide-react";
 import { GetServerSideProps } from "next";
 import { useRouter } from "next/router";
 import React, { useEffect, useState } from "react";
+import CustomSwitch from "@/components/common/customSwitch/customSwitch";
+import useGlobalStore from "@/store/global";
+import { extractErrorMessage } from "@/utils/utilFUncs";
 
 const CHANNEL_META: Record<
   string,
@@ -40,6 +43,7 @@ const AutomationDetailPage = () => {
   const [a, setA] = useState<AutomationView | null>(null);
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState<string | null>(null);
+  const { setToastData } = useGlobalStore();
 
   useEffect(() => {
     if (!key) return;
@@ -53,6 +57,12 @@ const AutomationDetailPage = () => {
     setBusy("active");
     try {
       setA(await setAutomationActive(key, next));
+      setToastData({
+        type: "success",
+        message: next ? "Automation turned on." : "Automation turned off.",
+      });
+    } catch (err) {
+      setToastData({ type: "error", message: extractErrorMessage(err) });
     } finally {
       setBusy(null);
     }
@@ -62,6 +72,8 @@ const AutomationDetailPage = () => {
     setBusy(channel);
     try {
       setA(await setAutomationChannel(key, channel, next));
+    } catch (err) {
+      setToastData({ type: "error", message: extractErrorMessage(err) });
     } finally {
       setBusy(null);
     }
@@ -92,19 +104,15 @@ const AutomationDetailPage = () => {
         title={a.title}
         subtitle={a.description}
         actions={
-          <label className="flex cursor-pointer items-center gap-2 text-sm">
+          <div className="flex items-center gap-2 text-sm">
             <span className="text-owner-fg-3">{a.active ? "Active" : "Off"}</span>
-            <input
-              type="checkbox"
-              className="peer sr-only"
+            <CustomSwitch
               checked={a.active}
               disabled={busy === "active"}
-              onChange={(e) => toggleActive(e.target.checked)}
+              onChange={() => toggleActive(!a.active)}
+              label={a.active ? "Turn off" : "Turn on"}
             />
-            <span className="relative h-6 w-11 rounded-full bg-owner-border transition peer-checked:bg-owner-blue-500">
-              <span className="absolute left-0.5 top-0.5 h-5 w-5 rounded-full bg-white transition peer-checked:translate-x-5" />
-            </span>
-          </label>
+          </div>
         }
       />
 
@@ -149,18 +157,12 @@ const AutomationDetailPage = () => {
                   </p>
                 </div>
               </div>
-              <label className="flex cursor-pointer items-center">
-                <input
-                  type="checkbox"
-                  className="peer sr-only"
-                  checked={enabled}
-                  disabled={busy === ch}
-                  onChange={(e) => toggleChannel(ch, e.target.checked)}
-                />
-                <span className="relative h-6 w-11 rounded-full bg-owner-border transition peer-checked:bg-owner-blue-500">
-                  <span className="absolute left-0.5 top-0.5 h-5 w-5 rounded-full bg-white transition peer-checked:translate-x-5" />
-                </span>
-              </label>
+              <CustomSwitch
+                checked={enabled}
+                disabled={busy === ch}
+                onChange={() => toggleChannel(ch, !enabled)}
+                label={`${meta.label} ${enabled ? "on" : "off"}`}
+              />
             </div>
           );
         })}

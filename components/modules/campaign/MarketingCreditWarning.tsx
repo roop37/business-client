@@ -3,8 +3,8 @@
 import { inrFormat, OwnerButton } from "@/components/common/owner";
 import { RowsPerPageEnum } from "@/generated/graphql";
 import { sdk } from "@/utils/graphqlClient";
+import useGlobalStore from "@/store/global";
 import { AlertTriangle, CreditCard } from "lucide-react";
-import { useRouter } from "next/router";
 import { useEffect, useMemo, useState } from "react";
 
 type MarketingCreditWarningProps = {
@@ -26,7 +26,7 @@ export const MarketingCreditWarning = ({
   label = "this campaign",
   className = "",
 }: MarketingCreditWarningProps) => {
-  const router = useRouter();
+  const { openTopUpModal } = useGlobalStore();
   const [balance, setBalance] = useState<number | null>(null);
 
   const normalizedEstimate = normalizeAmount(estimatedCost);
@@ -94,14 +94,7 @@ export const MarketingCreditWarning = ({
         type="button"
         size="sm"
         leadingIcon={<CreditCard size={14} />}
-        onClick={() =>
-          router.push(
-            `/campaigns/marketing-credit?topUp=1&amount=${Math.max(
-              100,
-              shortfall
-            )}`
-          )
-        }
+        onClick={() => openTopUpModal(Math.max(100, shortfall))}
         className="shrink-0"
       >
         Top up

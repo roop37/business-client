@@ -367,14 +367,14 @@ const OnboardingJourneyLayout = ({ children, includeTimezones }: Props) => {
         </span>
         <div className="flex items-center gap-4">
           <Link
-            href="https://www.hoizr.com/terms-conditions"
+            href="https://business.hoizr.com/legal/terms"
             target="_blank"
             className="hover:text-[var(--owner-fg-1)] hover:underline"
           >
             Terms
           </Link>
           <Link
-            href="https://www.hoizr.com/privacy-policy"
+            href="https://business.hoizr.com/legal/privacy"
             target="_blank"
             className="hover:text-[var(--owner-fg-1)] hover:underline"
           >
