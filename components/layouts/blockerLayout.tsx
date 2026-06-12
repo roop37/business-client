@@ -68,7 +68,7 @@ const BlockerLayouout = ({ children }: Props) => {
           <div className="flex space-x-2">
             <Link
               className="text-primary hover:underline"
-              href="https://www.hoizr.com/terms-conditions"
+              href="https://business.hoizr.com/legal/terms"
               target="_blank"
             >
               {" "}
@@ -76,7 +76,7 @@ const BlockerLayouout = ({ children }: Props) => {
             </Link>
             <Link
               className="text-primary hover:underline"
-              href="https://www.hoizr.com/privacy-policy"
+              href="https://business.hoizr.com/legal/privacy"
               target="_blank"
             >
               {" "}

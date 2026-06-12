@@ -32,7 +32,7 @@ const StaticLayout = ({ children }: Props) => {
           <p className="text-gray-500 whitespace-pre-line text-sm space-x-2">
             <Link
               className="text-primary underline"
-              href="https://www.hoizr.com/terms-conditions"
+              href="https://business.hoizr.com/legal/terms"
               target="_blank"
             >
               {" "}
@@ -40,7 +40,7 @@ const StaticLayout = ({ children }: Props) => {
             </Link>
             <Link
               className="text-primary underline"
-              href="https://www.hoizr.com/privacy-policy"
+              href="https://business.hoizr.com/legal/privacy"
               target="_blank"
             >
               {" "}

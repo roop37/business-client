@@ -26,10 +26,10 @@ const SUPPORT_LINKS = [
 
 const INSTAGRAM_URL = "https://www.instagram.com/hoizr.technologies";
 const LEGAL_LINKS = [
-  { label: "Privacy", href: "/legal/privacy" },
-  { label: "Terms", href: "/legal/terms" },
-  { label: "Cookies", href: "/legal/cookies" },
-  { label: "GST · CIN", href: "/legal/entity" },
+  { label: "Privacy", href: "https://business.hoizr.com/legal/privacy" },
+  { label: "Terms", href: "https://business.hoizr.com/legal/terms" },
+  { label: "Cookies", href: "https://business.hoizr.com/legal/cookies" },
+  { label: "GST · CIN", href: "https://business.hoizr.com/legal/entity" },
 ];
 const isHttpHref = (href: string) => /^https?:\/\//.test(href);
 

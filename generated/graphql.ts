@@ -1119,6 +1119,24 @@ export type CreateHostPushCampaignInput = {
   target?: InputMaybe<HostEmailTargetType>;
 };
 
+export type CreateMyWhatsAppTemplateInput = {
+  bodyText: Scalars['String']['input'];
+  buttonLabel?: InputMaybe<Scalars['String']['input']>;
+  buttonPhone?: InputMaybe<Scalars['String']['input']>;
+  buttonType: WhatsAppTemplateButtonType;
+  buttonUrl?: InputMaybe<Scalars['String']['input']>;
+  category: WhatsAppTemplateCategory;
+  description?: InputMaybe<Scalars['String']['input']>;
+  footerText?: InputMaybe<Scalars['String']['input']>;
+  headerSampleMediaUrl?: InputMaybe<Scalars['String']['input']>;
+  headerText?: InputMaybe<Scalars['String']['input']>;
+  headerType: WhatsAppTemplateHeaderType;
+  language?: InputMaybe<Scalars['String']['input']>;
+  name: Scalars['String']['input'];
+  slugHint?: InputMaybe<Scalars['String']['input']>;
+  variables?: InputMaybe<Array<WhatsAppTemplateVariableInput>>;
+};
+
 export type CreateScannerInput = {
   email: Scalars['String']['input'];
   eventId: Scalars['String']['input'];
@@ -2876,6 +2894,7 @@ export type Mutation = {
   addPermission: Scalars['Boolean']['output'];
   addTeamMember: Scalars['Boolean']['output'];
   addWaitListUser: Scalars['Boolean']['output'];
+  adminApproveWhatsAppTemplateReview: WhatsAppMessageTemplate;
   adminClearOfferGenerationNegative: EventOfferGeneration;
   adminCreateWhatsAppTemplate: WhatsAppMessageTemplate;
   adminDeleteWhatsAppTemplate: Scalars['Boolean']['output'];
@@ -2890,6 +2909,7 @@ export type Mutation = {
   adminRefreshPayoutSettlement: PayoutSettlement;
   adminRefundLateCapture: LateCaptureRefundResponse;
   adminRejectPayout: Payout;
+  adminRejectWhatsAppTemplateReview: WhatsAppMessageTemplate;
   adminResumePayoutSettlement: PayoutSettlement;
   adminSubmitWhatsAppTemplateToMeta: WhatsAppTemplateSubmissionResult;
   adminTriggerRazorpaySettlementReconcile: RazorpayReconcileSummary;
@@ -2916,6 +2936,7 @@ export type Mutation = {
   artistVerifyOtp: ArtistAuthResult;
   autoGenerateEventDescription: EventEvalResultView;
   blockUnblockAdmin: Scalars['Boolean']['output'];
+  bookmarkWhatsAppTemplate: Scalars['Boolean']['output'];
   changeAdminRole: Scalars['Boolean']['output'];
   completeHostOnboarding: Scalars['Boolean']['output'];
   createAdminEmailCampaign: Scalars['String']['output'];
@@ -2926,6 +2947,7 @@ export type Mutation = {
   createHostPushCampaign: HostPushCampaign;
   createHostWhatsAppCampaign: Scalars['String']['output'];
   createMarketingCreditTopUpOrder: MarketingCreditTopUpOrder;
+  createMyWhatsAppTemplate: WhatsAppMessageTemplate;
   createOfflinePaymentLink: OfflinePaymentLinkResponse;
   createScanner: ScannerCreateResponse;
   deleteAdminEmailCampaign: Scalars['Boolean']['output'];
@@ -2952,6 +2974,7 @@ export type Mutation = {
   publishEvent: Event;
   publishHostPushCampaign: HostPushCampaign;
   regenerateScannerAccessCode: ScannerCreateResponse;
+  requestWhatsAppTemplate: WhatsAppMessageTemplate;
   respondToEventCollaboration: Event;
   resumeHostEmailCampaign: Scalars['Boolean']['output'];
   resumeHostWhatsAppCampaign: Scalars['Boolean']['output'];
@@ -2966,7 +2989,9 @@ export type Mutation = {
   setPrimaryPayout: Payout;
   startNewHostOnboarding: Scalars['Boolean']['output'];
   submitHostFeedback: Scalars['Boolean']['output'];
+  submitMyWhatsAppTemplateForReview: WhatsAppMessageTemplate;
   tokensRefresh: Scalars['Boolean']['output'];
+  unbookmarkWhatsAppTemplate: Scalars['Boolean']['output'];
   updateAdmin: Scalars['Boolean']['output'];
   updateAdminEmailCampaign: Scalars['Boolean']['output'];
   updateConfig: Scalars['Boolean']['output'];
@@ -2982,6 +3007,7 @@ export type Mutation = {
   updateHostPushCampaign: HostPushCampaign;
   updateHostWhatsAppCampaign: Scalars['Boolean']['output'];
   updateIndianCityStatus: Scalars['Boolean']['output'];
+  updateMyWhatsAppTemplate: WhatsAppMessageTemplate;
   updatePermissionPreselect: Scalars['Boolean']['output'];
   updateScanner: ScannerUser;
   updateSubuserPermissions: Scalars['Boolean']['output'];
@@ -3050,6 +3076,11 @@ export type MutationAddTeamMemberArgs = {
 
 export type MutationAddWaitListUserArgs = {
   input: AddWaitListUserInput;
+};
+
+
+export type MutationAdminApproveWhatsAppTemplateReviewArgs = {
+  templateId: Scalars['String']['input'];
 };
 
 
@@ -3124,6 +3155,12 @@ export type MutationAdminRefundLateCaptureArgs = {
 export type MutationAdminRejectPayoutArgs = {
   id: Scalars['String']['input'];
   reason: Scalars['String']['input'];
+};
+
+
+export type MutationAdminRejectWhatsAppTemplateReviewArgs = {
+  reason: Scalars['String']['input'];
+  templateId: Scalars['String']['input'];
 };
 
 
@@ -3250,6 +3287,11 @@ export type MutationBlockUnblockAdminArgs = {
 };
 
 
+export type MutationBookmarkWhatsAppTemplateArgs = {
+  templateId: Scalars['String']['input'];
+};
+
+
 export type MutationChangeAdminRoleArgs = {
   input: ChangeAdminRoleInput;
 };
@@ -3292,6 +3334,11 @@ export type MutationCreateHostWhatsAppCampaignArgs = {
 
 export type MutationCreateMarketingCreditTopUpOrderArgs = {
   input: MarketingCreditTopUpOrderInput;
+};
+
+
+export type MutationCreateMyWhatsAppTemplateArgs = {
+  input: CreateMyWhatsAppTemplateInput;
 };
 
 
@@ -3426,6 +3473,11 @@ export type MutationRegenerateScannerAccessCodeArgs = {
 };
 
 
+export type MutationRequestWhatsAppTemplateArgs = {
+  input: RequestWhatsAppTemplateInput;
+};
+
+
 export type MutationRespondToEventCollaborationArgs = {
   accept: Scalars['Boolean']['input'];
   eventId: Scalars['String']['input'];
@@ -3495,6 +3547,16 @@ export type MutationSubmitHostFeedbackArgs = {
   context: HostFeedbackContext;
   eventId?: InputMaybe<Scalars['String']['input']>;
   rating?: InputMaybe<Scalars['Int']['input']>;
+};
+
+
+export type MutationSubmitMyWhatsAppTemplateForReviewArgs = {
+  templateId: Scalars['String']['input'];
+};
+
+
+export type MutationUnbookmarkWhatsAppTemplateArgs = {
+  templateId: Scalars['String']['input'];
 };
 
 
@@ -3576,6 +3638,11 @@ export type MutationUpdateHostWhatsAppCampaignArgs = {
 
 export type MutationUpdateIndianCityStatusArgs = {
   id: Scalars['String']['input'];
+};
+
+
+export type MutationUpdateMyWhatsAppTemplateArgs = {
+  input: UpdateMyWhatsAppTemplateInput;
 };
 
 
@@ -4043,7 +4110,9 @@ export type Query = {
   adminLoginVerification: Scalars['String']['output'];
   adminLogout: Scalars['Boolean']['output'];
   adminPayoutsReport: AdminPayoutsReport;
+  adminPendingWhatsAppTemplateReviews: WhatsAppTemplatesPaginatedResponse;
   adminTicketsReport: AdminTicketsReport;
+  adminWhatsAppTemplateById: WhatsAppMessageTemplate;
   aiBoostPaymentInfo: AiBoostPaymentInfo;
   allAdmins: AdminPaginatedResponse;
   allHostPayoutAccounts: HostPayoutAccountPaginatedResponse;
@@ -4134,6 +4203,10 @@ export type Query = {
   myMarketingCreditLedger: MarketingCreditLedgerResponse;
   myMarketingReputation: HostMarketingLimitObject;
   myOfflineOrders: OfflineOrdersPaginatedResponse;
+  myWhatsAppTemplateBookmarkIds: Array<Scalars['String']['output']>;
+  myWhatsAppTemplateBookmarks: WhatsAppTemplatesPaginatedResponse;
+  myWhatsAppTemplateById: WhatsAppMessageTemplate;
+  myWhatsAppTemplates: WhatsAppTemplatesPaginatedResponse;
   publicArtistEvents: Array<PublicArtistEvent>;
   publicArtistFollowerCounts: ArtistFollowerCounts;
   publicArtistLinks: Array<ArtistLink>;
@@ -4144,6 +4217,7 @@ export type Query = {
   rejectUserDetails: Scalars['Boolean']['output'];
   searchCollaboratorHosts: Array<Host>;
   searchEventArtists: Array<EventArtistSearchResult>;
+  selectableWhatsAppTemplates: WhatsAppTemplatesPaginatedResponse;
   sendTestAdminEmail: Scalars['Boolean']['output'];
   sendTestHostCampaignEmail: Scalars['Boolean']['output'];
   setHostIdAsCookie: Scalars['Boolean']['output'];
@@ -4273,8 +4347,18 @@ export type QueryAdminPayoutsReportArgs = {
 };
 
 
+export type QueryAdminPendingWhatsAppTemplateReviewsArgs = {
+  pagination?: InputMaybe<PaginationInput>;
+};
+
+
 export type QueryAdminTicketsReportArgs = {
   input: AdminReportFilterInput;
+};
+
+
+export type QueryAdminWhatsAppTemplateByIdArgs = {
+  templateId: Scalars['String']['input'];
 };
 
 
@@ -4567,6 +4651,21 @@ export type QueryMyOfflineOrdersArgs = {
 };
 
 
+export type QueryMyWhatsAppTemplateBookmarksArgs = {
+  pagination?: InputMaybe<PaginationInput>;
+};
+
+
+export type QueryMyWhatsAppTemplateByIdArgs = {
+  templateId: Scalars['String']['input'];
+};
+
+
+export type QueryMyWhatsAppTemplatesArgs = {
+  pagination?: InputMaybe<PaginationInput>;
+};
+
+
 export type QueryPublicArtistEventsArgs = {
   idOrSlug: Scalars['String']['input'];
 };
@@ -4614,6 +4713,11 @@ export type QuerySearchCollaboratorHostsArgs = {
 
 export type QuerySearchEventArtistsArgs = {
   search: Scalars['String']['input'];
+};
+
+
+export type QuerySelectableWhatsAppTemplatesArgs = {
+  pagination?: InputMaybe<PaginationInput>;
 };
 
 
@@ -4693,6 +4797,13 @@ export type RejectUserDetailsInput = {
 
 export type ReorderArtistLinksInput = {
   orderedLinkIds: Array<Scalars['String']['input']>;
+};
+
+export type RequestWhatsAppTemplateInput = {
+  bodyText?: InputMaybe<Scalars['String']['input']>;
+  category?: InputMaybe<WhatsAppTemplateCategory>;
+  name: Scalars['String']['input'];
+  requestNote: Scalars['String']['input'];
 };
 
 export enum RiderType {
@@ -4995,6 +5106,22 @@ export type UpdateHostWhatsAppCampaignInput = {
   templateVariables?: InputMaybe<Array<HostWhatsAppCampaignVariableInput>>;
 };
 
+export type UpdateMyWhatsAppTemplateInput = {
+  bodyText?: InputMaybe<Scalars['String']['input']>;
+  buttonLabel?: InputMaybe<Scalars['String']['input']>;
+  buttonPhone?: InputMaybe<Scalars['String']['input']>;
+  buttonType?: InputMaybe<WhatsAppTemplateButtonType>;
+  buttonUrl?: InputMaybe<Scalars['String']['input']>;
+  description?: InputMaybe<Scalars['String']['input']>;
+  footerText?: InputMaybe<Scalars['String']['input']>;
+  headerSampleMediaUrl?: InputMaybe<Scalars['String']['input']>;
+  headerText?: InputMaybe<Scalars['String']['input']>;
+  headerType?: InputMaybe<WhatsAppTemplateHeaderType>;
+  name?: InputMaybe<Scalars['String']['input']>;
+  templateId: Scalars['ID']['input'];
+  variables?: InputMaybe<Array<WhatsAppTemplateVariableInput>>;
+};
+
 export type UpdateScannerInput = {
   isActive?: InputMaybe<Scalars['Boolean']['input']>;
   phone?: InputMaybe<Scalars['String']['input']>;
@@ -5195,8 +5322,15 @@ export type WhatsAppMessageTemplate = {
   metaStatus: WhatsAppTemplateStatus;
   metaTemplateId?: Maybe<Scalars['String']['output']>;
   name: Scalars['String']['output'];
+  ownerHostId?: Maybe<Scalars['String']['output']>;
   rejectionReason?: Maybe<Scalars['String']['output']>;
+  requestNote?: Maybe<Scalars['String']['output']>;
+  reviewRejectionReason?: Maybe<Scalars['String']['output']>;
+  reviewStatus: WhatsAppTemplateReviewStatus;
+  reviewedAt?: Maybe<Scalars['DateTimeISO']['output']>;
+  reviewedBy?: Maybe<Scalars['String']['output']>;
   slug: Scalars['String']['output'];
+  source: WhatsAppTemplateSource;
   submittedAt?: Maybe<Scalars['DateTimeISO']['output']>;
   updatedAt?: Maybe<Scalars['DateTimeISO']['output']>;
   updatedBy?: Maybe<Scalars['String']['output']>;
@@ -5222,6 +5356,18 @@ export enum WhatsAppTemplateHeaderType {
   None = 'NONE',
   Text = 'TEXT',
   Video = 'VIDEO'
+}
+
+export enum WhatsAppTemplateReviewStatus {
+  ApprovedInternal = 'APPROVED_INTERNAL',
+  Draft = 'DRAFT',
+  PendingReview = 'PENDING_REVIEW',
+  RejectedInternal = 'REJECTED_INTERNAL'
+}
+
+export enum WhatsAppTemplateSource {
+  Admin = 'ADMIN',
+  Host = 'HOST'
 }
 
 export enum WhatsAppTemplateStatus {

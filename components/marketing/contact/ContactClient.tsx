@@ -210,7 +210,7 @@ export const ContactClient = () => {
           By submitting, you agree to be contacted about Hoizr. We never share
           your details — see our{" "}
           <a
-            href="/legal/privacy"
+            href="https://business.hoizr.com/legal/privacy"
             className="font-semibold text-[var(--m-forest-700)] hover:underline"
           >
             privacy policy

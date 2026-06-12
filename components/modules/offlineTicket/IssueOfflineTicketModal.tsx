@@ -14,10 +14,9 @@ import {
   Loader2,
   Minus,
   Plus,
-  TicketCheck,
-  X,
 } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
+import ReusableModal from "@/components/common/modal/modal";
 
 type Props = {
   open: boolean;
@@ -176,31 +175,13 @@ export const IssueOfflineTicketModal = ({
   if (!open) return null;
 
   return (
-    <div
-      className="fixed inset-0 z-[60] grid place-items-end bg-black/40 p-0 backdrop-blur-sm sm:place-items-center sm:p-4"
-      onClick={close}
+    <ReusableModal
+      isOpen={open}
+      onClose={close}
+      title="Issue offline ticket"
+      width="ml"
     >
-      <div
-        className="flex max-h-[92vh] w-full max-w-lg flex-col overflow-hidden rounded-t-owner-xl border border-owner-border bg-owner-bg shadow-owner-lg sm:rounded-owner-xl"
-        onClick={(e) => e.stopPropagation()}
-      >
-        <div className="flex items-center justify-between border-b border-owner-border-soft px-5 py-4">
-          <div className="flex items-center gap-2">
-            <TicketCheck size={18} className="text-owner-blue-500" />
-            <h2 className="text-[15px] font-semibold text-owner-fg-1">
-              Issue offline ticket
-            </h2>
-          </div>
-          <button
-            type="button"
-            onClick={close}
-            className="grid h-8 w-8 place-items-center rounded-owner-md text-owner-fg-3 hover:bg-owner-bg-subtle"
-          >
-            <X size={16} />
-          </button>
-        </div>
-
-        <div className="min-h-0 flex-1 overflow-y-auto px-5 py-4">
+        <div>
           {done ? (
             <div className="flex flex-col items-center py-6 text-center">
               <div className="grid h-12 w-12 place-items-center rounded-full bg-green-100 text-green-600">
@@ -374,7 +355,7 @@ export const IssueOfflineTicketModal = ({
         </div>
 
         {!done ? (
-          <div className="flex items-center justify-between gap-3 border-t border-owner-border-soft px-5 py-4">
+          <div className="mt-4 flex items-center justify-between gap-3 border-t border-owner-border-soft pt-4">
             <span className="text-sm text-owner-fg-3">
               Total <span className="font-semibold text-owner-fg-1">{rupee(total)}</span>
             </span>
@@ -394,8 +375,7 @@ export const IssueOfflineTicketModal = ({
             </button>
           </div>
         ) : null}
-      </div>
-    </div>
+    </ReusableModal>
   );
 };
 
