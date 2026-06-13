@@ -55,7 +55,7 @@ const CHANNELS: Channel[] = [
     label: "WhatsApp broadcast",
     description: "1:1 broadcasts via your WhatsApp Business number.",
     Icon: MessageCircle,
-    available: false,
+    available: true,
   },
   {
     id: "sms",
@@ -105,27 +105,46 @@ const RunCampaignModal = () => {
   const businessAddress = hostAddress?.addressLine1 || "";
   const [balance, setBalance] = useState<number | null>(null);
   const [loading, setLoading] = useState(false);
-  const [creating, setCreating] = useState<"email" | null>(null);
+  const [creating, setCreating] = useState<"email" | "whatsapp" | null>(null);
+  const [eventTickets, setEventTickets] = useState<
+    Array<{ ticketName: string; description?: string | null }>
+  >([]);
 
   useEffect(() => {
     if (!runCampaignModalEvent) return;
     let cancelled = false;
     setLoading(true);
-    sdk
-      .myMarketingCreditLedger({
-        pagination: { pageNumber: 1, rowsPerPage: "ONE" as any },
-      })
-      .then((res) => {
-        if (cancelled) return;
-        const next = res?.myMarketingCreditLedger?.balance;
-        setBalance(typeof next === "number" ? next : Number(next ?? 0));
-      })
-      .catch(() => {
-        if (!cancelled) setBalance(null);
-      })
-      .finally(() => {
-        if (!cancelled) setLoading(false);
-      });
+    Promise.all([
+      sdk
+        .myMarketingCreditLedger({
+          pagination: { pageNumber: 1, rowsPerPage: "ONE" as any },
+        })
+        .then((res) => {
+          if (cancelled) return;
+          const next = res?.myMarketingCreditLedger?.balance;
+          setBalance(typeof next === "number" ? next : Number(next ?? 0));
+        })
+        .catch(() => {
+          if (!cancelled) setBalance(null);
+        }),
+      sdk
+        .getMyEventsForSelector()
+        .then((res) => {
+          if (cancelled) return;
+          const ev = res?.getMyEvents?.find(
+            (e) => e._id === runCampaignModalEvent.eventId,
+          );
+          const tickets = (ev?.tickets ?? [])
+            .filter((t) => t.ticketVisible !== false)
+            .map((t) => ({ ticketName: t.ticketName, description: t.description }));
+          setEventTickets(tickets);
+        })
+        .catch(() => {
+          if (!cancelled) setEventTickets([]);
+        }),
+    ]).finally(() => {
+      if (!cancelled) setLoading(false);
+    });
     return () => {
       cancelled = true;
     };
@@ -213,10 +232,49 @@ const RunCampaignModal = () => {
     }
   };
 
+  const handleWhatsApp = async () => {
+    if (!runCampaignModalEvent || creating) return;
+    setCreating("whatsapp");
+    try {
+      const newId = await sdk
+        .createHostWhatsAppCampaign({
+          input: { campaignName: runCampaignModalEvent.title || "Untitled campaign" },
+        })
+        .then((res) => res?.createHostWhatsAppCampaign);
+
+      if (!newId) throw new Error("Campaign creation returned no id");
+
+      try {
+        await sdk.updateHostWhatsAppCampaign({
+          input: { campaignId: newId, eventId: runCampaignModalEvent.eventId },
+        });
+      } catch {
+        setToastData({
+          type: "warning",
+          message:
+            "Created the campaign — couldn't auto-link the event, pick it on the audience step.",
+        });
+      }
+
+      closeRunCampaignModal();
+      router.push(
+        `/campaigns/whatsapp/onboarding/basics?editId=${encodeURIComponent(newId)}`,
+      );
+    } catch (error) {
+      setToastData({ type: "error", message: extractErrorMessage(error) });
+    } finally {
+      setCreating(null);
+    }
+  };
+
   const handleChannel = (channel: Channel) => {
     if (!runCampaignModalEvent) return;
     if (channel.id === "email") {
       void handleEmail();
+      return;
+    }
+    if (channel.id === "whatsapp") {
+      void handleWhatsApp();
       return;
     }
     if (!channel.available) {
@@ -235,12 +293,29 @@ const RunCampaignModal = () => {
       title="Run a campaign"
       width="ml"
     >
-      <p className="mb-4 text-[12.5px] text-owner-fg-3">
-        For{" "}
-        <span className="font-medium text-owner-fg-1">
-          {runCampaignModalEvent?.title || "Untitled event"}
-        </span>
-      </p>
+      <div className="mb-4">
+        <p className="text-[12.5px] text-owner-fg-3">
+          For{" "}
+          <span className="font-medium text-owner-fg-1">
+            {runCampaignModalEvent?.title || "Untitled event"}
+          </span>
+        </p>
+        {eventTickets.length > 0 ? (
+          <ul className="mt-2 flex flex-col gap-1">
+            {eventTickets.map((t) => (
+              <li key={t.ticketName} className="flex items-start gap-1.5 text-[12px] text-owner-fg-3">
+                <span className="mt-0.5 shrink-0 text-owner-fg-4">·</span>
+                <span>
+                  <span className="font-medium text-owner-fg-2">{t.ticketName}</span>
+                  {t.description ? (
+                    <span className="ml-1 text-owner-fg-4">— {t.description}</span>
+                  ) : null}
+                </span>
+              </li>
+            ))}
+          </ul>
+        ) : null}
+      </div>
 
       <ul className="flex flex-col gap-2.5">
         {/* Marketing credit — first horizontal card. Clicking the whole
@@ -279,15 +354,14 @@ const RunCampaignModal = () => {
         </li>
 
         {CHANNELS.map((channel) => {
-          const isEmail = channel.id === "email";
-          const isCreating = creating === "email" && isEmail;
+          const isCreating = creating === channel.id;
           return (
             <li key={channel.id}>
               <button
                 type="button"
                 onClick={() => handleChannel(channel)}
                 disabled={isCreating}
-                aria-disabled={!channel.available && !isEmail}
+                aria-disabled={!channel.available}
                 className={`group flex w-full items-center gap-3 rounded-owner-md border bg-owner-bg px-4 py-3 text-left transition ${
                   channel.available
                     ? "border-owner-border hover:border-owner-blue-200 hover:shadow-sm"

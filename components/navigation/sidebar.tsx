@@ -391,7 +391,7 @@ const isActiveFor = (pathname: string, item: TSidebarItem) => {
   if (item.title === "Dashboard") return pathname === "/dashboard";
   if (item.title === "Campaigns") return pathname.startsWith("/campaigns");
   if (item.title === "Rewards & Loyalties")
-    return pathname.startsWith("/rewards");
+    return pathname.startsWith("/rewards") || pathname.startsWith("/coupons");
   if (item.title === "Payment") return pathname.startsWith("/payment");
   return item.href !== "" && pathname.startsWith(item.href);
 };
