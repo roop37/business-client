@@ -97,6 +97,8 @@ query getMyEventsForSelector {
       ticketSold
       ticketPrice
       ticketVisible
+      ticketName
+      description
     }
   }
 }
