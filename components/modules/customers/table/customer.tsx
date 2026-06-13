@@ -1,14 +1,19 @@
 import {
   Badge,
-  Card,
   OwnerButton,
   PageHeader,
   PillTabs,
   inrFormat,
 } from "@/components/common/owner";
-import EmptyStateView from "@/components/common/emptyTableView/emptyTableView";
+import DataTable from "@/components/common/dataTable";
+import DataTableTextCell from "@/components/common/dataTable/common/textCell";
 import ReusableModal from "@/components/common/modal/modal";
-import Loader from "@/components/loader";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import {
   FilterDataEnum,
   FilterDataInput,
@@ -28,7 +33,9 @@ import {
   getPageSizeEnum,
   getPageSizeNumber,
 } from "@/utils/utilFUncs";
-import { Download, Filter, Plus, Search, Upload } from "lucide-react";
+import { ColumnDef, createColumnHelper } from "@tanstack/react-table";
+import { Download, Plus, Upload } from "lucide-react";
+import { FiClock } from "react-icons/fi";
 import { format } from "date-fns";
 import React, { useEffect, useMemo, useState } from "react";
 
@@ -88,14 +95,6 @@ const rangeTabs = [
 const customerName = (customer: Customer) =>
   [customer.firstName, customer.lastName].filter(Boolean).join(" ") ||
   "Unnamed customer";
-
-const initialsFor = (name: string) =>
-  name
-    .split(" ")
-    .map((part) => part[0])
-    .join("")
-    .slice(0, 2)
-    .toUpperCase();
 
 const tierForCustomer = (customer: Customer) => {
   if (Number(customer.ltv ?? 0) >= 20000 || customer.orderHistory.length >= 10) {
@@ -233,6 +232,165 @@ const CustomerRecord: React.FC = () => {
     1
   );
 
+  const openOrderHistory = (customer: Customer) => {
+    setOrderHistoryData(customer.orderHistory);
+    setIsOrderHistoryOpen(true);
+  };
+
+  const columnHelper = createColumnHelper<Customer>();
+
+  const columns: ColumnDef<Customer, any>[] = useMemo(
+    () => [
+      columnHelper.accessor("firstName", {
+        header: "Name",
+        enableColumnFilter: true,
+        filterFn: "auto",
+        enableSorting: true,
+        cell: ({ row }) => {
+          const name = customerName(row.original);
+          return (
+            <DataTableTextCell
+              className="cursor-pointer"
+              onClick={() => openOrderHistory(row.original)}
+              value={name}
+            />
+          );
+        },
+      }),
+      columnHelper.accessor("lastOrderDate", {
+        header: "Last event",
+        enableColumnFilter: false,
+        enableSorting: true,
+        cell: ({ row }) => (
+          <DataTableTextCell
+            value={
+              row.original.lastOrderDate
+                ? convertToRestoTimezone(
+                    timezone,
+                    new Date(row.original.lastOrderDate)
+                  )
+                : "No orders"
+            }
+          />
+        ),
+      }),
+      columnHelper.accessor("phone", {
+        header: "Phone",
+        enableColumnFilter: true,
+        filterFn: "auto",
+        enableSorting: false,
+        cell: ({ row }) => (
+          <DataTableTextCell value={row.original.phone || "N/A"} />
+        ),
+      }),
+      columnHelper.accessor("email", {
+        header: "Email",
+        enableColumnFilter: true,
+        filterFn: "auto",
+        enableSorting: false,
+        cell: ({ row }) => (
+          <DataTableTextCell value={row.original.email || "N/A"} />
+        ),
+      }),
+      columnHelper.accessor("orderHistory", {
+        header: "Shows",
+        enableColumnFilter: false,
+        enableSorting: true,
+        cell: ({ row }) => (
+          <DataTableTextCell
+            value={row.original.orderHistory.length.toLocaleString("en-IN")}
+          />
+        ),
+      }),
+      columnHelper.accessor("ltv", {
+        header: "Spent",
+        enableColumnFilter: false,
+        enableSorting: true,
+        cell: ({ row }) => (
+          <span className="text-sm font-medium text-owner-fg-1 tabular-nums">
+            {inrFormat(row.original.ltv)}
+          </span>
+        ),
+      }),
+      columnHelper.accessor("aov", {
+        header: "AOV",
+        enableColumnFilter: false,
+        enableSorting: true,
+        cell: ({ row }) => (
+          <span className="text-sm font-medium text-owner-fg-1 tabular-nums">
+            {inrFormat(row.original.aov)}
+          </span>
+        ),
+      }),
+      columnHelper.accessor("firstOrderDate", {
+        header: "Customer since",
+        enableColumnFilter: false,
+        enableSorting: true,
+        cell: ({ row }) => (
+          <DataTableTextCell
+            value={
+              row.original.firstOrderDate
+                ? format(new Date(row.original.firstOrderDate), "MMM yyyy")
+                : "—"
+            }
+          />
+        ),
+      }),
+      columnHelper.display({
+        id: "tier",
+        header: "Tier",
+        cell: ({ row }) => {
+          const tier = tierForCustomer(row.original);
+          return (
+            <Badge
+              tone={
+                tier === "Founder"
+                  ? "info"
+                  : tier === "Insider"
+                  ? "success"
+                  : "neutral"
+              }
+            >
+              {tier}
+            </Badge>
+          );
+        },
+      }),
+      columnHelper.display({
+        id: "marketing",
+        header: "Marketing",
+        cell: ({ row }) => (
+          <Badge tone={row.original.email ? "success" : "neutral"}>
+            {row.original.email ? "Subscribed" : "Unsubscribed"}
+          </Badge>
+        ),
+      }),
+      columnHelper.display({
+        id: "actions",
+        header: "Actions",
+        cell: ({ row }) => (
+          <TooltipProvider>
+            <div className="flex items-center justify-center">
+              <Tooltip>
+                <TooltipTrigger>
+                  <FiClock
+                    className="text-primary text-lg cursor-pointer"
+                    onClick={() => openOrderHistory(row.original)}
+                  />
+                </TooltipTrigger>
+                <TooltipContent className="bg-black text-white max-w-xs">
+                  <p>Order history</p>
+                </TooltipContent>
+              </Tooltip>
+            </div>
+          </TooltipProvider>
+        ),
+      }),
+    ],
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [columnHelper, timezone]
+  );
+
   const insights = useMemo(() => {
     const returning = data.filter((customer) => customer.orderHistory.length > 1);
     const emailSubscribers = data.filter((customer) => customer.email);
@@ -313,173 +471,48 @@ const CustomerRecord: React.FC = () => {
         ))}
       </div>
 
-      <div className="mb-4 flex flex-col gap-3 lg:flex-row">
-        <div className="owner-search flex-1">
-          <Search size={18} />
-          <input
-            value={searchFilter}
-            onChange={(event) => {
-              setPageIndex(1);
-              setFilterData(undefined);
-              setSearchFilter(event.target.value);
-            }}
-            placeholder="Search customers by name, phone, or email"
-          />
-        </div>
-        <OwnerButton
-          variant="secondary"
-          leadingIcon={<Filter size={16} />}
-        >
-          Filter
-        </OwnerButton>
-        <OwnerButton
-          variant="secondary"
-          leadingIcon={<Download size={16} />}
-          onClick={handleCsvDownload}
-          disabled={downloadBtnLoading}
-        >
-          Export
-        </OwnerButton>
-      </div>
-
-      <Card padding={0} className="overflow-hidden">
-        {loading ? (
-          <div className="flex min-h-[280px] items-center justify-center">
-            <Loader />
-          </div>
-        ) : data.length ? (
-          <div className="overflow-x-auto">
-            <table className="owner-table min-w-[1040px]">
-              <caption className="sr-only">Customers</caption>
-              <thead>
-                <tr>
-                  <th scope="col">Name</th>
-                  <th scope="col">Last event</th>
-                  <th scope="col">Phone</th>
-                  <th scope="col">Email</th>
-                  <th scope="col" className="num">Shows</th>
-                  <th scope="col" className="num">Spent</th>
-                  <th scope="col" className="num">AOV</th>
-                  <th scope="col">Customer since</th>
-                  <th scope="col">Tier</th>
-                  <th scope="col">Marketing</th>
-                </tr>
-              </thead>
-              <tbody>
-                {data.map((customer, index) => {
-                  const name = customerName(customer);
-                  const tier = tierForCustomer(customer);
-                  return (
-                    <tr key={customer._id}>
-                      <td>
-                        <div className="flex items-center gap-3">
-                          <div
-                            className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-[12px] font-bold text-white"
-                            style={{
-                              background: `linear-gradient(135deg, hsl(${
-                                index * 47
-                              }, 70%, 60%), hsl(${
-                                index * 47 + 40
-                              }, 70%, 50%))`,
-                            }}
-                          >
-                            {initialsFor(name)}
-                          </div>
-                          <span className="font-medium">{name}</span>
-                        </div>
-                      </td>
-                      <td className="text-owner-fg-3">
-                        {customer.lastOrderDate
-                          ? convertToRestoTimezone(
-                              timezone,
-                              new Date(customer.lastOrderDate)
-                            )
-                          : "No orders"}
-                      </td>
-                      <td className="text-owner-fg-3 tabular-nums">
-                        {customer.phone || "N/A"}
-                      </td>
-                      <td className="text-owner-fg-3">{customer.email || "N/A"}</td>
-                      <td className="num font-medium">
-                        {customer.orderHistory.length.toLocaleString("en-IN")}
-                      </td>
-                      <td className="num">{inrFormat(customer.ltv)}</td>
-                      <td className="num tabular-nums">
-                        {inrFormat(customer.aov)}
-                      </td>
-                      <td className="text-owner-fg-3">
-                        {customer.firstOrderDate
-                          ? format(new Date(customer.firstOrderDate), "MMM yyyy")
-                          : "—"}
-                      </td>
-                      <td>
-                        <Badge
-                          tone={
-                            tier === "Founder"
-                              ? "info"
-                              : tier === "Insider"
-                              ? "success"
-                              : "neutral"
-                          }
-                        >
-                          {tier}
-                        </Badge>
-                      </td>
-                      <td>
-                        <Badge tone={customer.email ? "success" : "neutral"}>
-                          {customer.email ? "Subscribed" : "Unsubscribed"}
-                        </Badge>
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
-        ) : (
-          <div className="p-8">
-            <EmptyStateView title="No customers found, please wait for your first customer to arrive!" />
-          </div>
-        )}
-
-        <div className="flex flex-col gap-3 border-t border-owner-border-soft px-6 py-4 sm:flex-row sm:items-center sm:justify-between">
-          <span className="text-[13px] text-owner-fg-4">
-            Page {pageIndex} of {pageCount} - {totalData.toLocaleString("en-IN")} customers
-          </span>
-          <div className="flex items-center gap-2">
-            <select
-              className="h-9 rounded-owner-sm border border-owner-border bg-owner-bg px-2 text-[13px] text-owner-fg-2"
-              value={getPageSizeNumber(pageSize)}
-              onChange={(event) => {
-                setPageIndex(1);
-                setPageSize(getPageSizeEnum(Number(event.target.value)));
-              }}
-            >
-              {[10, 20, 30, 40, 50].map((size) => (
-                <option key={size} value={size}>
-                  {size} rows
-                </option>
-              ))}
-            </select>
-            <OwnerButton
-              variant="secondary"
-              size="sm"
-              onClick={() => setPageIndex((prev) => Math.max(prev - 1, 1))}
-              disabled={pageIndex <= 1}
-            >
-              Previous
-            </OwnerButton>
-            <OwnerButton
-              variant="secondary"
-              size="sm"
-              onClick={() => setPageIndex((prev) => Math.min(prev + 1, pageCount))}
-              disabled={pageIndex >= pageCount}
-            >
-              Next
-            </OwnerButton>
-          </div>
-        </div>
-      </Card>
+      <DataTable
+        totalRows={totalData}
+        columns={columns}
+        data={data}
+        loading={loading}
+        manualPagination={true}
+        pageSize={getPageSizeNumber(pageSize)}
+        pageCount={pageCount}
+        nextPage={() => {
+          if (pageIndex < pageCount) setPageIndex((prev) => prev + 1);
+        }}
+        prevPage={() => {
+          if (pageIndex > 1) setPageIndex((prev) => prev - 1);
+        }}
+        paginationData={{
+          pageIndex: pageIndex - 1,
+          pageSize: getPageSizeNumber(pageSize),
+        }}
+        pageSizeChangeHandler={(size) => {
+          setPageIndex(1);
+          setPageSize(getPageSizeEnum(size));
+        }}
+        downloadClickHandler={async () => {
+          await handleCsvDownload();
+        }}
+        downloadFileName={downloadFileName}
+        downloadLoading={downloadBtnLoading}
+        filterClickHandler={async (next) => {
+          setPageIndex(1);
+          setSearchFilter("");
+          setFilterData(next);
+        }}
+        sortClickHandler={async (next) => {
+          setSortData(next);
+        }}
+        searchFilter={searchFilter}
+        setSearchFilter={(value) => {
+          setPageIndex(1);
+          setFilterData(undefined);
+          setSearchFilter(value);
+        }}
+      />
 
       <ReusableModal
         isOpen={isOrderHistoryOpen}

@@ -26,7 +26,7 @@ export const MarketingCreditWarning = ({
   label = "this campaign",
   className = "",
 }: MarketingCreditWarningProps) => {
-  const { openTopUpModal } = useGlobalStore();
+  const { openTopUpModal, marketingCreditVersion } = useGlobalStore();
   const [balance, setBalance] = useState<number | null>(null);
 
   const normalizedEstimate = normalizeAmount(estimatedCost);
@@ -58,7 +58,10 @@ export const MarketingCreditWarning = ({
     return () => {
       cancelled = true;
     };
-  }, [normalizedEstimate]);
+    // marketingCreditVersion bumps after a verified top-up — refetch the
+    // balance so the shortfall recomputes and this warning unmounts itself
+    // (shortfall <= 0 returns null below) without a page reload.
+  }, [normalizedEstimate, marketingCreditVersion]);
 
   if (normalizedEstimate <= 0 || balance === null || shortfall <= 0) {
     return null;

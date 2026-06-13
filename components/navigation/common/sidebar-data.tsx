@@ -69,7 +69,7 @@ export const getSidebarList = (): TSidebarItem[] => [
     ],
   },
   {
-    title: "Coupons",
+    title: "Coupons & Promo Codes",
     href: "/coupons",
     icon: TicketPercent,
     active: true,
@@ -88,11 +88,9 @@ export const getSidebarList = (): TSidebarItem[] => [
         href: "/rewards/loyalty-settings",
         comingSoon: true,
       },
-      {
-        title: "Promo Codes",
-        href: "/rewards/promo-codes",
-        comingSoon: true,
-      },
+      // "Promo Codes" removed here — it was a blocked (comingSoon) duplicate of
+      // the live "Coupons & Promo Codes" feature above, which is the real
+      // promo-code entry point.
     ],
   },
   {

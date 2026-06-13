@@ -1,12 +1,19 @@
 import {
   Badge,
-  Card,
   PageHeader,
   PillTabs,
   StatTile,
   inrFormat,
 } from "@/components/common/owner";
 import type { BadgeTone } from "@/components/common/owner";
+import DataTable from "@/components/common/dataTable";
+import DataTableTextCell from "@/components/common/dataTable/common/textCell";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import MainLayout from "@/components/layouts/mainBodyLayout";
 import useGlobalStore from "@/store/global";
 import { PermissionTypeEnum } from "@/generated/graphql";
@@ -20,7 +27,8 @@ import {
   type OfflineEvent,
   type OfflineOrderRow,
 } from "@/utils/offlineTicketClient";
-import { Search } from "lucide-react";
+import { ColumnDef, createColumnHelper } from "@tanstack/react-table";
+import { FiEye } from "react-icons/fi";
 import { GetServerSideProps } from "next";
 import React, { useEffect, useMemo, useState } from "react";
 
@@ -144,6 +152,205 @@ const OrdersPage = () => {
     return { count: orders.length, revenue, tickets };
   }, [orders]);
 
+  const orderColumnHelper = createColumnHelper<HostOrderRow>();
+  const orderColumns: ColumnDef<HostOrderRow, any>[] = useMemo(
+    () => [
+      orderColumnHelper.accessor("customerName", {
+        header: "Customer",
+        enableColumnFilter: true,
+        filterFn: "auto",
+        enableSorting: true,
+        cell: ({ row }) => (
+          <div className="flex flex-col">
+            <DataTableTextCell
+              className="cursor-pointer"
+              onClick={() => openOrderReceipt(row.original.orderId)}
+              value={row.original.customerName}
+            />
+            <span className="text-[12px] text-owner-fg-4">
+              {row.original.customerEmail ?? row.original.customerPhone ?? ""}
+            </span>
+          </div>
+        ),
+      }),
+      orderColumnHelper.accessor("eventTitle", {
+        header: "Event",
+        enableColumnFilter: true,
+        filterFn: "auto",
+        enableSorting: true,
+        cell: ({ row }) => (
+          <DataTableTextCell value={row.original.eventTitle ?? "—"} />
+        ),
+      }),
+      orderColumnHelper.accessor("ticketCount", {
+        header: "Tickets",
+        enableColumnFilter: false,
+        enableSorting: true,
+        cell: ({ row }) => (
+          <span className="text-sm font-medium text-owner-fg-1 tabular-nums">
+            {row.original.ticketCount}
+          </span>
+        ),
+      }),
+      orderColumnHelper.accessor("totalAmount", {
+        header: "Amount",
+        enableColumnFilter: false,
+        enableSorting: true,
+        cell: ({ row }) => (
+          <span className="text-sm font-medium text-owner-fg-1 tabular-nums">
+            {inrFormat(row.original.totalAmount)}
+          </span>
+        ),
+      }),
+      orderColumnHelper.accessor("source", {
+        header: "Source",
+        enableColumnFilter: true,
+        filterFn: "auto",
+        enableSorting: false,
+        cell: ({ row }) => (
+          <DataTableTextCell value={sourceLabel(row.original.source)} />
+        ),
+      }),
+      orderColumnHelper.accessor("status", {
+        header: "Status",
+        enableColumnFilter: true,
+        filterFn: "auto",
+        enableSorting: true,
+        cell: ({ row }) => {
+          const st = orderStatusLabel(row.original.status);
+          return (
+            <Badge tone={st.tone}>
+              {row.original.checkedIn && row.original.status !== "REFUNDED"
+                ? "Checked in"
+                : st.label}
+            </Badge>
+          );
+        },
+      }),
+      orderColumnHelper.accessor("createdAt", {
+        header: "Placed",
+        enableColumnFilter: false,
+        enableSorting: true,
+        cell: ({ row }) => (
+          <DataTableTextCell value={fmtDate(row.original.createdAt)} />
+        ),
+      }),
+      orderColumnHelper.display({
+        id: "actions",
+        header: "Actions",
+        cell: ({ row }) => (
+          <TooltipProvider>
+            <div className="flex items-center justify-center">
+              <Tooltip>
+                <TooltipTrigger>
+                  <FiEye
+                    className="text-primary text-lg cursor-pointer"
+                    onClick={() => openOrderReceipt(row.original.orderId)}
+                  />
+                </TooltipTrigger>
+                <TooltipContent className="bg-black text-white max-w-xs">
+                  <p>View receipt</p>
+                </TooltipContent>
+              </Tooltip>
+            </div>
+          </TooltipProvider>
+        ),
+      }),
+    ],
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [orderColumnHelper]
+  );
+
+  const offlineColumnHelper = createColumnHelper<OfflineOrderRow>();
+  const offlineColumns: ColumnDef<OfflineOrderRow, any>[] = useMemo(
+    () => [
+      offlineColumnHelper.accessor("customerFirstName", {
+        header: "Customer",
+        enableColumnFilter: true,
+        filterFn: "auto",
+        enableSorting: true,
+        cell: ({ row }) => {
+          const name =
+            [row.original.customerFirstName, row.original.customerLastName]
+              .filter(Boolean)
+              .join(" ") || "Guest";
+          return (
+            <div className="flex flex-col">
+              <DataTableTextCell value={name} />
+              <span className="text-[12px] text-owner-fg-4">
+                {row.original.customerEmail ?? row.original.customerPhone}
+              </span>
+            </div>
+          );
+        },
+      }),
+      offlineColumnHelper.accessor("eventId", {
+        header: "Event",
+        enableColumnFilter: false,
+        enableSorting: false,
+        cell: ({ row }) => (
+          <DataTableTextCell
+            value={eventTitleById.get(row.original.eventId) ?? "—"}
+          />
+        ),
+      }),
+      offlineColumnHelper.accessor("mode", {
+        header: "Type",
+        enableColumnFilter: true,
+        filterFn: "auto",
+        enableSorting: false,
+        cell: ({ row }) => (
+          <DataTableTextCell
+            value={row.original.mode === "ISSUED" ? "Issued" : "Payment link"}
+          />
+        ),
+      }),
+      offlineColumnHelper.accessor("amountTotal", {
+        header: "Amount",
+        enableColumnFilter: false,
+        enableSorting: true,
+        cell: ({ row }) => (
+          <span className="text-sm font-medium text-owner-fg-1 tabular-nums">
+            {inrFormat(row.original.amountTotal)}
+          </span>
+        ),
+      }),
+      offlineColumnHelper.accessor("status", {
+        header: "Status",
+        enableColumnFilter: true,
+        filterFn: "auto",
+        enableSorting: true,
+        cell: ({ row }) => {
+          const st = offlineStatusLabel(row.original.status);
+          return <Badge tone={st.tone}>{st.label}</Badge>;
+        },
+      }),
+      offlineColumnHelper.accessor("createdByName", {
+        header: "Issued by",
+        enableColumnFilter: false,
+        enableSorting: false,
+        cell: ({ row }) => (
+          <div className="flex items-center gap-1 text-sm text-owner-fg-1">
+            {row.original.createdByName ?? "—"}
+            {row.original.createdByCollaborator ? (
+              <span className="text-[12px] text-owner-fg-4">(collab)</span>
+            ) : null}
+          </div>
+        ),
+      }),
+      offlineColumnHelper.accessor("createdAt", {
+        header: "Created",
+        enableColumnFilter: false,
+        enableSorting: true,
+        cell: ({ row }) => (
+          <DataTableTextCell value={fmtDate(row.original.createdAt)} />
+        ),
+      }),
+    ],
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [offlineColumnHelper, eventTitleById]
+  );
+
   return (
     <div className="min-w-0">
       <PageHeader
@@ -183,151 +390,31 @@ const OrdersPage = () => {
         </select>
       </div>
 
-      <Card padding={0} className="overflow-hidden">
-        <div className="border-b border-owner-border-soft p-4">
-          <div className="owner-search">
-            <Search size={18} />
-            <input
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              placeholder="Search by customer, email, phone, or event"
-            />
-          </div>
-        </div>
-
-        <div className="overflow-x-auto">
-          {tab === "orders" ? (
-            <table className="owner-table min-w-[920px]">
-              <thead>
-                <tr>
-                  <th scope="col">Customer</th>
-                  <th scope="col">Event</th>
-                  <th scope="col" className="num">Tickets</th>
-                  <th scope="col" className="num">Amount</th>
-                  <th scope="col">Source</th>
-                  <th scope="col">Status</th>
-                  <th scope="col">Placed</th>
-                </tr>
-              </thead>
-              <tbody>
-                {loading ? (
-                  <tr>
-                    <td colSpan={7} className="text-center text-owner-fg-4">
-                      Loading orders…
-                    </td>
-                  </tr>
-                ) : ordersFiltered.length === 0 ? (
-                  <tr>
-                    <td colSpan={7} className="text-center text-owner-fg-4">
-                      No orders yet.
-                    </td>
-                  </tr>
-                ) : (
-                  ordersFiltered.map((o) => {
-                    const st = orderStatusLabel(o.status);
-                    return (
-                      <tr
-                        key={o.orderId}
-                        onClick={() => openOrderReceipt(o.orderId)}
-                        className="cursor-pointer transition hover:bg-owner-bg-subtle"
-                      >
-                        <td>
-                          <div className="font-medium text-owner-fg-1">
-                            {o.customerName}
-                          </div>
-                          <div className="text-xs text-owner-fg-4">
-                            {o.customerEmail ?? o.customerPhone ?? ""}
-                          </div>
-                        </td>
-                        <td>{o.eventTitle ?? "—"}</td>
-                        <td className="num tabular-nums">{o.ticketCount}</td>
-                        <td className="num tabular-nums">{inrFormat(o.totalAmount)}</td>
-                        <td className="text-xs">{sourceLabel(o.source)}</td>
-                        <td>
-                          <Badge tone={st.tone}>
-                            {o.checkedIn && o.status !== "REFUNDED"
-                              ? "Checked in"
-                              : st.label}
-                          </Badge>
-                        </td>
-                        <td className="text-xs text-owner-fg-3">{fmtDate(o.createdAt)}</td>
-                      </tr>
-                    );
-                  })
-                )}
-              </tbody>
-            </table>
-          ) : (
-            <table className="owner-table min-w-[920px]">
-              <thead>
-                <tr>
-                  <th scope="col">Customer</th>
-                  <th scope="col">Event</th>
-                  <th scope="col">Type</th>
-                  <th scope="col" className="num">Amount</th>
-                  <th scope="col">Status</th>
-                  <th scope="col">Issued by</th>
-                  <th scope="col">Created</th>
-                </tr>
-              </thead>
-              <tbody>
-                {loading ? (
-                  <tr>
-                    <td colSpan={7} className="text-center text-owner-fg-4">
-                      Loading offline orders…
-                    </td>
-                  </tr>
-                ) : offlineFiltered.length === 0 ? (
-                  <tr>
-                    <td colSpan={7} className="text-center text-owner-fg-4">
-                      No offline orders yet. Use “Issue offline ticket” to create one.
-                    </td>
-                  </tr>
-                ) : (
-                  offlineFiltered.map((o) => {
-                    const st = offlineStatusLabel(o.status);
-                    const name =
-                      [o.customerFirstName, o.customerLastName]
-                        .filter(Boolean)
-                        .join(" ") || "Guest";
-                    return (
-                      <tr key={o._id}>
-                        <td>
-                          <div className="font-medium text-owner-fg-1">{name}</div>
-                          <div className="text-xs text-owner-fg-4">
-                            {o.customerEmail ?? o.customerPhone}
-                          </div>
-                        </td>
-                        <td>{eventTitleById.get(o.eventId) ?? "—"}</td>
-                        <td className="text-xs">
-                          {o.mode === "ISSUED" ? "Issued" : "Payment link"}
-                        </td>
-                        <td className="num tabular-nums">{inrFormat(o.amountTotal)}</td>
-                        <td>
-                          <Badge tone={st.tone}>{st.label}</Badge>
-                        </td>
-                        <td className="text-xs">
-                          {o.createdByName ?? "—"}
-                          {o.createdByCollaborator ? (
-                            <span className="ml-1 text-owner-fg-4">(collab)</span>
-                          ) : null}
-                        </td>
-                        <td className="text-xs text-owner-fg-3">{fmtDate(o.createdAt)}</td>
-                      </tr>
-                    );
-                  })
-                )}
-              </tbody>
-            </table>
-          )}
-        </div>
-
-        <div className="flex items-center justify-between border-t border-owner-border-soft px-6 py-4">
-          <span className="text-[13px] text-owner-fg-4">
-            {tab === "orders" ? ordersFiltered.length : offlineFiltered.length} shown
-          </span>
-        </div>
-      </Card>
+      {tab === "orders" ? (
+        <DataTable
+          totalRows={ordersFiltered.length}
+          columns={orderColumns}
+          data={ordersFiltered}
+          loading={loading}
+          manualPagination={false}
+          hideDownloadButton
+          pageSize={10}
+          searchFilter={search}
+          setSearchFilter={setSearch}
+        />
+      ) : (
+        <DataTable
+          totalRows={offlineFiltered.length}
+          columns={offlineColumns}
+          data={offlineFiltered}
+          loading={loading}
+          manualPagination={false}
+          hideDownloadButton
+          pageSize={10}
+          searchFilter={search}
+          setSearchFilter={setSearch}
+        />
+      )}
     </div>
   );
 };

@@ -61,7 +61,6 @@ const WhatsAppTemplateAuthorForm = ({
   const [headerText, setHeaderText] = useState("");
   const [headerSampleMediaUrl, setHeaderSampleMediaUrl] = useState("");
   const [bodyText, setBodyText] = useState("");
-  const [footerText, setFooterText] = useState("");
   const [buttonType, setButtonType] = useState<WhatsAppTemplateButtonType>("NONE");
   const [buttonLabel, setButtonLabel] = useState("");
   const [buttonUrl, setButtonUrl] = useState("");
@@ -108,7 +107,6 @@ const WhatsAppTemplateAuthorForm = ({
             ? headerSampleMediaUrl.trim() || undefined
             : undefined,
         bodyText: bodyText.trim(),
-        footerText: footerText.trim() || undefined,
         buttonType,
         buttonUrl: buttonType === "URL" ? buttonUrl.trim() || undefined : undefined,
         buttonLabel:
@@ -285,22 +283,25 @@ const WhatsAppTemplateAuthorForm = ({
         ))}
       </div>
 
-      <Field label="Footer (optional)">
-        <input
-          className={inputCls}
-          value={footerText}
-          onChange={(e) => setFooterText(e.target.value)}
-          placeholder="e.g. Reply STOP to opt out"
-        />
-      </Field>
+      <div className="rounded-owner-md border border-owner-border-soft bg-owner-bg-subtle px-3 py-2 text-[11px] text-owner-fg-4">
+        Hoizr automatically adds a standard “Reply STOP to opt out” footer to
+        every template, so recipients can always opt out. You don&apos;t need to
+        add one.
+      </div>
 
       <Field label="Button">
         <select
           className={inputCls}
           value={buttonType}
-          onChange={(e) =>
-            setButtonType(e.target.value as WhatsAppTemplateButtonType)
-          }
+          onChange={(e) => {
+            const next = e.target.value as WhatsAppTemplateButtonType;
+            setButtonType(next);
+            // Default the CTA to the Hoizr venue page so the link is never
+            // empty; the host can point it at a specific event or use {{1}}.
+            if (next === "URL" && !buttonUrl.trim()) {
+              setButtonUrl("https://hoizr.com");
+            }
+          }}
         >
           <option value="NONE">No button</option>
           <option value="URL">Visit a link</option>
@@ -319,7 +320,10 @@ const WhatsAppTemplateAuthorForm = ({
         </Field>
       ) : null}
       {buttonType === "URL" ? (
-        <Field label="Button URL" hint="Use {{1}} for a per-message link.">
+        <Field
+          label="Button URL"
+          hint="Defaults to your Hoizr venue page. Point it at a specific event (https://hoizr.com/events/…) or use {{1}} for a per-message link."
+        >
           <input
             className={inputCls}
             value={buttonUrl}

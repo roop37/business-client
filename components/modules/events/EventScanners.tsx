@@ -1,7 +1,16 @@
 import ConfirmModal from "@/components/common/confirm-modal";
+import DataTable from "@/components/common/dataTable";
+import DataTableTextCell from "@/components/common/dataTable/common/textCell";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import useGlobalStore from "@/store/global";
 import { sdk } from "@/utils/graphqlClient";
 import { extractErrorMessage } from "@/utils/utilFUncs";
+import { ColumnDef, createColumnHelper } from "@tanstack/react-table";
 import {
   CheckCircle2Icon,
   ClipboardCopyIcon,
@@ -388,6 +397,228 @@ export const EventScanners = ({ eventId }: { eventId: string }) => {
 
   const scanTotalPages = Math.max(1, Math.ceil(scanTotal / SCAN_PAGE_SIZE));
 
+  const scannerColumnHelper = createColumnHelper<Scanner>();
+  const scannerColumns: ColumnDef<Scanner, any>[] = useMemo(
+    () => [
+      scannerColumnHelper.accessor("scannerName", {
+        header: "Scanner",
+        enableColumnFilter: true,
+        filterFn: "auto",
+        enableSorting: true,
+        cell: ({ row }) => (
+          <div className="flex flex-col">
+            <div className="flex items-center gap-2">
+              <span className="font-semibold text-owner-fg-1">
+                {row.original.scannerName}
+              </span>
+              <span className="inline-flex items-center gap-1 rounded-md bg-owner-bg-subtle px-2 py-0.5 text-xs font-medium text-owner-fg-3">
+                {labelForType(row.original.scannerType)}
+              </span>
+            </div>
+            <span className="text-[12px] text-owner-fg-4">
+              {row.original.name}
+            </span>
+          </div>
+        ),
+      }),
+      scannerColumnHelper.accessor("email", {
+        header: "Contact",
+        enableColumnFilter: true,
+        filterFn: "auto",
+        enableSorting: false,
+        cell: ({ row }) => (
+          <div className="flex flex-col">
+            <DataTableTextCell value={row.original.email} />
+            {row.original.phone ? (
+              <span className="text-[12px] text-owner-fg-4">
+                {row.original.phone}
+              </span>
+            ) : null}
+          </div>
+        ),
+      }),
+      scannerColumnHelper.accessor("totalScanned", {
+        header: "Scans",
+        enableColumnFilter: false,
+        enableSorting: true,
+        cell: ({ row }) => (
+          <div className="flex flex-col">
+            <span className="text-sm font-medium text-owner-fg-1 tabular-nums">
+              {row.original.totalScanned ?? 0}
+            </span>
+            <span className="text-[12px] text-owner-fg-4">
+              Last login {formatDate(row.original.lastLoginAt)}
+            </span>
+          </div>
+        ),
+      }),
+      scannerColumnHelper.accessor("isActive", {
+        header: "Status",
+        enableColumnFilter: false,
+        enableSorting: true,
+        cell: ({ row }) => (
+          <span
+            className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-sm font-medium ${
+              row.original.isActive
+                ? "bg-green-100 text-green-600"
+                : "bg-gray-200 text-gray-600"
+            }`}
+          >
+            {row.original.isActive ? "Active" : "Disabled"}
+          </span>
+        ),
+      }),
+      scannerColumnHelper.display({
+        id: "actions",
+        header: "Actions",
+        cell: ({ row }) => {
+          const scanner = row.original;
+          return (
+            <TooltipProvider>
+              <div className="flex items-center justify-center gap-3">
+                <Tooltip>
+                  <TooltipTrigger>
+                    <PowerIcon
+                      size={16}
+                      className={`cursor-pointer ${
+                        scanner.isActive ? "text-emerald-600" : "text-primary"
+                      }`}
+                      onClick={() => requestToggleActive(scanner)}
+                    />
+                  </TooltipTrigger>
+                  <TooltipContent className="bg-black text-white max-w-xs">
+                    <p>{scanner.isActive ? "Disable" : "Enable"}</p>
+                  </TooltipContent>
+                </Tooltip>
+                <Tooltip>
+                  <TooltipTrigger>
+                    <KeyRoundIcon
+                      size={16}
+                      className="text-primary cursor-pointer"
+                      onClick={() => requestRegenerate(scanner)}
+                    />
+                  </TooltipTrigger>
+                  <TooltipContent className="bg-black text-white max-w-xs">
+                    <p>Regenerate access code</p>
+                  </TooltipContent>
+                </Tooltip>
+                <Tooltip>
+                  <TooltipTrigger>
+                    <Edit3Icon
+                      size={16}
+                      className="text-primary cursor-pointer"
+                      onClick={() => openEditModal(scanner)}
+                    />
+                  </TooltipTrigger>
+                  <TooltipContent className="bg-black text-white max-w-xs">
+                    <p>Edit</p>
+                  </TooltipContent>
+                </Tooltip>
+                <Tooltip>
+                  <TooltipTrigger>
+                    <Trash2Icon
+                      size={16}
+                      className="text-red-600 cursor-pointer"
+                      onClick={() => requestDelete(scanner)}
+                    />
+                  </TooltipTrigger>
+                  <TooltipContent className="bg-black text-white max-w-xs">
+                    <p>Remove</p>
+                  </TooltipContent>
+                </Tooltip>
+              </div>
+            </TooltipProvider>
+          );
+        },
+      }),
+    ],
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [scannerColumnHelper]
+  );
+
+  const scanColumnHelper = createColumnHelper<ScanRow>();
+  const scanColumns: ColumnDef<ScanRow, any>[] = useMemo(
+    () => [
+      scanColumnHelper.accessor("customerName", {
+        header: "Customer",
+        enableColumnFilter: true,
+        filterFn: "auto",
+        enableSorting: false,
+        cell: ({ row }) => (
+          <div className="flex flex-col">
+            <span className="font-medium text-owner-fg-1">
+              {row.original.customerName || "Guest"}
+            </span>
+            <span className="text-[12px] text-owner-fg-4">
+              {row.original.customerPhone ||
+                `Order ${row.original.orderId.slice(-8)}`}
+            </span>
+          </div>
+        ),
+      }),
+      scanColumnHelper.accessor("ticketCount", {
+        header: "Tickets",
+        enableColumnFilter: false,
+        enableSorting: true,
+        cell: ({ row }) => (
+          <div className="flex flex-col">
+            <span className="text-sm text-owner-fg-1">
+              {row.original.ticketCount} ticket
+              {row.original.ticketCount === 1 ? "" : "s"}
+            </span>
+            <span className="max-w-[280px] truncate text-[12px] text-owner-fg-4">
+              {row.original.ticketNames.join(", ") || "-"}
+            </span>
+          </div>
+        ),
+      }),
+      scanColumnHelper.accessor("scannerName", {
+        header: "Scanner",
+        enableColumnFilter: true,
+        filterFn: "auto",
+        enableSorting: false,
+        cell: ({ row }) => (
+          <DataTableTextCell value={row.original.scannerName || "Scanner"} />
+        ),
+      }),
+      scanColumnHelper.accessor("checkedInAt", {
+        header: "Checked in",
+        enableColumnFilter: false,
+        enableSorting: true,
+        cell: ({ row }) => (
+          <DataTableTextCell value={formatDate(row.original.checkedInAt)} />
+        ),
+      }),
+      scanColumnHelper.display({
+        id: "actions",
+        header: "Action",
+        cell: ({ row }) => (
+          <TooltipProvider>
+            <div className="flex items-center justify-center">
+              <Tooltip>
+                <TooltipTrigger>
+                  <Undo2Icon
+                    size={16}
+                    className="text-amber-700 cursor-pointer"
+                    onClick={() => {
+                      setReverseTarget(row.original);
+                      setReverseReason("");
+                    }}
+                  />
+                </TooltipTrigger>
+                <TooltipContent className="bg-black text-white max-w-xs">
+                  <p>Reverse check-in</p>
+                </TooltipContent>
+              </Tooltip>
+            </div>
+          </TooltipProvider>
+        ),
+      }),
+    ],
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [scanColumnHelper]
+  );
+
   return (
     <div className="space-y-5">
       <div className="flex items-end justify-between gap-3">
@@ -418,91 +649,16 @@ export const EventScanners = ({ eventId }: { eventId: string }) => {
         </div>
       </div>
 
-      <div className="rounded-lg border border-[var(--owner-border)] bg-white">
-        {loading ? (
-          <div className="flex items-center justify-center gap-2 py-12 text-sm text-[var(--owner-fg-3)]">
-            <Loader2Icon size={16} className="animate-spin" />
-            Loading scanners…
-          </div>
-        ) : scanners.length === 0 ? (
-          <div className="px-6 py-12 text-center text-sm text-[var(--owner-fg-3)]">
-            No scanners added yet. Add one to give door staff access.
-          </div>
-        ) : (
-          <div className="divide-y divide-[var(--owner-bg-subtle)]">
-            {scanners.map((scanner) => (
-              <div
-                key={scanner._id}
-                className="grid gap-3 px-4 py-3 text-sm md:grid-cols-[minmax(0,1.6fr)_minmax(0,1.4fr)_120px_200px] md:items-center"
-              >
-                <div className="min-w-0">
-                  <div className="flex items-center gap-2">
-                    <span className="truncate font-semibold">
-                      {scanner.scannerName}
-                    </span>
-                    <span className="inline-flex items-center gap-1 rounded-md bg-[var(--owner-bg-subtle)] px-2 py-0.5 text-xs font-medium text-[var(--owner-fg-3)]">
-                      {labelForType(scanner.scannerType)}
-                    </span>
-                  </div>
-                  <div className="mt-0.5 truncate text-xs text-[var(--owner-fg-3)]">
-                    {scanner.name}
-                  </div>
-                </div>
-                <div className="min-w-0 text-xs text-[var(--owner-fg-3)]">
-                  <div className="truncate">{scanner.email}</div>
-                  {scanner.phone ? (
-                    <div className="truncate">{scanner.phone}</div>
-                  ) : null}
-                </div>
-                <div className="text-xs">
-                  <div>{scanner.totalScanned ?? 0} scans</div>
-                  <div className="text-[var(--owner-fg-3)]">
-                    Last login {formatDate(scanner.lastLoginAt)}
-                  </div>
-                </div>
-                <div className="flex flex-wrap justify-start gap-1.5 md:justify-end">
-                  <button
-                    type="button"
-                    onClick={() => requestToggleActive(scanner)}
-                    className={`inline-flex h-8 w-8 items-center justify-center rounded-md border ${
-                      scanner.isActive
-                        ? "border-emerald-200 bg-emerald-50 text-emerald-700"
-                        : "border-[var(--owner-border)] text-[var(--owner-fg-3)]"
-                    }`}
-                    title={scanner.isActive ? "Disable" : "Enable"}
-                  >
-                    <PowerIcon size={14} />
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => requestRegenerate(scanner)}
-                    className="inline-flex h-8 w-8 items-center justify-center rounded-md border border-[var(--owner-border)]"
-                    title="Regenerate access code"
-                  >
-                    <KeyRoundIcon size={14} />
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => openEditModal(scanner)}
-                    className="inline-flex h-8 w-8 items-center justify-center rounded-md border border-[var(--owner-border)]"
-                    title="Edit"
-                  >
-                    <Edit3Icon size={14} />
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => requestDelete(scanner)}
-                    className="inline-flex h-8 w-8 items-center justify-center rounded-md border border-red-200 text-red-700"
-                    title="Remove"
-                  >
-                    <Trash2Icon size={14} />
-                  </button>
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
+      <DataTable
+        totalRows={scanners.length}
+        columns={scannerColumns}
+        data={scanners}
+        loading={loading}
+        manualPagination={false}
+        hideDownloadButton
+        pageSize={10}
+        addClickHandler={openCreateModal}
+      />
 
       <div className="rounded-lg border border-[var(--owner-border)] bg-white">
         <div className="flex flex-col gap-3 border-b border-[var(--owner-border)] px-5 py-4 md:flex-row md:items-center md:justify-between">
@@ -523,105 +679,29 @@ export const EventScanners = ({ eventId }: { eventId: string }) => {
             Refresh
           </button>
         </div>
-        {scansLoading ? (
-          <div className="flex items-center justify-center gap-2 py-10 text-sm text-[var(--owner-fg-3)]">
-            <Loader2Icon size={16} className="animate-spin" />
-            Loading admissions...
-          </div>
-        ) : scanRows.length === 0 ? (
-          <div className="px-6 py-10 text-center text-sm text-[var(--owner-fg-3)]">
-            No admissions scanned yet.
-          </div>
-        ) : (
-          <>
-            <div className="overflow-x-auto">
-              <table className="min-w-full text-sm">
-                <thead>
-                  <tr className="border-b border-[var(--owner-border)] text-left text-xs text-[var(--owner-fg-3)]">
-                    <th className="px-4 py-2 font-semibold">Customer</th>
-                    <th className="px-4 py-2 font-semibold">Tickets</th>
-                    <th className="px-4 py-2 font-semibold">Scanner</th>
-                    <th className="px-4 py-2 font-semibold">Checked in</th>
-                    <th className="px-4 py-2 text-right font-semibold">
-                      Action
-                    </th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {scanRows.map((row) => (
-                    <tr
-                      key={row.orderId}
-                      className="border-b border-[var(--owner-border-soft)] last:border-b-0"
-                    >
-                      <td className="px-4 py-3">
-                        <div className="font-medium">
-                          {row.customerName || "Guest"}
-                        </div>
-                        <div className="text-xs text-[var(--owner-fg-3)]">
-                          {row.customerPhone || `Order ${row.orderId.slice(-8)}`}
-                        </div>
-                      </td>
-                      <td className="px-4 py-3">
-                        <div>{row.ticketCount} ticket{row.ticketCount === 1 ? "" : "s"}</div>
-                        <div className="max-w-[280px] truncate text-xs text-[var(--owner-fg-3)]">
-                          {row.ticketNames.join(", ") || "-"}
-                        </div>
-                      </td>
-                      <td className="px-4 py-3">
-                        {row.scannerName || "Scanner"}
-                      </td>
-                      <td className="px-4 py-3 text-xs">
-                        {formatDate(row.checkedInAt)}
-                      </td>
-                      <td className="px-4 py-3 text-right">
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setReverseTarget(row);
-                            setReverseReason("");
-                          }}
-                          className="inline-flex items-center gap-1.5 rounded-md border border-amber-200 bg-amber-50 px-3 py-1.5 text-xs font-semibold text-amber-800"
-                        >
-                          <Undo2Icon size={13} />
-                          Reverse
-                        </button>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-            {scanTotalPages > 1 ? (
-              <div className="flex items-center justify-between border-t border-[var(--owner-border)] px-4 py-3 text-xs text-[var(--owner-fg-3)]">
-                <span>
-                  Page {scanPage} of {scanTotalPages} · {scanTotal} admissions
-                </span>
-                <div className="flex gap-2">
-                  <button
-                    type="button"
-                    disabled={scanPage <= 1}
-                    onClick={() => setScanPage((current) => Math.max(1, current - 1))}
-                    className="rounded-md border border-[var(--owner-border)] px-3 py-1.5 font-semibold disabled:opacity-50"
-                  >
-                    Prev
-                  </button>
-                  <button
-                    type="button"
-                    disabled={scanPage >= scanTotalPages}
-                    onClick={() =>
-                      setScanPage((current) =>
-                        Math.min(scanTotalPages, current + 1)
-                      )
-                    }
-                    className="rounded-md border border-[var(--owner-border)] px-3 py-1.5 font-semibold disabled:opacity-50"
-                  >
-                    Next
-                  </button>
-                </div>
-              </div>
-            ) : null}
-          </>
-        )}
+        <div className="p-4">
+          <DataTable
+            totalRows={scanTotal}
+            columns={scanColumns}
+            data={scanRows}
+            loading={scansLoading}
+            manualPagination={true}
+            hideDownloadButton
+            pageSize={SCAN_PAGE_SIZE}
+            pageCount={scanTotalPages}
+            nextPage={() => {
+              if (scanPage < scanTotalPages)
+                setScanPage((current) => current + 1);
+            }}
+            prevPage={() => {
+              if (scanPage > 1) setScanPage((current) => current - 1);
+            }}
+            paginationData={{
+              pageIndex: scanPage - 1,
+              pageSize: SCAN_PAGE_SIZE,
+            }}
+          />
+        </div>
       </div>
 
       {modalOpen ? (

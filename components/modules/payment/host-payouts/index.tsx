@@ -4,8 +4,9 @@ import {
   Badge,
   Card,
   OwnerButton,
-  OwnerTable,
 } from "@/components/common/owner";
+import DataTable from "@/components/common/dataTable";
+import DataTableTextCell from "@/components/common/dataTable/common/textCell";
 import {
   Tooltip,
   TooltipContent,
@@ -15,6 +16,7 @@ import {
 import useGlobalStore from "@/store/global";
 import { sdk } from "@/utils/graphqlClient";
 import { extractErrorMessage } from "@/utils/utilFUncs";
+import { ColumnDef, createColumnHelper } from "@tanstack/react-table";
 import {
   Building2,
   CheckCircle2,
@@ -113,6 +115,117 @@ const HostPayouts: React.FC = () => {
     }
   };
 
+  const columnHelper = createColumnHelper<HostPayoutAccount>();
+  const columns: ColumnDef<HostPayoutAccount, any>[] = useMemo(
+    () => [
+      columnHelper.accessor("bankName", {
+        header: "Bank",
+        enableColumnFilter: true,
+        filterFn: "auto",
+        enableSorting: true,
+        cell: ({ row }) => (
+          <div className="flex flex-col">
+            <DataTableTextCell
+              className="font-semibold"
+              value={row.original.bankName}
+            />
+            {row.original.branchName ? (
+              <span className="text-[12px] text-owner-fg-4">
+                {row.original.branchName}
+              </span>
+            ) : null}
+          </div>
+        ),
+      }),
+      columnHelper.accessor("accountHolderName", {
+        header: "Account holder",
+        enableColumnFilter: true,
+        filterFn: "auto",
+        enableSorting: true,
+        cell: ({ row }) => (
+          <DataTableTextCell value={row.original.accountHolderName} />
+        ),
+      }),
+      columnHelper.accessor("last4", {
+        header: "Account",
+        enableColumnFilter: false,
+        enableSorting: false,
+        cell: ({ row }) => (
+          <span className="font-mono text-sm text-owner-fg-1">
+            •••• {row.original.last4}
+          </span>
+        ),
+      }),
+      columnHelper.accessor("ifscCode", {
+        header: "IFSC",
+        enableColumnFilter: true,
+        filterFn: "auto",
+        enableSorting: false,
+        cell: ({ row }) => (
+          <span className="font-mono text-sm text-owner-fg-1">
+            {row.original.ifscCode}
+          </span>
+        ),
+      }),
+      columnHelper.accessor("verificationStatus", {
+        header: "Status",
+        enableColumnFilter: true,
+        filterFn: "auto",
+        enableSorting: true,
+        cell: ({ row }) => (
+          <div className="flex items-center gap-2">
+            <StatusBadge status={row.original.verificationStatus} />
+            {row.original.isPrimary ? <Badge tone="info">Primary</Badge> : null}
+          </div>
+        ),
+      }),
+      columnHelper.display({
+        id: "actions",
+        header: "Actions",
+        cell: ({ row }) => {
+          const account = row.original;
+          const canSetPrimary =
+            account.verificationStatus === "VERIFIED" && !account.isPrimary;
+          const showRejectionReason =
+            account.verificationStatus === "REJECTED" &&
+            account.rejectionReason;
+          return (
+            <div className="flex items-center justify-center">
+              {canSetPrimary ? (
+                <OwnerButton
+                  variant="secondary"
+                  size="sm"
+                  leadingIcon={<CheckCircle2 size={13} />}
+                  disabled={primaryLoadingId === account._id}
+                  onClick={() => handleSetPrimary(account._id)}
+                >
+                  Set primary
+                </OwnerButton>
+              ) : showRejectionReason ? (
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <span className="cursor-help text-[12.5px] font-medium text-owner-danger-text underline">
+                        Reason
+                      </span>
+                    </TooltipTrigger>
+                    <TooltipContent className="max-w-xs bg-owner-fg-1 text-white">
+                      <p>{account.rejectionReason}</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              ) : (
+                <span className="text-owner-fg-4">—</span>
+              )}
+            </div>
+          );
+        },
+      }),
+    ],
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [columnHelper, primaryLoadingId]
+  );
+
   return (
     <div className="flex flex-col gap-6 font-owner">
       {/* Primary payout summary card */}
@@ -184,86 +297,16 @@ const HostPayouts: React.FC = () => {
       </Card>
 
       {/* Accounts table */}
-      <OwnerTable loading={loading} rowCount={data.length} empty="No payout profiles yet.">
-        <OwnerTable.Toolbar>
-          <span className="text-[14px] font-semibold text-owner-fg-1">
-            All payout profiles
-          </span>
-          <OwnerButton
-            variant="secondary"
-            size="sm"
-            leadingIcon={<Plus size={13} />}
-            onClick={() => setAddOpen(true)}
-          >
-            Add account
-          </OwnerButton>
-        </OwnerTable.Toolbar>
-        <OwnerTable.Head>
-          <OwnerTable.HeaderCell>Bank</OwnerTable.HeaderCell>
-          <OwnerTable.HeaderCell>Account holder</OwnerTable.HeaderCell>
-          <OwnerTable.HeaderCell>Account</OwnerTable.HeaderCell>
-          <OwnerTable.HeaderCell>Status</OwnerTable.HeaderCell>
-          <OwnerTable.HeaderCell align="right">Actions</OwnerTable.HeaderCell>
-        </OwnerTable.Head>
-        <OwnerTable.Body>
-          {data.map((row) => {
-            const canSetPrimary =
-              row.verificationStatus === "VERIFIED" && !row.isPrimary;
-            const showRejectionReason =
-              row.verificationStatus === "REJECTED" && row.rejectionReason;
-            return (
-              <OwnerTable.Row key={row._id}>
-                <OwnerTable.Cell>
-                  <div className="flex flex-col">
-                    <span className="font-semibold text-owner-fg-1">
-                      {row.bankName}
-                    </span>
-                    {row.branchName ? (
-                      <span className="text-[12px] text-owner-fg-4">
-                        {row.branchName}
-                      </span>
-                    ) : null}
-                  </div>
-                </OwnerTable.Cell>
-                <OwnerTable.Cell>{row.accountHolderName}</OwnerTable.Cell>
-                <OwnerTable.Cell monospace>•••• {row.last4}</OwnerTable.Cell>
-                <OwnerTable.Cell>
-                  <div className="flex items-center gap-2">
-                    <StatusBadge status={row.verificationStatus} />
-                    {row.isPrimary ? <Badge tone="info">Primary</Badge> : null}
-                  </div>
-                </OwnerTable.Cell>
-                <OwnerTable.Cell align="right">
-                  {canSetPrimary ? (
-                    <OwnerButton
-                      variant="secondary"
-                      size="sm"
-                      leadingIcon={<CheckCircle2 size={13} />}
-                      disabled={primaryLoadingId === row._id}
-                      onClick={() => handleSetPrimary(row._id)}
-                    >
-                      Set primary
-                    </OwnerButton>
-                  ) : showRejectionReason ? (
-                    <TooltipProvider>
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <span className="cursor-help text-[12.5px] font-medium text-owner-danger-text underline">
-                            Reason
-                          </span>
-                        </TooltipTrigger>
-                        <TooltipContent className="max-w-xs bg-owner-fg-1 text-white">
-                          <p>{row.rejectionReason}</p>
-                        </TooltipContent>
-                      </Tooltip>
-                    </TooltipProvider>
-                  ) : null}
-                </OwnerTable.Cell>
-              </OwnerTable.Row>
-            );
-          })}
-        </OwnerTable.Body>
-      </OwnerTable>
+      <DataTable
+        totalRows={data.length}
+        columns={columns}
+        data={data}
+        loading={loading}
+        manualPagination={false}
+        hideDownloadButton
+        pageSize={10}
+        addClickHandler={() => setAddOpen(true)}
+      />
 
       <Card padding={16}>
         <div className="flex items-start gap-3">

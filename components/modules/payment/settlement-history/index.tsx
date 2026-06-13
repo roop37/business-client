@@ -5,13 +5,14 @@ import {
   Card,
   inrFormat,
   OwnerButton,
-  OwnerTable,
   StatTile,
 } from "@/components/common/owner";
 import type { BadgeTone } from "@/components/common/owner";
+import DataTable from "@/components/common/dataTable";
 import useGlobalStore from "@/store/global";
 import { sdk } from "@/utils/graphqlClient";
 import { extractErrorMessage } from "@/utils/utilFUncs";
+import { ColumnDef, createColumnHelper } from "@tanstack/react-table";
 import { Download, RefreshCcw, ReceiptText } from "lucide-react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 
@@ -150,6 +151,119 @@ const SettlementHistory = () => {
     }
   };
 
+  const columnHelper = createColumnHelper<SettlementRow>();
+  const columns: ColumnDef<SettlementRow, any>[] = useMemo(
+    () => [
+      columnHelper.accessor("_id", {
+        header: "Settlement",
+        enableColumnFilter: false,
+        enableSorting: false,
+        cell: ({ row }) => (
+          <div className="flex flex-col">
+            <span className="font-mono text-[12px] text-owner-fg-1">
+              {compactId(row.original._id)}
+            </span>
+            <span className="text-[12px] text-owner-fg-4">
+              Event {compactId(row.original.eventId)} · {row.original.orderCount}{" "}
+              orders
+            </span>
+            {row.original.razorpayPayoutId ? (
+              <span className="mt-1 font-mono text-[11px] text-owner-fg-4">
+                {row.original.razorpayPayoutId}
+              </span>
+            ) : null}
+          </div>
+        ),
+      }),
+      columnHelper.accessor("status", {
+        header: "Status",
+        enableColumnFilter: true,
+        filterFn: "auto",
+        enableSorting: true,
+        cell: ({ row }) => (
+          <div className="flex flex-col">
+            <Badge tone={statusTone(row.original.status)}>
+              {row.original.status}
+            </Badge>
+            {row.original.errorMessage ? (
+              <div className="mt-1 max-w-[220px] text-[11px] text-owner-danger-text">
+                {row.original.errorMessage}
+              </div>
+            ) : null}
+          </div>
+        ),
+      }),
+      columnHelper.accessor("grossAmount", {
+        header: "Gross",
+        enableColumnFilter: false,
+        enableSorting: true,
+        cell: ({ row }) => (
+          <span className="text-sm font-medium text-owner-fg-1 tabular-nums">
+            {inrFormat(row.original.grossAmount)}
+          </span>
+        ),
+      }),
+      columnHelper.accessor("refundsTotal", {
+        header: "Refunds",
+        enableColumnFilter: false,
+        enableSorting: true,
+        cell: ({ row }) => {
+          const refundAdjustments =
+            Number(row.original.refundsTotal ?? 0) +
+            Number(row.original.chargebacksTotal ?? 0);
+          return (
+            <span className="text-sm font-medium text-owner-fg-1 tabular-nums">
+              {refundAdjustments > 0 ? inrFormat(refundAdjustments) : "-"}
+            </span>
+          );
+        },
+      }),
+      columnHelper.accessor("netPayoutAmount", {
+        header: "Net payout",
+        enableColumnFilter: false,
+        enableSorting: true,
+        cell: ({ row }) => (
+          <span className="text-sm font-semibold text-owner-fg-1 tabular-nums">
+            {inrFormat(row.original.netPayoutAmount)}
+          </span>
+        ),
+      }),
+      columnHelper.accessor("scheduledFor", {
+        header: "Schedule",
+        enableColumnFilter: false,
+        enableSorting: true,
+        cell: ({ row }) => (
+          <div className="flex flex-col text-[12px] text-owner-fg-3">
+            <span>Eligible {dateFmt(row.original.scheduledFor)}</span>
+            <span>Paid {dateFmt(row.original.paidAt)}</span>
+          </div>
+        ),
+      }),
+      columnHelper.display({
+        id: "actions",
+        header: "Statement",
+        cell: ({ row }) => {
+          const canDownload = row.original.status === "PAID";
+          return (
+            <div className="flex items-center justify-center">
+              <OwnerButton
+                variant="secondary"
+                size="sm"
+                leadingIcon={<Download size={13} />}
+                disabled={!canDownload || downloadingId === row.original._id}
+                onClick={() => downloadStatement(row.original)}
+              >
+                PDF
+              </OwnerButton>
+            </div>
+          );
+        },
+      }),
+    ],
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [columnHelper, downloadingId]
+  );
+
   return (
     <div className="flex flex-col gap-6 font-owner">
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
@@ -175,142 +289,61 @@ const SettlementHistory = () => {
         />
       </div>
 
-      <OwnerTable
-        loading={loading}
-        rowCount={rows.length}
-        empty="No settlements found for this filter."
-      >
-        <OwnerTable.Toolbar>
-          <div className="flex items-center gap-2">
-            <ReceiptText size={16} className="text-owner-blue-500" />
-            <div>
-              <div className="text-[14px] font-semibold text-owner-fg-1">
-                Payout settlement history
-              </div>
-              <div className="text-[12.5px] text-owner-fg-4">
-                Reconcile bank deposits against Hoizr settlement calculations.
-              </div>
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex items-center gap-2">
+          <ReceiptText size={16} className="text-owner-blue-500" />
+          <div>
+            <div className="text-[14px] font-semibold text-owner-fg-1">
+              Payout settlement history
+            </div>
+            <div className="text-[12.5px] text-owner-fg-4">
+              Reconcile bank deposits against Hoizr settlement calculations.
             </div>
           </div>
-          <div className="flex flex-wrap items-center gap-2">
-            <select
-              value={status}
-              onChange={(event) => {
-                setStatus(event.target.value as "ALL" | SettlementStatus);
-                setPage(1);
-              }}
-              className="h-9 rounded-owner-md border border-owner-border bg-owner-bg px-3 text-[13px] outline-none focus:border-owner-blue-200 focus:ring-2 focus:ring-owner-blue-050"
-            >
-              {STATUS_OPTIONS.map((option) => (
-                <option key={option.value} value={option.value}>
-                  {option.label}
-                </option>
-              ))}
-            </select>
-            <OwnerButton
-              variant="secondary"
-              size="sm"
-              leadingIcon={<RefreshCcw size={13} />}
-              onClick={load}
-            >
-              Refresh
-            </OwnerButton>
-          </div>
-        </OwnerTable.Toolbar>
-        <OwnerTable.Head>
-          <OwnerTable.HeaderCell>Settlement</OwnerTable.HeaderCell>
-          <OwnerTable.HeaderCell>Status</OwnerTable.HeaderCell>
-          <OwnerTable.HeaderCell align="right">Gross</OwnerTable.HeaderCell>
-          <OwnerTable.HeaderCell align="right">Refunds</OwnerTable.HeaderCell>
-          <OwnerTable.HeaderCell align="right">Net payout</OwnerTable.HeaderCell>
-          <OwnerTable.HeaderCell>Schedule</OwnerTable.HeaderCell>
-          <OwnerTable.HeaderCell align="right">Statement</OwnerTable.HeaderCell>
-        </OwnerTable.Head>
-        <OwnerTable.Body>
-          {rows.map((row) => {
-            const refundAdjustments =
-              Number(row.refundsTotal ?? 0) + Number(row.chargebacksTotal ?? 0);
-            const canDownload = row.status === "PAID";
-            return (
-              <OwnerTable.Row key={row._id}>
-                <OwnerTable.Cell>
-                  <div className="font-mono text-[12px] text-owner-fg-1">
-                    {compactId(row._id)}
-                  </div>
-                  <div className="text-[12px] text-owner-fg-4">
-                    Event {compactId(row.eventId)} · {row.orderCount} orders
-                  </div>
-                  {row.razorpayPayoutId ? (
-                    <div className="mt-1 font-mono text-[11px] text-owner-fg-4">
-                      {row.razorpayPayoutId}
-                    </div>
-                  ) : null}
-                </OwnerTable.Cell>
-                <OwnerTable.Cell>
-                  <Badge tone={statusTone(row.status)}>{row.status}</Badge>
-                  {row.errorMessage ? (
-                    <div className="mt-1 max-w-[220px] text-[11px] text-owner-danger-text">
-                      {row.errorMessage}
-                    </div>
-                  ) : null}
-                </OwnerTable.Cell>
-                <OwnerTable.Cell align="right">
-                  {inrFormat(row.grossAmount)}
-                </OwnerTable.Cell>
-                <OwnerTable.Cell align="right">
-                  {refundAdjustments > 0 ? inrFormat(refundAdjustments) : "-"}
-                </OwnerTable.Cell>
-                <OwnerTable.Cell align="right" bold>
-                  {inrFormat(row.netPayoutAmount)}
-                </OwnerTable.Cell>
-                <OwnerTable.Cell>
-                  <div className="text-[12px] text-owner-fg-3">
-                    Eligible {dateFmt(row.scheduledFor)}
-                  </div>
-                  <div className="text-[12px] text-owner-fg-3">
-                    Paid {dateFmt(row.paidAt)}
-                  </div>
-                </OwnerTable.Cell>
-                <OwnerTable.Cell align="right">
-                  <OwnerButton
-                    variant="secondary"
-                    size="sm"
-                    leadingIcon={<Download size={13} />}
-                    disabled={!canDownload || downloadingId === row._id}
-                    onClick={() => downloadStatement(row)}
-                  >
-                    PDF
-                  </OwnerButton>
-                </OwnerTable.Cell>
-              </OwnerTable.Row>
-            );
-          })}
-        </OwnerTable.Body>
-        <OwnerTable.Footer
-          summary={`Page ${page} of ${totalPages} · ${total.toLocaleString("en-IN")} settlements`}
-        >
-          <div className="flex items-center gap-2">
-            <OwnerButton
-              variant="secondary"
-              size="sm"
-              disabled={page <= 1}
-              onClick={() => setPage((current) => Math.max(1, current - 1))}
-            >
-              Prev
-            </OwnerButton>
-            <OwnerButton
-              variant="secondary"
-              size="sm"
-              disabled={page >= totalPages}
-              onClick={() =>
-                setPage((current) => Math.min(totalPages, current + 1))
-              }
-            >
-              Next
-            </OwnerButton>
-          </div>
-        </OwnerTable.Footer>
-      </OwnerTable>
+        </div>
+        <div className="flex flex-wrap items-center gap-2">
+          <select
+            value={status}
+            onChange={(event) => {
+              setStatus(event.target.value as "ALL" | SettlementStatus);
+              setPage(1);
+            }}
+            className="h-9 rounded-owner-md border border-owner-border bg-owner-bg px-3 text-[13px] outline-none focus:border-owner-blue-200 focus:ring-2 focus:ring-owner-blue-050"
+          >
+            {STATUS_OPTIONS.map((option) => (
+              <option key={option.value} value={option.value}>
+                {option.label}
+              </option>
+            ))}
+          </select>
+          <OwnerButton
+            variant="secondary"
+            size="sm"
+            leadingIcon={<RefreshCcw size={13} />}
+            onClick={load}
+          >
+            Refresh
+          </OwnerButton>
+        </div>
+      </div>
+
+      <DataTable
+        totalRows={total}
+        columns={columns}
+        data={rows}
+        loading={loading}
+        manualPagination={true}
+        hideDownloadButton
+        pageSize={pageSize}
+        pageCount={totalPages}
+        nextPage={() => {
+          if (page < totalPages) setPage((current) => current + 1);
+        }}
+        prevPage={() => {
+          if (page > 1) setPage((current) => current - 1);
+        }}
+        paginationData={{ pageIndex: page - 1, pageSize }}
+      />
 
       <Card padding={16} className="text-[12.5px] leading-5 text-owner-fg-3">
         Statements are minted as short-lived signed URLs when you click PDF.

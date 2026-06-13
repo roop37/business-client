@@ -61,6 +61,14 @@ type MenuState = {
   openTopUpModal: (presetAmount?: number) => void;
   closeTopUpModal: () => void;
 
+  // Reactive refresh signal for marketing-credit balance. Any surface that
+  // displays the balance or an insufficient-credit warning subscribes to
+  // this counter and refetches when it bumps. The top-up modal calls
+  // bumpMarketingCredit() on a verified top-up so stale "₹X more needed"
+  // messages clear and balances update without a manual reload.
+  marketingCreditVersion: number;
+  bumpMarketingCredit: () => void;
+
   // Unified settings modal — replaces /profile and /org-settings.
   // `settingsModalTab` selects the initial tab; "account" lands the user
   // on the Personal info tab (used by the host-switcher's "Account
@@ -139,6 +147,10 @@ const useGlobalStore = create<MenuState>((set) => ({
           : null,
     }),
   closeTopUpModal: () => set({ topUpModalOpen: false, topUpPresetAmount: null }),
+
+  marketingCreditVersion: 0,
+  bumpMarketingCredit: () =>
+    set((state) => ({ marketingCreditVersion: state.marketingCreditVersion + 1 })),
 
   settingsModalOpen: false,
   settingsModalTab: "account",

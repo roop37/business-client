@@ -1,13 +1,21 @@
 "use client";
 
 import ConfirmModal from "@/components/common/confirm-modal";
+import DataTable from "@/components/common/dataTable";
+import DataTableDateTimeCell from "@/components/common/dataTable/common/dateTimeCell";
+import DataTableNumberCell from "@/components/common/dataTable/common/numberCell";
+import DataTableTextCell from "@/components/common/dataTable/common/textCell";
 import {
-  Badge,
   Card,
   OwnerButton,
-  OwnerTable,
   PageHeader,
 } from "@/components/common/owner";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import {
   CustomCampaignFilter,
   CustomEmailTargetType,
@@ -16,23 +24,23 @@ import {
 import useGlobalStore from "@/store/global";
 import { sdk } from "@/utils/graphqlClient";
 import { extractErrorMessage, formatResEmailTarget } from "@/utils/utilFUncs";
+import { ColumnDef, createColumnHelper } from "@tanstack/react-table";
 import {
   Bell,
   CalendarClock,
   CheckCircle2,
   Clock,
-  Edit3,
   ExternalLink,
   Loader2,
   Megaphone,
   Plus,
   Send,
-  Trash2,
   Users,
   X,
 } from "lucide-react";
 import type { ReactNode } from "react";
 import { useEffect, useMemo, useState } from "react";
+import { MdDeleteOutline, MdOutlineEdit } from "react-icons/md";
 import {
   PUSH_BODY_LIMIT,
   PUSH_TITLE_LIMIT,
@@ -90,23 +98,39 @@ const formatDateTime = (value?: string | null) =>
       })
     : "Not scheduled";
 
-const statusTone = (status?: string | null) => {
+// Display label for the lowercase push status enum (draft/scheduled/…).
+const statusLabel = (status?: string | null) => {
+  const value = (status ?? "draft").toLowerCase();
+  return value.charAt(0).toUpperCase() + value.slice(1);
+};
+
+// Colored status pill — mirrors customCampaign.tsx#getStatusColor and the
+// WhatsApp table so all three campaign lists read visually identical. Keyed
+// on the Title-cased label so the switch matches the other tables.
+const getStatusColor = (status: string): string => {
   switch (status) {
-    case "Completed":
-    case "completed":
-      return "success";
-    case "Processing":
-    case "processing":
-      return "info";
+    case "Draft":
+      return "bg-gray-200 text-gray-600";
     case "Scheduled":
-    case "scheduled":
-      return "warning";
+      return "bg-blue-100 text-blue-600";
+    case "Processing":
+      return "bg-amber-100 text-amber-600";
+    case "Completed":
+      return "bg-green-100 text-green-600";
     case "Failed":
-    case "failed":
-      return "danger";
+      return "bg-red-100 text-red-600";
     default:
-      return "neutral";
+      return "bg-gray-100 text-gray-600";
   }
+};
+
+// A push campaign is still editable / publishable / deletable while it is a
+// draft or a not-yet-sent scheduled row — mirrors the email + WhatsApp tables'
+// `canEdit` rule. Once it is processing/completed/failed the send has begun
+// and those actions are hidden.
+const isEditable = (status?: string | null): boolean => {
+  const value = (status ?? "draft").toLowerCase();
+  return value === "draft" || value === "scheduled";
 };
 
 const normalisePushCampaign = (campaign: any): PushCampaignDraft => ({
@@ -406,6 +430,171 @@ const PushCampaigns = () => {
     });
   };
 
+  const columnHelper = createColumnHelper<any>();
+
+  const columns: ColumnDef<any, any>[] = useMemo(
+    () => [
+      columnHelper.accessor("campaignName", {
+        header: "Campaign",
+        enableColumnFilter: true,
+        filterFn: "auto",
+        enableSorting: true,
+        cell: ({ row }) => (
+          <div className="flex flex-col">
+            <DataTableTextCell
+              className="cursor-pointer"
+              onClick={() => openEdit(row.original)}
+              value={row.original.campaignName}
+            />
+            <span className="text-[12px] text-owner-fg-4">
+              {row.original.pushTitle ?? "—"}
+            </span>
+          </div>
+        ),
+      }),
+      columnHelper.accessor("target", {
+        header: "Audience",
+        enableColumnFilter: true,
+        filterFn: "auto",
+        enableSorting: true,
+        cell: ({ row }) => (
+          <div className="flex flex-col">
+            <DataTableTextCell
+              value={formatResEmailTarget(row.original.target ?? "")}
+            />
+            {row.original.filters?.length ? (
+              <span className="text-[12px] text-owner-fg-4">
+                {row.original.filters.map(formatFilterLabel).join(", ")}
+              </span>
+            ) : null}
+          </div>
+        ),
+      }),
+      columnHelper.accessor("status", {
+        header: "Status",
+        enableColumnFilter: true,
+        filterFn: "auto",
+        enableSorting: true,
+        cell: ({ row }) => {
+          const label = statusLabel(row.original.status);
+          return (
+            <DataTableTextCell
+              value={label}
+              className={`px-3 py-1 text-sm font-medium justify-center rounded-full inline-block ${getStatusColor(
+                label
+              )}`}
+            />
+          );
+        },
+      }),
+      columnHelper.accessor("scheduleType", {
+        header: "Schedule",
+        enableColumnFilter: false,
+        enableSorting: true,
+        cell: ({ row }) => (
+          <DataTableTextCell
+            value={
+              row.original.scheduleType === "later"
+                ? formatDateTime(row.original.scheduleTime)
+                : "Send now"
+            }
+          />
+        ),
+      }),
+      columnHelper.accessor("stats.notificationsSent", {
+        header: "Sent",
+        enableColumnFilter: false,
+        enableSorting: true,
+        cell: ({ row }) => (
+          <DataTableNumberCell
+            value={Number(row.original.stats?.notificationsSent ?? 0)}
+          />
+        ),
+      }),
+      columnHelper.accessor("updatedAt", {
+        header: "Updated",
+        enableColumnFilter: false,
+        enableSorting: true,
+        cell: ({ row }) => (
+          <DataTableDateTimeCell
+            value={
+              row.original.updatedAt
+                ? new Date(row.original.updatedAt)
+                : (null as unknown as Date)
+            }
+          />
+        ),
+      }),
+      columnHelper.display({
+        id: "actions",
+        header: "Actions",
+        cell: ({ row }) => {
+          const campaign = row.original;
+          const canEdit = isEditable(campaign.status);
+          const publishing = publishingId === campaign._id;
+
+          return (
+            <TooltipProvider>
+              <div className="flex space-x-2 justify-center items-center">
+                {canEdit ? (
+                  <Tooltip>
+                    <TooltipTrigger>
+                      <MdOutlineEdit
+                        className="text-primary text-lg cursor-pointer"
+                        onClick={() => openEdit(campaign)}
+                      />
+                    </TooltipTrigger>
+                    <TooltipContent className="bg-black text-white max-w-xs">
+                      <p>Edit campaign</p>
+                    </TooltipContent>
+                  </Tooltip>
+                ) : null}
+
+                {canEdit ? (
+                  <Tooltip>
+                    <TooltipTrigger>
+                      {publishing ? (
+                        <Loader2
+                          size={16}
+                          className="animate-spin text-primary"
+                        />
+                      ) : (
+                        <Send
+                          size={16}
+                          className="text-primary cursor-pointer"
+                          onClick={() => requestPublishCampaign(campaign)}
+                        />
+                      )}
+                    </TooltipTrigger>
+                    <TooltipContent className="bg-black text-white max-w-xs">
+                      <p>Publish campaign</p>
+                    </TooltipContent>
+                  </Tooltip>
+                ) : null}
+
+                {canEdit ? (
+                  <Tooltip>
+                    <TooltipTrigger>
+                      <MdDeleteOutline
+                        className="text-primary text-lg cursor-pointer"
+                        onClick={() => requestDeleteCampaign(campaign)}
+                      />
+                    </TooltipTrigger>
+                    <TooltipContent className="bg-black text-white max-w-xs">
+                      <p>Delete Campaign</p>
+                    </TooltipContent>
+                  </Tooltip>
+                ) : null}
+              </div>
+            </TooltipProvider>
+          );
+        },
+      }),
+    ],
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [columnHelper, publishingId]
+  );
+
   return (
     <div>
       <PageHeader
@@ -447,101 +636,16 @@ const PushCampaigns = () => {
         </Card>
       </div>
 
-      <OwnerTable
+      <DataTable
+        totalRows={campaigns.length}
+        columns={columns}
+        data={campaigns}
         loading={loading}
-        rowCount={campaigns.length}
-        empty={
-          <div className="mx-auto max-w-sm">
-            <div className="font-semibold text-owner-fg-1">
-              No push campaigns yet
-            </div>
-            <p className="mt-1 text-owner-fg-3">
-              Create a concise notification for opted-in customers.
-            </p>
-          </div>
-        }
-      >
-        <OwnerTable.Head>
-          <OwnerTable.HeaderCell>Campaign</OwnerTable.HeaderCell>
-          <OwnerTable.HeaderCell>Audience</OwnerTable.HeaderCell>
-          <OwnerTable.HeaderCell>Status</OwnerTable.HeaderCell>
-          <OwnerTable.HeaderCell>Schedule</OwnerTable.HeaderCell>
-          <OwnerTable.HeaderCell align="right">Sent</OwnerTable.HeaderCell>
-          <OwnerTable.HeaderCell align="right">Actions</OwnerTable.HeaderCell>
-        </OwnerTable.Head>
-        <OwnerTable.Body>
-          {campaigns.map((campaign) => (
-            <OwnerTable.Row key={campaign._id}>
-              <OwnerTable.Cell>
-                <div className="font-semibold text-owner-fg-1">
-                  {campaign.campaignName}
-                </div>
-                <div className="mt-1 line-clamp-1 text-[13px] text-owner-fg-4">
-                  {campaign.pushTitle}
-                </div>
-              </OwnerTable.Cell>
-              <OwnerTable.Cell>
-                <div className="text-sm">
-                  {formatResEmailTarget(campaign.target ?? "")}
-                </div>
-                {campaign.filters?.length ? (
-                  <div className="mt-1 text-xs text-owner-fg-4">
-                    {campaign.filters.map(formatFilterLabel).join(", ")}
-                  </div>
-                ) : null}
-              </OwnerTable.Cell>
-              <OwnerTable.Cell>
-                <Badge tone={statusTone(campaign.status) as any}>
-                  {campaign.status ?? "Draft"}
-                </Badge>
-              </OwnerTable.Cell>
-              <OwnerTable.Cell>
-                <span className="text-sm text-owner-fg-3">
-                  {campaign.scheduleType === "later"
-                    ? formatDateTime(campaign.scheduleTime)
-                    : "Send now"}
-                </span>
-              </OwnerTable.Cell>
-              <OwnerTable.Cell align="right">
-                {campaign.stats?.notificationsSent ?? 0}
-              </OwnerTable.Cell>
-              <OwnerTable.Cell align="right">
-                <div className="flex justify-end gap-2">
-                  <button
-                    type="button"
-                    className="rounded-owner-sm p-2 text-owner-fg-3 hover:bg-owner-bg-subtle hover:text-owner-fg-1"
-                    onClick={() => openEdit(campaign)}
-                    aria-label="Edit push campaign"
-                  >
-                    <Edit3 size={16} />
-                  </button>
-                  <button
-                    type="button"
-                    className="rounded-owner-sm p-2 text-owner-blue-500 hover:bg-owner-blue-050"
-                    disabled={publishingId === campaign._id}
-                    onClick={() => requestPublishCampaign(campaign)}
-                    aria-label="Publish push campaign"
-                  >
-                    {publishingId === campaign._id ? (
-                      <Loader2 size={16} className="animate-spin" />
-                    ) : (
-                      <Send size={16} />
-                    )}
-                  </button>
-                  <button
-                    type="button"
-                    className="rounded-owner-sm p-2 text-owner-danger-text hover:bg-owner-danger-bg"
-                    onClick={() => requestDeleteCampaign(campaign)}
-                    aria-label="Delete push campaign"
-                  >
-                    <Trash2 size={16} />
-                  </button>
-                </div>
-              </OwnerTable.Cell>
-            </OwnerTable.Row>
-          ))}
-        </OwnerTable.Body>
-      </OwnerTable>
+        manualPagination={false}
+        hideDownloadButton
+        pageSize={10}
+        addClickHandler={openCreate}
+      />
 
       {modalOpen ? (
         <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-black/40 px-4 py-8">

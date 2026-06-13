@@ -4,11 +4,13 @@ import {
   Badge,
   inrFormat,
   OwnerButton,
-  OwnerTable,
   StatTile,
 } from "@/components/common/owner";
+import DataTable from "@/components/common/dataTable";
+import DataTableTextCell from "@/components/common/dataTable/common/textCell";
+import { ColumnDef, createColumnHelper } from "@tanstack/react-table";
 import { Download, Receipt } from "lucide-react";
-import React from "react";
+import React, { useMemo } from "react";
 
 type PayoutInvoiceRow = {
   id: string;
@@ -36,6 +38,97 @@ const InvoicesTable: React.FC = () => {
     .reduce((s, r) => s + r.amount, 0);
   const totalGst = rows.reduce((s, r) => s + r.gst, 0);
 
+  const columnHelper = createColumnHelper<PayoutInvoiceRow>();
+  const columns: ColumnDef<PayoutInvoiceRow, any>[] = useMemo(
+    () => [
+      columnHelper.accessor("invoiceId", {
+        header: "Invoice",
+        enableColumnFilter: true,
+        filterFn: "auto",
+        enableSorting: true,
+        cell: ({ row }) => (
+          <div className="flex items-center gap-3">
+            <span className="grid h-8 w-8 place-items-center rounded-owner-sm bg-owner-blue-050 text-owner-blue-500">
+              <Receipt size={14} />
+            </span>
+            <span className="font-ownerMono text-[13px] text-owner-fg-1">
+              {row.original.invoiceId}
+            </span>
+          </div>
+        ),
+      }),
+      columnHelper.accessor("issued", {
+        header: "Issued",
+        enableColumnFilter: false,
+        enableSorting: true,
+        cell: ({ row }) => <DataTableTextCell value={row.original.issued} />,
+      }),
+      columnHelper.accessor("period", {
+        header: "Period",
+        enableColumnFilter: false,
+        enableSorting: true,
+        cell: ({ row }) => <DataTableTextCell value={row.original.period} />,
+      }),
+      columnHelper.accessor("amount", {
+        header: "Amount",
+        enableColumnFilter: false,
+        enableSorting: true,
+        cell: ({ row }) => (
+          <span className="text-sm font-semibold text-owner-fg-1 tabular-nums">
+            {inrFormat(row.original.amount)}
+          </span>
+        ),
+      }),
+      columnHelper.accessor("gst", {
+        header: "GST (18%)",
+        enableColumnFilter: false,
+        enableSorting: true,
+        cell: ({ row }) => (
+          <span className="text-sm text-owner-fg-4 tabular-nums">
+            {inrFormat(row.original.gst)}
+          </span>
+        ),
+      }),
+      columnHelper.accessor("status", {
+        header: "Status",
+        enableColumnFilter: true,
+        filterFn: "auto",
+        enableSorting: true,
+        cell: ({ row }) => (
+          <Badge tone={row.original.status === "Paid" ? "success" : "warning"}>
+            {row.original.status}
+          </Badge>
+        ),
+      }),
+      columnHelper.display({
+        id: "actions",
+        header: "PDF",
+        cell: ({ row }) => (
+          <div className="flex items-center justify-center">
+            {row.original.pdfUrl ? (
+              <OwnerButton
+                variant="ghost"
+                size="sm"
+                leadingIcon={<Download size={13} />}
+                onClick={() =>
+                  typeof window !== "undefined"
+                    ? window.open(row.original.pdfUrl!, "_blank")
+                    : null
+                }
+              >
+                PDF
+              </OwnerButton>
+            ) : (
+              <span className="text-[13px] text-owner-fg-4">—</span>
+            )}
+          </div>
+        ),
+      }),
+    ],
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [columnHelper]
+  );
+
   return (
     <div className="flex flex-col gap-6 font-owner">
       <div className="grid gap-4 sm:grid-cols-3">
@@ -56,82 +149,15 @@ const InvoicesTable: React.FC = () => {
         />
       </div>
 
-      <OwnerTable
+      <DataTable
+        totalRows={rows.length}
+        columns={columns}
+        data={rows}
         loading={false}
-        rowCount={rows.length}
-        empty="No payout invoices yet. Once your first payout settles, the tax invoice will appear here."
-      >
-        <OwnerTable.Toolbar>
-          <span className="text-[14px] font-semibold text-owner-fg-1">
-            All invoices
-          </span>
-          <OwnerButton
-            variant="secondary"
-            size="sm"
-            leadingIcon={<Download size={13} />}
-            disabled
-          >
-            Download all
-          </OwnerButton>
-        </OwnerTable.Toolbar>
-        <OwnerTable.Head>
-          <OwnerTable.HeaderCell>Invoice</OwnerTable.HeaderCell>
-          <OwnerTable.HeaderCell>Issued</OwnerTable.HeaderCell>
-          <OwnerTable.HeaderCell>Period</OwnerTable.HeaderCell>
-          <OwnerTable.HeaderCell align="right">Amount</OwnerTable.HeaderCell>
-          <OwnerTable.HeaderCell align="right">GST (18%)</OwnerTable.HeaderCell>
-          <OwnerTable.HeaderCell>Status</OwnerTable.HeaderCell>
-          <OwnerTable.HeaderCell align="right">PDF</OwnerTable.HeaderCell>
-        </OwnerTable.Head>
-        <OwnerTable.Body>
-          {rows.map((row) => (
-            <OwnerTable.Row key={row.id}>
-              <OwnerTable.Cell>
-                <div className="flex items-center gap-3">
-                  <span className="grid h-8 w-8 place-items-center rounded-owner-sm bg-owner-blue-050 text-owner-blue-500">
-                    <Receipt size={14} />
-                  </span>
-                  <span className="font-ownerMono text-[13px]">
-                    {row.invoiceId}
-                  </span>
-                </div>
-              </OwnerTable.Cell>
-              <OwnerTable.Cell>{row.issued}</OwnerTable.Cell>
-              <OwnerTable.Cell>{row.period}</OwnerTable.Cell>
-              <OwnerTable.Cell align="right" bold>
-                {inrFormat(row.amount)}
-              </OwnerTable.Cell>
-              <OwnerTable.Cell align="right" muted>
-                {inrFormat(row.gst)}
-              </OwnerTable.Cell>
-              <OwnerTable.Cell>
-                <Badge tone={row.status === "Paid" ? "success" : "warning"}>
-                  {row.status}
-                </Badge>
-              </OwnerTable.Cell>
-              <OwnerTable.Cell align="right">
-                {row.pdfUrl ? (
-                  <OwnerButton
-                    variant="ghost"
-                    size="sm"
-                    leadingIcon={<Download size={13} />}
-                    onClick={() =>
-                      typeof window !== "undefined"
-                        ? window.open(row.pdfUrl!, "_blank")
-                        : null
-                    }
-                  >
-                    PDF
-                  </OwnerButton>
-                ) : (
-                  <span className="text-[13px] text-owner-fg-4">—</span>
-                )}
-              </OwnerTable.Cell>
-            </OwnerTable.Row>
-          ))}
-        </OwnerTable.Body>
-        <OwnerTable.Footer summary={`${rows.length} invoices`} />
-      </OwnerTable>
+        manualPagination={false}
+        hideDownloadButton
+        pageSize={10}
+      />
     </div>
   );
 };

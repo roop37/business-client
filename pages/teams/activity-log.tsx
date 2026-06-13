@@ -1,11 +1,10 @@
 import {
   Badge,
-  OwnerButton,
-  OwnerTable,
   PageHeader,
 } from "@/components/common/owner";
 import type { BadgeTone } from "@/components/common/owner";
-import EmptyStateView from "@/components/common/emptyTableView/emptyTableView";
+import DataTable from "@/components/common/dataTable";
+import DataTableTextCell from "@/components/common/dataTable/common/textCell";
 import MainLayout from "@/components/layouts/mainBodyLayout";
 import { PermissionTypeEnum } from "@/generated/graphql";
 import useGlobalStore from "@/store/global";
@@ -16,7 +15,7 @@ import {
 import { sdk } from "@/utils/graphqlClient";
 import { hasAccess } from "@/utils/hasAccess";
 import { extractErrorMessage } from "@/utils/utilFUncs";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { ColumnDef, createColumnHelper } from "@tanstack/react-table";
 import { GetServerSideProps } from "next";
 import React, { useEffect, useMemo, useState } from "react";
 
@@ -130,8 +129,50 @@ const ActivityLogPage: NextPageWithLayout = () => {
     [total]
   );
 
-  const rangeStart = total === 0 ? 0 : (page - 1) * PAGE_SIZE + 1;
-  const rangeEnd = Math.min(page * PAGE_SIZE, total);
+  const columnHelper = createColumnHelper<ActivityLogRow>();
+  const columns: ColumnDef<ActivityLogRow, any>[] = useMemo(
+    () => [
+      columnHelper.accessor("createdAt", {
+        header: "When",
+        enableColumnFilter: false,
+        enableSorting: false,
+        cell: ({ row }) => (
+          <DataTableTextCell value={fmtDate(row.original.createdAt)} />
+        ),
+      }),
+      columnHelper.accessor("performedBy", {
+        header: "Who",
+        enableColumnFilter: true,
+        filterFn: "auto",
+        enableSorting: false,
+        cell: ({ row }) => (
+          <DataTableTextCell
+            className="font-semibold"
+            value={row.original.performedBy || "Unknown"}
+          />
+        ),
+      }),
+      columnHelper.accessor("actionType", {
+        header: "Action",
+        enableColumnFilter: true,
+        filterFn: "auto",
+        enableSorting: false,
+        cell: ({ row }) => {
+          const action = actionLabel(row.original.actionType);
+          return <Badge tone={action.tone}>{action.label}</Badge>;
+        },
+      }),
+      columnHelper.accessor("description", {
+        header: "Details",
+        enableColumnFilter: true,
+        filterFn: "auto",
+        enableSorting: false,
+        cell: ({ row }) => <DataTableTextCell value={row.original.description} />,
+      }),
+    ],
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [columnHelper]
+  );
 
   return (
     <div className="min-w-0">
@@ -140,86 +181,27 @@ const ActivityLogPage: NextPageWithLayout = () => {
         subtitle="See offline-ticket activity performed on your events by your team members and by collaborating organizations."
       />
 
-      <OwnerTable
-        rowCount={rows.length}
+      <DataTable
+        totalRows={total}
+        columns={columns}
+        data={rows}
         loading={loading}
-        empty={
-          <EmptyStateView
-            title="No activity yet. Actions performed on your events will appear here."
-          />
-        }
-        className="mb-6"
-      >
-        <OwnerTable.Toolbar>
-          <OwnerTable.SearchInput
-            value={search}
-            onChange={setSearch}
-            placeholder="Search by person, action, or description"
-            className="flex-1"
-          />
-        </OwnerTable.Toolbar>
-
-        <OwnerTable.Head>
-          <OwnerTable.HeaderCell width="20%">When</OwnerTable.HeaderCell>
-          <OwnerTable.HeaderCell width="20%">Who</OwnerTable.HeaderCell>
-          <OwnerTable.HeaderCell width="18%">Action</OwnerTable.HeaderCell>
-          <OwnerTable.HeaderCell>Details</OwnerTable.HeaderCell>
-        </OwnerTable.Head>
-
-        <OwnerTable.Body>
-          {rows.map((row) => {
-            const action = actionLabel(row.actionType);
-            return (
-              <OwnerTable.Row key={row._id}>
-                <OwnerTable.Cell muted>{fmtDate(row.createdAt)}</OwnerTable.Cell>
-                <OwnerTable.Cell bold>
-                  {row.performedBy || "Unknown"}
-                </OwnerTable.Cell>
-                <OwnerTable.Cell>
-                  <Badge tone={action.tone}>{action.label}</Badge>
-                </OwnerTable.Cell>
-                <OwnerTable.Cell muted>{row.description}</OwnerTable.Cell>
-              </OwnerTable.Row>
-            );
-          })}
-        </OwnerTable.Body>
-
-        <OwnerTable.Footer
-          summary={
-            total === 0
-              ? "No entries"
-              : `Showing ${rangeStart.toLocaleString(
-                  "en-IN"
-                )}–${rangeEnd.toLocaleString("en-IN")} of ${total.toLocaleString(
-                  "en-IN"
-                )}`
-          }
-        >
-          <div className="flex items-center gap-2">
-            <OwnerButton
-              variant="secondary"
-              size="sm"
-              disabled={loading || page <= 1}
-              leadingIcon={<ChevronLeft size={16} />}
-              onClick={() => setPage((p) => Math.max(1, p - 1))}
-            >
-              Previous
-            </OwnerButton>
-            <span className="text-[13px] text-owner-fg-4">
-              Page {page} of {totalPages}
-            </span>
-            <OwnerButton
-              variant="secondary"
-              size="sm"
-              disabled={loading || page >= totalPages}
-              trailingIcon={<ChevronRight size={16} />}
-              onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-            >
-              Next
-            </OwnerButton>
-          </div>
-        </OwnerTable.Footer>
-      </OwnerTable>
+        manualPagination={true}
+        hideDownloadButton
+        pageSize={PAGE_SIZE}
+        pageCount={totalPages}
+        nextPage={() => {
+          if (page < totalPages) setPage((p) => p + 1);
+        }}
+        prevPage={() => {
+          if (page > 1) setPage((p) => p - 1);
+        }}
+        paginationData={{ pageIndex: page - 1, pageSize: PAGE_SIZE }}
+        searchFilter={search}
+        setSearchFilter={(value) => {
+          setSearch(value);
+        }}
+      />
     </div>
   );
 };

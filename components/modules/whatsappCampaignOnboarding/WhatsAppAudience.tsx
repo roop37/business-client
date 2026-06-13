@@ -30,7 +30,6 @@ const WhatsAppAudience = () => {
     target,
     setTarget,
     eventId,
-    setEventId,
     filters,
     setFilters,
     targetCount,
@@ -94,17 +93,18 @@ const WhatsAppAudience = () => {
       </label>
 
       {target === "EventSpecific" ? (
-        <label className="block">
-          <span className="text-[12px] font-semibold text-owner-fg-2">
-            Event ID
-          </span>
-          <input
-            className={`${inputCls} mt-1`}
-            value={eventId}
-            onChange={(e) => setEventId(e.target.value)}
-            placeholder="Paste the event id"
-          />
-        </label>
+        eventId ? (
+          <div className="rounded-owner-md border border-owner-border-soft bg-owner-bg-subtle px-3 py-2 text-[12px] text-owner-fg-3">
+            Targeting buyers of the event you picked in{" "}
+            <span className="font-semibold text-owner-fg-1">Step 1</span>. To
+            change it, go back to Basics.
+          </div>
+        ) : (
+          <div className="rounded-owner-md border border-dashed border-owner-warning-text/40 bg-owner-warning-bg px-3 py-2 text-[12px] text-owner-warning-text">
+            No event selected. Go back to Step 1 (Basics) and pick the event
+            whose buyers you want to message.
+          </div>
+        )
       ) : null}
 
       {target === "CustomCustomer" ? (

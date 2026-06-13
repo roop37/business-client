@@ -1,6 +1,5 @@
 import {
   Badge,
-  Card,
   OwnerButton,
   PageHeader,
   PillTabs,
@@ -8,13 +7,16 @@ import {
   inrFormat,
 } from "@/components/common/owner";
 import type { BadgeTone } from "@/components/common/owner";
+import DataTable from "@/components/common/dataTable";
+import DataTableTextCell from "@/components/common/dataTable/common/textCell";
 import MainLayout from "@/components/layouts/mainBodyLayout";
 import { PermissionTypeEnum } from "@/generated/graphql";
 import useGlobalStore from "@/store/global";
 import { sdk } from "@/utils/graphqlClient";
 import { hasAccess } from "@/utils/hasAccess";
 import { extractErrorMessage } from "@/utils/utilFUncs";
-import { Download, Filter, MoreVertical, Plus, Search, Ticket } from "lucide-react";
+import { ColumnDef, createColumnHelper } from "@tanstack/react-table";
+import { Download, Filter, Plus, Ticket } from "lucide-react";
 import { GetServerSideProps } from "next";
 import { useRouter } from "next/router";
 import React, { useEffect, useMemo, useState } from "react";
@@ -213,6 +215,92 @@ const TicketsPage = () => {
     return { sold, revenue, refunds, avg };
   }, [rows]);
 
+  const columnHelper = createColumnHelper<TicketRow>();
+  const columns: ColumnDef<TicketRow, any>[] = useMemo(
+    () => [
+      columnHelper.accessor("id", {
+        header: "Ticket ID",
+        enableColumnFilter: true,
+        filterFn: "auto",
+        enableSorting: true,
+        cell: ({ row }) => (
+          <span className="font-mono text-[13px] text-owner-fg-1">
+            {row.original.id}
+          </span>
+        ),
+      }),
+      columnHelper.accessor("event", {
+        header: "Event",
+        enableColumnFilter: true,
+        filterFn: "auto",
+        enableSorting: true,
+        cell: ({ row }) => <DataTableTextCell value={row.original.event} />,
+      }),
+      columnHelper.accessor("tier", {
+        header: "Tier",
+        enableColumnFilter: true,
+        filterFn: "auto",
+        enableSorting: true,
+        cell: ({ row }) => (
+          <Badge tone={tierTone(row.original.tier)}>{row.original.tier}</Badge>
+        ),
+      }),
+      columnHelper.accessor("buyer", {
+        header: "Buyer",
+        enableColumnFilter: true,
+        filterFn: "auto",
+        enableSorting: false,
+        cell: ({ row }) => (
+          <div className="flex flex-col">
+            <span className="font-medium text-owner-fg-1">
+              {row.original.buyer}
+            </span>
+            <span className="text-[12px] text-owner-fg-4">
+              {row.original.email}
+            </span>
+          </div>
+        ),
+      }),
+      columnHelper.accessor("booked", {
+        header: "Booked",
+        enableColumnFilter: false,
+        enableSorting: true,
+        cell: ({ row }) => <DataTableTextCell value={row.original.booked} />,
+      }),
+      columnHelper.accessor("price", {
+        header: "Price",
+        enableColumnFilter: false,
+        enableSorting: true,
+        cell: ({ row }) => (
+          <span className="text-sm font-medium text-owner-fg-1 tabular-nums">
+            {inrFormat(row.original.price)}
+            {row.original.sold > 1 ? (
+              <span className="ml-1 font-normal text-owner-fg-4">
+                x {row.original.sold}
+              </span>
+            ) : null}
+          </span>
+        ),
+      }),
+      columnHelper.accessor("status", {
+        header: "Status",
+        enableColumnFilter: true,
+        filterFn: "auto",
+        enableSorting: true,
+        cell: ({ row }) => (
+          <Badge
+            tone={statusTone(row.original.status)}
+            icon={row.original.checkedIn ? <Ticket size={13} /> : undefined}
+          >
+            {row.original.checkedIn ? "Checked-in" : row.original.status}
+          </Badge>
+        ),
+      }),
+    ],
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [columnHelper]
+  );
+
   return (
     <div className="min-w-0">
       <PageHeader
@@ -269,100 +357,17 @@ const TicketsPage = () => {
         </OwnerButton>
       </div>
 
-      <Card padding={0} className="overflow-hidden">
-        <div className="border-b border-owner-border-soft p-4">
-          <div className="owner-search">
-            <Search size={18} />
-            <input
-              value={search}
-              onChange={(event) => setSearch(event.target.value)}
-              placeholder="Search by ticket ID, event, tier, or buyer"
-            />
-          </div>
-        </div>
-
-        <div className="overflow-x-auto">
-          <table className="owner-table min-w-[980px]">
-            <caption className="sr-only">Ticket sales</caption>
-            <thead>
-              <tr>
-                <th scope="col">Ticket ID</th>
-                <th scope="col">Event</th>
-                <th scope="col">Tier</th>
-                <th scope="col">Buyer</th>
-                <th scope="col">Booked</th>
-                <th scope="col" className="num">Price</th>
-                <th scope="col">Status</th>
-                <th scope="col" aria-label="More actions" />
-              </tr>
-            </thead>
-            <tbody>
-              {loading ? (
-                <tr>
-                  <td colSpan={8} className="text-center text-owner-fg-4">
-                    Loading ticket sales...
-                  </td>
-                </tr>
-              ) : filtered.length ? (
-                filtered.map((row) => (
-                  <tr key={`${row.eventId}-${row.id}`}>
-                    <td className="owner-mono">{row.id}</td>
-                    <td>
-                      <div className="max-w-[240px] truncate font-medium">
-                        {row.event}
-                      </div>
-                    </td>
-                    <td>
-                      <Badge tone={tierTone(row.tier)}>{row.tier}</Badge>
-                    </td>
-                    <td>
-                      <div className="font-medium">{row.buyer}</div>
-                      <div className="mt-1 text-[12px] text-owner-fg-4">
-                        {row.email}
-                      </div>
-                    </td>
-                    <td className="text-owner-fg-3">{row.booked}</td>
-                    <td className="num font-medium">
-                      {inrFormat(row.price)}
-                      {row.sold > 1 ? (
-                        <span className="ml-1 font-normal text-owner-fg-4">
-                          x {row.sold}
-                        </span>
-                      ) : null}
-                    </td>
-                    <td>
-                      <Badge
-                        tone={statusTone(row.status)}
-                        icon={row.checkedIn ? <Ticket size={13} /> : undefined}
-                      >
-                        {row.checkedIn ? "Checked-in" : row.status}
-                      </Badge>
-                    </td>
-                    <td className="text-owner-fg-4">
-                      <MoreVertical size={18} />
-                    </td>
-                  </tr>
-                ))
-              ) : (
-                <tr>
-                  <td colSpan={8} className="text-center text-owner-fg-4">
-                    No ticket rows found.
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
-        </div>
-
-        <div className="flex items-center justify-between border-t border-owner-border-soft px-6 py-4">
-          <span className="text-[13px] text-owner-fg-4">
-            1-{filtered.length} of {filtered.length}
-          </span>
-          <span className="rounded-owner-sm bg-owner-blue-050 px-3 py-1 text-[13px] font-semibold text-owner-blue-500">
-            Page 1
-          </span>
-        </div>
-      </Card>
+      <DataTable
+        totalRows={filtered.length}
+        columns={columns}
+        data={filtered}
+        loading={loading}
+        manualPagination={false}
+        hideDownloadButton
+        pageSize={10}
+        searchFilter={search}
+        setSearchFilter={setSearch}
+      />
     </div>
   );
 };

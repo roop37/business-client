@@ -2,6 +2,7 @@
 
 import { Badge, OwnerButton } from "@/components/common/owner";
 import useGlobalStore from "@/store/global";
+import useHostsStore from "@/store/host";
 import useWhatsappCampaignStore from "@/store/whatsappCampaignStore";
 import { extractErrorMessage } from "@/utils/utilFUncs";
 import {
@@ -18,6 +19,7 @@ import {
   MERGE_TAGS,
   resolveTagValue,
   tagKeyForValue,
+  type MergeContext,
 } from "@/utils/whatsappMergeTags";
 import { Star } from "lucide-react";
 import { useCallback, useEffect, useMemo, useState } from "react";
@@ -37,18 +39,35 @@ const WhatsAppContent = () => {
     setTemplateVariables,
     headerMediaUrl,
     setHeaderMediaUrl,
+    eventId,
   } = useWhatsappCampaignStore();
+  const { selectedHost, hostAddress } = useHostsStore();
 
   const [items, setItems] = useState<WhatsAppMessageTemplate[]>([]);
   const [loading, setLoading] = useState(true);
   const [bookmarkIds, setBookmarkIds] = useState<Set<string>>(new Set());
   const [bookmarkedOnly, setBookmarkedOnly] = useState(false);
 
+  // The event is chosen in Step 1 (Basics); here we only need its details to
+  // resolve event-scoped merge tags. We still fetch the list so we can map the
+  // stored eventId → its title/address/date even on a fresh edit-rehydrate.
   const [events, setEvents] = useState<WhatsAppPrefillEvent[]>([]);
-  const [eventId, setEventId] = useState("");
   const selectedEvent = useMemo(
     () => events.find((e) => e._id === eventId) ?? null,
     [events, eventId]
+  );
+
+  // Event + host/venue context that the merge-tag dropdown resolves against.
+  const mergeCtx = useMemo<MergeContext>(
+    () => ({
+      event: selectedEvent,
+      host: {
+        name: selectedHost,
+        address: hostAddress?.formattedAddress ?? hostAddress?.city ?? null,
+        city: hostAddress?.city ?? null,
+      },
+    }),
+    [selectedEvent, selectedHost, hostAddress]
   );
 
   // Per-variable UI state (tag choice + custom text). Stored campaign value is
@@ -145,28 +164,29 @@ const WhatsAppContent = () => {
   const onTagChange = (position: number, tagKey: string) => {
     const custom = varUi[position]?.custom ?? "";
     setVarUi((prev) => ({ ...prev, [position]: { tagKey, custom } }));
-    writeVar(position, resolveTagValue(tagKey, selectedEvent, custom));
+    writeVar(position, resolveTagValue(tagKey, mergeCtx, custom));
   };
   const onCustomChange = (position: number, custom: string) => {
     setVarUi((prev) => ({
       ...prev,
       [position]: { tagKey: CUSTOM_TAG_KEY, custom },
     }));
-    writeVar(position, resolveTagValue(CUSTOM_TAG_KEY, selectedEvent, custom));
+    writeVar(position, resolveTagValue(CUSTOM_TAG_KEY, mergeCtx, custom));
   };
 
-  // When the prefill event changes, re-resolve any event-scoped variable.
+  // When the Step 1 event or the host/venue context changes, re-resolve any
+  // event/host-scoped variable to its new literal value.
   useEffect(() => {
     if (!selectedTemplate) return;
     for (const [posStr, ui] of Object.entries(varUi)) {
       const pos = Number(posStr);
       const tag = MERGE_TAGS.find((t) => t.key === ui.tagKey);
-      if (tag?.scope === "event") {
-        writeVar(pos, resolveTagValue(ui.tagKey, selectedEvent, ui.custom));
+      if (tag?.scope === "event" || tag?.scope === "host") {
+        writeVar(pos, resolveTagValue(ui.tagKey, mergeCtx, ui.custom));
       }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [eventId]);
+  }, [mergeCtx]);
 
   const needsMedia =
     selectedTemplate &&
@@ -284,28 +304,20 @@ const WhatsAppContent = () => {
 
           {(selectedTemplate.variables ?? []).length > 0 ? (
             <>
-              {events.length > 0 ? (
-                <label className="block">
-                  <span className="text-[12px] font-semibold text-owner-fg-2">
-                    Prefill from an event{" "}
-                    <span className="font-normal text-owner-fg-4">
-                      (optional)
-                    </span>
-                  </span>
-                  <select
-                    className={`${inputCls} mt-1`}
-                    value={eventId}
-                    onChange={(e) => setEventId(e.target.value)}
-                  >
-                    <option value="">No event</option>
-                    {events.map((e) => (
-                      <option key={e._id} value={e._id}>
-                        {e.title}
-                      </option>
-                    ))}
-                  </select>
-                </label>
-              ) : null}
+              {selectedEvent ? (
+                <div className="rounded-owner-md border border-owner-border-soft bg-owner-bg px-3 py-2 text-[12px] text-owner-fg-3">
+                  Event details prefill from{" "}
+                  <span className="font-semibold text-owner-fg-1">
+                    {selectedEvent.title}
+                  </span>{" "}
+                  (chosen in Step 1). Change it from the Basics step.
+                </div>
+              ) : eventId ? null : (
+                <div className="rounded-owner-md border border-dashed border-owner-border px-3 py-2 text-[12px] text-owner-fg-4">
+                  No event picked in Step 1, so event-based variables (name,
+                  date, link…) will be blank. Go back to Basics to choose one.
+                </div>
+              )}
 
               {(selectedTemplate.variables ?? [])
                 .slice()
@@ -345,7 +357,7 @@ const WhatsAppContent = () => {
                       ) : null}
                       {needsEvent ? (
                         <span className="text-[11px] text-owner-warning-text">
-                          Pick an event above to fill this in.
+                          Pick an event in Step 1 to fill this in.
                         </span>
                       ) : null}
                       {v.hint ? (

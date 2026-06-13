@@ -1,24 +1,28 @@
 import {
   Badge,
+  type BadgeTone,
   inrFormat,
   OwnerButton,
-  OwnerTable,
   PageHeader,
   StatTile,
 } from "@/components/common/owner";
+import DataTable from "@/components/common/dataTable";
+import DataTableTextCell from "@/components/common/dataTable/common/textCell";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import MainLayout from "@/components/layouts/mainBodyLayout";
 import { PermissionTypeEnum } from "@/generated/graphql";
 import useGlobalStore from "@/store/global";
 import { sdk } from "@/utils/graphqlClient";
 import { hasAccess } from "@/utils/hasAccess";
 import { extractErrorMessage } from "@/utils/utilFUncs";
-import {
-  ChevronRight,
-  Copy,
-  ScanLine,
-  ShieldCheck,
-  Smartphone,
-} from "lucide-react";
+import { ColumnDef, createColumnHelper } from "@tanstack/react-table";
+import { Copy, ScanLine, ShieldCheck, Smartphone } from "lucide-react";
+import { FiSettings } from "react-icons/fi";
 import { GetServerSideProps } from "next";
 import { useRouter } from "next/router";
 import React, { useCallback, useEffect, useMemo, useState } from "react";
@@ -123,6 +127,131 @@ const ScannersIndex: React.FC & {
     [events]
   );
 
+  const columnHelper = createColumnHelper<EventRow>();
+  const columns: ColumnDef<EventRow, any>[] = useMemo(
+    () => [
+      columnHelper.accessor("title", {
+        header: "Event",
+        enableColumnFilter: true,
+        filterFn: "auto",
+        enableSorting: true,
+        cell: ({ row }) => (
+          <div className="flex items-center gap-3">
+            <div
+              className="grid h-9 w-9 shrink-0 place-items-center rounded-owner-md text-white"
+              style={{
+                background:
+                  "linear-gradient(135deg, #0F8842 0%, #16A150 100%)",
+              }}
+            >
+              <ScanLine size={15} />
+            </div>
+            <div className="flex flex-col">
+              <DataTableTextCell
+                className="cursor-pointer font-semibold"
+                onClick={() =>
+                  router.push(`/events/${row.original._id}/scanners`)
+                }
+                value={row.original.title || "Untitled Event"}
+              />
+              {row.original.city ? (
+                <span className="text-[12px] text-owner-fg-4">
+                  {row.original.city}
+                </span>
+              ) : null}
+            </div>
+          </div>
+        ),
+      }),
+      columnHelper.accessor("startDate", {
+        header: "Date & time",
+        enableColumnFilter: false,
+        enableSorting: true,
+        cell: ({ row }) => (
+          <DataTableTextCell value={formatEventDate(row.original.startDate)} />
+        ),
+      }),
+      columnHelper.accessor("status", {
+        header: "Status",
+        enableColumnFilter: true,
+        filterFn: "auto",
+        enableSorting: true,
+        cell: ({ row }) => {
+          const status = (row.original.status ?? "").toUpperCase();
+          const tone: BadgeTone =
+            status === "PUBLISHED" || status === "LIVE"
+              ? "success"
+              : status === "DRAFT"
+              ? "neutral"
+              : "info";
+          return (
+            <Badge tone={tone}>
+              {status === "PUBLISHED"
+                ? "Live"
+                : status.charAt(0) + status.slice(1).toLowerCase()}
+            </Badge>
+          );
+        },
+      }),
+      columnHelper.accessor("capacity", {
+        header: "Capacity",
+        enableColumnFilter: false,
+        enableSorting: true,
+        cell: ({ row }) => (
+          <span className="text-sm font-medium text-owner-fg-1 tabular-nums">
+            {row.original.ticketSold ?? 0} / {row.original.capacity ?? "—"}
+          </span>
+        ),
+      }),
+      columnHelper.display({
+        id: "scanners",
+        header: "Scanners",
+        cell: ({ row }) => {
+          const count = counts[row.original._id];
+          if (!count) return <span className="text-owner-fg-4">—</span>;
+          return (
+            <span className="inline-flex items-center gap-1.5 text-[13px] font-medium text-owner-fg-1">
+              <span
+                className={`inline-block h-1.5 w-1.5 rounded-full ${
+                  count.active > 0
+                    ? "bg-owner-success-text"
+                    : "bg-owner-fg-4"
+                }`}
+              />
+              {count.active} active{" "}
+              <span className="text-owner-fg-4">/ {count.total}</span>
+            </span>
+          );
+        },
+      }),
+      columnHelper.display({
+        id: "actions",
+        header: "Manage",
+        cell: ({ row }) => (
+          <TooltipProvider>
+            <div className="flex items-center justify-center">
+              <Tooltip>
+                <TooltipTrigger>
+                  <FiSettings
+                    className="text-primary text-lg cursor-pointer"
+                    onClick={() =>
+                      router.push(`/events/${row.original._id}/scanners`)
+                    }
+                  />
+                </TooltipTrigger>
+                <TooltipContent className="bg-black text-white max-w-xs">
+                  <p>Manage scanners</p>
+                </TooltipContent>
+              </Tooltip>
+            </div>
+          </TooltipProvider>
+        ),
+      }),
+    ],
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [columnHelper, counts, router]
+  );
+
   const copyInviteLink = async () => {
     try {
       if (typeof navigator !== "undefined" && navigator.clipboard) {
@@ -190,114 +319,15 @@ const ScannersIndex: React.FC & {
         />
       </div>
 
-      <OwnerTable
+      <DataTable
+        totalRows={visibleEvents.length}
+        columns={columns}
+        data={visibleEvents}
         loading={loading}
-        rowCount={visibleEvents.length}
-        empty="No live or upcoming events. Create an event to add scanners."
-      >
-        <OwnerTable.Toolbar>
-          <span className="text-[14px] font-semibold text-owner-fg-1">
-            Events with scanner access
-          </span>
-          <span className="text-[12.5px] text-owner-fg-4">
-            Click an event to manage its scanners
-          </span>
-        </OwnerTable.Toolbar>
-        <OwnerTable.Head>
-          <OwnerTable.HeaderCell>Event</OwnerTable.HeaderCell>
-          <OwnerTable.HeaderCell>Date &amp; time</OwnerTable.HeaderCell>
-          <OwnerTable.HeaderCell>Status</OwnerTable.HeaderCell>
-          <OwnerTable.HeaderCell align="right">Capacity</OwnerTable.HeaderCell>
-          <OwnerTable.HeaderCell align="right">Scanners</OwnerTable.HeaderCell>
-          <OwnerTable.HeaderCell align="right">Manage</OwnerTable.HeaderCell>
-        </OwnerTable.Head>
-        <OwnerTable.Body>
-          {visibleEvents.map((event) => {
-            const count = counts[event._id];
-            const status = (event.status ?? "").toUpperCase();
-            return (
-              <OwnerTable.Row
-                key={event._id}
-                className="cursor-pointer"
-                onClick={() => router.push(`/events/${event._id}/scanners`)}
-              >
-                <OwnerTable.Cell>
-                  <div className="flex items-center gap-3">
-                    <div
-                      className="grid h-9 w-9 shrink-0 place-items-center rounded-owner-md text-white"
-                      style={{
-                        background:
-                          "linear-gradient(135deg, #0F8842 0%, #16A150 100%)",
-                      }}
-                    >
-                      <ScanLine size={15} />
-                    </div>
-                    <div className="min-w-0">
-                      <p className="truncate font-semibold text-owner-fg-1">
-                        {event.title || "Untitled Event"}
-                      </p>
-                      {event.city ? (
-                        <p className="text-[12px] text-owner-fg-4">
-                          {event.city}
-                        </p>
-                      ) : null}
-                    </div>
-                  </div>
-                </OwnerTable.Cell>
-                <OwnerTable.Cell>
-                  {formatEventDate(event.startDate)}
-                </OwnerTable.Cell>
-                <OwnerTable.Cell>
-                  <Badge
-                    tone={
-                      status === "PUBLISHED" || status === "LIVE"
-                        ? "success"
-                        : status === "DRAFT"
-                        ? "neutral"
-                        : "info"
-                    }
-                  >
-                    {status === "PUBLISHED"
-                      ? "Live"
-                      : status.charAt(0) + status.slice(1).toLowerCase()}
-                  </Badge>
-                </OwnerTable.Cell>
-                <OwnerTable.Cell align="right" muted>
-                  {event.ticketSold ?? 0} / {event.capacity ?? "—"}
-                </OwnerTable.Cell>
-                <OwnerTable.Cell align="right">
-                  {count ? (
-                    <span className="inline-flex items-center gap-1.5 text-[13px] font-medium text-owner-fg-1">
-                      <span
-                        className={`inline-block h-1.5 w-1.5 rounded-full ${
-                          count.active > 0
-                            ? "bg-owner-success-text"
-                            : "bg-owner-fg-4"
-                        }`}
-                      />
-                      {count.active} active{" "}
-                      <span className="text-owner-fg-4">
-                        / {count.total}
-                      </span>
-                    </span>
-                  ) : (
-                    <span className="text-owner-fg-4">—</span>
-                  )}
-                </OwnerTable.Cell>
-                <OwnerTable.Cell align="right">
-                  <span className="inline-flex items-center gap-1 text-[12.5px] font-medium text-owner-blue-500">
-                    Manage
-                    <ChevronRight size={13} />
-                  </span>
-                </OwnerTable.Cell>
-              </OwnerTable.Row>
-            );
-          })}
-        </OwnerTable.Body>
-        <OwnerTable.Footer
-          summary={`${visibleEvents.length} events showing`}
-        />
-      </OwnerTable>
+        manualPagination={false}
+        hideDownloadButton
+        pageSize={10}
+      />
 
       {/* Bottom info banner */}
       <div
