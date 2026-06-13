@@ -41,12 +41,12 @@ const WhatsAppCampaignOnboardingLayout = ({
     typeof router.query.editId === "string" ? router.query.editId : undefined;
   const stepIndex = Math.max(
     0,
-    STEPS.findIndex((s) => s.id === step)
+    STEPS.findIndex((s) => s.id === step),
   );
 
   const store = useWhatsappCampaignStore();
   const setOriginalCampaign = useOriginalWhatsappCampaignStore(
-    (s) => s.setOriginalCampaign
+    (s) => s.setOriginalCampaign,
   );
 
   const [submitting, setSubmitting] = useState<null | "next" | "draft">(null);
@@ -81,7 +81,7 @@ const WhatsAppCampaignOnboardingLayout = ({
         store.setScheduleType((c.scheduleType as "Now" | "Later") ?? "Now");
         store.setScheduleDate(c.scheduleTime ? new Date(c.scheduleTime) : null);
         store.setPublicationStatus(
-          (c.publicationStatus as "Drafted" | "Active") ?? "Drafted"
+          (c.publicationStatus as "Drafted" | "Active") ?? "Drafted",
         );
         if (c.templateId) {
           const tpl = await fetchWhatsAppTemplateById(c.templateId);
@@ -111,8 +111,12 @@ const WhatsAppCampaignOnboardingLayout = ({
   const variablesFilled = useMemo(() => {
     const t = store.selectedTemplate;
     if (!t) return false;
-    const byPos = new Map(store.templateVariables.map((v) => [v.position, v.value]));
-    return (t.variables ?? []).every((v) => (byPos.get(v.position) ?? "").trim());
+    const byPos = new Map(
+      store.templateVariables.map((v) => [v.position, v.value]),
+    );
+    return (t.variables ?? []).every((v) =>
+      (byPos.get(v.position) ?? "").trim(),
+    );
   }, [store.selectedTemplate, store.templateVariables]);
 
   // Create the Drafted campaign as soon as it has a name (step 1), so it gets
@@ -170,7 +174,7 @@ const WhatsAppCampaignOnboardingLayout = ({
         });
       }
     },
-    [step, store]
+    [step, store],
   );
 
   const handleContinue = async () => {
@@ -186,7 +190,7 @@ const WhatsAppCampaignOnboardingLayout = ({
         // Thread the id into the URL so back/forward/reload rehydrate.
         if (!editId) {
           router.replace(
-            `/campaigns/whatsapp/onboarding/content?editId=${encodeURIComponent(id)}`
+            `/campaigns/whatsapp/onboarding/content?editId=${encodeURIComponent(id)}`,
           );
         } else {
           goTo("content");
@@ -196,7 +200,10 @@ const WhatsAppCampaignOnboardingLayout = ({
 
       if (step === "content") {
         if (!store.selectedTemplate) {
-          setToastData({ type: "error", message: "Pick a template to continue." });
+          setToastData({
+            type: "error",
+            message: "Pick a template to continue.",
+          });
           return;
         }
         if (!variablesFilled) {
@@ -323,7 +330,7 @@ const WhatsAppCampaignOnboardingLayout = ({
   return (
     <div className="flex min-h-screen flex-col bg-white font-owner text-black">
       {/* Top bar — mirrors the email campaign onboarding: back arrow left,
-          step counter + actions on the right, no numbered stepper. */}
+          step counter + actions on the right, no numbered stepper okay. */}
       <div className="fixed left-0 right-0 top-0 z-20 border-b bg-white">
         <div className="flex h-14 items-center justify-between gap-4 px-4">
           <button
