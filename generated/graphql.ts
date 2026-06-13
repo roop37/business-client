@@ -1257,6 +1257,7 @@ export type CreateWhatsAppTemplateInput = {
   headerSampleMediaUrl?: InputMaybe<Scalars['String']['input']>;
   headerText?: InputMaybe<Scalars['String']['input']>;
   headerType: WhatsAppTemplateHeaderType;
+  internalOnly?: InputMaybe<Scalars['Boolean']['input']>;
   language?: InputMaybe<Scalars['String']['input']>;
   name: Scalars['String']['input'];
   slug: Scalars['String']['input'];
@@ -5442,6 +5443,7 @@ export type UpdateWhatsAppTemplateInput = {
   footerText?: InputMaybe<Scalars['String']['input']>;
   headerSampleMediaUrl?: InputMaybe<Scalars['String']['input']>;
   headerText?: InputMaybe<Scalars['String']['input']>;
+  internalOnly?: InputMaybe<Scalars['Boolean']['input']>;
   isActive?: InputMaybe<Scalars['Boolean']['input']>;
   name?: InputMaybe<Scalars['String']['input']>;
   templateId: Scalars['ID']['input'];
@@ -5602,6 +5604,7 @@ export type WhatsAppMessageTemplate = {
   headerSampleMediaUrl?: Maybe<Scalars['String']['output']>;
   headerText?: Maybe<Scalars['String']['output']>;
   headerType: WhatsAppTemplateHeaderType;
+  internalOnly: Scalars['Boolean']['output'];
   isActive: Scalars['Boolean']['output'];
   language: Scalars['String']['output'];
   metaStatus: WhatsAppTemplateStatus;
