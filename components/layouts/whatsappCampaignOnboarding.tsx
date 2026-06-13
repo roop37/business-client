@@ -78,7 +78,11 @@ const WhatsAppCampaignOnboardingLayout = ({
         store.setEventId(c.eventId ?? "");
         store.setFilters(c.filters ?? []);
         store.setTargetCount(c.targetCount ?? 0);
-        store.setScheduleType((c.scheduleType as "Now" | "Later") ?? "Now");
+        // Server returns the TypeGraphQL enum KEY ("now"/"later"); store uses "Now"/"Later".
+        const rawSched = c.scheduleType ?? "now";
+        store.setScheduleType(
+          (rawSched.charAt(0).toUpperCase() + rawSched.slice(1)) as "Now" | "Later"
+        );
         store.setScheduleDate(c.scheduleTime ? new Date(c.scheduleTime) : null);
         store.setPublicationStatus(
           (c.publicationStatus as "Drafted" | "Active") ?? "Drafted",
@@ -166,7 +170,7 @@ const WhatsAppCampaignOnboardingLayout = ({
       } else if (step === "schedule") {
         await updateWhatsAppCampaign({
           campaignId: id,
-          scheduleType: store.scheduleType,
+          scheduleType: store.scheduleType.toLowerCase(),
           scheduleTime:
             store.scheduleType === "Later" && store.scheduleDate
               ? store.scheduleDate.toISOString()
@@ -281,7 +285,7 @@ const WhatsAppCampaignOnboardingLayout = ({
         target: store.target,
         eventId: store.eventId.trim() || undefined,
         filters: store.target === "CustomCustomer" ? store.filters : [],
-        scheduleType: store.scheduleType,
+        scheduleType: store.scheduleType.toLowerCase(),
         scheduleTime:
           store.scheduleType === "Later" && store.scheduleDate
             ? store.scheduleDate.toISOString()
