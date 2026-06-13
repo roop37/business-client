@@ -8,7 +8,8 @@ import IdentityVerificationForm from "@/components/modules/profile/forms/identit
 import useGlobalStore from "@/store/global";
 import useHostsStore from "@/store/host";
 import { uploadHostAsset } from "@/utils/cloudinaryUpload";
-import { sdk } from "@/utils/graphqlClient";
+import { endpoint, sdk } from "@/utils/graphqlClient";
+import { GraphQLClient } from "graphql-request";
 import { extractErrorMessage } from "@/utils/utilFUncs";
 import {
   Bell,
@@ -57,6 +58,7 @@ type BrandForm = {
   businessRegistrationNumber: string;
   gstNumber: string;
   averageEventSize: string;
+  gallery: string[];
 };
 
 const emptyBrand: BrandForm = {
@@ -75,6 +77,7 @@ const emptyBrand: BrandForm = {
   businessRegistrationNumber: "",
   gstNumber: "",
   averageEventSize: "",
+  gallery: [],
 };
 
 const SettingsModal = () => {
@@ -93,7 +96,9 @@ const SettingsModal = () => {
   const [brandLoading, setBrandLoading] = useState(false);
   const [brandSaving, setBrandSaving] = useState(false);
   const [logoUploading, setLogoUploading] = useState(false);
+  const [galleryUploading, setGalleryUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const galleryInputRef = useRef<HTMLInputElement | null>(null);
 
   useEffect(() => {
     if (settingsModalOpen) {
@@ -114,6 +119,22 @@ const SettingsModal = () => {
         (h) => h._id === selectedHostId,
       );
       if (!host) return;
+      // The codegen `getHostsByBusiness` operation doesn't select `gallery`,
+      // so fetch it raw to seed the uploader (otherwise a save would wipe an
+      // existing gallery). Additive + best-effort.
+      let gallery: string[] = [];
+      try {
+        const gq = await new GraphQLClient(endpoint, {
+          credentials: "include",
+        }).request<{
+          getHostsByBusiness: { _id: string; gallery?: string[] | null }[];
+        }>(`query { getHostsByBusiness { _id gallery } }`);
+        gallery =
+          gq.getHostsByBusiness?.find((h) => h._id === selectedHostId)
+            ?.gallery ?? [];
+      } catch {
+        /* ignore — gallery stays empty if it can't load */
+      }
       setBrand({
         name: host.name ?? "",
         description: host.description ?? "",
@@ -130,6 +151,7 @@ const SettingsModal = () => {
         businessRegistrationNumber: host.businessRegistrationNumber ?? "",
         gstNumber: host.gstNumber ?? "",
         averageEventSize: host.averageEventSize ?? "",
+        gallery,
       });
     } catch (error) {
       setToastData({ type: "error", message: extractErrorMessage(error) });
@@ -169,6 +191,44 @@ const SettingsModal = () => {
     }
   };
 
+  const handleGallerySelect = async (
+    event: React.ChangeEvent<HTMLInputElement>,
+  ) => {
+    const file = event.target.files?.[0];
+    event.target.value = "";
+    if (!file || !selectedHostId) return;
+    if (brand.gallery.length >= 5) {
+      setToastData({
+        type: "error",
+        message: "You can add up to 5 gallery photos.",
+      });
+      return;
+    }
+    setGalleryUploading(true);
+    try {
+      const result = await uploadHostAsset({
+        file,
+        kind: "host-settings",
+        hostId: selectedHostId,
+      });
+      setBrand((prev) => ({
+        ...prev,
+        gallery: [...prev.gallery, result.secureUrl].slice(0, 5),
+      }));
+      setToastData({ type: "success", message: "Photo added" });
+    } catch (error) {
+      setToastData({ type: "error", message: extractErrorMessage(error) });
+    } finally {
+      setGalleryUploading(false);
+    }
+  };
+
+  const removeGalleryImage = (url: string) =>
+    setBrand((prev) => ({
+      ...prev,
+      gallery: prev.gallery.filter((u) => u !== url),
+    }));
+
   const handleSaveBrand = async () => {
     if (!selectedHostId) return;
     setBrandSaving(true);
@@ -185,6 +245,7 @@ const SettingsModal = () => {
           businessRegistrationNumber: brand.businessRegistrationNumber,
           gstNumber: brand.gstNumber,
           averageEventSize: brand.averageEventSize,
+          gallery: brand.gallery,
           address: {
             addressLine1: brand.addressLine1,
             addressLine2: brand.addressLine2,
@@ -376,6 +437,66 @@ const SettingsModal = () => {
                         type="url"
                         placeholder="https://"
                       />
+
+                      {/* Venue gallery — up to 5 photos shown on the public
+                          venue page. Saved with the rest of the brand form. */}
+                      <div className="space-y-2">
+                        <div className="flex items-center justify-between">
+                          <span className="text-[13px] font-medium text-owner-fg-2">
+                            Venue gallery
+                            <span className="ml-1 text-[11px] font-normal text-owner-fg-4">
+                              (up to 5 photos)
+                            </span>
+                          </span>
+                          <button
+                            type="button"
+                            onClick={() => galleryInputRef.current?.click()}
+                            disabled={
+                              galleryUploading || brand.gallery.length >= 5
+                            }
+                            className="owner-btn owner-btn--secondary owner-btn--sm"
+                          >
+                            <Upload size={14} />
+                            {galleryUploading ? "Uploading…" : "Add photo"}
+                          </button>
+                        </div>
+                        {brand.gallery.length > 0 ? (
+                          <div className="grid grid-cols-3 gap-2 sm:grid-cols-5">
+                            {brand.gallery.map((url) => (
+                              <div
+                                key={url}
+                                className="relative aspect-square overflow-hidden rounded-owner-md border border-owner-border bg-owner-bg-subtle"
+                              >
+                                {/* eslint-disable-next-line @next/next/no-img-element */}
+                                <img
+                                  src={url}
+                                  alt="Venue photo"
+                                  className="h-full w-full object-cover"
+                                />
+                                <button
+                                  type="button"
+                                  onClick={() => removeGalleryImage(url)}
+                                  aria-label="Remove photo"
+                                  className="absolute right-1 top-1 grid h-5 w-5 place-items-center rounded-full bg-black/60 text-[12px] leading-none text-white hover:bg-black/80"
+                                >
+                                  ×
+                                </button>
+                              </div>
+                            ))}
+                          </div>
+                        ) : (
+                          <p className="text-[11px] text-owner-fg-4">
+                            These photos appear on your public venue page.
+                          </p>
+                        )}
+                        <input
+                          ref={galleryInputRef}
+                          type="file"
+                          accept="image/png,image/jpeg,image/webp"
+                          onChange={handleGallerySelect}
+                          className="hidden"
+                        />
+                      </div>
                     </div>
                   ) : null}
 

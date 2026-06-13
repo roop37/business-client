@@ -92,6 +92,7 @@ const GlobalTopUpModal = () => {
     topUpPresetAmount,
     closeTopUpModal,
     setToastData,
+    bumpMarketingCredit,
   } = useGlobalStore();
 
   const [amount, setAmount] = useState<number>(MIN_TOP_UP_INR);
@@ -203,6 +204,11 @@ const GlobalTopUpModal = () => {
               );
               setBalance(newBalance);
               setStatus("success");
+              // Reactively notify every balance/insufficient-credit surface
+              // (email + WhatsApp publish flows, MarketingCredit page,
+              // RunCampaignModal) to refetch so stale "₹X more needed"
+              // messages clear without a manual reload.
+              bumpMarketingCredit();
               resolve();
             } catch (verifyError) {
               reject(verifyError);

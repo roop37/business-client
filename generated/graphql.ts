@@ -1194,6 +1194,7 @@ export type CreateHostInput = {
   description?: InputMaybe<Scalars['String']['input']>;
   email?: InputMaybe<Scalars['String']['input']>;
   forceNew?: InputMaybe<Scalars['Boolean']['input']>;
+  gallery?: InputMaybe<Array<Scalars['String']['input']>>;
   gstNumber?: InputMaybe<Scalars['String']['input']>;
   hostType?: InputMaybe<HostType>;
   logo?: InputMaybe<Scalars['String']['input']>;
@@ -2160,6 +2161,7 @@ export type Host = {
   createdAt?: Maybe<Scalars['DateTimeISO']['output']>;
   description?: Maybe<Scalars['String']['output']>;
   email?: Maybe<Scalars['String']['output']>;
+  gallery?: Maybe<Array<Scalars['String']['output']>>;
   gstNumber?: Maybe<Scalars['String']['output']>;
   hostType: HostType;
   isActive: Scalars['Boolean']['output'];
@@ -5346,6 +5348,7 @@ export type UpdateHostInput = {
   businessRegistrationNumber?: InputMaybe<Scalars['String']['input']>;
   description?: InputMaybe<Scalars['String']['input']>;
   email?: InputMaybe<Scalars['String']['input']>;
+  gallery?: InputMaybe<Array<Scalars['String']['input']>>;
   gstNumber?: InputMaybe<Scalars['String']['input']>;
   isActive?: InputMaybe<Scalars['Boolean']['input']>;
   logo?: InputMaybe<Scalars['String']['input']>;

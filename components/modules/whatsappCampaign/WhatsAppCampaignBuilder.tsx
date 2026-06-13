@@ -1,6 +1,8 @@
 "use client";
 
 import { Card, OwnerButton } from "@/components/common/owner";
+import MarketingCreditWarning from "@/components/modules/campaign/MarketingCreditWarning";
+import { sdk } from "@/utils/graphqlClient";
 import useGlobalStore from "@/store/global";
 import { extractErrorMessage } from "@/utils/utilFUncs";
 import {
@@ -48,6 +50,11 @@ export const WhatsAppCampaignBuilder = ({
 
   const [submitting, setSubmitting] = useState<"draft" | "publish" | null>(null);
 
+  // WhatsApp marketing-credit rate (₹/delivered message). Fetched so the
+  // insufficient-credit warning can estimate cost; falls back to the same
+  // 0.5 default the MarketingCredit page uses if pricing can't be loaded.
+  const [whatsappRate, setWhatsappRate] = useState(0.5);
+
   useEffect(() => {
     (async () => {
       try {
@@ -59,6 +66,18 @@ export const WhatsAppCampaignBuilder = ({
       }
     })();
   }, [setToastData]);
+
+  useEffect(() => {
+    sdk
+      .GetMarketingPricing()
+      .then((res) => {
+        const rate = Number(res?.getMarketingPricing?.whatsappRate);
+        if (Number.isFinite(rate) && rate > 0) setWhatsappRate(rate);
+      })
+      .catch(() => {
+        // Best-effort — fallback rate already in state.
+      });
+  }, []);
 
   const template = useMemo(
     () => templates.find((t) => t._id === templateId) ?? null,
@@ -103,6 +122,17 @@ export const WhatsAppCampaignBuilder = ({
   const allVarsFilled =
     !!template &&
     (template.variables ?? []).every((v) => (varValues[v.position] ?? "").trim());
+
+  // Estimated WhatsApp marketing-credit cost = recipients × per-message rate.
+  // Drives the insufficient-credit warning (which auto-clears after a
+  // top-up via the shared marketingCreditVersion signal).
+  const estimatedWhatsAppCost = useMemo(
+    () =>
+      targetCount && targetCount > 0
+        ? Math.ceil(targetCount * whatsappRate)
+        : 0,
+    [targetCount, whatsappRate]
+  );
 
   const canSubmit =
     !!campaignName.trim() &&
@@ -311,6 +341,13 @@ export const WhatsAppCampaignBuilder = ({
             </Field>
           ) : null}
         </Card>
+
+        {estimatedWhatsAppCost > 0 ? (
+          <MarketingCreditWarning
+            estimatedCost={estimatedWhatsAppCost}
+            label="this WhatsApp campaign"
+          />
+        ) : null}
 
         <div className="flex items-center justify-end gap-2">
           <OwnerButton

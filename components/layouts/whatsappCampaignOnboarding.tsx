@@ -136,6 +136,9 @@ const WhatsAppCampaignOnboardingLayout = ({
           campaignId: id,
           campaignName: store.campaignName.trim(),
           objectiveTag: store.objectiveTag.trim() || undefined,
+          // The Step 1 event drives content prefill + audience targeting; it is
+          // owned here, so persist it (or clear it) from this step.
+          eventId: store.eventId.trim() || undefined,
         });
       } else if (step === "content") {
         await updateWhatsAppCampaign({
@@ -148,8 +151,11 @@ const WhatsAppCampaignOnboardingLayout = ({
         await updateWhatsAppCampaign({
           campaignId: id,
           target: store.target,
-          eventId:
-            store.target === "EventSpecific" ? store.eventId.trim() : undefined,
+          // eventId is owned by Step 1 — preserve it regardless of target so
+          // switching to "All attendees" here doesn't wipe the campaign event.
+          // The backend only narrows recipients by it when target is
+          // EventSpecific.
+          eventId: store.eventId.trim() || undefined,
           filters: store.target === "CustomCustomer" ? store.filters : [],
           targetCount: store.targetCount,
         });
@@ -208,7 +214,10 @@ const WhatsAppCampaignOnboardingLayout = ({
 
       if (step === "audience") {
         if (store.target === "EventSpecific" && !store.eventId.trim()) {
-          setToastData({ type: "error", message: "Add the event id." });
+          setToastData({
+            type: "error",
+            message: "Pick the event in Step 1 to target its buyers.",
+          });
           return;
         }
         const id = await ensureCampaign();
@@ -263,8 +272,7 @@ const WhatsAppCampaignOnboardingLayout = ({
       await updateWhatsAppCampaign({
         campaignId: id,
         target: store.target,
-        eventId:
-          store.target === "EventSpecific" ? store.eventId.trim() : undefined,
+        eventId: store.eventId.trim() || undefined,
         filters: store.target === "CustomCustomer" ? store.filters : [],
         scheduleType: store.scheduleType,
         scheduleTime:

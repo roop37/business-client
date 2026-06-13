@@ -144,86 +144,111 @@ const OrderReceiptModal = () => {
   const canRefund = !!detail?.refundable && !isRefunded;
 
   return ReactDOM.createPortal(
-    <div className="fixed inset-0 z-[1100] flex items-center justify-center bg-black/55 px-4 py-6">
-      <div className="flex max-h-[92dvh] w-full max-w-3xl flex-col overflow-hidden rounded-lg bg-[var(--owner-bg)] shadow-2xl">
-        {/* Header — Refund top-left, title centre-ish, close top-right */}
-        <div className="flex shrink-0 items-center justify-between gap-3 border-b border-[var(--owner-border)] px-5 py-4">
-          <div className="flex items-center gap-3">
-            {canRefund ? (
-              confirming ? (
-                <div className="flex items-center gap-1.5">
-                  <button
-                    type="button"
-                    onClick={handleRefund}
-                    disabled={refunding}
-                    className="inline-flex items-center gap-1.5 rounded-md bg-[var(--owner-danger-bg,#fee2e2)] px-3 py-1.5 text-xs font-semibold text-[var(--owner-danger-text,#b91c1c)] disabled:opacity-60"
-                  >
-                    {refunding ? (
-                      <Loader2 size={13} className="animate-spin" />
-                    ) : (
-                      <RotateCcw size={13} />
-                    )}
-                    Confirm refund
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setConfirming(false)}
-                    disabled={refunding}
-                    className="rounded-md border border-[var(--owner-border)] px-2.5 py-1.5 text-xs font-semibold disabled:opacity-60"
-                  >
-                    Cancel
-                  </button>
-                </div>
-              ) : (
-                <button
-                  type="button"
-                  onClick={() => setConfirming(true)}
-                  className="inline-flex items-center gap-1.5 rounded-md border border-[var(--owner-border-strong)] bg-white px-3 py-1.5 text-xs font-semibold text-[var(--owner-fg-1)] hover:border-red-300 hover:text-red-600"
-                >
-                  <RotateCcw size={13} />
-                  Refund
-                </button>
-              )
-            ) : (
-              <span className="text-xs font-semibold text-[var(--owner-fg-4)]">
-                {isRefunded ? "Refunded" : "Receipt"}
-              </span>
-            )}
-          </div>
+    <div className="fixed inset-0 z-[1100] flex flex-col bg-[var(--owner-bg)]">
+      {/* Top bar — close left, title centre, refund right */}
+      <header className="sticky top-0 z-10 flex shrink-0 items-center justify-between gap-3 border-b border-[var(--owner-border)] bg-[var(--owner-bg)] px-4 py-3 md:px-6">
+        <button
+          type="button"
+          onClick={handleClose}
+          disabled={refunding}
+          className="inline-flex items-center gap-1.5 rounded-md px-2.5 py-2 text-sm font-medium text-[var(--owner-fg-2)] hover:bg-[var(--owner-bg-subtle)] disabled:opacity-50"
+        >
+          <X size={18} />
+          <span className="hidden sm:inline">Close</span>
+        </button>
 
-          <div className="min-w-0 flex-1 text-center">
-            <div className="truncate text-sm font-semibold">Order receipt</div>
-            {detail ? (
-              <p className="mt-0.5 truncate text-xs text-[var(--owner-fg-3)]">
-                {statusLabel(detail.status)} · {sourceLabel(detail.source)}
-              </p>
-            ) : null}
+        <div className="min-w-0 flex-1 text-center">
+          <div className="truncate text-sm font-semibold text-[var(--owner-fg-1)]">
+            Order receipt
           </div>
-
-          <button
-            type="button"
-            onClick={handleClose}
-            disabled={refunding}
-            className="inline-flex h-9 w-9 items-center justify-center rounded-md border border-[var(--owner-border)] disabled:opacity-50"
-            aria-label="Close"
-          >
-            <X size={16} />
-          </button>
+          {detail ? (
+            <p className="mt-0.5 truncate text-xs text-[var(--owner-fg-3)]">
+              {statusLabel(detail.status)} · {sourceLabel(detail.source)}
+            </p>
+          ) : null}
         </div>
 
-        {/* Body */}
-        <div className="min-h-0 flex-1 overflow-y-auto p-5">
+        <div className="flex items-center justify-end gap-1.5">
+          {canRefund ? (
+            confirming ? (
+              <>
+                <button
+                  type="button"
+                  onClick={handleRefund}
+                  disabled={refunding}
+                  className="inline-flex items-center gap-1.5 rounded-md bg-[var(--owner-danger-bg,#fee2e2)] px-3 py-2 text-xs font-semibold text-[var(--owner-danger-text,#b91c1c)] disabled:opacity-60"
+                >
+                  {refunding ? (
+                    <Loader2 size={13} className="animate-spin" />
+                  ) : (
+                    <RotateCcw size={13} />
+                  )}
+                  Confirm refund
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setConfirming(false)}
+                  disabled={refunding}
+                  className="rounded-md border border-[var(--owner-border)] px-2.5 py-2 text-xs font-semibold disabled:opacity-60"
+                >
+                  Cancel
+                </button>
+              </>
+            ) : (
+              <button
+                type="button"
+                onClick={() => setConfirming(true)}
+                className="inline-flex items-center gap-1.5 rounded-md border border-[var(--owner-border-strong)] bg-white px-3 py-2 text-xs font-semibold text-[var(--owner-fg-1)] hover:border-red-300 hover:text-red-600"
+              >
+                <RotateCcw size={13} />
+                Refund
+              </button>
+            )
+          ) : (
+            <span className="w-9" aria-hidden />
+          )}
+        </div>
+      </header>
+
+      {/* Body — full-page, centred reading column */}
+      <div className="min-h-0 flex-1 overflow-y-auto">
+        <div className="mx-auto w-full max-w-4xl px-4 py-6 md:px-6 md:py-8">
           {loading ? (
-            <div className="flex items-center justify-center gap-2 py-16 text-sm text-[var(--owner-fg-3)]">
+            <div className="flex items-center justify-center gap-2 py-24 text-sm text-[var(--owner-fg-3)]">
               <Loader2 size={16} className="animate-spin" />
               Loading receipt…
             </div>
           ) : errorMessage ? (
-            <div className="py-16 text-center text-sm text-red-600">
+            <div className="py-24 text-center text-sm text-red-600">
               {errorMessage}
             </div>
           ) : detail ? (
-            <div className="grid gap-5 md:grid-cols-2">
+            <>
+              {/* Order summary */}
+              <div className="mb-6 flex flex-wrap items-end justify-between gap-3 border-b border-[var(--owner-border-soft)] pb-5">
+                <div className="min-w-0">
+                  <div className="text-xs font-semibold uppercase tracking-wide text-[var(--owner-fg-4)]">
+                    Order
+                  </div>
+                  <div className="mt-1 font-mono text-[13px] text-[var(--owner-fg-2)]">
+                    #{detail.orderId}
+                  </div>
+                  <div className="mt-1 text-xs text-[var(--owner-fg-4)]">
+                    Placed {fmtDate(detail.createdAt)}
+                  </div>
+                </div>
+                <span
+                  className={`rounded-full px-3 py-1 text-xs font-semibold ${
+                    isRefunded
+                      ? "bg-[var(--owner-warning-bg,#fef3c7)] text-[var(--owner-warning-text,#92400e)]"
+                      : "bg-[var(--owner-success-bg,#dcfce7)] text-[var(--owner-success-text,#15803d)]"
+                  }`}
+                >
+                  {statusLabel(detail.status)}
+                </span>
+              </div>
+
+              <div className="grid gap-5 md:grid-cols-2">
               {/* LEFT — event + customer */}
               <div className="flex flex-col gap-4">
                 <div className="rounded-lg border border-[var(--owner-border)] bg-[var(--owner-bg-subtle)] p-4">
@@ -388,6 +413,7 @@ const OrderReceiptModal = () => {
                 </div>
               </div>
             </div>
+            </>
           ) : null}
         </div>
       </div>

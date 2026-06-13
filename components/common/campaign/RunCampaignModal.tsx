@@ -99,6 +99,7 @@ const RunCampaignModal = () => {
     closeRunCampaignModal,
     openTopUpModal,
     setToastData,
+    marketingCreditVersion,
   } = useGlobalStore();
   const { selectedHost, hostLogo, hostAddress } = useHostsStore();
   const businessAddress = hostAddress?.addressLine1 || "";
@@ -128,7 +129,10 @@ const RunCampaignModal = () => {
     return () => {
       cancelled = true;
     };
-  }, [runCampaignModalEvent]);
+    // marketingCreditVersion bumps after a verified top-up (the top-up modal
+    // can be launched from inside this modal) — refetch so the shown balance
+    // updates without closing/reopening.
+  }, [runCampaignModalEvent, marketingCreditVersion]);
 
   // Clean Slate template prepared once (strip + merge-tag substitute).
   // Re-runs when the host or event changes so the editor preview shows

@@ -28,7 +28,7 @@ const resolveEndpoint = (): string => {
   return base.endsWith("/graphql") ? base : `${base}/graphql`;
 };
 
-const endpoint = resolveEndpoint();
+export const endpoint = resolveEndpoint();
 
 const graphQLClient = new GraphQLClient(endpoint, {
   credentials: "include",

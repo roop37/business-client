@@ -2,13 +2,15 @@
 
 import {
   inrFormat,
-  OwnerTable,
   PageHeader,
 } from "@/components/common/owner";
+import DataTable from "@/components/common/dataTable";
+import DataTableTextCell from "@/components/common/dataTable/common/textCell";
 import { RowsPerPageEnum } from "@/generated/graphql";
 import useGlobalStore from "@/store/global";
 import { sdk } from "@/utils/graphqlClient";
 import { extractErrorMessage } from "@/utils/utilFUncs";
+import { ColumnDef, createColumnHelper } from "@tanstack/react-table";
 import {
   Bell,
   CreditCard,
@@ -116,7 +118,8 @@ const formatAmountCell = (amount: number) => {
 
 export const MarketingCredit = () => {
   const router = useRouter();
-  const { setToastData, openTopUpModal, topUpModalOpen } = useGlobalStore();
+  const { setToastData, openTopUpModal, topUpModalOpen, marketingCreditVersion } =
+    useGlobalStore();
   const [loading, setLoading] = useState(true);
   const [balance, setBalance] = useState(0);
   const [ledger, setLedger] = useState<LedgerEntry[]>([]);
@@ -203,6 +206,17 @@ export const MarketingCredit = () => {
     prevTopUpModalOpenRef.current = topUpModalOpen;
   }, [topUpModalOpen, loadLedger]);
 
+  // Refetch immediately on a verified top-up (even before the modal closes)
+  // so the balance + ledger update reactively. Skip the initial mount —
+  // loadLedger already runs there.
+  const prevCreditVersionRef = useRef(marketingCreditVersion);
+  useEffect(() => {
+    if (prevCreditVersionRef.current !== marketingCreditVersion) {
+      prevCreditVersionRef.current = marketingCreditVersion;
+      loadLedger();
+    }
+  }, [marketingCreditVersion, loadLedger]);
+
   const messageCapacity = useMemo(() => {
     const whatsappDivisor = rateCard.find(
       (rate) => rate.channel === "WhatsApp"
@@ -216,6 +230,62 @@ export const MarketingCredit = () => {
       email: emailDivisor && balance > 0 ? Math.floor(balance / emailDivisor) : 0,
     };
   }, [balance, rateCard]);
+
+  const columnHelper = createColumnHelper<LedgerEntry>();
+  const ledgerColumns: ColumnDef<LedgerEntry, any>[] = useMemo(
+    () => [
+      columnHelper.accessor("date", {
+        header: "Date",
+        enableColumnFilter: false,
+        enableSorting: false,
+        cell: ({ row }) => <DataTableTextCell value={row.original.date} />,
+      }),
+      columnHelper.accessor("activity", {
+        header: "Activity",
+        enableColumnFilter: true,
+        filterFn: "auto",
+        enableSorting: false,
+        cell: ({ row }) => <DataTableTextCell value={row.original.activity} />,
+      }),
+      columnHelper.accessor("recipients", {
+        header: "Recipients",
+        enableColumnFilter: false,
+        enableSorting: true,
+        cell: ({ row }) => (
+          <span className="text-sm font-medium text-owner-fg-1 tabular-nums">
+            {row.original.recipients
+              ? row.original.recipients.toLocaleString("en-IN")
+              : "—"}
+          </span>
+        ),
+      }),
+      columnHelper.accessor("amount", {
+        header: "Amount",
+        enableColumnFilter: false,
+        enableSorting: true,
+        cell: ({ row }) => {
+          const amount = formatAmountCell(row.original.amount);
+          return (
+            <span className={`text-sm tabular-nums ${amount.className}`}>
+              {amount.text}
+            </span>
+          );
+        },
+      }),
+      columnHelper.accessor("balance", {
+        header: "Balance",
+        enableColumnFilter: false,
+        enableSorting: true,
+        cell: ({ row }) => (
+          <span className="text-sm font-semibold text-owner-fg-1 tabular-nums">
+            {formatCredit(row.original.balance)}
+          </span>
+        ),
+      }),
+    ],
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [columnHelper]
+  );
 
   const handleAddEmailCampaign = () => {
     router.push("/campaigns/onboarding/template-select");
@@ -369,47 +439,15 @@ export const MarketingCredit = () => {
 
       <div>
         <h2 className="owner-h2 mb-4">Activity</h2>
-        <OwnerTable
+        <DataTable
+          totalRows={ledger.length}
+          columns={ledgerColumns}
+          data={ledger}
           loading={loading}
-          rowCount={ledger.length}
-          empty="No marketing-credit activity yet."
-        >
-          <OwnerTable.Head>
-            <OwnerTable.HeaderCell width="160px">Date</OwnerTable.HeaderCell>
-            <OwnerTable.HeaderCell>Activity</OwnerTable.HeaderCell>
-            <OwnerTable.HeaderCell align="right" width="120px">
-              Recipients
-            </OwnerTable.HeaderCell>
-            <OwnerTable.HeaderCell align="right" width="140px">
-              Amount
-            </OwnerTable.HeaderCell>
-            <OwnerTable.HeaderCell align="right" width="120px">
-              Balance
-            </OwnerTable.HeaderCell>
-          </OwnerTable.Head>
-          <OwnerTable.Body>
-            {ledger.map((row) => {
-              const amount = formatAmountCell(row.amount);
-              return (
-                <OwnerTable.Row key={row.id}>
-                  <OwnerTable.Cell muted>{row.date}</OwnerTable.Cell>
-                  <OwnerTable.Cell>{row.activity}</OwnerTable.Cell>
-                  <OwnerTable.Cell align="right" muted>
-                    {row.recipients
-                      ? row.recipients.toLocaleString("en-IN")
-                      : "—"}
-                  </OwnerTable.Cell>
-                  <OwnerTable.Cell align="right">
-                    <span className={amount.className}>{amount.text}</span>
-                  </OwnerTable.Cell>
-                  <OwnerTable.Cell align="right" bold>
-                    {formatCredit(row.balance)}
-                  </OwnerTable.Cell>
-                </OwnerTable.Row>
-              );
-            })}
-          </OwnerTable.Body>
-        </OwnerTable>
+          manualPagination={false}
+          hideDownloadButton
+          pageSize={10}
+        />
       </div>
     </div>
   );

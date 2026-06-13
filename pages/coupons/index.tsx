@@ -2,9 +2,16 @@ import {
   Badge,
   type BadgeTone,
   OwnerButton,
-  OwnerTable,
   PageHeader,
 } from "@/components/common/owner";
+import DataTable from "@/components/common/dataTable";
+import DataTableTextCell from "@/components/common/dataTable/common/textCell";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import MainLayout from "@/components/layouts/mainBodyLayout";
 import CouponEditor from "@/components/modules/coupons/CouponEditor";
 import CouponDetailModal from "@/components/modules/coupons/CouponDetailModal";
@@ -18,9 +25,13 @@ import {
   type Coupon,
 } from "@/utils/couponClient";
 import { extractErrorMessage } from "@/utils/utilFUncs";
-import { Pencil, Plus, Power, RefreshCcw, Trash2 } from "lucide-react";
+import { ColumnDef, createColumnHelper } from "@tanstack/react-table";
+import { Plus, RefreshCcw } from "lucide-react";
+import { FiInfo } from "react-icons/fi";
+import { MdDeleteOutline, MdOutlineEdit } from "react-icons/md";
+import { TbPower } from "react-icons/tb";
 import { GetServerSideProps } from "next";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 
 const fmtDate = (v?: string | null) => {
   if (!v) return "—";
@@ -120,6 +131,143 @@ const CouponsPage = () => {
     }
   };
 
+  const columnHelper = createColumnHelper<Coupon>();
+
+  const columns: ColumnDef<Coupon, any>[] = useMemo(
+    () => [
+      columnHelper.accessor("code", {
+        header: "Code",
+        enableColumnFilter: true,
+        filterFn: "auto",
+        enableSorting: true,
+        cell: ({ row }) => (
+          <div className="flex flex-col">
+            <DataTableTextCell
+              className="cursor-pointer font-semibold text-owner-blue-500"
+              onClick={() => setDetail(row.original)}
+              value={row.original.code}
+            />
+            <span className="text-[12px] text-owner-fg-4">
+              {row.original.description ??
+                (row.original.showToCustomers ? "Public" : "Private")}
+            </span>
+          </div>
+        ),
+      }),
+      columnHelper.accessor("promoCodeDiscountType", {
+        header: "Discount",
+        enableColumnFilter: true,
+        filterFn: "auto",
+        enableSorting: false,
+        cell: ({ row }) => <DataTableTextCell value={discountOf(row.original)} />,
+      }),
+      columnHelper.accessor("isActive", {
+        header: "Status",
+        enableColumnFilter: false,
+        enableSorting: true,
+        cell: ({ row }) => {
+          const st = statusOf(row.original);
+          return <Badge tone={st.tone}>{st.label}</Badge>;
+        },
+      }),
+      columnHelper.accessor("usage", {
+        header: "Used",
+        enableColumnFilter: false,
+        enableSorting: true,
+        cell: ({ row }) => (
+          <DataTableTextCell
+            value={`${row.original.usage?.length ?? 0}${
+              row.original.maxUsage ? `/${row.original.maxUsage}` : ""
+            }`}
+          />
+        ),
+      }),
+      columnHelper.accessor("startDate", {
+        header: "Window",
+        enableColumnFilter: false,
+        enableSorting: true,
+        cell: ({ row }) => (
+          <DataTableTextCell
+            value={`${fmtDate(row.original.startDate)} → ${fmtDate(
+              row.original.endDate
+            )}`}
+          />
+        ),
+      }),
+      columnHelper.display({
+        id: "actions",
+        header: "Actions",
+        cell: ({ row }) => {
+          const c = row.original;
+          const busy = busyId === c._id;
+          const canDelete = (c.usage?.length ?? 0) === 0;
+          return (
+            <TooltipProvider>
+              <div className="flex items-center justify-center gap-3">
+                <Tooltip>
+                  <TooltipTrigger>
+                    <FiInfo
+                      className="text-primary text-lg cursor-pointer"
+                      onClick={() => setDetail(c)}
+                    />
+                  </TooltipTrigger>
+                  <TooltipContent className="bg-black text-white max-w-xs">
+                    <p>View coupon</p>
+                  </TooltipContent>
+                </Tooltip>
+                <Tooltip>
+                  <TooltipTrigger disabled={busy}>
+                    <MdOutlineEdit
+                      className={`text-primary text-lg ${
+                        busy ? "opacity-40" : "cursor-pointer"
+                      }`}
+                      onClick={() =>
+                        !busy && setView({ mode: "edit", id: c._id })
+                      }
+                    />
+                  </TooltipTrigger>
+                  <TooltipContent className="bg-black text-white max-w-xs">
+                    <p>Edit coupon</p>
+                  </TooltipContent>
+                </Tooltip>
+                <Tooltip>
+                  <TooltipTrigger disabled={busy}>
+                    <TbPower
+                      className={`text-primary text-lg ${
+                        busy ? "opacity-40" : "cursor-pointer"
+                      }`}
+                      onClick={() => !busy && toggle(c)}
+                    />
+                  </TooltipTrigger>
+                  <TooltipContent className="bg-black text-white max-w-xs">
+                    <p>{c.isActive ? "Deactivate" : "Activate"}</p>
+                  </TooltipContent>
+                </Tooltip>
+                {canDelete ? (
+                  <Tooltip>
+                    <TooltipTrigger disabled={busy}>
+                      <MdDeleteOutline
+                        className={`text-primary text-lg ${
+                          busy ? "opacity-40" : "cursor-pointer"
+                        }`}
+                        onClick={() => !busy && remove(c)}
+                      />
+                    </TooltipTrigger>
+                    <TooltipContent className="bg-black text-white max-w-xs">
+                      <p>Delete coupon</p>
+                    </TooltipContent>
+                  </Tooltip>
+                ) : null}
+              </div>
+            </TooltipProvider>
+          );
+        },
+      }),
+    ],
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [columnHelper, busyId]
+  );
+
   if (view.mode !== "list") {
     return (
       <div className="min-w-0 py-2">
@@ -163,90 +311,16 @@ const CouponsPage = () => {
         }
       />
 
-      <OwnerTable
+      <DataTable
+        totalRows={rows.length}
+        columns={columns}
+        data={rows}
         loading={loading}
-        rowCount={rows.length}
-        empty="No coupons yet. Create your first one."
-      >
-        <OwnerTable.Head>
-          <OwnerTable.HeaderCell>Code</OwnerTable.HeaderCell>
-          <OwnerTable.HeaderCell>Discount</OwnerTable.HeaderCell>
-          <OwnerTable.HeaderCell>Status</OwnerTable.HeaderCell>
-          <OwnerTable.HeaderCell align="right">Used</OwnerTable.HeaderCell>
-          <OwnerTable.HeaderCell>Window</OwnerTable.HeaderCell>
-          <OwnerTable.HeaderCell align="right">Actions</OwnerTable.HeaderCell>
-        </OwnerTable.Head>
-        <OwnerTable.Body>
-          {rows.map((c) => {
-            const st = statusOf(c);
-            return (
-              <OwnerTable.Row key={c._id}>
-                <OwnerTable.Cell>
-                  <button
-                    type="button"
-                    onClick={() => setDetail(c)}
-                    className="text-left"
-                  >
-                    <div className="text-[13px] font-semibold text-owner-blue-500 hover:underline">
-                      {c.code}
-                    </div>
-                    <div className="text-[12px] text-owner-fg-4">
-                      {c.description ??
-                        (c.showToCustomers ? "Public" : "Private")}
-                    </div>
-                  </button>
-                </OwnerTable.Cell>
-                <OwnerTable.Cell>{discountOf(c)}</OwnerTable.Cell>
-                <OwnerTable.Cell>
-                  <Badge tone={st.tone}>{st.label}</Badge>
-                </OwnerTable.Cell>
-                <OwnerTable.Cell align="right">
-                  {c.usage?.length ?? 0}
-                  {c.maxUsage ? `/${c.maxUsage}` : ""}
-                </OwnerTable.Cell>
-                <OwnerTable.Cell>
-                  <div className="text-[12px] text-owner-fg-3">
-                    {fmtDate(c.startDate)} → {fmtDate(c.endDate)}
-                  </div>
-                </OwnerTable.Cell>
-                <OwnerTable.Cell align="right">
-                  <div className="flex items-center justify-end gap-1.5">
-                    <OwnerButton
-                      variant="secondary"
-                      size="sm"
-                      leadingIcon={<Pencil size={12} />}
-                      disabled={busyId === c._id}
-                      onClick={() => setView({ mode: "edit", id: c._id })}
-                    >
-                      Edit
-                    </OwnerButton>
-                    <OwnerButton
-                      variant="secondary"
-                      size="sm"
-                      leadingIcon={<Power size={12} />}
-                      disabled={busyId === c._id}
-                      onClick={() => toggle(c)}
-                    >
-                      {c.isActive ? "Deactivate" : "Activate"}
-                    </OwnerButton>
-                    {(c.usage?.length ?? 0) === 0 ? (
-                      <OwnerButton
-                        variant="secondary"
-                        size="sm"
-                        leadingIcon={<Trash2 size={12} />}
-                        disabled={busyId === c._id}
-                        onClick={() => remove(c)}
-                      >
-                        Delete
-                      </OwnerButton>
-                    ) : null}
-                  </div>
-                </OwnerTable.Cell>
-              </OwnerTable.Row>
-            );
-          })}
-        </OwnerTable.Body>
-      </OwnerTable>
+        manualPagination={false}
+        hideDownloadButton
+        pageSize={10}
+        addClickHandler={() => setView({ mode: "new" })}
+      />
 
       <CouponDetailModal
         coupon={detail}
