@@ -155,6 +155,15 @@ const OrdersPage = () => {
   const orderColumnHelper = createColumnHelper<HostOrderRow>();
   const orderColumns: ColumnDef<HostOrderRow, any>[] = useMemo(
     () => [
+      orderColumnHelper.display({
+        id: "shortId",
+        header: "Order",
+        cell: ({ row }) => (
+          <span className="font-mono text-xs font-semibold text-owner-fg-3">
+            #{row.original.orderId.slice(-6).toUpperCase()}
+          </span>
+        ),
+      }),
       orderColumnHelper.accessor("customerName", {
         header: "Customer",
         enableColumnFilter: true,

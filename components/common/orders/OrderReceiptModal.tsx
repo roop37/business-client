@@ -231,7 +231,7 @@ const OrderReceiptModal = () => {
                     Order
                   </div>
                   <div className="mt-1 font-mono text-[13px] text-[var(--owner-fg-2)]">
-                    #{detail.orderId}
+                    #{detail.orderId.slice(-6).toUpperCase()}
                   </div>
                   <div className="mt-1 text-xs text-[var(--owner-fg-4)]">
                     Placed {fmtDate(detail.createdAt)}

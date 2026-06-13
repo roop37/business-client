@@ -2202,6 +2202,23 @@ export type HostContentDefaults = {
   updatedAt?: Maybe<Scalars['DateTimeISO']['output']>;
 };
 
+export type HostCustomerOrderRow = {
+  __typename?: 'HostCustomerOrderRow';
+  createdAt?: Maybe<Scalars['DateTimeISO']['output']>;
+  eventDate?: Maybe<Scalars['DateTimeISO']['output']>;
+  eventTitle?: Maybe<Scalars['String']['output']>;
+  orderId: Scalars['String']['output'];
+  shortId: Scalars['String']['output'];
+  status: Scalars['String']['output'];
+  totalAmount: Scalars['Float']['output'];
+};
+
+export type HostCustomerOrdersResponse = {
+  __typename?: 'HostCustomerOrdersResponse';
+  items: Array<HostCustomerOrderRow>;
+  total: Scalars['Int']['output'];
+};
+
 export type HostCustomerRow = {
   __typename?: 'HostCustomerRow';
   aov: Scalars['Float']['output'];
@@ -4426,6 +4443,7 @@ export type Query = {
   getTeamMembers: Array<SubUser>;
   getUser?: Maybe<User>;
   getWaitListUsers: Array<WaitListUser>;
+  hostCustomerOrders: HostCustomerOrdersResponse;
   hostCustomers: HostCustomersResponse;
   hostEmailCampaignCsvExport: Scalars['String']['output'];
   hostEventFeedback: HostEventFeedbackResponse;
@@ -4834,6 +4852,13 @@ export type QueryGetPlacesListArgs = {
 
 export type QueryGetUserArgs = {
   id: Scalars['String']['input'];
+};
+
+
+export type QueryHostCustomerOrdersArgs = {
+  customerId: Scalars['String']['input'];
+  page?: InputMaybe<Scalars['Int']['input']>;
+  pageSize?: InputMaybe<Scalars['Int']['input']>;
 };
 
 
