@@ -321,80 +321,23 @@ const WhatsAppCampaignOnboardingLayout = ({
       : "Continue";
 
   return (
-    <div className="flex h-screen flex-col bg-owner-bg-subtle font-owner">
-      {/* Header */}
-      <div className="shrink-0 border-b border-owner-border bg-owner-bg">
-        <div className="mx-auto flex max-w-6xl items-center gap-4 px-6 py-3">
+    <div className="flex min-h-screen flex-col bg-white font-owner text-black">
+      {/* Top bar — mirrors the email campaign onboarding: back arrow left,
+          step counter + actions on the right, no numbered stepper. */}
+      <div className="fixed left-0 right-0 top-0 z-20 border-b bg-white">
+        <div className="flex h-14 items-center justify-between gap-4 px-4">
           <button
             type="button"
             onClick={back}
-            className="flex items-center gap-1 text-[13px] text-owner-fg-3 hover:text-owner-fg-1"
+            className="group flex items-center"
+            aria-label="Back"
           >
-            <LuArrowLeft size={16} /> Back
+            <LuArrowLeft className="h-7 w-7 text-gray-500 group-hover:text-black" />
           </button>
-          <div className="ml-2 hidden items-center gap-2 md:flex">
-            {STEPS.map((s, i) => (
-              <div key={s.id} className="flex items-center gap-2">
-                <div
-                  className={`flex items-center gap-1.5 text-[12.5px] ${
-                    i === stepIndex
-                      ? "font-semibold text-owner-fg-1"
-                      : i < stepIndex
-                      ? "text-owner-blue-500"
-                      : "text-owner-fg-4"
-                  }`}
-                >
-                  <span
-                    className={`flex h-5 w-5 items-center justify-center rounded-full text-[11px] ${
-                      i <= stepIndex
-                        ? "bg-owner-blue-500 text-white"
-                        : "bg-owner-bg-subtle text-owner-fg-4"
-                    }`}
-                  >
-                    {i + 1}
-                  </span>
-                  <span>{s.title}</span>
-                </div>
-                {i < STEPS.length - 1 ? (
-                  <span className="h-px w-4 bg-owner-border" />
-                ) : null}
-              </div>
-            ))}
-          </div>
-          <div className="ml-auto text-[12px] text-owner-fg-4">
-            Step {stepIndex + 1} of {STEPS.length}
-          </div>
-        </div>
-      </div>
-
-      {/* Body: scrollable form + live preview */}
-      <div className="min-h-0 flex-1 overflow-y-auto">
-        <div className="mx-auto grid max-w-6xl gap-6 px-6 py-6 lg:grid-cols-[1fr_360px]">
-          <div className="rounded-owner-lg border border-owner-border bg-owner-bg p-5">
-            {children}
-          </div>
-          <div className="lg:sticky lg:top-0 lg:self-start">
-            <WhatsAppTemplatePreview
-              template={store.selectedTemplate}
-              // Show friendly labels for dynamic customer tokens (e.g.
-              // "Customer first name") instead of the raw {{...}} token.
-              variables={store.templateVariables.map((v) => ({
-                ...v,
-                value: previewLabelForValue(v.value),
-              }))}
-              headerMediaUrl={store.headerMediaUrl}
-            />
-          </div>
-        </div>
-      </div>
-
-      {/* Footer nav — pinned to the viewport bottom */}
-      <div className="shrink-0 border-t border-owner-border bg-owner-bg">
-        <div className="mx-auto flex max-w-6xl items-center justify-between gap-2 px-6 py-3">
-          <OwnerButton variant="secondary" onClick={back} disabled={!!submitting}>
-            {stepIndex === 0 ? "Cancel" : "Back"}
-          </OwnerButton>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-3">
+            <span className="text-sm text-gray-700">
+              Step {stepIndex + 1} of {STEPS.length}
+            </span>
             <OwnerButton
               variant="secondary"
               onClick={saveDraft}
@@ -416,6 +359,26 @@ const WhatsAppCampaignOnboardingLayout = ({
               {continueLabel}
             </OwnerButton>
           </div>
+        </div>
+      </div>
+
+      {/* Body — form (left half) + live preview (right half), same split as
+          the email editor. */}
+      <div className="mt-[56px] flex h-[calc(100vh-56px)]">
+        <div className="flex w-1/2 flex-1 flex-col gap-4 overflow-y-auto px-6 py-5">
+          {children}
+        </div>
+        <div className="flex-1 overflow-y-auto border-l border-owner-border bg-owner-bg-subtle p-6">
+          <WhatsAppTemplatePreview
+            template={store.selectedTemplate}
+            // Show friendly labels for dynamic customer tokens (e.g.
+            // "Customer first name") instead of the raw {{...}} token.
+            variables={store.templateVariables.map((v) => ({
+              ...v,
+              value: previewLabelForValue(v.value),
+            }))}
+            headerMediaUrl={store.headerMediaUrl}
+          />
         </div>
       </div>
 
