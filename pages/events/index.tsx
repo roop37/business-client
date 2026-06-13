@@ -936,7 +936,6 @@ const EventListCard = ({
                 Icon={CopyIcon}
                 onClick={onDuplicate}
               />
-              <ActionButton label="Delete" Icon={Trash2Icon} onClick={onDelete} />
               <ActionButton label="Find Promoters" Icon={UsersRoundIcon} disabled />
               <ActionButton label="Find Artists" Icon={MoreHorizontalIcon} disabled />
             </>
