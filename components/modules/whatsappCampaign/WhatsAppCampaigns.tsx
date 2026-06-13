@@ -38,27 +38,46 @@ import { FiInfo } from "react-icons/fi";
 import { MdDeleteOutline, MdOutlineEdit } from "react-icons/md";
 import { WhatsAppTemplatePreview } from "./WhatsAppTemplatePreview";
 
-// A campaign is still editable (and deletable) while it is a Draft or an
-// unscheduled/not-yet-sent row — mirrors the email table's `canEdit` rule,
-// adapted to WhatsApp's nullable `status` string (no status === Draft).
-const isEditable = (c: WhatsAppCampaign): boolean =>
-  !c.status || c.status === "Draft" || c.status === "Scheduled";
+// IMPORTANT: TypeGraphQL serialises this enum's KEYS, so `status` arrives as
+// the lowercase key ("draft", "scheduled", "paused"…), NOT the capitalised
+// value ("Draft"). Normalise before every comparison — the table was first
+// copied from the email table (capitalised) which silently hid all the
+// status-gated actions (Edit/Continue, Resume, Delete) on drafts.
+const normStatus = (s?: string | null): string => (s ?? "draft").toLowerCase();
+
+const STATUS_LABEL: Record<string, string> = {
+  draft: "Draft",
+  scheduled: "Scheduled",
+  processing: "Processing",
+  paused: "Paused",
+  completed: "Completed",
+  failed: "Failed",
+};
+
+const statusLabel = (s?: string | null): string =>
+  STATUS_LABEL[normStatus(s)] ?? (s || "Draft");
+
+// A campaign is still editable (and deletable) while it is a Draft or a
+// not-yet-sent Scheduled row — mirrors the email table's `canEdit` rule.
+const isEditable = (c: WhatsAppCampaign): boolean => {
+  const s = normStatus(c.status);
+  return s === "draft" || s === "scheduled";
+};
 
 // Colored status pill — mirrors customCampaign.tsx#getStatusColor so the
 // WhatsApp table reads visually identical to the email table.
-const getStatusColor = (status: string): string => {
-  switch (status) {
-    case "Draft":
+const getStatusColor = (status?: string | null): string => {
+  switch (normStatus(status)) {
+    case "draft":
       return "bg-gray-200 text-gray-600";
-    case "Scheduled":
+    case "scheduled":
       return "bg-blue-100 text-blue-600";
-    case "Processing":
+    case "processing":
+    case "paused":
       return "bg-amber-100 text-amber-600";
-    case "Paused":
-      return "bg-amber-100 text-amber-600";
-    case "Completed":
+    case "completed":
       return "bg-green-100 text-green-600";
-    case "Failed":
+    case "failed":
       return "bg-red-100 text-red-600";
     default:
       return "bg-gray-100 text-gray-600";
@@ -208,17 +227,14 @@ export const WhatsAppCampaigns = () => {
         enableColumnFilter: true,
         filterFn: "auto",
         enableSorting: true,
-        cell: ({ row }) => {
-          const status = row.original.status || "Draft";
-          return (
-            <DataTableTextCell
-              value={status}
-              className={`px-3 py-1 text-sm font-medium justify-center rounded-full inline-block ${getStatusColor(
-                status
-              )}`}
-            />
-          );
-        },
+        cell: ({ row }) => (
+          <DataTableTextCell
+            value={statusLabel(row.original.status)}
+            className={`px-3 py-1 text-sm font-medium justify-center rounded-full inline-block ${getStatusColor(
+              row.original.status
+            )}`}
+          />
+        ),
       }),
       columnHelper.accessor("stats.messagesSent", {
         header: "Sent",
@@ -266,7 +282,7 @@ export const WhatsAppCampaigns = () => {
         cell: ({ row }) => {
           const c = row.original;
           const canEdit = isEditable(c);
-          const isPaused = c.status === "Paused";
+          const isPaused = normStatus(c.status) === "paused";
 
           return (
             <TooltipProvider>
@@ -307,7 +323,11 @@ export const WhatsAppCampaigns = () => {
                       />
                     </TooltipTrigger>
                     <TooltipContent className="bg-black text-white max-w-xs">
-                      <p>{!c.status ? "Continue campaign" : "Edit campaign"}</p>
+                      <p>
+                        {normStatus(c.status) === "draft"
+                          ? "Continue campaign"
+                          : "Edit campaign"}
+                      </p>
                     </TooltipContent>
                   </Tooltip>
                 ) : null}
