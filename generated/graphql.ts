@@ -274,6 +274,9 @@ export enum AdminCampaignFilter {
   HostOnboardingPending = 'HostOnboardingPending',
   HostOrganizer = 'HostOrganizer',
   HostPromoter = 'HostPromoter',
+  HostTop20 = 'HostTop20',
+  HostTop50 = 'HostTop50',
+  HostTop100 = 'HostTop100',
   HostVenue = 'HostVenue',
   SourceArtists = 'SourceArtists',
   SourceCustomers = 'SourceCustomers',
@@ -328,6 +331,12 @@ export type AdminCustomersReport = {
   byPeriod: Array<AdminReportMetricRow>;
   newSignups: Scalars['Int']['output'];
   repeatBuyers: Scalars['Int']['output'];
+};
+
+export type AdminDetailField = {
+  __typename?: 'AdminDetailField';
+  label: Scalars['String']['output'];
+  value: Scalars['String']['output'];
 };
 
 export type AdminEmailCampaignStats = {
@@ -393,6 +402,18 @@ export type AdminEmailTemplate = {
   content: Scalars['String']['output'];
   designJson: Scalars['String']['output'];
   html: Scalars['String']['output'];
+};
+
+export type AdminEntityDetail = {
+  __typename?: 'AdminEntityDetail';
+  fields: Array<AdminDetailField>;
+  gallery: Array<Scalars['String']['output']>;
+  id: Scalars['ID']['output'];
+  image?: Maybe<Scalars['String']['output']>;
+  kind: Scalars['String']['output'];
+  location?: Maybe<Scalars['String']['output']>;
+  subtitle?: Maybe<Scalars['String']['output']>;
+  title: Scalars['String']['output'];
 };
 
 export type AdminEventUpdateInput = {
@@ -490,6 +511,28 @@ export type AdminLoginVerificationInput = {
   otpId: Scalars['String']['input'];
 };
 
+export type AdminOrderRow = {
+  __typename?: 'AdminOrderRow';
+  _id: Scalars['String']['output'];
+  businessId?: Maybe<Scalars['String']['output']>;
+  buyerName?: Maybe<Scalars['String']['output']>;
+  createdAt?: Maybe<Scalars['DateTimeISO']['output']>;
+  eventId?: Maybe<Scalars['String']['output']>;
+  eventTitle?: Maybe<Scalars['String']['output']>;
+  hostName?: Maybe<Scalars['String']['output']>;
+  isGuest: Scalars['Boolean']['output'];
+  orderStatus: OrderStatus;
+  razorpayOrderId?: Maybe<Scalars['String']['output']>;
+  ticketCount: Scalars['Int']['output'];
+  totalAmount: Scalars['Float']['output'];
+};
+
+export type AdminOrdersResponse = {
+  __typename?: 'AdminOrdersResponse';
+  items: Array<AdminOrderRow>;
+  total: Scalars['Int']['output'];
+};
+
 export type AdminPaginatedResponse = {
   __typename?: 'AdminPaginatedResponse';
   items: Array<Admin>;
@@ -550,6 +593,16 @@ export enum AdminRole {
   Normal = 'NORMAL',
   SuperAdmin = 'SUPER_ADMIN'
 }
+
+export type AdminSearchResult = {
+  __typename?: 'AdminSearchResult';
+  id: Scalars['ID']['output'];
+  image?: Maybe<Scalars['String']['output']>;
+  kind: Scalars['String']['output'];
+  location?: Maybe<Scalars['String']['output']>;
+  subtitle?: Maybe<Scalars['String']['output']>;
+  title: Scalars['String']['output'];
+};
 
 export enum AdminStatus {
   Active = 'ACTIVE',
@@ -2445,6 +2498,7 @@ export type HostFeedbackAdminRow = {
   _id: Scalars['String']['output'];
   channel?: Maybe<Scalars['String']['output']>;
   comment?: Maybe<Scalars['String']['output']>;
+  context?: Maybe<HostFeedbackContext>;
   createdAt?: Maybe<Scalars['DateTimeISO']['output']>;
   customerId?: Maybe<Scalars['String']['output']>;
   eventId?: Maybe<Scalars['String']['output']>;
@@ -2452,6 +2506,7 @@ export type HostFeedbackAdminRow = {
   hostId?: Maybe<Scalars['String']['output']>;
   hostName?: Maybe<Scalars['String']['output']>;
   isResolved: Scalars['Boolean']['output'];
+  kind?: Maybe<HostFeedbackKind>;
   rating?: Maybe<Scalars['Float']['output']>;
   source: HostFeedbackSource;
 };
@@ -2461,6 +2516,11 @@ export enum HostFeedbackContext {
   CustomerPostPurchase = 'CUSTOMER_POST_PURCHASE',
   HostEventCompleted = 'HOST_EVENT_COMPLETED',
   HostEventCreated = 'HOST_EVENT_CREATED'
+}
+
+export enum HostFeedbackKind {
+  Event = 'EVENT',
+  HoizrPlatform = 'HOIZR_PLATFORM'
 }
 
 export enum HostFeedbackSource {
@@ -3071,6 +3131,14 @@ export type MarketingCreditTopUpVerifyResponse = {
   entry: MarketingCreditLedgerEntry;
 };
 
+export type MarketingMarginRow = {
+  __typename?: 'MarketingMarginRow';
+  actualCost: Scalars['Float']['output'];
+  channel: Scalars['String']['output'];
+  charged: Scalars['Float']['output'];
+  marginPerSend: Scalars['Float']['output'];
+};
+
 export type MarketingPricing = {
   __typename?: 'MarketingPricing';
   currency: Scalars['String']['output'];
@@ -3120,6 +3188,7 @@ export type Mutation = {
   adminRejectWhatsAppTemplateReview: WhatsAppMessageTemplate;
   adminResumePayoutSettlement: PayoutSettlement;
   adminSetAutomationTemplate: Array<AdminAutomationTemplateView>;
+  adminSetPlatformCosts: PlatformCostConfig;
   adminSubmitWhatsAppTemplateToMeta: WhatsAppTemplateSubmissionResult;
   adminTriggerRazorpaySettlementReconcile: RazorpayReconcileSummary;
   adminUpdateEvent: Event;
@@ -3391,6 +3460,11 @@ export type MutationAdminResumePayoutSettlementArgs = {
 export type MutationAdminSetAutomationTemplateArgs = {
   automationKey: Scalars['String']['input'];
   whatsappTemplateId: Scalars['String']['input'];
+};
+
+
+export type MutationAdminSetPlatformCostsArgs = {
+  input: SetPlatformCostsInput;
 };
 
 
@@ -4296,6 +4370,18 @@ export type Places = {
   placeId: Scalars['String']['output'];
 };
 
+export type PlatformCostConfig = {
+  __typename?: 'PlatformCostConfig';
+  _id: Scalars['ID']['output'];
+  actualEmailCost: Scalars['Float']['output'];
+  actualPushCost: Scalars['Float']['output'];
+  actualSmsCost: Scalars['Float']['output'];
+  actualWhatsappMarketingCost: Scalars['Float']['output'];
+  notes?: Maybe<Scalars['String']['output']>;
+  updatedAt?: Maybe<Scalars['DateTimeISO']['output']>;
+  updatedBy?: Maybe<Scalars['String']['output']>;
+};
+
 export type ProhibitedItemMaster = {
   __typename?: 'ProhibitedItemMaster';
   _id: Scalars['ID']['output'];
@@ -4348,12 +4434,17 @@ export type Query = {
   adminCampaignsReport: AdminCampaignsReport;
   adminCsvExport: Scalars['String']['output'];
   adminCustomersReport: AdminCustomersReport;
+  adminEntityDetail?: Maybe<AdminEntityDetail>;
   adminEventReconciliation: EventReconciliationView;
   adminEvents: EventPaginatedResponse;
   adminEventsReport: AdminEventsReport;
   adminGetOfferGeneration: EventOfferGeneration;
   adminGetPayoutReleaseReadiness: PayoutReleaseReadiness;
   adminGetPayoutSettlement: PayoutSettlement;
+  /** Admin-set actual unit costs (email/WhatsApp/SMS/push). */
+  adminGetPlatformCosts: PlatformCostConfig;
+  /** Global admin search across organizers, venues, artists, and phantom artists. Safe fields only — no contacts. Min 2 chars, max 5 per type. */
+  adminGlobalSearch: Array<AdminSearchResult>;
   adminGstOutputBreakdown: GstOutputBreakdown;
   adminHosts: HostPaginatedResponse;
   adminHostsReport: AdminHostsReport;
@@ -4361,12 +4452,15 @@ export type Query = {
   adminListFeedback: HostFeedbackAdminListResponse;
   adminListHostCampaigns: HostEmailCampaignsPaginatedResponse;
   adminListOfferGenerations: EventOfferGenerationPaginatedResponse;
+  adminListOrders: AdminOrdersResponse;
   adminListPayoutReleaseReadiness: Array<PayoutReleaseReadiness>;
   adminListPayoutSettlements: PayoutSettlementPaginatedResponse;
   adminListWhatsAppTemplates: WhatsAppTemplatesPaginatedResponse;
   adminLogin: Scalars['String']['output'];
   adminLoginVerification: Scalars['String']['output'];
   adminLogout: Scalars['Boolean']['output'];
+  /** Per-send marketing margin: what hosts are charged minus our actual cost. */
+  adminMarketingMargins: Array<MarketingMarginRow>;
   adminPayoutsReport: AdminPayoutsReport;
   adminPendingWhatsAppTemplateReviews: WhatsAppTemplatesPaginatedResponse;
   adminTicketsReport: AdminTicketsReport;
@@ -4512,6 +4606,12 @@ export type QueryAdminCustomersReportArgs = {
 };
 
 
+export type QueryAdminEntityDetailArgs = {
+  id: Scalars['String']['input'];
+  kind: Scalars['String']['input'];
+};
+
+
 export type QueryAdminEventReconciliationArgs = {
   eventId: Scalars['String']['input'];
 };
@@ -4543,6 +4643,11 @@ export type QueryAdminGetPayoutSettlementArgs = {
 };
 
 
+export type QueryAdminGlobalSearchArgs = {
+  q: Scalars['String']['input'];
+};
+
+
 export type QueryAdminGstOutputBreakdownArgs = {
   from?: InputMaybe<Scalars['String']['input']>;
   to?: InputMaybe<Scalars['String']['input']>;
@@ -4566,6 +4671,7 @@ export type QueryAdminLedgerAccountBalancesArgs = {
 
 
 export type QueryAdminListFeedbackArgs = {
+  kind?: InputMaybe<HostFeedbackKind>;
   pagination?: InputMaybe<PaginationInput>;
 };
 
@@ -4577,6 +4683,13 @@ export type QueryAdminListHostCampaignsArgs = {
 
 export type QueryAdminListOfferGenerationsArgs = {
   input?: InputMaybe<ListOfferGenerationsInput>;
+};
+
+
+export type QueryAdminListOrdersArgs = {
+  pagination?: InputMaybe<PaginationInput>;
+  search?: InputMaybe<Scalars['String']['input']>;
+  status?: InputMaybe<OrderStatus>;
 };
 
 
@@ -5162,6 +5275,14 @@ export type SelectEventPricingInput = {
   eventId: Scalars['String']['input'];
   feeSettlementMode: EventFeeSettlementMode;
   optionId: Scalars['String']['input'];
+};
+
+export type SetPlatformCostsInput = {
+  actualEmailCost?: InputMaybe<Scalars['Float']['input']>;
+  actualPushCost?: InputMaybe<Scalars['Float']['input']>;
+  actualSmsCost?: InputMaybe<Scalars['Float']['input']>;
+  actualWhatsappMarketingCost?: InputMaybe<Scalars['Float']['input']>;
+  notes?: InputMaybe<Scalars['String']['input']>;
 };
 
 export type SignedPdfUrl = {
