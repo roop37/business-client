@@ -834,6 +834,8 @@ const EventJourney = ({
   const [selectedPricingOptionId, setSelectedPricingOptionId] = useState("");
   const [publishModalOpen, setPublishModalOpen] = useState(false);
   const [publishing, setPublishing] = useState(false);
+  // Public live link shown in the post-publish success modal (null = closed).
+  const [publishedLiveUrl, setPublishedLiveUrl] = useState<string | null>(null);
   const [cityOptions, setCityOptions] = useState<CityOption[]>([]);
   const formScrollRef = useRef<HTMLElement | null>(null);
 
@@ -2794,7 +2796,6 @@ const EventJourney = ({
       }
       await sdk.publishEvent({ id: eventId });
       setStatus("PUBLISHED");
-      setToastData({ type: "success", message: "Event published" });
       setPublishModalOpen(false);
       // Save the latest Terms & Refund Policy as the host's defaults
       // so the next event prefills with them. Best-effort — a failure
@@ -2814,7 +2815,17 @@ const EventJourney = ({
         // ignore — host defaults will retry next publish
       }
 
-      router.push(`/events/${eventId}/manage`);
+      // Surface a success MODAL with the public live link (instead of a bare
+      // toast + silent redirect). Slug lookup is best-effort — fall back to the
+      // id-based public URL so the modal always has a working link.
+      let liveUrl = `https://hoizr.com/events/${eventId}`;
+      try {
+        const evt = (await sdk.getEventForManage({ id: eventId }))?.getEvent;
+        if (evt?.slug) liveUrl = `https://hoizr.com/events/${evt.slug}`;
+      } catch {
+        // keep the id-based fallback
+      }
+      setPublishedLiveUrl(liveUrl);
     } catch (error) {
       const message = extractErrorMessage(error);
       if (isHostVerificationBlockMessage(message)) {
@@ -5520,6 +5531,62 @@ const EventJourney = ({
                 >
                   {uploadingFlyer ? "Uploading..." : "Save flyer"}
                 </button>
+              </div>
+            </div>
+          </div>
+        ) : null}
+
+        {publishedLiveUrl ? (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+            <div className="w-full max-w-md overflow-hidden rounded-2xl bg-white shadow-2xl">
+              <div className="px-6 pb-6 pt-7 text-center">
+                <div className="mx-auto mb-3 grid h-14 w-14 place-items-center rounded-full bg-[#E9F7EF] text-3xl">
+                  🎉
+                </div>
+                <h2 className="text-xl font-semibold text-[var(--owner-fg-1)]">
+                  Your event is live!
+                </h2>
+                <p className="mx-auto mt-2 max-w-sm text-sm leading-relaxed text-[var(--owner-fg-3)]">
+                  Customers can now discover it and book tickets on Hoizr. Share
+                  your link to start driving early sales.
+                </p>
+                <div className="mt-5 flex items-center gap-2 rounded-xl border border-[var(--owner-border)] bg-[var(--owner-bg-subtle)] px-3 py-2 text-left">
+                  <span className="min-w-0 flex-1 truncate text-[13px] text-[var(--owner-fg-2)]">
+                    {publishedLiveUrl}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      navigator.clipboard
+                        ?.writeText(publishedLiveUrl)
+                        .catch(() => {});
+                      setToastData({ type: "success", message: "Link copied" });
+                    }}
+                    className="shrink-0 rounded-md px-2 py-1 text-[12px] font-semibold text-[#0F8842] hover:bg-[#E9F7EF]"
+                  >
+                    Copy
+                  </button>
+                </div>
+                <div className="mt-5 grid gap-2">
+                  <a
+                    href={publishedLiveUrl}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="inline-flex h-11 items-center justify-center rounded-xl bg-[#0F8842] text-sm font-semibold text-white transition hover:opacity-95"
+                  >
+                    View live page
+                  </a>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setPublishedLiveUrl(null);
+                      router.push(`/events/${eventId}/manage`);
+                    }}
+                    className="inline-flex h-11 items-center justify-center rounded-xl border border-[var(--owner-border)] text-sm font-semibold text-[var(--owner-fg-1)] transition hover:bg-[var(--owner-bg-subtle)]"
+                  >
+                    Go to event dashboard
+                  </button>
+                </div>
               </div>
             </div>
           </div>
