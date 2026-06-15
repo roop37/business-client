@@ -565,6 +565,17 @@ export type AdminQueueDepth = {
   waiting: Scalars['Int']['output'];
 };
 
+export type AdminRefundOrderRow = {
+  __typename?: 'AdminRefundOrderRow';
+  amount: Scalars['Float']['output'];
+  capturedAt?: Maybe<Scalars['DateTimeISO']['output']>;
+  customerName?: Maybe<Scalars['String']['output']>;
+  eventTitle: Scalars['String']['output'];
+  orderId: Scalars['String']['output'];
+  reason?: Maybe<Scalars['String']['output']>;
+  refundState: Scalars['String']['output'];
+};
+
 export type AdminReportCsvExportInput = {
   fileName: Scalars['String']['input'];
   filters: AdminReportFilterInput;
@@ -4461,6 +4472,7 @@ export type Query = {
   adminLogout: Scalars['Boolean']['output'];
   /** Per-send marketing margin: what hosts are charged minus our actual cost. */
   adminMarketingMargins: Array<MarketingMarginRow>;
+  adminOrdersNeedingRefund: Array<AdminRefundOrderRow>;
   adminPayoutsReport: AdminPayoutsReport;
   adminPendingWhatsAppTemplateReviews: WhatsAppTemplatesPaginatedResponse;
   adminTicketsReport: AdminTicketsReport;

@@ -1,6 +1,8 @@
 "use client";
 
 import useGlobalStore from "@/store/global";
+import useUserStore from "@/store/user";
+import { TeamRole } from "@/generated/graphql";
 import {
   fetchHostOrderDetail,
   refundHostOrder,
@@ -76,6 +78,8 @@ const OrderReceiptModal = () => {
   const { orderReceiptModalOpen, orderReceiptId, closeOrderReceipt, setToastData } =
     useGlobalStore();
 
+  const meUser = useUserStore((s) => s.meUser);
+
   const [detail, setDetail] = useState<HostOrderDetail | null>(null);
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
@@ -141,7 +145,11 @@ const OrderReceiptModal = () => {
   if (typeof window === "undefined") return null;
 
   const isRefunded = detail?.status === "REFUNDED";
-  const canRefund = !!detail?.refundable && !isRefunded;
+  // Owner-only: the server already gates `refundable` on ownership, but hide
+  // the action client-side too. The owner is either explicitly TeamRole.Owner
+  // or the top-level account (no ownerUserId pointing to someone above them).
+  const isOwner = meUser?.role === TeamRole.Owner || !meUser?.ownerUserId;
+  const canRefund = !!detail?.refundable && !isRefunded && isOwner;
 
   return ReactDOM.createPortal(
     <div className="fixed inset-0 z-[1100] flex flex-col bg-[var(--owner-bg)]">
