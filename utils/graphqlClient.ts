@@ -145,6 +145,21 @@ Object.assign(sdk, {
   deleteIncompleteRestaurant: () => truthy("deleteIncompleteRestaurant"),
   updateWalkthroughStatus: () => truthy("updateWalkthroughStatus"),
   getActiveStates: async () => {
+    // Prefer the server's cached + deduped states query (~37 rows). It
+    // is one Redis read instead of pulling the full 500+ city list just
+    // to derive states. Falls back to client-side derivation if the
+    // server hasn't been deployed with `getActiveStates` yet.
+    try {
+      const data: any = await graphQLClient.request(
+        "query getActiveStates { getActiveStates { _id value } }"
+      );
+      if (Array.isArray(data?.getActiveStates) && data.getActiveStates.length) {
+        return { getActiveStates: data.getActiveStates };
+      }
+    } catch {
+      // Server may predate this query — fall through to city derivation.
+    }
+
     const response = await sdk.getActiveIndianCities();
     const uniqueStates = Array.from(
       new Set(

@@ -6,6 +6,16 @@ query getActiveIndianCities {
   }
 }
 
+# Distinct, deduped, server-cached states (derived from the `cities`
+# collection). Used by the state pickers in onboarding + location forms
+# so they don't have to download the full city list to build the list.
+query getActiveStates {
+  getActiveStates {
+    _id
+    value
+  }
+}
+
 query getActiveEventCategories {
   getActiveEventCategories {
     _id

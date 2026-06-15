@@ -4509,6 +4509,7 @@ export type Query = {
   getActiveLanguages: Array<LanguageMaster>;
   getActivePayout?: Maybe<Payout>;
   getActiveProhibitedItems: Array<ProhibitedItemMaster>;
+  getActiveStates: Array<StateOption>;
   getActivityLogs: ActivityLogPaginatedResponse;
   getAdminAudienceCount: Scalars['Int']['output'];
   /** Returns admin dashboard KPIs. The payload is cached in-memory for 60 seconds per date range. */
@@ -5322,6 +5323,12 @@ export enum SortDataEnum {
 export type SortDataInput = {
   key: Scalars['String']['input'];
   sortType: SortDataEnum;
+};
+
+export type StateOption = {
+  __typename?: 'StateOption';
+  _id: Scalars['String']['output'];
+  value: Scalars['String']['output'];
 };
 
 export type SubUser = {
@@ -6227,6 +6234,11 @@ export type GetActiveIndianCitiesQueryVariables = Exact<{ [key: string]: never; 
 
 
 export type GetActiveIndianCitiesQuery = { __typename?: 'Query', getActiveIndianCities: Array<{ __typename?: 'IndianCity', _id: string, value: string, state?: string | null }> };
+
+export type GetActiveStatesQueryVariables = Exact<{ [key: string]: never; }>;
+
+
+export type GetActiveStatesQuery = { __typename?: 'Query', getActiveStates: Array<{ __typename?: 'StateOption', _id: string, value: string }> };
 
 export type GetActiveEventCategoriesQueryVariables = Exact<{ [key: string]: never; }>;
 
@@ -7342,6 +7354,14 @@ export const GetActiveIndianCitiesDocument = gql`
   }
 }
     `;
+export const GetActiveStatesDocument = gql`
+    query getActiveStates {
+  getActiveStates {
+    _id
+    value
+  }
+}
+    `;
 export const GetActiveEventCategoriesDocument = gql`
     query getActiveEventCategories {
   getActiveEventCategories {
@@ -8026,6 +8046,9 @@ export function getSdk(client: GraphQLClient, withWrapper: SdkFunctionWrapper = 
     },
     getActiveIndianCities(variables?: GetActiveIndianCitiesQueryVariables, requestHeaders?: GraphQLClientRequestHeaders): Promise<GetActiveIndianCitiesQuery> {
       return withWrapper((wrappedRequestHeaders) => client.request<GetActiveIndianCitiesQuery>(GetActiveIndianCitiesDocument, variables, {...requestHeaders, ...wrappedRequestHeaders}), 'getActiveIndianCities', 'query', variables);
+    },
+    getActiveStates(variables?: GetActiveStatesQueryVariables, requestHeaders?: GraphQLClientRequestHeaders): Promise<GetActiveStatesQuery> {
+      return withWrapper((wrappedRequestHeaders) => client.request<GetActiveStatesQuery>(GetActiveStatesDocument, variables, {...requestHeaders, ...wrappedRequestHeaders}), 'getActiveStates', 'query', variables);
     },
     getActiveEventCategories(variables?: GetActiveEventCategoriesQueryVariables, requestHeaders?: GraphQLClientRequestHeaders): Promise<GetActiveEventCategoriesQuery> {
       return withWrapper((wrappedRequestHeaders) => client.request<GetActiveEventCategoriesQuery>(GetActiveEventCategoriesDocument, variables, {...requestHeaders, ...wrappedRequestHeaders}), 'getActiveEventCategories', 'query', variables);
