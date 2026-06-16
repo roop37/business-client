@@ -3095,7 +3095,7 @@ const EventJourney = ({
                 })}
               </div>
 
-              <div className="rounded-lg border border-[var(--owner-border)] bg-[var(--owner-bg)] p-4 md:p-5">
+              <div className="flex-1 rounded-lg border border-[var(--owner-border)] bg-[var(--owner-bg)] p-4 md:p-5">
                 {step === 0 ? (
                   <StepSection
                     title="Choose event category"
