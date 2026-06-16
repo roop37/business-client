@@ -568,6 +568,25 @@ Object.assign(sdk, {
       `,
       variables
     ),
+  // Show/hide a single ticket type from the manage table. Ticket _id is a
+  // string subdocument id (passed through as-is).
+  setEventTicketVisibility: async (variables: {
+    id: string;
+    ticketId: string;
+    visible: boolean;
+  }) =>
+    graphQLClient.request(
+      `
+        mutation setEventTicketVisibility(
+          $id: String!
+          $ticketId: String!
+          $visible: Boolean!
+        ) {
+          setEventTicketVisibility(id: $id, ticketId: $ticketId, visible: $visible)
+        }
+      `,
+      variables
+    ),
   updateEventPartial: async (variables: { id: string; input: any }) =>
     graphQLClient.request(
       `
