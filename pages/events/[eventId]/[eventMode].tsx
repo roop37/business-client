@@ -1,6 +1,9 @@
 import EventJourney from "@/components/modules/events/EventJourney";
 import { EventScanners } from "@/components/modules/events/EventScanners";
 import { IssueOfflineTicketModal } from "@/components/modules/offlineTicket/IssueOfflineTicketModal";
+import TicketOrdersModal, {
+  type TicketOrdersTarget,
+} from "@/components/modules/events/TicketOrdersModal";
 import useGlobalStore from "@/store/global";
 import { sdk } from "@/utils/graphqlClient";
 import { extractErrorMessage } from "@/utils/utilFUncs";
@@ -80,6 +83,8 @@ const EventOperations = ({
   const [busy, setBusy] = useState(false);
   const [offlineOpen, setOfflineOpen] = useState(false);
   const [collaboratorsOpen, setCollaboratorsOpen] = useState(false);
+  const [ticketOrdersTarget, setTicketOrdersTarget] =
+    useState<TicketOrdersTarget | null>(null);
 
   const loadOverview = async () => {
     try {
@@ -362,12 +367,19 @@ const EventOperations = ({
                           </button>
                         </td>
                         <td className="px-5 py-3 text-right">
-                          <Link
-                            href={`/customer?eventId=${eventId}&ticketId=${t._id}&ticketName=${encodeURIComponent(t.ticketName ?? "")}`}
+                          <button
+                            type="button"
+                            onClick={() =>
+                              setTicketOrdersTarget({
+                                eventId,
+                                ticketId: t._id,
+                                ticketName: t.ticketName,
+                              })
+                            }
                             className="text-xs font-medium text-[var(--owner-blue-500)] hover:underline"
                           >
-                            See customers
-                          </Link>
+                            See orders
+                          </button>
                         </td>
                       </tr>
                     ))}
@@ -501,6 +513,11 @@ const EventOperations = ({
           setCollaboratorsOpen(false);
           router.push(`/events/${eventId}/update`);
         }}
+      />
+
+      <TicketOrdersModal
+        target={ticketOrdersTarget}
+        onClose={() => setTicketOrdersTarget(null)}
       />
     </EventShell>
   );
