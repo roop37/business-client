@@ -1,6 +1,9 @@
 import EventJourney from "@/components/modules/events/EventJourney";
 import { EventScanners } from "@/components/modules/events/EventScanners";
 import { IssueOfflineTicketModal } from "@/components/modules/offlineTicket/IssueOfflineTicketModal";
+import TicketOrdersModal, {
+  type TicketOrdersTarget,
+} from "@/components/modules/events/TicketOrdersModal";
 import useGlobalStore from "@/store/global";
 import { sdk } from "@/utils/graphqlClient";
 import { extractErrorMessage } from "@/utils/utilFUncs";
@@ -21,6 +24,7 @@ import {
   XIcon,
 } from "lucide-react";
 import { GetServerSideProps } from "next";
+import Link from "next/link";
 import { useRouter } from "next/router";
 import type { ReactNode } from "react";
 import { useEffect, useState } from "react";
@@ -79,6 +83,8 @@ const EventOperations = ({
   const [busy, setBusy] = useState(false);
   const [offlineOpen, setOfflineOpen] = useState(false);
   const [collaboratorsOpen, setCollaboratorsOpen] = useState(false);
+  const [ticketOrdersTarget, setTicketOrdersTarget] =
+    useState<TicketOrdersTarget | null>(null);
 
   const loadOverview = async () => {
     try {
@@ -304,6 +310,7 @@ const EventOperations = ({
                       <th className="px-5 py-2 text-right">Price</th>
                       <th className="px-5 py-2 text-right">Revenue</th>
                       <th className="px-5 py-2">Visible</th>
+                      <th className="px-5 py-2 text-right">Actions</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -316,14 +323,69 @@ const EventOperations = ({
                         <td className="px-5 py-3 text-right tabular-nums">
                           {rupee(Number(t.ticketPrice) * Number(t.ticketSold))}
                         </td>
-                        <td className="px-5 py-3 text-xs">
-                          {t.ticketVisible ? "Yes" : "Hidden"}
+                        <td className="px-5 py-3">
+                          <button
+                            type="button"
+                            disabled={busy}
+                            role="switch"
+                            aria-checked={!!t.ticketVisible}
+                            title={t.ticketVisible ? "Visible — click to hide" : "Hidden — click to show"}
+                            onClick={async () => {
+                              const next = !t.ticketVisible;
+                              setBusy(true);
+                              try {
+                                await sdk.setEventTicketVisibility({
+                                  id: eventId,
+                                  ticketId: t._id,
+                                  visible: next,
+                                });
+                                setToastData({
+                                  type: "success",
+                                  message: next ? "Ticket is now visible" : "Ticket hidden",
+                                });
+                                await loadOverview();
+                              } catch (error) {
+                                setToastData({
+                                  type: "error",
+                                  message: extractErrorMessage(error),
+                                });
+                              } finally {
+                                setBusy(false);
+                              }
+                            }}
+                            className={`relative inline-flex h-5 w-9 items-center rounded-full transition disabled:opacity-50 ${
+                              t.ticketVisible
+                                ? "bg-[var(--owner-blue-500)]"
+                                : "bg-[var(--owner-border)]"
+                            }`}
+                          >
+                            <span
+                              className={`inline-block h-4 w-4 transform rounded-full bg-white transition ${
+                                t.ticketVisible ? "translate-x-4" : "translate-x-0.5"
+                              }`}
+                            />
+                          </button>
+                        </td>
+                        <td className="px-5 py-3 text-right">
+                          <button
+                            type="button"
+                            onClick={() =>
+                              setTicketOrdersTarget({
+                                eventId,
+                                ticketId: t._id,
+                                ticketName: t.ticketName,
+                              })
+                            }
+                            className="text-xs font-medium text-[var(--owner-blue-500)] hover:underline"
+                          >
+                            See orders
+                          </button>
                         </td>
                       </tr>
                     ))}
                     {(overview?.tickets ?? []).length === 0 ? (
                       <tr>
-                        <td colSpan={6} className="px-5 py-6 text-center text-xs text-[var(--owner-fg-3)]">
+                        <td colSpan={7} className="px-5 py-6 text-center text-xs text-[var(--owner-fg-3)]">
                           No tickets configured.
                         </td>
                       </tr>
@@ -331,6 +393,28 @@ const EventOperations = ({
                   </tbody>
                 </table>
               </div>
+            </div>
+
+            {/* Report & customer navigation */}
+            <div className="flex flex-wrap gap-2">
+              <Link
+                href={`/customer?eventId=${eventId}`}
+                className="rounded-lg border border-[var(--owner-border)] bg-[var(--owner-bg)] px-4 py-2 text-sm font-medium hover:border-[#c89d75]"
+              >
+                See customers
+              </Link>
+              <Link
+                href={`/reports/sales?eventId=${eventId}`}
+                className="rounded-lg border border-[var(--owner-border)] bg-[var(--owner-bg)] px-4 py-2 text-sm font-medium hover:border-[#c89d75]"
+              >
+                See sales report
+              </Link>
+              <Link
+                href={`/reports/marketing?eventId=${eventId}`}
+                className="rounded-lg border border-[var(--owner-border)] bg-[var(--owner-bg)] px-4 py-2 text-sm font-medium hover:border-[#c89d75]"
+              >
+                See marketing report
+              </Link>
             </div>
 
             {/* Collaborators & promoters */}
@@ -429,6 +513,11 @@ const EventOperations = ({
           setCollaboratorsOpen(false);
           router.push(`/events/${eventId}/update`);
         }}
+      />
+
+      <TicketOrdersModal
+        target={ticketOrdersTarget}
+        onClose={() => setTicketOrdersTarget(null)}
       />
     </EventShell>
   );

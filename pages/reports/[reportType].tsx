@@ -81,6 +81,16 @@ const reports: Record<string, ReportConfig> = {
     title: "Tax & GST summary",
     description: "Primary payout and verification status for paid events.",
   },
+  "sales": {
+    title: "Sales report",
+    description:
+      "Sales performance for this event. Detailed breakdown coming soon.",
+  },
+  "marketing": {
+    title: "Marketing report",
+    description:
+      "Campaign and channel performance for this event. Detailed breakdown coming soon.",
+  },
 };
 
 const formatDate = (value?: string | null) => {
