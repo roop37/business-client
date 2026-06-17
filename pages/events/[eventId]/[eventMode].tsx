@@ -326,10 +326,16 @@ const EventOperations = ({
                         <td className="px-5 py-3">
                           <button
                             type="button"
-                            disabled={busy}
+                            disabled={busy || (!!t.ticketVisible && Number(t.ticketSold) > 0)}
                             role="switch"
                             aria-checked={!!t.ticketVisible}
-                            title={t.ticketVisible ? "Visible — click to hide" : "Hidden — click to show"}
+                            title={
+                              !!t.ticketVisible && Number(t.ticketSold) > 0
+                                ? "Can't hide — this ticket already has sales"
+                                : t.ticketVisible
+                                ? "Visible — click to hide"
+                                : "Hidden — click to show"
+                            }
                             onClick={async () => {
                               const next = !t.ticketVisible;
                               setBusy(true);
