@@ -632,6 +632,7 @@ Object.assign(sdk, {
       contributorName?: string;
       cap?: number | null;
       isPublic?: boolean;
+      isActive?: boolean;
     };
   }) =>
     graphQLClient.request(
