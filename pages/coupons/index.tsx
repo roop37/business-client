@@ -270,16 +270,51 @@ const CouponsPage = () => {
 
   if (view.mode !== "list") {
     return (
-      <div className="min-w-0 py-2">
-        <PageHeader
-          title={view.mode === "new" ? "New coupon" : "Edit coupon"}
-          subtitle="Set up a discount code your customers can use at checkout."
-        />
-        <CouponEditor
-          couponId={view.mode === "edit" ? view.id : undefined}
-          onCancel={() => setView({ mode: "list" })}
-          onDone={() => setView({ mode: "list" })}
-        />
+      <div className="fixed inset-0 z-50 flex flex-col bg-[var(--owner-bg-sidebar)]">
+        {/* Branded top header (logo + title), divider, then step + form below. */}
+        <div className="flex items-center justify-between gap-3 border-b border-[var(--owner-border)] bg-[var(--owner-bg)] px-5 py-3.5">
+          <div className="flex min-w-0 items-center gap-3">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="/logo/logoDark.png" alt="Hoizr" className="h-6 w-auto" />
+            <div className="min-w-0">
+              <div className="text-[15px] font-semibold text-[var(--owner-fg-1)]">
+                {view.mode === "new" ? "New coupon" : "Edit coupon"}
+              </div>
+              <div className="truncate text-xs text-[var(--owner-fg-3)]">
+                Set up a discount code your customers can use at checkout.
+              </div>
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={() => setView({ mode: "list" })}
+            aria-label="Close"
+            className="grid h-9 w-9 shrink-0 place-items-center rounded-lg border border-[var(--owner-border)] bg-white text-[var(--owner-fg-3)] hover:border-[var(--owner-blue-500)] hover:text-[var(--owner-fg-1)]"
+          >
+            <svg
+              className="h-3 w-3"
+              aria-hidden="true"
+              xmlns="http://www.w3.org/2000/svg"
+              fill="none"
+              viewBox="0 0 14 14"
+            >
+              <path
+                stroke="currentColor"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth="2"
+                d="m1 1 6 6m0 0 6 6M7 7l6-6M7 7l-6 6"
+              />
+            </svg>
+          </button>
+        </div>
+        <div className="flex-1 overflow-auto px-4 py-6 md:px-6">
+          <CouponEditor
+            couponId={view.mode === "edit" ? view.id : undefined}
+            onCancel={() => setView({ mode: "list" })}
+            onDone={() => setView({ mode: "list" })}
+          />
+        </div>
       </div>
     );
   }

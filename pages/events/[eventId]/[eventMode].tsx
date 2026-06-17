@@ -4,6 +4,7 @@ import { IssueOfflineTicketModal } from "@/components/modules/offlineTicket/Issu
 import TicketOrdersModal, {
   type TicketOrdersTarget,
 } from "@/components/modules/events/TicketOrdersModal";
+import GuestlistManagerModal from "@/components/modules/events/GuestlistManagerModal";
 import useGlobalStore from "@/store/global";
 import { sdk } from "@/utils/graphqlClient";
 import { extractErrorMessage } from "@/utils/utilFUncs";
@@ -85,6 +86,7 @@ const EventOperations = ({
   const [collaboratorsOpen, setCollaboratorsOpen] = useState(false);
   const [ticketOrdersTarget, setTicketOrdersTarget] =
     useState<TicketOrdersTarget | null>(null);
+  const [guestlistOpen, setGuestlistOpen] = useState(false);
 
   const loadOverview = async () => {
     try {
@@ -326,10 +328,16 @@ const EventOperations = ({
                         <td className="px-5 py-3">
                           <button
                             type="button"
-                            disabled={busy}
+                            disabled={busy || (!!t.ticketVisible && Number(t.ticketSold) > 0)}
                             role="switch"
                             aria-checked={!!t.ticketVisible}
-                            title={t.ticketVisible ? "Visible — click to hide" : "Hidden — click to show"}
+                            title={
+                              !!t.ticketVisible && Number(t.ticketSold) > 0
+                                ? "Can't hide — this ticket already has sales"
+                                : t.ticketVisible
+                                ? "Visible — click to hide"
+                                : "Hidden — click to show"
+                            }
                             onClick={async () => {
                               const next = !t.ticketVisible;
                               setBusy(true);
@@ -416,6 +424,29 @@ const EventOperations = ({
                 See marketing report
               </Link>
             </div>
+
+            {/* Guestlist */}
+            {!isCollaboratorView ? (
+              <button
+                type="button"
+                onClick={() => setGuestlistOpen(true)}
+                className="w-full rounded-lg border border-[var(--owner-border)] bg-[var(--owner-bg)] p-5 text-left transition hover:border-[#c89d75]"
+              >
+                <div className="flex items-center justify-between gap-4">
+                  <div className="min-w-0">
+                    <p className="font-semibold">Guestlist</p>
+                    <p className="text-xs text-[var(--owner-fg-3)]">
+                      {overview?.guestlistEnabled
+                        ? "Manage lists, links and guests. Golden tickets scan at the door."
+                        : "Off — tap to enable free guest invites with golden tickets."}
+                    </p>
+                  </div>
+                  <span className="shrink-0 text-xs font-semibold text-[var(--owner-blue-500)]">
+                    {overview?.guestlistEnabled ? "Manage" : "Set up"}
+                  </span>
+                </div>
+              </button>
+            ) : null}
 
             {/* Collaborators & promoters */}
             {showCollaboratorsCard ? (
@@ -518,6 +549,15 @@ const EventOperations = ({
       <TicketOrdersModal
         target={ticketOrdersTarget}
         onClose={() => setTicketOrdersTarget(null)}
+      />
+
+      <GuestlistManagerModal
+        open={guestlistOpen}
+        onClose={() => setGuestlistOpen(false)}
+        eventId={eventId}
+        guestlistEnabled={!!overview?.guestlistEnabled}
+        guestlistAutoAccept={overview?.guestlistAutoAccept !== false}
+        onSettingsChanged={loadOverview}
       />
     </EventShell>
   );

@@ -487,6 +487,8 @@ Object.assign(sdk, {
             endDate
             isVisible
             ticketingEnabled
+            guestlistEnabled
+            guestlistAutoAccept
             isCollaboratorView
             canSeeMetrics
             canRunCampaigns
@@ -583,6 +585,109 @@ Object.assign(sdk, {
           $visible: Boolean!
         ) {
           setEventTicketVisibility(id: $id, ticketId: $ticketId, visible: $visible)
+        }
+      `,
+      variables
+    ),
+  // ── Guestlist management (host + collaborator) ──────────────────────────
+  setEventGuestlistSettings: async (variables: {
+    input: {
+      eventId: string;
+      guestlistEnabled: boolean;
+      guestlistAutoAccept: boolean;
+    };
+  }) =>
+    graphQLClient.request(
+      `
+        mutation setEventGuestlistSettings($input: EventGuestlistSettingsInput!) {
+          setEventGuestlistSettings(input: $input)
+        }
+      `,
+      variables
+    ),
+  eventGuestlists: async (variables: { eventId: string }) =>
+    graphQLClient.request(
+      `
+        query eventGuestlists($eventId: String!) {
+          eventGuestlists(eventId: $eventId) {
+            _id
+            eventId
+            contributorType
+            contributorId
+            contributorName
+            cap
+            isPublic
+            code
+            isActive
+          }
+        }
+      `,
+      variables
+    ),
+  upsertGuestlist: async (variables: {
+    input: {
+      eventId: string;
+      contributorType: string;
+      contributorId: string;
+      contributorName?: string;
+      cap?: number | null;
+      isPublic?: boolean;
+      isActive?: boolean;
+    };
+  }) =>
+    graphQLClient.request(
+      `
+        mutation upsertGuestlist($input: UpsertGuestlistInput!) {
+          upsertGuestlist(input: $input) {
+            _id
+            contributorType
+            contributorId
+            contributorName
+            cap
+            isPublic
+            code
+            isActive
+          }
+        }
+      `,
+      variables
+    ),
+  guestlistEntries: async (variables: {
+    eventId: string;
+    guestlistId?: string;
+  }) =>
+    graphQLClient.request(
+      `
+        query guestlistEntries($eventId: String!, $guestlistId: String) {
+          guestlistEntries(eventId: $eventId, guestlistId: $guestlistId) {
+            _id
+            guestlistId
+            guestName
+            guestEmail
+            guestPhone
+            status
+            checkedIn
+            checkedInAt
+            createdAt
+          }
+        }
+      `,
+      variables
+    ),
+  approveGuestlistEntry: async (variables: { entryId: string }) =>
+    graphQLClient.request(
+      `
+        mutation approveGuestlistEntry($entryId: String!) {
+          approveGuestlistEntry(entryId: $entryId)
+        }
+      `,
+      variables
+    ),
+  revokeGuestlistEntry: async (variables: { entryId: string }) =>
+    graphQLClient.request(
+      `
+        mutation revokeGuestlistEntry($entryId: String!) {
+          revokeGuestlistEntry(entryId: $entryId)
         }
       `,
       variables
