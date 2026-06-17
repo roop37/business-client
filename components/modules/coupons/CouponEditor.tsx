@@ -1,6 +1,7 @@
 "use client";
 
 import { OwnerButton } from "@/components/common/owner";
+import { DateTimeInput } from "@/components/common/dateTimeInput";
 import useGlobalStore from "@/store/global";
 import { extractErrorMessage } from "@/utils/utilFUncs";
 import {
@@ -352,27 +353,17 @@ const CouponEditor = ({
             </select>
           </Field>
           <div className="grid gap-4 sm:grid-cols-2">
-            <Field label="Start date & time" locked={hasStarted}>
-              <input
-                type="datetime-local"
-                className={inputCls}
-                disabled={hasStarted}
-                value={toLocalInput(startDate)}
-                onChange={(e) =>
-                  setStartDate(e.target.value ? new Date(e.target.value) : null)
-                }
-              />
-            </Field>
-            <Field label="End date & time">
-              <input
-                type="datetime-local"
-                className={inputCls}
-                value={toLocalInput(endDate)}
-                onChange={(e) =>
-                  setEndDate(e.target.value ? new Date(e.target.value) : null)
-                }
-              />
-            </Field>
+            <DateTimeInput
+              label="Start date & time"
+              disabled={hasStarted}
+              value={toLocalInput(startDate)}
+              onChange={(v) => setStartDate(v ? new Date(v) : null)}
+            />
+            <DateTimeInput
+              label="End date & time"
+              value={toLocalInput(endDate)}
+              onChange={(v) => setEndDate(v ? new Date(v) : null)}
+            />
           </div>
           <p className="-mt-1 text-[11px] text-owner-fg-4">
             The code activates and expires automatically based on these dates.
