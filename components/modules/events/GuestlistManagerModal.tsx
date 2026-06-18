@@ -4,8 +4,41 @@ import ReusableModal from "@/components/common/modal/modal";
 import useGlobalStore from "@/store/global";
 import { sdk } from "@/utils/graphqlClient";
 import { extractErrorMessage } from "@/utils/utilFUncs";
-import { Check, Copy, Loader2, X } from "lucide-react";
+import { Check, Copy, Download, Loader2, X } from "lucide-react";
 import React, { useCallback, useEffect, useState } from "react";
+
+const formatDate = (iso?: string | null): string => {
+  if (!iso) return "";
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return "";
+  return new Intl.DateTimeFormat("en-IN", {
+    day: "numeric",
+    month: "short",
+    hour: "numeric",
+    minute: "2-digit",
+    hour12: true,
+  }).format(d);
+};
+
+// Per-guest activity trail — the "who did what, when" log within a list.
+const activityLine = (en: GuestlistEntry): string => {
+  const parts: string[] = [];
+  if (en.createdAt) parts.push(`Joined ${formatDate(en.createdAt)}`);
+  if (en.checkedIn && en.checkedInAt)
+    parts.push(`Checked in ${formatDate(en.checkedInAt)}`);
+  if (en.status === "REVOKED" && en.revokedAt)
+    parts.push(`Removed ${formatDate(en.revokedAt)}`);
+  return parts.join(" · ");
+};
+
+const FILTERS = [
+  { id: "all", label: "All" },
+  { id: "pending", label: "Pending" },
+  { id: "going", label: "Going" },
+  { id: "checkedin", label: "Checked in" },
+  { id: "removed", label: "Removed" },
+] as const;
+type FilterId = (typeof FILTERS)[number]["id"];
 
 type GuestlistConfig = {
   _id: string;
@@ -28,6 +61,7 @@ type GuestlistEntry = {
   checkedIn: boolean;
   checkedInAt?: string | null;
   createdAt?: string | null;
+  revokedAt?: string | null;
 };
 
 // The customer app where guests open a join link.
@@ -61,6 +95,9 @@ const GuestlistManagerModal: React.FC<Props> = ({
   const [entries, setEntries] = useState<GuestlistEntry[]>([]);
   const [entriesLoading, setEntriesLoading] = useState(false);
   const [copied, setCopied] = useState<string | null>(null);
+  const [filter, setFilter] = useState<FilterId>("all");
+  const [search, setSearch] = useState("");
+  const [downloading, setDownloading] = useState<string | null>(null);
 
   useEffect(() => {
     setEnabled(guestlistEnabled);
@@ -183,6 +220,8 @@ const GuestlistManagerModal: React.FC<Props> = ({
     }
     setExpandedId(listId);
     setEntriesLoading(true);
+    setFilter("all");
+    setSearch("");
     try {
       const resp = await sdk.guestlistEntries({ eventId, guestlistId: listId });
       setEntries(resp?.guestlistEntries ?? []);
@@ -190,6 +229,20 @@ const GuestlistManagerModal: React.FC<Props> = ({
       setToastData({ type: "error", message: extractErrorMessage(err) });
     } finally {
       setEntriesLoading(false);
+    }
+  };
+
+  // Server-generated CSV (returns a download URL). Scoped to one list.
+  const downloadCsv = async (listId: string) => {
+    setDownloading(listId);
+    try {
+      const resp = await sdk.guestlistEntriesCsv({ eventId, guestlistId: listId });
+      const url = resp?.guestlistEntriesCsv;
+      if (url) window.open(url, "_blank", "noopener");
+    } catch (err) {
+      setToastData({ type: "error", message: extractErrorMessage(err) });
+    } finally {
+      setDownloading(null);
     }
   };
 
@@ -367,6 +420,19 @@ const GuestlistManagerModal: React.FC<Props> = ({
                         >
                           {expandedId === list._id ? "Hide guests" : "View guests"}
                         </button>
+                        <button
+                          type="button"
+                          disabled={downloading === list._id}
+                          onClick={() => downloadCsv(list._id)}
+                          className="inline-flex items-center gap-1.5 rounded-md border border-[var(--owner-border)] px-2.5 py-1.5 text-xs font-medium hover:border-[#c89d75] disabled:opacity-50"
+                        >
+                          {downloading === list._id ? (
+                            <Loader2 size={13} className="animate-spin" />
+                          ) : (
+                            <Download size={13} />
+                          )}
+                          CSV
+                        </button>
                       </div>
                     </div>
 
@@ -381,64 +447,145 @@ const GuestlistManagerModal: React.FC<Props> = ({
                             No guests yet.
                           </p>
                         ) : (
-                          <div className="divide-y divide-[var(--owner-border-soft)]">
-                            {entries.map((en) => (
-                              <div
-                                key={en._id}
-                                className="flex items-center justify-between gap-3 py-2"
-                              >
-                                <div className="min-w-0">
-                                  <div className="truncate text-sm font-medium">
-                                    {en.guestName || "Guest"}
-                                  </div>
-                                  <div className="truncate text-xs text-[var(--owner-fg-3)]">
-                                    {[en.guestPhone, en.guestEmail]
-                                      .filter(Boolean)
-                                      .join(" · ")}
-                                  </div>
-                                </div>
-                                <div className="flex shrink-0 items-center gap-2">
-                                  <span
-                                    className={`rounded-full px-2 py-0.5 text-[10px] font-medium ${
-                                      en.checkedIn
-                                        ? "bg-blue-500/10 text-blue-600"
-                                        : en.status === "ACCEPTED"
-                                        ? "bg-emerald-500/10 text-emerald-600"
-                                        : en.status === "PENDING"
-                                        ? "bg-amber-500/10 text-amber-600"
-                                        : "bg-rose-500/10 text-rose-600"
-                                    }`}
-                                  >
-                                    {en.checkedIn ? "Checked in" : en.status}
-                                  </span>
-                                  {en.status === "PENDING" ? (
+                          (() => {
+                            const counts: Record<string, number> = {
+                              all: entries.length,
+                              pending: entries.filter(
+                                (e) => e.status === "PENDING"
+                              ).length,
+                              going: entries.filter(
+                                (e) => e.status === "ACCEPTED" && !e.checkedIn
+                              ).length,
+                              checkedin: entries.filter((e) => e.checkedIn)
+                                .length,
+                              removed: entries.filter(
+                                (e) => e.status === "REVOKED"
+                              ).length,
+                            };
+                            const q = search.trim().toLowerCase();
+                            const visible = entries.filter((en) => {
+                              if (filter === "pending" && en.status !== "PENDING")
+                                return false;
+                              if (
+                                filter === "going" &&
+                                !(en.status === "ACCEPTED" && !en.checkedIn)
+                              )
+                                return false;
+                              if (filter === "checkedin" && !en.checkedIn)
+                                return false;
+                              if (filter === "removed" && en.status !== "REVOKED")
+                                return false;
+                              if (q) {
+                                const hay = [
+                                  en.guestName,
+                                  en.guestEmail,
+                                  en.guestPhone,
+                                ]
+                                  .filter(Boolean)
+                                  .join(" ")
+                                  .toLowerCase();
+                                if (!hay.includes(q)) return false;
+                              }
+                              return true;
+                            });
+                            return (
+                              <>
+                                <div className="mb-3 flex flex-wrap items-center gap-1.5">
+                                  {FILTERS.map((f) => (
                                     <button
+                                      key={f.id}
                                       type="button"
-                                      disabled={busy}
-                                      onClick={() =>
-                                        act(en._id, "approve", list._id)
-                                      }
-                                      className="rounded-md bg-emerald-500/10 px-2 py-1 text-xs font-semibold text-emerald-600 disabled:opacity-50"
+                                      onClick={() => setFilter(f.id)}
+                                      className={`rounded-full px-2.5 py-1 text-[11px] font-medium ${
+                                        filter === f.id
+                                          ? "bg-[var(--owner-blue-500)] text-white"
+                                          : "bg-[var(--owner-bg-subtle)] text-[var(--owner-fg-3)]"
+                                      }`}
                                     >
-                                      Approve
+                                      {f.label} ({counts[f.id] ?? 0})
                                     </button>
-                                  ) : null}
-                                  {en.status !== "REVOKED" ? (
-                                    <button
-                                      type="button"
-                                      disabled={busy}
-                                      onClick={() =>
-                                        act(en._id, "revoke", list._id)
-                                      }
-                                      className="inline-flex items-center gap-1 rounded-md border border-[var(--owner-border)] px-2 py-1 text-xs font-medium text-rose-600 hover:border-rose-300 disabled:opacity-50"
-                                    >
-                                      <X size={12} /> Remove
-                                    </button>
-                                  ) : null}
+                                  ))}
+                                  <input
+                                    value={search}
+                                    onChange={(e) => setSearch(e.target.value)}
+                                    placeholder="Search name, email, phone"
+                                    className="ml-auto min-w-[150px] flex-1 rounded-md border border-[var(--owner-border)] bg-transparent px-2.5 py-1 text-xs placeholder:text-[var(--owner-fg-3)]"
+                                  />
                                 </div>
-                              </div>
-                            ))}
-                          </div>
+                                {visible.length === 0 ? (
+                                  <p className="py-2 text-xs text-[var(--owner-fg-3)]">
+                                    No guests match this filter.
+                                  </p>
+                                ) : (
+                                  <div className="divide-y divide-[var(--owner-border-soft)]">
+                                    {visible.map((en) => (
+                                      <div
+                                        key={en._id}
+                                        className="flex items-center justify-between gap-3 py-2"
+                                      >
+                                        <div className="min-w-0">
+                                          <div className="truncate text-sm font-medium">
+                                            {en.guestName || "Guest"}
+                                          </div>
+                                          <div className="truncate text-xs text-[var(--owner-fg-3)]">
+                                            {[en.guestPhone, en.guestEmail]
+                                              .filter(Boolean)
+                                              .join(" · ")}
+                                          </div>
+                                          {activityLine(en) ? (
+                                            <div className="mt-0.5 truncate text-[11px] text-[var(--owner-fg-3)] opacity-80">
+                                              {activityLine(en)}
+                                            </div>
+                                          ) : null}
+                                        </div>
+                                        <div className="flex shrink-0 items-center gap-2">
+                                          <span
+                                            className={`rounded-full px-2 py-0.5 text-[10px] font-medium ${
+                                              en.checkedIn
+                                                ? "bg-blue-500/10 text-blue-600"
+                                                : en.status === "ACCEPTED"
+                                                ? "bg-emerald-500/10 text-emerald-600"
+                                                : en.status === "PENDING"
+                                                ? "bg-amber-500/10 text-amber-600"
+                                                : "bg-rose-500/10 text-rose-600"
+                                            }`}
+                                          >
+                                            {en.checkedIn
+                                              ? "Checked in"
+                                              : en.status}
+                                          </span>
+                                          {en.status === "PENDING" ? (
+                                            <button
+                                              type="button"
+                                              disabled={busy}
+                                              onClick={() =>
+                                                act(en._id, "approve", list._id)
+                                              }
+                                              className="rounded-md bg-emerald-500/10 px-2 py-1 text-xs font-semibold text-emerald-600 disabled:opacity-50"
+                                            >
+                                              Approve
+                                            </button>
+                                          ) : null}
+                                          {en.status !== "REVOKED" ? (
+                                            <button
+                                              type="button"
+                                              disabled={busy}
+                                              onClick={() =>
+                                                act(en._id, "revoke", list._id)
+                                              }
+                                              className="inline-flex items-center gap-1 rounded-md border border-[var(--owner-border)] px-2 py-1 text-xs font-medium text-rose-600 hover:border-rose-300 disabled:opacity-50"
+                                            >
+                                              <X size={12} /> Remove
+                                            </button>
+                                          ) : null}
+                                        </div>
+                                      </div>
+                                    ))}
+                                  </div>
+                                )}
+                              </>
+                            );
+                          })()
                         )}
                       </div>
                     ) : null}

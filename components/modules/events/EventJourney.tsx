@@ -389,9 +389,9 @@ const eventTypeCards: {
 }[] = [
   {
     value: "FREE",
-    title: "Guestlist Event",
+    title: "RSVP Event",
     description:
-      "Free guestlist entry, such as couple before 10 PM, controlled by your terms.",
+      "Free RSVP entry, such as couple before 10 PM, controlled by your terms.",
     meta: ["Recommended", "Free entry", "No card required"],
     recommended: true,
   },
@@ -541,7 +541,7 @@ const timePickerOptions = Array.from({ length: 24 * 12 }, (_, index) => {
 });
 
 const ticketCategories: { value: TicketCategoryValue; label: string }[] = [
-  { value: "GUESTLIST", label: "Guestlist" },
+  { value: "GUESTLIST", label: "RSVP" },
   { value: "NORMAL", label: "Normal" },
   { value: "TABLE", label: "Table" },
   { value: "GROUP", label: "Group" },
@@ -1149,7 +1149,7 @@ const EventJourney = ({
       title: checked ? "Enable ticketing?" : "Disable ticketing?",
       description: checked
         ? "Customers will be able to claim or purchase tickets after this event is saved and published."
-        : "Ticket sales and guestlist claims will be turned off for this event. Existing ticket drafts remain here if you enable ticketing again before saving.",
+        : "Ticket sales and RSVP claims will be turned off for this event. Existing ticket drafts remain here if you enable ticketing again before saving.",
       confirmLabel: checked ? "Enable ticketing" : "Disable ticketing",
       tone: checked ? "default" : "warning",
       onConfirm: () => setTicketingEnabled(checked),
@@ -4625,7 +4625,7 @@ const EventJourney = ({
               priceLine={(() => {
                 // Cheapest visible PAID ticket. "0 onwards" used to leak
                 // through when only the draft `ticketPrice` was checked.
-                if (eventType === "FREE") return "Guestlist";
+                if (eventType === "FREE") return "RSVP";
                 const paid = (tickets ?? [])
                   .filter(
                     (t) =>
@@ -4634,7 +4634,7 @@ const EventJourney = ({
                       (t.ticketVisible ?? true),
                   )
                   .map((t) => Number(t.ticketPrice ?? 0));
-                if (paid.length === 0) return "Guestlist";
+                if (paid.length === 0) return "RSVP";
                 const cheapest = Math.min(...paid);
                 return `${rupee(cheapest)} onwards`;
               })()}

@@ -669,7 +669,20 @@ Object.assign(sdk, {
             checkedIn
             checkedInAt
             createdAt
+            revokedAt
           }
+        }
+      `,
+      variables
+    ),
+  guestlistEntriesCsv: async (variables: {
+    eventId: string;
+    guestlistId?: string;
+  }) =>
+    graphQLClient.request(
+      `
+        query guestlistEntriesCsv($eventId: String!, $guestlistId: String) {
+          guestlistEntriesCsv(eventId: $eventId, guestlistId: $guestlistId)
         }
       `,
       variables
