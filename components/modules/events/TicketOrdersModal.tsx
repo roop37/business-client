@@ -73,8 +73,14 @@ export type TicketOrdersTarget = {
   ticketName?: string | null;
 };
 
+// The `status` field comes back as the RAW stored enum value ("PaymentSuccess",
+// "CheckedIn") because the resolver types it as String, not the OrderStatus enum.
+// Normalise to UPPER_SNAKE so we match regardless of which form the server sends.
+const normStatus = (s: string): string =>
+  (s || "").replace(/([a-z])([A-Z])/g, "$1_$2").toUpperCase();
+
 const statusLabel = (s: string): string => {
-  switch (s) {
+  switch (normStatus(s)) {
     case "PAYMENT_SUCCESS":
       return "Confirmed";
     case "CHECKED_IN":
@@ -85,7 +91,7 @@ const statusLabel = (s: string): string => {
 };
 
 const statusColor = (s: string): string => {
-  switch (s) {
+  switch (normStatus(s)) {
     case "PAYMENT_SUCCESS":
       return "bg-emerald-500/10 text-emerald-600";
     case "CHECKED_IN":

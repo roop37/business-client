@@ -1,10 +1,5 @@
 import EventJourney from "@/components/modules/events/EventJourney";
 import { EventScanners } from "@/components/modules/events/EventScanners";
-import { IssueOfflineTicketModal } from "@/components/modules/offlineTicket/IssueOfflineTicketModal";
-import TicketOrdersModal, {
-  type TicketOrdersTarget,
-} from "@/components/modules/events/TicketOrdersModal";
-import GuestlistManagerModal from "@/components/modules/events/GuestlistManagerModal";
 import useGlobalStore from "@/store/global";
 import { sdk } from "@/utils/graphqlClient";
 import { extractErrorMessage } from "@/utils/utilFUncs";
@@ -82,11 +77,7 @@ const EventOperations = ({
   const { setToastData, openRunCampaignModal } = useGlobalStore();
   const [overview, setOverview] = useState<any>(null);
   const [busy, setBusy] = useState(false);
-  const [offlineOpen, setOfflineOpen] = useState(false);
   const [collaboratorsOpen, setCollaboratorsOpen] = useState(false);
-  const [ticketOrdersTarget, setTicketOrdersTarget] =
-    useState<TicketOrdersTarget | null>(null);
-  const [guestlistOpen, setGuestlistOpen] = useState(false);
 
   const loadOverview = async () => {
     try {
@@ -176,16 +167,6 @@ const EventOperations = ({
               </div>
             </div>
             <div className="flex items-center gap-2">
-              {mode !== "scanners" ? (
-                <button
-                  type="button"
-                  onClick={() => setOfflineOpen(true)}
-                  className="inline-flex items-center justify-center gap-2 rounded-lg border border-[var(--owner-border)] bg-[var(--owner-bg)] px-3.5 py-2 text-sm font-semibold text-[var(--owner-fg-2)] hover:bg-[var(--owner-bg-subtle)]"
-                >
-                  <TicketIcon size={16} />
-                  Offline ticket
-                </button>
-              ) : null}
               {mode !== "scanners" && !isCollaboratorView ? (
                 <button
                   type="button"
@@ -312,7 +293,6 @@ const EventOperations = ({
                       <th className="px-5 py-2 text-right">Price</th>
                       <th className="px-5 py-2 text-right">Revenue</th>
                       <th className="px-5 py-2">Visible</th>
-                      <th className="px-5 py-2 text-right">Actions</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -374,26 +354,11 @@ const EventOperations = ({
                             />
                           </button>
                         </td>
-                        <td className="px-5 py-3 text-right">
-                          <button
-                            type="button"
-                            onClick={() =>
-                              setTicketOrdersTarget({
-                                eventId,
-                                ticketId: t._id,
-                                ticketName: t.ticketName,
-                              })
-                            }
-                            className="text-xs font-medium text-[var(--owner-blue-500)] hover:underline"
-                          >
-                            See orders
-                          </button>
-                        </td>
                       </tr>
                     ))}
                     {(overview?.tickets ?? []).length === 0 ? (
                       <tr>
-                        <td colSpan={7} className="px-5 py-6 text-center text-xs text-[var(--owner-fg-3)]">
+                        <td colSpan={6} className="px-5 py-6 text-center text-xs text-[var(--owner-fg-3)]">
                           No tickets configured.
                         </td>
                       </tr>
@@ -403,14 +368,9 @@ const EventOperations = ({
               </div>
             </div>
 
-            {/* Report & customer navigation */}
+            {/* Report navigation. Customers + orders + guestlist now live on
+                the event hub (/events/[id]); Manage is config + settings. */}
             <div className="flex flex-wrap gap-2">
-              <Link
-                href={`/customer?eventId=${eventId}`}
-                className="rounded-lg border border-[var(--owner-border)] bg-[var(--owner-bg)] px-4 py-2 text-sm font-medium hover:border-[#c89d75]"
-              >
-                See customers
-              </Link>
               <Link
                 href={`/reports/sales?eventId=${eventId}`}
                 className="rounded-lg border border-[var(--owner-border)] bg-[var(--owner-bg)] px-4 py-2 text-sm font-medium hover:border-[#c89d75]"
@@ -424,29 +384,6 @@ const EventOperations = ({
                 See marketing report
               </Link>
             </div>
-
-            {/* Guestlist */}
-            {!isCollaboratorView ? (
-              <button
-                type="button"
-                onClick={() => setGuestlistOpen(true)}
-                className="w-full rounded-lg border border-[var(--owner-border)] bg-[var(--owner-bg)] p-5 text-left transition hover:border-[#c89d75]"
-              >
-                <div className="flex items-center justify-between gap-4">
-                  <div className="min-w-0">
-                    <p className="font-semibold">Guestlist</p>
-                    <p className="text-xs text-[var(--owner-fg-3)]">
-                      {overview?.guestlistEnabled
-                        ? "Manage lists, links and guests. Golden tickets scan at the door."
-                        : "Off — tap to enable free guest invites with golden tickets."}
-                    </p>
-                  </div>
-                  <span className="shrink-0 text-xs font-semibold text-[var(--owner-blue-500)]">
-                    {overview?.guestlistEnabled ? "Manage" : "Set up"}
-                  </span>
-                </div>
-              </button>
-            ) : null}
 
             {/* Collaborators & promoters */}
             {showCollaboratorsCard ? (
@@ -530,12 +467,6 @@ const EventOperations = ({
         )}
       </div>
 
-      <IssueOfflineTicketModal
-        open={offlineOpen}
-        onClose={() => setOfflineOpen(false)}
-        presetEventId={eventId}
-      />
-
       <CollaboratorsModal
         open={collaboratorsOpen}
         collaborators={collaborators}
@@ -544,20 +475,6 @@ const EventOperations = ({
           setCollaboratorsOpen(false);
           router.push(`/events/${eventId}/update`);
         }}
-      />
-
-      <TicketOrdersModal
-        target={ticketOrdersTarget}
-        onClose={() => setTicketOrdersTarget(null)}
-      />
-
-      <GuestlistManagerModal
-        open={guestlistOpen}
-        onClose={() => setGuestlistOpen(false)}
-        eventId={eventId}
-        guestlistEnabled={!!overview?.guestlistEnabled}
-        guestlistAutoAccept={overview?.guestlistAutoAccept !== false}
-        onSettingsChanged={loadOverview}
       />
     </EventShell>
   );

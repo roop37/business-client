@@ -56,6 +56,7 @@ export type OfflineEvent = {
   title: string;
   eventFlyer?: string | null;
   startDate?: string | null;
+  endDate?: string | null;
   status?: string | null;
   tickets?: OfflineEventTicket[] | null;
   extras?: OfflineEventExtra[] | null;
@@ -95,6 +96,7 @@ export const fetchMyEventsForOffline = async (): Promise<OfflineEvent[]> => {
         title
         eventFlyer
         startDate
+        endDate
         status
         tickets { _id ticketName ticketPrice ticketVisible }
         extras { _id name price }

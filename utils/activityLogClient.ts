@@ -92,12 +92,37 @@ const ACTIVITY_LOG_FIELDS = `
   createdAt updatedAt ipAddress userAgent
 `;
 
+/**
+ * `RowsPerPageEnum` on the server is a NUMERIC enum (TEN=10, TWENTY_FIVE=25…),
+ * but GraphQL serialises enums by their NAME over the wire. Sending the raw
+ * number (e.g. 25) makes the server reject the variable with
+ * "Enum 'RowsPerPageEnum' cannot represent non-string value: 25" — which is
+ * the validation error that breaks the Activity Log. Map number → enum name.
+ */
+const ROWS_PER_PAGE_NAME: Record<number, string> = {
+  1: "ONE",
+  10: "TEN",
+  25: "TWENTY_FIVE",
+  30: "THIRTY",
+  50: "FIFTY",
+  100: "HUNDRED",
+};
+
 export const fetchActivityLogs = async (
   pagination?: ActivityLogPaginationInput,
   filter?: ActivityLogFilterInput[],
   sort?: ActivityLogSortInput,
   search?: string
 ): Promise<ActivityLogPage> => {
+  const wirePagination = pagination
+    ? {
+        pageNumber: pagination.pageNumber,
+        rowsPerPage:
+          pagination.rowsPerPage != null
+            ? ROWS_PER_PAGE_NAME[pagination.rowsPerPage]
+            : undefined,
+      }
+    : undefined;
   const data = await client.request<{
     getActivityLogs: ActivityLogPage;
   }>(
@@ -117,7 +142,7 @@ export const fetchActivityLogs = async (
          activityLogs { ${ACTIVITY_LOG_FIELDS} }
        }
      }`,
-    { pagination, filter, sort, search }
+    { pagination: wirePagination, filter, sort, search }
   );
   return data.getActivityLogs ?? { activityLogs: [], total: 0 };
 };
