@@ -4609,6 +4609,7 @@ export type Query = {
   artistDashboardSummary: ArtistDashboardSummary;
   artistGuestlist: Guestlist;
   artistGuestlistEntries: Array<GuestlistEntry>;
+  artistGuestlistEntriesCsv: Scalars['String']['output'];
   artistGuestlistEvents: Array<ArtistGuestlistEventSummary>;
   artistMe: Artist;
   artistMyLinks: Array<ArtistLink>;
@@ -4680,6 +4681,7 @@ export type Query = {
   getUser?: Maybe<User>;
   getWaitListUsers: Array<WaitListUser>;
   guestlistEntries: Array<GuestlistEntry>;
+  guestlistEntriesCsv: Scalars['String']['output'];
   hostCustomerOrders: HostCustomerOrdersResponse;
   hostCustomers: HostCustomersResponse;
   hostEmailCampaignCsvExport: Scalars['String']['output'];
@@ -4922,6 +4924,11 @@ export type QueryArtistGuestlistEntriesArgs = {
 };
 
 
+export type QueryArtistGuestlistEntriesCsvArgs = {
+  eventId: Scalars['String']['input'];
+};
+
+
 export type QueryArtistSlugAvailableArgs = {
   slug: Scalars['String']['input'];
 };
@@ -5135,6 +5142,12 @@ export type QueryGetUserArgs = {
 
 
 export type QueryGuestlistEntriesArgs = {
+  eventId: Scalars['String']['input'];
+  guestlistId?: InputMaybe<Scalars['String']['input']>;
+};
+
+
+export type QueryGuestlistEntriesCsvArgs = {
   eventId: Scalars['String']['input'];
   guestlistId?: InputMaybe<Scalars['String']['input']>;
 };
