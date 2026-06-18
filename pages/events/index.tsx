@@ -814,18 +814,16 @@ const EventListCard = ({
   const isCollab = !!event.isCollaboratorView;
   const collabPerms = event.collaboratorEntry;
   const openEvent = () => {
-    // Collab view: read-only Manage. Collabs never get the draft wizard.
-    if (isCollab) {
-      router.push(`/events/${event._id}/manage`);
-      return;
-    }
-    // Drafts: resume the wizard so the host can finish creating.
-    if (isDraftLike) {
+    // Drafts: resume the wizard so the host can finish creating. Collabs never
+    // get the draft wizard.
+    if (isDraftLike && !isCollab) {
       router.push(`/events/${event._id}/create`);
       return;
     }
-    // Published / completed / paused: always land on Manage Event.
-    router.push(`/events/${event._id}/manage`);
+    // Everything else (published / completed / paused / collaborator): land on
+    // the event hub page. Config lives behind its "Manage" button; the hub
+    // gates edit + customer access for collaborators itself.
+    router.push(`/events/${event._id}`);
   };
 
   return (
@@ -860,7 +858,7 @@ const EventListCard = ({
               <ActionButton
                 label="View event"
                 Icon={SettingsIcon}
-                onClick={() => router.push(`/events/${event._id}/manage`)}
+                onClick={() => router.push(`/events/${event._id}`)}
               />
               <ActionButton
                 label="Metrics"

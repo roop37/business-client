@@ -138,16 +138,12 @@ const UserLocationForm: React.FC = () => {
       if (d && d.getPlaceDetails) {
         setCords([d.getPlaceDetails.latitude, d.getPlaceDetails.longitude]);
 
-        // Set addressLine1
-        if (d.getPlaceDetails.address) {
-          setValue("addressLine1", "");
-          // setAddressLine1(d.getPlaceDetails.address);
-        }
-
-        if (d.getPlaceDetails.address) {
-          setValue("addressLine2", "");
-          // setAddressLine1(d.getPlaceDetails.address);
-        }
+        // Prefill Address Line 1 from the place — parity with host
+        // onboarding (hostAvailibility.tsx), which fills it from
+        // `data.address`. Line 2 always clears (place lookups don't
+        // return a unit/suite line).
+        setValue("addressLine1", d.getPlaceDetails.address ?? "");
+        setValue("addressLine2", "");
 
         // Set city
         if (d.getPlaceDetails.city) {

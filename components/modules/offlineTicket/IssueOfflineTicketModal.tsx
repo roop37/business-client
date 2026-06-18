@@ -19,10 +19,12 @@ import { useEffect, useMemo, useState } from "react";
 import ReusableModal from "@/components/common/modal/modal";
 
 type Props = {
-  open: boolean;
-  onClose: () => void;
+  open?: boolean;
+  onClose?: () => void;
   /** Pre-select an event (manage-event quick entry). */
   presetEventId?: string;
+  /** Render inline (no modal overlay) — used as a tab pane on the event hub. */
+  inline?: boolean;
 };
 
 type Mode = "ISSUE" | "LINK";
@@ -32,9 +34,10 @@ const rupee = (n: number) =>
   `₹${(n ?? 0).toLocaleString("en-IN", { maximumFractionDigits: 2 })}`;
 
 export const IssueOfflineTicketModal = ({
-  open,
+  open = false,
   onClose,
   presetEventId,
+  inline = false,
 }: Props) => {
   const [events, setEvents] = useState<OfflineEvent[]>([]);
   const [loadingEvents, setLoadingEvents] = useState(false);
@@ -55,10 +58,18 @@ export const IssueOfflineTicketModal = ({
   const [copied, setCopied] = useState(false);
 
   useEffect(() => {
-    if (!open) return;
+    if (!open && !inline) return;
     setLoadingEvents(true);
     fetchMyEventsForOffline()
-      .then((evts) => {
+      .then((all) => {
+        // Only events you can still sell into — the server rejects issuing on
+        // ended/cancelled events, so don't even offer them in the picker.
+        const now = Date.now();
+        const evts = all.filter((e) => {
+          if (e.status === "Cancelled" || e.status === "Completed") return false;
+          if (e.endDate && new Date(e.endDate).getTime() < now) return false;
+          return true;
+        });
         setEvents(evts);
         if (presetEventId && evts.some((e) => e._id === presetEventId)) {
           setEventId(presetEventId);
@@ -68,7 +79,7 @@ export const IssueOfflineTicketModal = ({
         setError(e?.response?.errors?.[0]?.message ?? "Couldn't load events")
       )
       .finally(() => setLoadingEvents(false));
-  }, [open, presetEventId]);
+  }, [open, inline, presetEventId]);
 
   const selectedEvent = useMemo(
     () => events.find((e) => e._id === eventId) ?? null,
@@ -131,7 +142,7 @@ export const IssueOfflineTicketModal = ({
   const close = () => {
     if (submitting) return;
     reset();
-    onClose();
+    onClose?.();
   };
 
   const step = (set: (fn: (q: Qty) => Qty) => void, id: string, d: number) =>
@@ -173,15 +184,8 @@ export const IssueOfflineTicketModal = ({
     }
   };
 
-  if (!open) return null;
-
-  return (
-    <ReusableModal
-      isOpen={open}
-      onClose={close}
-      title="Issue offline ticket"
-      width="ml"
-    >
+  const content = (
+    <>
         <div>
           {done ? (
             <div className="flex flex-col items-center py-6 text-center">
@@ -249,28 +253,37 @@ export const IssueOfflineTicketModal = ({
             </div>
           ) : (
             <div className="space-y-4">
-              {/* Event picker */}
-              <Field label="Event">
-                <select
-                  value={eventId}
-                  onChange={(e) => {
-                    setEventId(e.target.value);
-                    setTicketQty({});
-                    setExtraQty({});
-                  }}
-                  disabled={loadingEvents}
-                  className="h-10 w-full rounded-owner-md border border-owner-border bg-owner-bg px-3 text-sm text-owner-fg-1 outline-none focus:border-owner-blue-200"
-                >
-                  <option value="">
-                    {loadingEvents ? "Loading events…" : "Select an event"}
-                  </option>
-                  {events.map((e) => (
-                    <option key={e._id} value={e._id}>
-                      {e.title}
+              {/* Event picker — locked to the current event on the hub. */}
+              {inline ? (
+                <Field label="Event">
+                  <div className="flex h-10 items-center rounded-owner-md border border-owner-border bg-owner-bg-subtle px-3 text-sm text-owner-fg-2">
+                    {selectedEvent?.title ??
+                      (loadingEvents ? "Loading…" : "This event")}
+                  </div>
+                </Field>
+              ) : (
+                <Field label="Event">
+                  <select
+                    value={eventId}
+                    onChange={(e) => {
+                      setEventId(e.target.value);
+                      setTicketQty({});
+                      setExtraQty({});
+                    }}
+                    disabled={loadingEvents}
+                    className="h-10 w-full rounded-owner-md border border-owner-border bg-owner-bg px-3 text-sm text-owner-fg-1 outline-none focus:border-owner-blue-200"
+                  >
+                    <option value="">
+                      {loadingEvents ? "Loading events…" : "Select an event"}
                     </option>
-                  ))}
-                </select>
-              </Field>
+                    {events.map((e) => (
+                      <option key={e._id} value={e._id}>
+                        {e.title}
+                      </option>
+                    ))}
+                  </select>
+                </Field>
+              )}
 
               {/* Ticket lines */}
               {selectedEvent ? (
@@ -356,6 +369,15 @@ export const IssueOfflineTicketModal = ({
                 />
               </div>
 
+              {mode === "LINK" ? (
+                <p className="rounded-owner-md border border-owner-border-soft bg-owner-bg-subtle px-3 py-2 text-[12px] leading-relaxed text-owner-fg-3">
+                  We&apos;ll text &amp; email a secure link that opens a
+                  pre-filled checkout — these exact tickets and add-ons, the
+                  customer&apos;s details already entered. They just pay. The
+                  link is valid for 45 minutes.
+                </p>
+              ) : null}
+
               {error ? (
                 <p className="rounded-owner-md border border-red-200 bg-red-50 px-3 py-2 text-[13px] text-red-600">
                   {error}
@@ -386,6 +408,19 @@ export const IssueOfflineTicketModal = ({
             </button>
           </div>
         ) : null}
+    </>
+  );
+
+  if (inline) return <div className="text-owner-fg-1">{content}</div>;
+  if (!open) return null;
+  return (
+    <ReusableModal
+      isOpen={open}
+      onClose={close}
+      title="Issue offline ticket"
+      width="ml"
+    >
+      {content}
     </ReusableModal>
   );
 };

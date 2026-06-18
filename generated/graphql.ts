@@ -1366,6 +1366,18 @@ export type DeviceInfo = {
   uniqueId: Scalars['String']['output'];
 };
 
+export type EndedUnpaidEvent = {
+  __typename?: 'EndedUnpaidEvent';
+  endDate?: Maybe<Scalars['DateTimeISO']['output']>;
+  eventId: Scalars['String']['output'];
+  hostId: Scalars['String']['output'];
+  hostName?: Maybe<Scalars['String']['output']>;
+  netPayoutAmount?: Maybe<Scalars['Float']['output']>;
+  settlementId?: Maybe<Scalars['String']['output']>;
+  settlementStatus?: Maybe<Scalars['String']['output']>;
+  title?: Maybe<Scalars['String']['output']>;
+};
+
 export enum EntryAgeBand {
   Age_13Plus = 'AGE_13_PLUS',
   Age_16Plus = 'AGE_16_PLUS',
@@ -1544,6 +1556,26 @@ export enum EventCollabStatus {
   Declined = 'DECLINED',
   Invited = 'INVITED'
 }
+
+export type EventCustomerRow = {
+  __typename?: 'EventCustomerRow';
+  checkedInOrders: Scalars['Int']['output'];
+  customerId: Scalars['String']['output'];
+  email?: Maybe<Scalars['String']['output']>;
+  isGuest: Scalars['Boolean']['output'];
+  lastPurchaseAt?: Maybe<Scalars['DateTimeISO']['output']>;
+  name?: Maybe<Scalars['String']['output']>;
+  orderCount: Scalars['Int']['output'];
+  phone?: Maybe<Scalars['String']['output']>;
+  ticketCount: Scalars['Int']['output'];
+  totalSpent: Scalars['Float']['output'];
+};
+
+export type EventCustomersResponse = {
+  __typename?: 'EventCustomersResponse';
+  items: Array<EventCustomerRow>;
+  total: Scalars['Int']['output'];
+};
 
 export type EventEvalResultView = {
   __typename?: 'EventEvalResultView';
@@ -1826,6 +1858,28 @@ export type EventOnboardingStep = {
   description: Scalars['String']['output'];
   key: Scalars['String']['output'];
   title: Scalars['String']['output'];
+};
+
+export type EventOrderRow = {
+  __typename?: 'EventOrderRow';
+  checkedIn: Scalars['Boolean']['output'];
+  createdAt?: Maybe<Scalars['DateTimeISO']['output']>;
+  customerId?: Maybe<Scalars['String']['output']>;
+  customerName?: Maybe<Scalars['String']['output']>;
+  customerPhone?: Maybe<Scalars['String']['output']>;
+  isGuest: Scalars['Boolean']['output'];
+  orderId: Scalars['String']['output'];
+  shortId: Scalars['String']['output'];
+  status: Scalars['String']['output'];
+  ticketCount: Scalars['Int']['output'];
+  ticketSummary: Scalars['String']['output'];
+  totalAmount: Scalars['Float']['output'];
+};
+
+export type EventOrdersResponse = {
+  __typename?: 'EventOrdersResponse';
+  items: Array<EventOrderRow>;
+  total: Scalars['Int']['output'];
 };
 
 export enum EventOrganizerSegment {
@@ -4581,9 +4635,11 @@ export type Query = {
   /** Global admin search across organizers, venues, artists, and phantom artists. Safe fields only — no contacts. Min 2 chars, max 5 per type. */
   adminGlobalSearch: Array<AdminSearchResult>;
   adminGstOutputBreakdown: GstOutputBreakdown;
+  adminHostActivityLogs: ActivityLogPaginatedResponse;
   adminHosts: HostPaginatedResponse;
   adminHostsReport: AdminHostsReport;
   adminLedgerAccountBalances: Array<LedgerAccountBalance>;
+  adminListEndedUnpaidEvents: Array<EndedUnpaidEvent>;
   adminListFeedback: HostFeedbackAdminListResponse;
   adminListHostCampaigns: HostEmailCampaignsPaginatedResponse;
   adminListOfferGenerations: EventOfferGenerationPaginatedResponse;
@@ -4625,8 +4681,10 @@ export type Query = {
   deleteTeamMember: Scalars['Boolean']['output'];
   disable2FA: Scalars['Boolean']['output'];
   enable2FA: Scalars['String']['output'];
+  eventCustomers: EventCustomersResponse;
   eventGuestlists: Array<Guestlist>;
   eventOnboardingChecklist: EventOnboardingChecklist;
+  eventOrders: EventOrdersResponse;
   eventPricingOptions: Array<EventPricingOptionResponse>;
   eventTicketOrders: HostCustomerOrdersResponse;
   fetchAdminCampaignById: AdminEmailCampaignsObject;
@@ -4799,6 +4857,12 @@ export type QueryAdminGstOutputBreakdownArgs = {
 };
 
 
+export type QueryAdminHostActivityLogsArgs = {
+  hostId: Scalars['String']['input'];
+  pagination?: InputMaybe<PaginationInput>;
+};
+
+
 export type QueryAdminHostsArgs = {
   pagination?: InputMaybe<PaginationInput>;
 };
@@ -4812,6 +4876,11 @@ export type QueryAdminHostsReportArgs = {
 export type QueryAdminLedgerAccountBalancesArgs = {
   from?: InputMaybe<Scalars['String']['input']>;
   to?: InputMaybe<Scalars['String']['input']>;
+};
+
+
+export type QueryAdminListEndedUnpaidEventsArgs = {
+  limit?: InputMaybe<Scalars['Int']['input']>;
 };
 
 
@@ -4969,8 +5038,24 @@ export type QueryDisable2FaArgs = {
 };
 
 
+export type QueryEventCustomersArgs = {
+  eventId: Scalars['String']['input'];
+  page?: InputMaybe<Scalars['Int']['input']>;
+  pageSize?: InputMaybe<Scalars['Int']['input']>;
+};
+
+
 export type QueryEventGuestlistsArgs = {
   eventId: Scalars['String']['input'];
+};
+
+
+export type QueryEventOrdersArgs = {
+  customerId?: InputMaybe<Scalars['String']['input']>;
+  eventId: Scalars['String']['input'];
+  page?: InputMaybe<Scalars['Int']['input']>;
+  pageSize?: InputMaybe<Scalars['Int']['input']>;
+  ticketTypeId?: InputMaybe<Scalars['String']['input']>;
 };
 
 

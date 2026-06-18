@@ -68,22 +68,25 @@ type GuestlistEntry = {
 const JOIN_BASE = "https://hoizr.com/guestlist";
 
 interface Props {
-  open: boolean;
-  onClose: () => void;
+  open?: boolean;
+  onClose?: () => void;
   eventId: string;
   guestlistEnabled: boolean;
   guestlistAutoAccept: boolean;
   /** Refresh the parent overview after a settings change. */
   onSettingsChanged?: () => void;
+  /** Render inline (no modal overlay) — used as a tab pane on the event hub. */
+  inline?: boolean;
 }
 
 const GuestlistManagerModal: React.FC<Props> = ({
-  open,
+  open = false,
   onClose,
   eventId,
   guestlistEnabled,
   guestlistAutoAccept,
   onSettingsChanged,
+  inline = false,
 }) => {
   const { setToastData } = useGlobalStore();
   const [enabled, setEnabled] = useState(guestlistEnabled);
@@ -105,7 +108,7 @@ const GuestlistManagerModal: React.FC<Props> = ({
   }, [guestlistEnabled, guestlistAutoAccept, open]);
 
   const loadLists = useCallback(async () => {
-    if (!open) return;
+    if (!open && !inline) return;
     setLoading(true);
     try {
       const resp = await sdk.eventGuestlists({ eventId });
@@ -115,7 +118,7 @@ const GuestlistManagerModal: React.FC<Props> = ({
     } finally {
       setLoading(false);
     }
-  }, [open, eventId, setToastData]);
+  }, [open, inline, eventId, setToastData]);
 
   useEffect(() => {
     loadLists();
@@ -274,15 +277,7 @@ const GuestlistManagerModal: React.FC<Props> = ({
 
   const hasHostList = lists.some((l) => l.contributorType === "HOST");
 
-  return (
-    <ReusableModal
-      isOpen={open}
-      onClose={onClose}
-      title="Guestlist"
-      comments="Invite guests for free. They get a golden ticket that scans at the door."
-      width="lg"
-      isHighIndex
-    >
+  const content = (
       <div className="space-y-5 text-sm text-[var(--owner-fg-1)]">
         {/* Settings */}
         <div className="space-y-3 rounded-lg border border-[var(--owner-border)] p-4">
@@ -596,6 +591,19 @@ const GuestlistManagerModal: React.FC<Props> = ({
           </div>
         )}
       </div>
+  );
+
+  if (inline) return content;
+  return (
+    <ReusableModal
+      isOpen={open}
+      onClose={onClose ?? (() => undefined)}
+      title="Guestlist"
+      comments="Invite guests for free. They get a golden ticket that scans at the door."
+      width="lg"
+      isHighIndex
+    >
+      {content}
     </ReusableModal>
   );
 };
