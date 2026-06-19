@@ -2838,6 +2838,13 @@ export type HostPayoutAccountPaginatedResponse = {
   total: Scalars['Int']['output'];
 };
 
+export type HostPromoUsageInput = {
+  code: Scalars['String']['input'];
+  endDate: ReportDateInput;
+  eventId?: InputMaybe<Scalars['String']['input']>;
+  startDate: ReportDateInput;
+};
+
 export type HostPushCampaign = {
   __typename?: 'HostPushCampaign';
   _id: Scalars['ID']['output'];
@@ -2936,6 +2943,7 @@ export type HostReportInput = {
   compareEndDate?: InputMaybe<ReportDateInput>;
   compareStartDate?: InputMaybe<ReportDateInput>;
   endDate: ReportDateInput;
+  eventId?: InputMaybe<Scalars['String']['input']>;
   startDate: ReportDateInput;
   type: HostReportType;
 };
@@ -2944,6 +2952,7 @@ export enum HostReportType {
   Addons = 'ADDONS',
   AiInsights = 'AI_INSIGHTS',
   ArtistCollab = 'ARTIST_COLLAB',
+  AutomationPerformance = 'AUTOMATION_PERFORMANCE',
   CampaignPerformance = 'CAMPAIGN_PERFORMANCE',
   CampaignRoi = 'CAMPAIGN_ROI',
   CheckIn = 'CHECK_IN',
@@ -2960,7 +2969,8 @@ export enum HostReportType {
   SalesSummary = 'SALES_SUMMARY',
   TaxesGst = 'TAXES_GST',
   TicketSalesByType = 'TICKET_SALES_BY_TYPE',
-  WebsiteFunnel = 'WEBSITE_FUNNEL'
+  WebsiteFunnel = 'WEBSITE_FUNNEL',
+  WebsiteMetrics = 'WEBSITE_METRICS'
 }
 
 export enum HostStatus {
@@ -4766,6 +4776,7 @@ export type Query = {
   getHost?: Maybe<Host>;
   getHostAttendeesTargetCount: Scalars['Int']['output'];
   getHostDashboardSummary: HostDashboardSummary;
+  getHostPromoUsage: ReportTable;
   getHostReport: HostReportData;
   getHostWhatsAppAttendeesTargetCount: Scalars['Int']['output'];
   getHostsByBusiness: Array<Host>;
@@ -5235,6 +5246,11 @@ export type QueryGetHostAttendeesTargetCountArgs = {
 
 export type QueryGetHostDashboardSummaryArgs = {
   input?: InputMaybe<HostDashboardSummaryInput>;
+};
+
+
+export type QueryGetHostPromoUsageArgs = {
+  input: HostPromoUsageInput;
 };
 
 

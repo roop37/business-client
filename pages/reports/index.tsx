@@ -45,7 +45,6 @@ const GROUPS: ReportGroup[] = [
       { name: "Ticket Sales by Type", slug: "ticket-sales-by-type" },
       { name: "Refunds & Cancellations", slug: "refunds" },
       { name: "Discounts / Promo Codes", slug: "discounts" },
-      { name: "Taxes & GST", slug: "taxes-gst" },
       { name: "Add-ons & Upsells", slug: "add-ons" },
     ],
   },
@@ -64,6 +63,7 @@ const GROUPS: ReportGroup[] = [
     reports: [
       { name: "Campaign Performance", slug: "campaign-performance" },
       { name: "Campaign ROI", slug: "campaign-roi" },
+      { name: "Automation Performance", slug: "automation-performance" },
     ],
   },
   {
@@ -88,10 +88,13 @@ const GROUPS: ReportGroup[] = [
   },
   {
     title: "Website & Funnel",
-    description: "How visitors move from ticket select to paid.",
+    description: "Traffic and how visitors move from ticket select to paid.",
     Icon: Globe,
     available: true,
-    reports: [{ name: "Website & Funnel", slug: "website-funnel" }],
+    reports: [
+      { name: "Website Metrics", slug: "website-metrics" },
+      { name: "Booking Funnel", slug: "website-funnel" },
+    ],
   },
   {
     title: "Advanced",

@@ -16,9 +16,18 @@ interface ReportTableProps {
   table: ReportTableType;
   fileName: string;
   canDownload?: boolean;
+  // When a row carries a hidden `__action` cell (e.g. "order:<id>" /
+  // "promo:<code>"), clicking the row fires this. The `__action` cell is
+  // never rendered as a column.
+  onRowAction?: (action: string) => void;
 }
 
-export const ReportTable = ({ table, fileName, canDownload = true }: ReportTableProps) => {
+export const ReportTable = ({
+  table,
+  fileName,
+  canDownload = true,
+  onRowAction,
+}: ReportTableProps) => {
   const [sort, setSort] = useState<{ key: string; dir: "asc" | "desc" } | null>(null);
 
   const rows = useMemo(() => {
@@ -91,10 +100,16 @@ export const ReportTable = ({ table, fileName, canDownload = true }: ReportTable
           </thead>
           <tbody>
             {rows.length ? (
-              rows.map(({ map }, index) => (
+              rows.map(({ map }, index) => {
+                const action = map.get("__action");
+                const clickable = Boolean(action && onRowAction);
+                return (
                 <tr
                   key={index}
-                  className="border-t border-owner-border-soft hover:bg-owner-bg-subtle/60"
+                  onClick={clickable ? () => onRowAction!(action!) : undefined}
+                  className={`border-t border-owner-border-soft hover:bg-owner-bg-subtle/60 ${
+                    clickable ? "cursor-pointer" : ""
+                  }`}
                 >
                   {table.columns.map((col) => (
                     <td
@@ -107,7 +122,8 @@ export const ReportTable = ({ table, fileName, canDownload = true }: ReportTable
                     </td>
                   ))}
                 </tr>
-              ))
+                );
+              })
             ) : (
               <tr>
                 <td
