@@ -222,6 +222,43 @@ Object.assign(sdk, {
   DashboardMenuData: async () => ({ dashboardMenuData: {} }),
   DashboardMarketingData: async () => ({ dashboardMarketingData: {} }),
   getReport: async () => ({ getReport: null }),
+  // Hand-written (codegen-free, matching this file's pattern) — the generic
+  // host reports query. See main-server modules/hostReports.
+  getHostReport: async (variables: { input: any }) =>
+    graphQLClient.request(
+      `
+        query getHostReport($input: HostReportInput!) {
+          getHostReport(input: $input) {
+            type
+            freshnessLabel
+            generatedAt
+            metrics {
+              key
+              label
+              value
+              valueType
+              helpText
+              trendValue
+              trendDirection
+            }
+            tables {
+              title
+              columns { key header align valueType }
+              rows { cells { key value } }
+            }
+            charts {
+              key
+              title
+              type
+              xKey
+              seriesKeys
+              points { x values { key value } }
+            }
+          }
+        }
+      `,
+      variables
+    ),
   getCsvErrors: async () => ({ getCsvErrors: [] }),
   getSalesTrendReport: async () => ({ getSalesTrendReport: [] }),
   getCampaignReport: async () => ({ getCampaignReport: [] }),
@@ -274,6 +311,8 @@ Object.assign(sdk, {
           paidOutLifetime
           marketingSubscribersCount
           lifetimeCampaignMessagesSent
+          netTicketSales
+          totalCollected
           salesSeries {
             date
             label

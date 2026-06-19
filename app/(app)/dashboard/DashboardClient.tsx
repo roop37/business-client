@@ -79,6 +79,12 @@ type HostDashboardSummary = {
   paidOutLifetime: number;
   marketingSubscribersCount: number;
   lifetimeCampaignMessagesSent: number;
+  // Net ticket sales (subtotal − discounts − refunds) and total collected for
+  // the selected range. netTicketSales is the headline; totalCollected is the
+  // customer-paid figure shown as a secondary line. (Both optional so the
+  // dashboard renders correctly before/after the field lands in the response.)
+  netTicketSales?: number;
+  totalCollected?: number;
   salesSeries: DashboardSeriesPoint[];
   salesBySource: DashboardBreakdownRow[];
   ticketMix: DashboardBreakdownRow[];
@@ -140,6 +146,8 @@ const emptySummary: HostDashboardSummary = {
   paidOutLifetime: 0,
   marketingSubscribersCount: 0,
   lifetimeCampaignMessagesSent: 0,
+  netTicketSales: 0,
+  totalCollected: 0,
   salesSeries: [],
   salesBySource: [],
   ticketMix: [],
@@ -723,6 +731,12 @@ export const DashboardClient = () => {
                 <div className="mt-2 text-[13px] font-medium text-owner-fg-4">
                   {formatInteger(displayTickets)} tickets sold in this view
                 </div>
+                {Number(summary.totalCollected ?? 0) > 0 ? (
+                  <div className="mt-1 text-[12.5px] font-medium text-owner-fg-4">
+                    {inrFormat(Number(summary.totalCollected ?? 0))} collected
+                    (incl. fees &amp; GST)
+                  </div>
+                ) : null}
               </div>
               <OwnerButton
                 variant="secondary"
