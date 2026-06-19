@@ -2468,6 +2468,7 @@ export type HostDashboardSummary = {
   draftEventsCount: Scalars['Int']['output'];
   lifetimeCampaignMessagesSent: Scalars['Int']['output'];
   marketingSubscribersCount: Scalars['Int']['output'];
+  netTicketSales: Scalars['Float']['output'];
   orderCountLast30Days: Scalars['Int']['output'];
   paidOutLifetime: Scalars['Float']['output'];
   pendingSettlementsCount: Scalars['Int']['output'];
@@ -2480,6 +2481,7 @@ export type HostDashboardSummary = {
   ticketsSoldLast30Days: Scalars['Int']['output'];
   ticketsSoldToday: Scalars['Int']['output'];
   topItems: Array<HostDashboardBreakdownRow>;
+  totalCollected: Scalars['Float']['output'];
   upcomingCampaigns: Array<HostDashboardCampaignRow>;
   upcomingEventsCount: Scalars['Int']['output'];
 };
@@ -2919,6 +2921,45 @@ export type HostRefundResult = {
   refundedAt?: Maybe<Scalars['DateTimeISO']['output']>;
   status: OrderStatus;
 };
+
+export type HostReportData = {
+  __typename?: 'HostReportData';
+  charts: Array<ReportChart>;
+  freshnessLabel: Scalars['String']['output'];
+  generatedAt: Scalars['DateTimeISO']['output'];
+  metrics: Array<ReportMetric>;
+  tables: Array<ReportTable>;
+  type: HostReportType;
+};
+
+export type HostReportInput = {
+  compareEndDate?: InputMaybe<ReportDateInput>;
+  compareStartDate?: InputMaybe<ReportDateInput>;
+  endDate: ReportDateInput;
+  startDate: ReportDateInput;
+  type: HostReportType;
+};
+
+export enum HostReportType {
+  Addons = 'ADDONS',
+  AiInsights = 'AI_INSIGHTS',
+  ArtistCollab = 'ARTIST_COLLAB',
+  CampaignPerformance = 'CAMPAIGN_PERFORMANCE',
+  CheckIn = 'CHECK_IN',
+  CustomersFans = 'CUSTOMERS_FANS',
+  Discounts = 'DISCOUNTS',
+  DoorOffline = 'DOOR_OFFLINE',
+  EventComparison = 'EVENT_COMPARISON',
+  Guestlist = 'GUESTLIST',
+  Orders = 'ORDERS',
+  PayoutsSettlement = 'PAYOUTS_SETTLEMENT',
+  PredictedSellout = 'PREDICTED_SELLOUT',
+  Refunds = 'REFUNDS',
+  SalesSummary = 'SALES_SUMMARY',
+  TaxesGst = 'TAXES_GST',
+  TicketSalesByType = 'TICKET_SALES_BY_TYPE',
+  WebsiteFunnel = 'WEBSITE_FUNNEL'
+}
 
 export enum HostStatus {
   Active = 'ACTIVE',
@@ -4723,6 +4764,7 @@ export type Query = {
   getHost?: Maybe<Host>;
   getHostAttendeesTargetCount: Scalars['Int']['output'];
   getHostDashboardSummary: HostDashboardSummary;
+  getHostReport: HostReportData;
   getHostWhatsAppAttendeesTargetCount: Scalars['Int']['output'];
   getHostsByBusiness: Array<Host>;
   getLatestAiBoostGeneration?: Maybe<EventOfferGeneration>;
@@ -5194,6 +5236,11 @@ export type QueryGetHostDashboardSummaryArgs = {
 };
 
 
+export type QueryGetHostReportArgs = {
+  input: HostReportInput;
+};
+
+
 export type QueryGetHostWhatsAppAttendeesTargetCountArgs = {
   eventId?: InputMaybe<Scalars['String']['input']>;
   filters?: InputMaybe<Array<HostCampaignAudienceFilter>>;
@@ -5471,6 +5518,85 @@ export type RejectUserDetailsInput = {
 export type ReorderArtistLinksInput = {
   orderedLinkIds: Array<Scalars['String']['input']>;
 };
+
+export type ReportChart = {
+  __typename?: 'ReportChart';
+  key: Scalars['String']['output'];
+  points: Array<ReportChartPoint>;
+  seriesKeys: Array<Scalars['String']['output']>;
+  title: Scalars['String']['output'];
+  type: ReportChartType;
+  xKey: Scalars['String']['output'];
+};
+
+export type ReportChartPoint = {
+  __typename?: 'ReportChartPoint';
+  values: Array<ReportChartSeriesValue>;
+  x: Scalars['String']['output'];
+};
+
+export type ReportChartSeriesValue = {
+  __typename?: 'ReportChartSeriesValue';
+  key: Scalars['String']['output'];
+  value: Scalars['Float']['output'];
+};
+
+export enum ReportChartType {
+  Area = 'Area',
+  Bar = 'Bar',
+  Donut = 'Donut',
+  Line = 'Line'
+}
+
+export type ReportDateInput = {
+  day: Scalars['Int']['input'];
+  month: Scalars['Int']['input'];
+  year: Scalars['Int']['input'];
+};
+
+export type ReportMetric = {
+  __typename?: 'ReportMetric';
+  helpText?: Maybe<Scalars['String']['output']>;
+  key: Scalars['String']['output'];
+  label: Scalars['String']['output'];
+  trendDirection?: Maybe<Scalars['String']['output']>;
+  trendValue?: Maybe<Scalars['String']['output']>;
+  value: Scalars['String']['output'];
+  valueType: ReportValueType;
+};
+
+export type ReportTable = {
+  __typename?: 'ReportTable';
+  columns: Array<ReportTableColumn>;
+  rows: Array<ReportTableRow>;
+  title: Scalars['String']['output'];
+};
+
+export type ReportTableCell = {
+  __typename?: 'ReportTableCell';
+  key: Scalars['String']['output'];
+  value: Scalars['String']['output'];
+};
+
+export type ReportTableColumn = {
+  __typename?: 'ReportTableColumn';
+  align?: Maybe<Scalars['String']['output']>;
+  header: Scalars['String']['output'];
+  key: Scalars['String']['output'];
+  valueType?: Maybe<ReportValueType>;
+};
+
+export type ReportTableRow = {
+  __typename?: 'ReportTableRow';
+  cells: Array<ReportTableCell>;
+};
+
+export enum ReportValueType {
+  Amount = 'Amount',
+  Number = 'Number',
+  Percentage = 'Percentage',
+  Text = 'Text'
+}
 
 export type RequestWhatsAppTemplateInput = {
   bodyText?: InputMaybe<Scalars['String']['input']>;
