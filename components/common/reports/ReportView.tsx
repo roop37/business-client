@@ -32,6 +32,22 @@ export const ReportView = ({ data, fileNamePrefix, canDownload = true }: ReportV
               label={m.label}
               value={formatReportValue(m.value, m.valueType)}
               hint={m.helpText ?? undefined}
+              delta={
+                m.trendValue
+                  ? {
+                      value: m.trendValue,
+                      direction:
+                        m.trendDirection === "up"
+                          ? "up"
+                          : m.trendDirection === "down"
+                            ? "down"
+                            : "flat",
+                      // Neutral tone: an up/down arrow shows direction without
+                      // implying "good/bad" (a rise in refunds isn't positive).
+                      tone: "neutral",
+                    }
+                  : undefined
+              }
             />
           ))}
         </div>

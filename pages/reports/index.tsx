@@ -61,7 +61,10 @@ const GROUPS: ReportGroup[] = [
     description: "Campaign performance and attributed ticket sales.",
     Icon: Megaphone,
     available: true,
-    reports: [{ name: "Campaign Performance", slug: "campaign-performance" }],
+    reports: [
+      { name: "Campaign Performance", slug: "campaign-performance" },
+      { name: "Campaign ROI", slug: "campaign-roi" },
+    ],
   },
   {
     title: "Fans",
@@ -77,6 +80,7 @@ const GROUPS: ReportGroup[] = [
     available: true,
     reports: [
       { name: "Check-in Report", slug: "check-in" },
+      { name: "Comp & No-show", slug: "comp-noshow" },
       { name: "Guestlist Report", slug: "guestlist" },
       { name: "Door & Offline Sales", slug: "door-offline" },
       { name: "Artist & Collaborator Performance", slug: "artist-collaborator" },

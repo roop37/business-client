@@ -46,3 +46,34 @@ export const getPresetRange = (
       return { startDate: toInput(addDays(today, -29)), endDate: toInput(today) };
   }
 };
+
+/**
+ * The immediately-preceding period of equal length — for period-over-period
+ * trend deltas. (today→yesterday, last7→the 7 days before, last30→days −59..−30.)
+ */
+export const getPreviousPeriod = (
+  preset: ReportRangePreset
+): { startDate: ReportDateInput; endDate: ReportDateInput } => {
+  const today = istToday();
+  switch (preset) {
+    case "today": {
+      const y = addDays(today, -1);
+      return { startDate: toInput(y), endDate: toInput(y) };
+    }
+    case "yesterday": {
+      const d = addDays(today, -2);
+      return { startDate: toInput(d), endDate: toInput(d) };
+    }
+    case "last7":
+      return {
+        startDate: toInput(addDays(today, -13)),
+        endDate: toInput(addDays(today, -7)),
+      };
+    case "last30":
+    default:
+      return {
+        startDate: toInput(addDays(today, -59)),
+        endDate: toInput(addDays(today, -30)),
+      };
+  }
+};

@@ -5,6 +5,7 @@ import {
 } from "@/components/common/owner";
 import {
   getPresetRange,
+  getPreviousPeriod,
   RANGE_PRESETS,
   ReportView,
   type HostReportData,
@@ -81,6 +82,18 @@ const REPORTS: Record<string, ReportConfig> = {
     title: "Customers / Fans",
     description:
       "Your buyers — orders, tickets, net spend, new vs returning, and top fans.",
+  },
+  "campaign-roi": {
+    type: "CAMPAIGN_ROI",
+    title: "Campaign ROI",
+    description:
+      "Paid campaigns (WhatsApp / SMS / Push): credits spent vs attributed net sales and net-sales-per-credit. Email is free — see Campaign Performance.",
+  },
+  "comp-noshow": {
+    type: "COMP_NOSHOW",
+    title: "Comp & No-show",
+    description:
+      "Free (₹0) comp tickets, and paid-but-not-checked-in (no-show) tickets across events that have ended.",
   },
   "check-in": {
     type: "CHECK_IN",
@@ -173,8 +186,17 @@ const ReportDetail = () => {
       setLoading(true);
       try {
         const { startDate, endDate } = getPresetRange(preset);
+        const prev = getPreviousPeriod(preset);
         const res: any = await sdk.getHostReport({
-          input: { type: config.type, startDate, endDate },
+          input: {
+            type: config.type,
+            startDate,
+            endDate,
+            // Always send the previous period; reports that compute trends
+            // (Sales Summary) light up deltas, others ignore it.
+            compareStartDate: prev.startDate,
+            compareEndDate: prev.endDate,
+          },
         });
         if (active) setData(res?.getHostReport ?? null);
       } catch (error) {
