@@ -16,12 +16,15 @@ import {
   type AutomationView,
 } from "@/utils/automationClient";
 import { extractErrorMessage } from "@/utils/utilFUncs";
+import { getPresetRange } from "@/components/common/reports";
 import {
   ArrowUpRight,
   ChevronRight,
   Lightbulb,
+  Radio,
   Send,
   Sparkles,
+  TrendingUp,
   Workflow,
 } from "lucide-react";
 import { GetServerSideProps } from "next";
@@ -39,12 +42,63 @@ const AutomationsPage = () => {
   const [busyKey, setBusyKey] = useState<string | null>(null);
   const [suggestion, setSuggestion] = useState("");
   const [suggesting, setSuggesting] = useState(false);
+  const [liveEvents, setLiveEvents] = useState<
+    { _id: string; title: string; sold: number }[]
+  >([]);
+  const [topEvents, setTopEvents] = useState<{ name: string; net: number }[]>([]);
 
   useEffect(() => {
     fetchAutomations()
       .then(setItems)
       .catch(() => setItems([]))
       .finally(() => setLoading(false));
+  }, []);
+
+  // Performance strip — proof the automations are boosting sales: what's live
+  // right now + the top-performing events (last 30 days).
+  useEffect(() => {
+    (async () => {
+      try {
+        const ev: any = await sdk.getMyEvents();
+        const now = Date.now();
+        const live = (ev?.getMyEvents ?? [])
+          .filter((e: any) => {
+            const s = String(e.status ?? "").toUpperCase();
+            if (s === "DRAFT" || s === "CANCELLED" || s === "ARCHIVED") return false;
+            const start = e.startDate ? new Date(e.startDate).getTime() : null;
+            const end = e.endDate ? new Date(e.endDate).getTime() : null;
+            return (start === null || start <= now) && (end === null || end >= now);
+          })
+          .map((e: any) => ({
+            _id: e._id,
+            title: e.title || "Untitled event",
+            sold: (e.tickets ?? []).reduce(
+              (s: number, t: any) => s + Number(t.ticketSold ?? 0),
+              0
+            ),
+          }));
+        setLiveEvents(live);
+      } catch {
+        /* widget is optional */
+      }
+      try {
+        const { startDate, endDate } = getPresetRange("last30");
+        const res: any = await sdk.getHostReport({
+          input: { type: "EVENT_COMPARISON", startDate, endDate },
+        });
+        const table = res?.getHostReport?.tables?.[0];
+        const rows = (table?.rows ?? [])
+          .map((r: any) => {
+            const m = new Map(r.cells.map((c: any) => [c.key, c.value]));
+            return { name: String(m.get("event") ?? ""), net: Number(m.get("net") ?? 0) };
+          })
+          .filter((x: any) => x.net > 0)
+          .slice(0, 4);
+        setTopEvents(rows);
+      } catch {
+        /* widget is optional */
+      }
+    })();
   }, []);
 
   // Optimistic toggle that REVERTS on failure and surfaces the error — the
@@ -134,6 +188,71 @@ const AutomationsPage = () => {
           </div>
         </div>
       </a>
+
+      {liveEvents.length > 0 || topEvents.length > 0 ? (
+        <div className="mb-6 grid gap-4 lg:grid-cols-2">
+          <Card>
+            <div className="flex items-center gap-2 text-[14px] font-semibold text-owner-fg-1">
+              <Radio size={16} className="text-owner-blue-500" /> Live now
+            </div>
+            {liveEvents.length ? (
+              <div className="mt-3 space-y-2">
+                {liveEvents.slice(0, 4).map((ev) => (
+                  <button
+                    key={ev._id}
+                    type="button"
+                    onClick={() => router.push(`/events/${ev._id}/manage`)}
+                    className="flex w-full items-center justify-between gap-3 rounded-owner-sm px-1 py-1 text-left text-[13px] hover:bg-owner-bg-subtle"
+                  >
+                    <span className="truncate text-owner-fg-1">{ev.title}</span>
+                    <span className="shrink-0 text-owner-fg-4">
+                      {ev.sold.toLocaleString("en-IN")} sold
+                    </span>
+                  </button>
+                ))}
+              </div>
+            ) : (
+              <p className="mt-3 text-[13px] text-owner-fg-4">
+                No events running right now.
+              </p>
+            )}
+          </Card>
+          <Card>
+            <div className="flex items-center justify-between gap-2">
+              <div className="flex items-center gap-2 text-[14px] font-semibold text-owner-fg-1">
+                <TrendingUp size={16} className="text-owner-blue-500" /> Top
+                performing events
+              </div>
+              <button
+                type="button"
+                onClick={() => router.push("/reports/automation-performance")}
+                className="text-[12.5px] font-semibold text-owner-blue-500 hover:underline"
+              >
+                Automation report
+              </button>
+            </div>
+            {topEvents.length ? (
+              <div className="mt-3 space-y-2">
+                {topEvents.map((ev, i) => (
+                  <div
+                    key={i}
+                    className="flex items-center justify-between gap-3 text-[13px]"
+                  >
+                    <span className="truncate text-owner-fg-1">{ev.name}</span>
+                    <span className="shrink-0 font-medium tabular-nums text-owner-fg-1">
+                      {inrFormat(ev.net)}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="mt-3 text-[13px] text-owner-fg-4">
+                No sales yet — turn on an automation to boost them.
+              </p>
+            )}
+          </Card>
+        </div>
+      ) : null}
 
       {loading ? (
         <Card>

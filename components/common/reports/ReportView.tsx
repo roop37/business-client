@@ -7,10 +7,16 @@ interface ReportViewProps {
   data: HostReportData;
   fileNamePrefix: string;
   canDownload?: boolean;
+  onRowAction?: (action: string) => void;
 }
 
 /** Renders a HostReportData payload: KPI cards → charts → tables. */
-export const ReportView = ({ data, fileNamePrefix, canDownload = true }: ReportViewProps) => {
+export const ReportView = ({
+  data,
+  fileNamePrefix,
+  canDownload = true,
+  onRowAction,
+}: ReportViewProps) => {
   const hasContent =
     data.metrics.length > 0 || data.charts.length > 0 || data.tables.length > 0;
 
@@ -63,6 +69,7 @@ export const ReportView = ({ data, fileNamePrefix, canDownload = true }: ReportV
           table={table}
           fileName={`${fileNamePrefix}_${table.title.replace(/\s+/g, "_")}`}
           canDownload={canDownload}
+          onRowAction={onRowAction}
         />
       ))}
     </div>

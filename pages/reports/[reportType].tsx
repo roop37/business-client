@@ -7,9 +7,11 @@ import {
   getPresetRange,
   getPreviousPeriod,
   RANGE_PRESETS,
+  ReportTable,
   ReportView,
   type HostReportData,
   type ReportRangePreset,
+  type ReportTableData,
 } from "@/components/common/reports";
 import MainLayout from "@/components/layouts/mainBodyLayout";
 import { PermissionTypeEnum } from "@/generated/graphql";
@@ -21,8 +23,8 @@ import { extractErrorMessage } from "@/utils/utilFUncs";
 import { GetServerSideProps } from "next";
 import Link from "next/link";
 import { useRouter } from "next/router";
-import React, { useEffect, useMemo, useState } from "react";
-import { ChevronLeft, Clock, Loader2 } from "lucide-react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
+import { ChevronLeft, Clock, Loader2, X } from "lucide-react";
 
 type ReportConfig = { type: string; title: string; description: string };
 
@@ -54,12 +56,6 @@ const REPORTS: Record<string, ReportConfig> = {
     title: "Discounts / Promo Codes",
     description: "Coupon usage, amount discounted and net sales driven.",
   },
-  "taxes-gst": {
-    type: "TAXES_GST",
-    title: "Taxes & GST",
-    description:
-      "Ticket GST collected (pass-through to the organiser) and Hoizr fee GST, by rate.",
-  },
   "add-ons": {
     type: "ADDONS",
     title: "Add-ons & Upsells",
@@ -89,11 +85,17 @@ const REPORTS: Record<string, ReportConfig> = {
     description:
       "Paid campaigns (WhatsApp / SMS / Push): credits spent vs attributed net sales and net-sales-per-credit. Email is free — see Campaign Performance.",
   },
+  "automation-performance": {
+    type: "AUTOMATION_PERFORMANCE",
+    title: "Automation Performance",
+    description:
+      "Per automation (abandoned-cart retargeting, selling-fast alerts): whether it's on, messages sent, and attributed orders + net sales.",
+  },
   "comp-noshow": {
     type: "COMP_NOSHOW",
     title: "Comp & No-show",
     description:
-      "Free (₹0) comp tickets, and paid-but-not-checked-in (no-show) tickets across events that have ended.",
+      "Complimentary tickets you issued for free, and guests who bought a ticket but never checked in — measured across events that have already finished.",
   },
   "check-in": {
     type: "CHECK_IN",
@@ -111,7 +113,7 @@ const REPORTS: Record<string, ReportConfig> = {
     type: "ARTIST_COLLAB",
     title: "Artist & Collaborator Performance",
     description:
-      "Events, tickets and associated net sales per artist (platform + phantom) and per collaborator, plus the top artists on Hoizr by events played.",
+      "Events, tickets and associated net sales for each artist (platform + off-platform) and each collaborator on your events.",
   },
   guestlist: {
     type: "GUESTLIST",
@@ -119,11 +121,17 @@ const REPORTS: Record<string, ReportConfig> = {
     description:
       "Guestlist entries, accepted golden tickets, pending approvals, admitted (checked-in) and revoked — per event.",
   },
+  "website-metrics": {
+    type: "WEBSITE_METRICS",
+    title: "Website Metrics",
+    description:
+      "Traffic sources, devices and engagement (carts created, payment starts) for your event pages.",
+  },
   "website-funnel": {
     type: "WEBSITE_FUNNEL",
-    title: "Website & Funnel",
+    title: "Booking Funnel",
     description:
-      "Booking funnel — ticket selected → payment started → order placed — with cart-to-order conversion, payment drop-off, traffic sources and devices.",
+      "Ticket selected → payment started → order placed, with cart-to-order conversion and payment drop-off.",
   },
   "event-comparison": {
     type: "EVENT_COMPARISON",
@@ -160,21 +168,68 @@ const ReportDetail = () => {
   const slug = String(router.query.reportType ?? "");
   const config = REPORTS[slug];
 
-  const { setSelectedSideBarMenu, setToastData } = useGlobalStore();
+  const { setSelectedSideBarMenu, setToastData, openOrderReceipt } =
+    useGlobalStore();
   const { meUser } = useUserStore();
 
   const [preset, setPreset] = useState<ReportRangePreset>("last30");
   const [data, setData] = useState<HostReportData | null>(null);
   const [loading, setLoading] = useState(true);
+  const [promoTable, setPromoTable] = useState<ReportTableData | null>(null);
+  const [eventId, setEventId] = useState<string>("");
+  const [events, setEvents] = useState<
+    { _id: string; title?: string | null; status?: string | null }[]
+  >([]);
 
   const canDownload = useMemo(
     () => hasAccess(meUser?.permissions ?? [], PermissionTypeEnum.DownloadReports),
     [meUser?.permissions]
   );
 
+  // Row clicks: "order:<id>" opens the order receipt; "promo:<code>" opens a
+  // drill-down modal listing who used that code.
+  const handleRowAction = useCallback(
+    async (action: string) => {
+      if (action.startsWith("order:")) {
+        const id = action.slice("order:".length);
+        if (id) openOrderReceipt(id);
+        return;
+      }
+      if (action.startsWith("promo:")) {
+        const code = action.slice("promo:".length);
+        try {
+          const { startDate, endDate } = getPresetRange(preset);
+          const res: any = await sdk.getHostPromoUsage({
+            input: { code, startDate, endDate, ...(eventId ? { eventId } : {}) },
+          });
+          setPromoTable(res?.getHostPromoUsage ?? null);
+        } catch (error) {
+          setToastData({ type: "error", message: extractErrorMessage(error) });
+        }
+      }
+    },
+    [preset, eventId, openOrderReceipt, setToastData]
+  );
+
   useEffect(() => {
     setSelectedSideBarMenu("Reports");
   }, [setSelectedSideBarMenu]);
+
+  // Master event filter — load the host's non-draft events for the picker.
+  useEffect(() => {
+    (async () => {
+      try {
+        const res: any = await sdk.getMyEvents();
+        const list = (res?.getMyEvents ?? []).filter((e: any) => {
+          const s = String(e.status ?? "").toUpperCase();
+          return s !== "DRAFT" && s !== "CANCELLED" && s !== "ARCHIVED";
+        });
+        setEvents(list);
+      } catch {
+        /* picker is optional — ignore failures */
+      }
+    })();
+  }, []);
 
   useEffect(() => {
     if (!config) {
@@ -196,6 +251,7 @@ const ReportDetail = () => {
             // (Sales Summary) light up deltas, others ignore it.
             compareStartDate: prev.startDate,
             compareEndDate: prev.endDate,
+            ...(eventId ? { eventId } : {}),
           },
         });
         if (active) setData(res?.getHostReport ?? null);
@@ -210,7 +266,7 @@ const ReportDetail = () => {
     return () => {
       active = false;
     };
-  }, [config, preset, setToastData]);
+  }, [config, preset, eventId, setToastData]);
 
   if (!config) {
     return (
@@ -236,6 +292,21 @@ const ReportDetail = () => {
                 {data.freshnessLabel}
               </Badge>
             ) : null}
+            {events.length ? (
+              <select
+                value={eventId}
+                onChange={(e) => setEventId(e.target.value)}
+                aria-label="Filter by event"
+                className="h-9 max-w-[220px] rounded-owner-md border border-owner-border bg-owner-bg px-3 text-[13px] font-medium text-owner-fg-1 focus:outline-none focus:ring-2 focus:ring-owner-blue-200"
+              >
+                <option value="">All events</option>
+                {events.map((ev) => (
+                  <option key={ev._id} value={ev._id}>
+                    {ev.title || "Untitled event"}
+                  </option>
+                ))}
+              </select>
+            ) : null}
             <PillTabs tabs={RANGE_PRESETS} value={preset} onChange={setPreset} />
           </div>
         }
@@ -251,6 +322,7 @@ const ReportDetail = () => {
             data={data}
             fileNamePrefix={config.title.replace(/\s+/g, "_")}
             canDownload={canDownload}
+            onRowAction={handleRowAction}
           />
         ) : (
           <div className="rounded-owner-md border border-dashed border-owner-border bg-owner-bg-subtle px-5 py-12 text-center text-[14px] text-owner-fg-4">
@@ -258,6 +330,38 @@ const ReportDetail = () => {
           </div>
         )}
       </div>
+
+      {promoTable ? (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4"
+          onClick={() => setPromoTable(null)}
+        >
+          <div
+            className="max-h-[80vh] w-full max-w-3xl overflow-auto rounded-owner-lg bg-owner-bg p-4 shadow-owner-dropdown"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="mb-3 flex items-center justify-between">
+              <h3 className="text-[15px] font-semibold text-owner-fg-1">
+                {promoTable.title}
+              </h3>
+              <button
+                type="button"
+                onClick={() => setPromoTable(null)}
+                className="rounded-owner-sm p-1 text-owner-fg-3 hover:bg-owner-bg-subtle"
+                aria-label="Close"
+              >
+                <X size={18} />
+              </button>
+            </div>
+            <ReportTable
+              table={promoTable}
+              fileName="promo_usage"
+              canDownload={canDownload}
+              onRowAction={handleRowAction}
+            />
+          </div>
+        </div>
+      ) : null}
     </div>
   );
 };

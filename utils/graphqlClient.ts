@@ -259,6 +259,20 @@ Object.assign(sdk, {
       `,
       variables
     ),
+  // Drill-down: who used a promo code (rendered in a modal as a ReportTable).
+  getHostPromoUsage: async (variables: { input: any }) =>
+    graphQLClient.request(
+      `
+        query getHostPromoUsage($input: HostPromoUsageInput!) {
+          getHostPromoUsage(input: $input) {
+            title
+            columns { key header align valueType }
+            rows { cells { key value } }
+          }
+        }
+      `,
+      variables
+    ),
   getCsvErrors: async () => ({ getCsvErrors: [] }),
   getSalesTrendReport: async () => ({ getSalesTrendReport: [] }),
   getCampaignReport: async () => ({ getCampaignReport: [] }),
