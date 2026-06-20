@@ -186,7 +186,7 @@ const DataTable = <TData, TValue>({
   );
 
   return (
-    <div className="max-h-full min-h-0 rounded-owner-lg border border-owner-border bg-owner-bg text-owner-fg-1 flex flex-col justify-between overflow-hidden">
+    <div className="max-h-[70vh] min-h-0 rounded-owner-lg border border-owner-border bg-owner-bg text-owner-fg-1 flex flex-col justify-between overflow-hidden">
       {/* Toolbar */}
 
       {!staticTable && (

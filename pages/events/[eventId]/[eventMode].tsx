@@ -1,20 +1,20 @@
 import EventJourney from "@/components/modules/events/EventJourney";
 import { EventScanners } from "@/components/modules/events/EventScanners";
+import GuestlistManagerModal from "@/components/modules/events/GuestlistManagerModal";
 import useGlobalStore from "@/store/global";
 import { sdk } from "@/utils/graphqlClient";
 import { extractErrorMessage } from "@/utils/utilFUncs";
 import {
   CalendarDaysIcon,
-  CheckIcon,
   DoorOpenIcon,
   EyeIcon,
   EyeOffIcon,
   type LucideIcon,
   MegaphoneIcon,
-  MinusIcon,
   PencilIcon,
   QrCodeIcon,
   SettingsIcon,
+  SparklesIcon,
   TicketIcon,
   UsersRoundIcon,
   XIcon,
@@ -78,6 +78,7 @@ const EventOperations = ({
   const [overview, setOverview] = useState<any>(null);
   const [busy, setBusy] = useState(false);
   const [collaboratorsOpen, setCollaboratorsOpen] = useState(false);
+  const [guestlistOpen, setGuestlistOpen] = useState(false);
 
   const loadOverview = async () => {
     try {
@@ -385,6 +386,41 @@ const EventOperations = ({
               </Link>
             </div>
 
+            {/* Guest lists — managed inline from Manage (open the same manager
+                used on the event hub). */}
+            {!isCollaboratorView ? (
+              <button
+                type="button"
+                onClick={() => setGuestlistOpen(true)}
+                className="w-full rounded-lg border border-[var(--owner-border)] bg-[var(--owner-bg)] p-5 text-left transition hover:border-[#c89d75]"
+              >
+                <div className="flex items-center justify-between gap-4">
+                  <div className="flex min-w-0 items-start gap-3">
+                    <span className="grid h-10 w-10 shrink-0 place-items-center rounded-lg bg-[var(--owner-bg-subtle)] text-[var(--owner-blue-500)]">
+                      <SparklesIcon size={18} />
+                    </span>
+                    <div className="min-w-0">
+                      <p className="font-semibold">Guest lists</p>
+                      <p className="text-xs text-[var(--owner-fg-3)]">
+                        {overview?.guestlistEnabled
+                          ? "Manage lists, invite links and guests. Golden tickets scan at the door."
+                          : "Off — turn on free guest invites with golden tickets."}
+                      </p>
+                    </div>
+                  </div>
+                  <span
+                    className={`shrink-0 rounded-full px-2.5 py-1 text-[11px] font-semibold ${
+                      overview?.guestlistEnabled
+                        ? "bg-[var(--owner-blue-500)]/[0.10] text-[var(--owner-blue-500)]"
+                        : "bg-[var(--owner-bg-subtle)] text-[var(--owner-fg-3)]"
+                    }`}
+                  >
+                    {overview?.guestlistEnabled ? "On" : "Off"}
+                  </span>
+                </div>
+              </button>
+            ) : null}
+
             {/* Collaborators & promoters */}
             {showCollaboratorsCard ? (
               <button
@@ -475,6 +511,15 @@ const EventOperations = ({
           setCollaboratorsOpen(false);
           router.push(`/events/${eventId}/update`);
         }}
+      />
+
+      <GuestlistManagerModal
+        open={guestlistOpen}
+        onClose={() => setGuestlistOpen(false)}
+        eventId={eventId}
+        guestlistEnabled={!!overview?.guestlistEnabled}
+        guestlistAutoAccept={overview?.guestlistAutoAccept !== false}
+        onSettingsChanged={loadOverview}
       />
     </EventShell>
   );
@@ -675,15 +720,22 @@ const ReadOnlySettingRow = ({
         </span>
       ) : null}
     </span>
+    {/* Actual switch visual (disabled — this is a read-only review of the
+        collaborator's granted capabilities; editing happens in "Manage
+        collaborators"). Mirrors ToggleCard's switch so the UI is consistent. */}
     <span
-      className={`inline-flex shrink-0 items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-semibold ${
-        enabled
-          ? "bg-[var(--owner-blue-500)]/[0.10] text-[var(--owner-blue-500)]"
-          : "bg-[var(--owner-bg-subtle)] text-[var(--owner-fg-3)]"
+      role="switch"
+      aria-checked={enabled}
+      aria-readonly="true"
+      className={`relative inline-flex h-6 w-11 shrink-0 cursor-default items-center rounded-full opacity-70 transition ${
+        enabled ? "bg-[var(--owner-blue-500)]" : "bg-[var(--owner-border)]"
       }`}
     >
-      {enabled ? <CheckIcon size={13} /> : <MinusIcon size={13} />}
-      {enabled ? "On" : "Off"}
+      <span
+        className={`inline-block h-5 w-5 transform rounded-full bg-white transition ${
+          enabled ? "translate-x-5" : "translate-x-0.5"
+        }`}
+      />
     </span>
   </div>
 );

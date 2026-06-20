@@ -731,12 +731,10 @@ export const DashboardClient = () => {
                 <div className="mt-2 text-[13px] font-medium text-owner-fg-4">
                   {formatInteger(displayTickets)} tickets sold in this view
                 </div>
-                {Number(summary.totalCollected ?? 0) > 0 ? (
-                  <div className="mt-1 text-[12.5px] font-medium text-owner-fg-4">
-                    {inrFormat(Number(summary.totalCollected ?? 0))} collected
-                    (incl. fees &amp; GST)
-                  </div>
-                ) : null}
+                {/* "Total collected (incl. fees & GST)" intentionally hidden:
+                    the customer-paid gross + platform fee Hoizr charges
+                    customers are separate Hoizr entities, not the org's money.
+                    Hosts see net sales + their commission/AI fee only. */}
               </div>
               <OwnerButton
                 variant="secondary"

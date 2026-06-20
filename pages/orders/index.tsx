@@ -124,24 +124,33 @@ const OrdersPage = () => {
     );
   }, [tab, eventId]);
 
+  // Always latest-first (newest createdAt at the top), regardless of how the
+  // server returns the page.
+  const byNewest = <T extends { createdAt?: string | null }>(a: T, b: T) =>
+    new Date(b.createdAt ?? 0).getTime() - new Date(a.createdAt ?? 0).getTime();
+
   const ordersFiltered = useMemo(() => {
     const q = search.trim().toLowerCase();
-    if (!q) return orders;
-    return orders.filter((o) =>
-      [o.customerName, o.customerEmail, o.customerPhone, o.eventTitle, o.orderId]
-        .filter(Boolean)
-        .some((v) => String(v).toLowerCase().includes(q))
-    );
+    const rows = !q
+      ? orders
+      : orders.filter((o) =>
+          [o.customerName, o.customerEmail, o.customerPhone, o.eventTitle, o.orderId]
+            .filter(Boolean)
+            .some((v) => String(v).toLowerCase().includes(q))
+        );
+    return [...rows].sort(byNewest);
   }, [orders, search]);
 
   const offlineFiltered = useMemo(() => {
     const q = search.trim().toLowerCase();
-    if (!q) return offline;
-    return offline.filter((o) =>
-      [o.customerFirstName, o.customerLastName, o.customerEmail, o.customerPhone]
-        .filter(Boolean)
-        .some((v) => String(v).toLowerCase().includes(q))
-    );
+    const rows = !q
+      ? offline
+      : offline.filter((o) =>
+          [o.customerFirstName, o.customerLastName, o.customerEmail, o.customerPhone]
+            .filter(Boolean)
+            .some((v) => String(v).toLowerCase().includes(q))
+        );
+    return [...rows].sort(byNewest);
   }, [offline, search]);
 
   const stats = useMemo(() => {
