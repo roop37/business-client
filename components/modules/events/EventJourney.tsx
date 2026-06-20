@@ -766,8 +766,10 @@ const EventJourney = ({
   const [requestCustomerListAccess, setRequestCustomerListAccess] =
     useState(true);
   const [hideOnEventPage, setHideOnEventPage] = useState(false);
+  // Default ON — most collaborators are co-hosts who help work the door, so
+  // door/offline ticket issuing is allowed unless the inviting host turns it off.
   const [allowIssuingOfflineTickets, setAllowIssuingOfflineTickets] =
-    useState(false);
+    useState(true);
   const [sendTransactionalMails, setSendTransactionalMails] = useState(false);
   const [canSeeMetrics, setCanSeeMetrics] = useState(true);
   const [canRunCampaigns, setCanRunCampaigns] = useState(true);
@@ -1335,7 +1337,7 @@ const EventJourney = ({
     setCollaboratorSearchResults([]);
     setRequestCustomerListAccess(true);
     setHideOnEventPage(false);
-    setAllowIssuingOfflineTickets(false);
+    setAllowIssuingOfflineTickets(true);
     setSendTransactionalMails(false);
     setCanSeeMetrics(true);
     setCanRunCampaigns(true);
