@@ -87,11 +87,16 @@ export type OfflinePaymentLinkResponse = {
   emailQueued: boolean;
 };
 
-/** Host's events (owned) with full ticket/extra fields for the picker. */
+/**
+ * Events the host can issue offline tickets for RIGHT NOW — owned + events
+ * they collaborate on with the allowIssuingOfflineTickets permission, gated
+ * to PUBLISHED + not-ended on the server. (Was getMyEvents, which returned
+ * owned-only and included drafts/ended events.)
+ */
 export const fetchMyEventsForOffline = async (): Promise<OfflineEvent[]> => {
-  const data = await client.request<{ getMyEvents: OfflineEvent[] }>(
+  const data = await client.request<{ eventsForOfflineIssuing: OfflineEvent[] }>(
     `query {
-      getMyEvents {
+      eventsForOfflineIssuing {
         _id
         title
         eventFlyer
@@ -103,7 +108,7 @@ export const fetchMyEventsForOffline = async (): Promise<OfflineEvent[]> => {
       }
     }`
   );
-  return data.getMyEvents ?? [];
+  return data.eventsForOfflineIssuing ?? [];
 };
 
 export const issueOfflineTicket = async (
