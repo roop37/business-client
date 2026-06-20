@@ -1,5 +1,4 @@
 import {
-  Badge,
   PageHeader,
   PillTabs,
 } from "@/components/common/owner";
@@ -24,7 +23,7 @@ import { GetServerSideProps } from "next";
 import Link from "next/link";
 import { useRouter } from "next/router";
 import React, { useCallback, useEffect, useMemo, useState } from "react";
-import { ChevronLeft, Clock, Loader2, X } from "lucide-react";
+import { ChevronLeft, Loader2, X } from "lucide-react";
 
 type ReportConfig = { type: string; title: string; description: string };
 
@@ -287,11 +286,6 @@ const ReportDetail = () => {
         subtitle={config.description}
         actions={
           <div className="flex flex-wrap items-center gap-3">
-            {data?.freshnessLabel ? (
-              <Badge tone="neutral" icon={<Clock size={12} />}>
-                {data.freshnessLabel}
-              </Badge>
-            ) : null}
             {events.length ? (
               <select
                 value={eventId}
