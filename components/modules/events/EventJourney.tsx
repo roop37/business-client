@@ -162,6 +162,9 @@ type TicketDraft = {
   _id?: string;
   ticketCategory: TicketCategoryValue;
   ticketName: string;
+  // Multi-day: the EventDay.dayId this ticket admits, the "ALL_DAYS" sentinel
+  // (festival pass), or undefined on a single-day event.
+  dayId?: string;
   ticketType: TicketTypeValue;
   ticketCapacity: number;
   ticketSold?: number;
@@ -177,6 +180,16 @@ type TicketDraft = {
   markAsOnGroundOnly: boolean;
   ticketVisible: boolean;
   description?: string;
+};
+
+// Festival-pass sentinel — mirrors ALL_DAYS_TICKET in @hoizr-technology/shared.
+const ALL_DAYS_TICKET = "ALL_DAYS";
+
+type EventDayDraft = {
+  dayId: string;
+  title: string;
+  startDate: string; // datetime-local string (UTC-sliced, like toDateTimeInput)
+  endDate: string;
 };
 
 type HoizrExtraTypeValue =
@@ -577,6 +590,74 @@ const toDateTimeInput = (value?: string | Date | null) => {
   return date.toISOString().slice(0, 16);
 };
 
+// Stable client-side id for a new day. The server keeps any dayId we send
+// (assignDayIds only mints one when absent), so generating it here lets a
+// ticket reference its day before the event is saved.
+const genDayId = (): string => {
+  if (typeof crypto !== "undefined" && typeof crypto.randomUUID === "function") {
+    return crypto.randomUUID().replace(/-/g, "").slice(0, 16);
+  }
+  return `${Math.random().toString(36).slice(2, 10)}${Date.now().toString(36)}`;
+};
+
+// Split an event date range into Day 1…N — one calendar day each, same daily
+// time window inferred from the overall start/end. UTC throughout to match
+// toDateTimeInput's UTC slicing. Days are editable after generation.
+const buildDaysFromRange = (start: string, end: string): EventDayDraft[] => {
+  if (!start || !end) return [];
+  const s = new Date(start);
+  const e = new Date(end);
+  if (Number.isNaN(s.getTime()) || Number.isNaN(e.getTime()) || e <= s) return [];
+  const DAY_MS = 24 * 60 * 60 * 1000;
+  const startMidnight = Date.UTC(s.getUTCFullYear(), s.getUTCMonth(), s.getUTCDate());
+  const endMidnight = Date.UTC(e.getUTCFullYear(), e.getUTCMonth(), e.getUTCDate());
+  const n = Math.round((endMidnight - startMidnight) / DAY_MS) + 1;
+  const startMins = s.getUTCHours() * 60 + s.getUTCMinutes();
+  const endMins = e.getUTCHours() * 60 + e.getUTCMinutes();
+  const out: EventDayDraft[] = [];
+  for (let i = 0; i < n; i++) {
+    const base = startMidnight + i * DAY_MS;
+    const dayStart = new Date(base + startMins * 60000);
+    let dayEnd = new Date(base + endMins * 60000);
+    if (dayEnd <= dayStart) dayEnd = new Date(dayEnd.getTime() + DAY_MS); // overnight
+    out.push({
+      dayId: genDayId(),
+      title: `Day ${i + 1}`,
+      startDate: dayStart.toISOString().slice(0, 16),
+      endDate: dayEnd.toISOString().slice(0, 16),
+    });
+  }
+  return out;
+};
+
+// Mirrors validateEventDays on the server (spec §5) for instant feedback.
+// Returns an error message, or null when the days are valid.
+const validateEventDaysClient = (
+  days: EventDayDraft[],
+  eventStart: string,
+  eventEnd: string
+): string | null => {
+  if (!days.length) return null;
+  if (days.length < 2) return "A multi-day event needs at least 2 days.";
+  const ms = (v: string) => new Date(v).getTime();
+  const sorted = [...days].sort((a, b) => ms(a.startDate) - ms(b.startDate));
+  const evStart = eventStart ? ms(eventStart) : null;
+  const evEnd = eventEnd ? ms(eventEnd) : null;
+  for (let i = 0; i < sorted.length; i++) {
+    const d = sorted[i];
+    if (!d.title?.trim()) return "Each day needs a title.";
+    const s = ms(d.startDate);
+    const en = ms(d.endDate);
+    if (Number.isNaN(s) || Number.isNaN(en) || !(s < en)) {
+      return `${d.title}: start must be before end.`;
+    }
+    if (evStart != null && s < evStart) return `${d.title} starts before the event start.`;
+    if (evEnd != null && en > evEnd) return `${d.title} ends after the event end.`;
+    if (i > 0 && s < ms(sorted[i - 1].endDate)) return "Days overlap — adjust the times.";
+  }
+  return null;
+};
+
 const normalizeEnum = <T extends string>(value: any, fallback: T): T => {
   if (!value) return fallback;
   const raw = String(value);
@@ -665,6 +746,8 @@ const EventJourney = ({
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
   const [markSeparateDays, setMarkSeparateDays] = useState(false);
+  // Per-day segments for a multi-day event (Day 1…N). Empty = single-day.
+  const [eventDays, setEventDays] = useState<EventDayDraft[]>([]);
   const [isVisible, setIsVisible] = useState(true);
 
   const [city, setCity] = useState("");
@@ -712,6 +795,8 @@ const EventJourney = ({
   const [ticketComingSoon, setTicketComingSoon] = useState(false);
   const [ticketOnGroundOnly, setTicketOnGroundOnly] = useState(false);
   const [ticketVisible, setTicketVisible] = useState(true);
+  // Multi-day "Valid for" picker value: "" (single-day), ALL_DAYS, or a dayId.
+  const [ticketDayId, setTicketDayId] = useState<string>("");
   const [ticketDescription, setTicketDescription] = useState("");
   const [allowWalkIns, setAllowWalkIns] = useState(false);
   const [requiresIDVerification, setRequiresIDVerification] = useState(false);
@@ -931,6 +1016,36 @@ const EventJourney = ({
     );
   }, [endDate, startDate]);
 
+  // Auto-split: when the range spans >1 day and "separate days" is on, generate
+  // Day 1…N once (functional setState preserves rehydrated/edited days — never
+  // re-mints their dayIds). Toggling off / becoming ineligible collapses to a
+  // single continuous event.
+  useEffect(() => {
+    if (!multiDayEligible || !markSeparateDays) {
+      setEventDays((prev) => (prev.length ? [] : prev));
+      return;
+    }
+    if (startDate && endDate) {
+      setEventDays((prev) =>
+        prev.length ? prev : buildDaysFromRange(startDate, endDate)
+      );
+    }
+  }, [multiDayEligible, markSeparateDays, startDate, endDate]);
+
+  // Inline validation for the day editor (also gates save in step 1).
+  const daysError = useMemo(
+    () =>
+      multiDayEligible && markSeparateDays
+        ? validateEventDaysClient(eventDays, startDate, endDate)
+        : null,
+    [multiDayEligible, markSeparateDays, eventDays, startDate, endDate]
+  );
+
+  const updateEventDay = (index: number, patch: Partial<EventDayDraft>) =>
+    setEventDays((prev) =>
+      prev.map((d, i) => (i === index ? { ...d, ...patch } : d))
+    );
+
   const stateOptions = useMemo(
     () =>
       Array.from(
@@ -994,6 +1109,10 @@ const EventJourney = ({
   const currentTicketDraft = (): TicketDraft => ({
     ticketCategory,
     ticketName,
+    dayId:
+      markSeparateDays && multiDayEligible && ticketDayId
+        ? ticketDayId
+        : undefined,
     ticketType,
     ticketCapacity: Number(ticketCapacity) || 0,
     ticketPrice: ticketCategory === "GUESTLIST" ? 0 : Number(ticketPrice) || 0,
@@ -1033,6 +1152,13 @@ const EventJourney = ({
     setTicketOnGroundOnly(false);
     setTicketVisible(true);
     setTicketDescription("");
+    // Default a new ticket to the first day on a multi-day event so it's never
+    // left untagged; single-day events keep it empty.
+    setTicketDayId(
+      markSeparateDays && multiDayEligible && eventDays[0]
+        ? eventDays[0].dayId
+        : ""
+    );
     setTicketAdvancedOpen(true);
   };
 
@@ -1043,6 +1169,7 @@ const EventJourney = ({
       setTicketEditIndex(index);
       setTicketCategory(ticket.ticketCategory);
       setTicketName(ticket.ticketName);
+      setTicketDayId(ticket.dayId ?? "");
       setTicketType(ticket.ticketType);
       setTicketPrice(ticket.ticketPrice);
       setTicketCapacity(ticket.ticketCapacity);
@@ -1295,6 +1422,9 @@ const EventJourney = ({
       }
       if (!isComingSoon && new Date(endDate) <= new Date(startDate)) {
         return "Event end must be after event start.";
+      }
+      if (markSeparateDays && multiDayEligible && daysError) {
+        return daysError;
       }
     }
     if (targetStep === 2) {
@@ -2129,6 +2259,18 @@ const EventJourney = ({
         setStartDate(toDateTimeInput(event.startDate));
         setEndDate(toDateTimeInput(event.endDate));
         setMarkSeparateDays(Boolean(event.markSeparateDays));
+        // Rehydrate days WITH their server dayIds so the ticket "Valid for"
+        // picker keeps matching them (re-minting would orphan ticket dayIds).
+        setEventDays(
+          Array.isArray((event as any).days)
+            ? (event as any).days.map((d: any) => ({
+                dayId: d.dayId,
+                title: d.title ?? "",
+                startDate: toDateTimeInput(d.startDate),
+                endDate: toDateTimeInput(d.endDate),
+              }))
+            : []
+        );
         setIsVisible(event.isVisible !== false);
         setCity(event.city ?? "");
         setEventLocationDecided(event.eventLocationDecided !== false);
@@ -2198,6 +2340,7 @@ const EventJourney = ({
               "GUESTLIST",
             ),
             ticketName: ticket.ticketName ?? "General Entry",
+            dayId: ticket.dayId ?? undefined,
             ticketType: normalizeEnum<TicketTypeValue>(
               ticket.ticketType,
               "SINGLE",
@@ -2383,6 +2526,17 @@ const EventJourney = ({
       startDate: !isComingSoon && startDate ? new Date(startDate) : undefined,
       endDate: !isComingSoon && endDate ? new Date(endDate) : undefined,
       markSeparateDays: multiDayEligible ? markSeparateDays : false,
+      // Send days[] only for an eligible multi-day event; otherwise [] so the
+      // server collapses to single-day and strips ticket dayIds.
+      days:
+        multiDayEligible && markSeparateDays
+          ? eventDays.map((d) => ({
+              dayId: d.dayId,
+              title: d.title,
+              startDate: new Date(d.startDate),
+              endDate: new Date(d.endDate),
+            }))
+          : [],
       isVisible,
       city: city || undefined,
       eventLocationDecided,
@@ -2442,6 +2596,11 @@ const EventJourney = ({
             _id: ticket._id,
             ticketCategory: ticket.ticketCategory,
             ticketName: ticket.ticketName,
+            // Per-day tag only on a multi-day event; cleared otherwise.
+            dayId:
+              multiDayEligible && markSeparateDays
+                ? ticket.dayId || undefined
+                : undefined,
             ticketType: ticket.ticketType,
             ticketCapacity: Number(ticket.ticketCapacity),
             ticketPrice:
@@ -3448,10 +3607,75 @@ const EventJourney = ({
                           <div className="md:col-span-2">
                             <ToggleSettingRow
                               title="Mark as separate dated events"
-                              subtitle="Customers must select which day they want to attend."
+                              subtitle="Customers must select which day they want to attend, and each day's tickets stop selling when that day starts."
                               checked={markSeparateDays}
                               onCheckedChange={setMarkSeparateDays}
                             />
+                            {markSeparateDays ? (
+                              <div className="mt-3 space-y-3 rounded-xl border border-border bg-gray-50 p-3">
+                                <div className="flex items-center justify-between">
+                                  <div className="text-sm font-semibold">
+                                    Event days
+                                  </div>
+                                  <button
+                                    type="button"
+                                    onClick={() =>
+                                      setEventDays(
+                                        buildDaysFromRange(startDate, endDate)
+                                      )
+                                    }
+                                    disabled={eventStarted}
+                                    className="text-xs font-semibold text-emerald-700 hover:underline disabled:opacity-40"
+                                  >
+                                    Auto-fill from range
+                                  </button>
+                                </div>
+                                {eventDays.map((day, i) => (
+                                  <div
+                                    key={day.dayId}
+                                    className="grid gap-2 rounded-lg border border-border bg-background p-3 md:grid-cols-3"
+                                  >
+                                    <input
+                                      value={day.title}
+                                      onChange={(e) =>
+                                        updateEventDay(i, {
+                                          title: e.target.value,
+                                        })
+                                      }
+                                      disabled={eventStarted}
+                                      placeholder={`Day ${i + 1}`}
+                                      className="rounded-md border border-border bg-background px-3 py-2 text-sm md:col-span-3"
+                                    />
+                                    <DateTimeInput
+                                      label="Starts"
+                                      value={day.startDate}
+                                      onChange={(v: string) =>
+                                        updateEventDay(i, { startDate: v })
+                                      }
+                                      disabled={eventStarted}
+                                    />
+                                    <DateTimeInput
+                                      label="Ends"
+                                      value={day.endDate}
+                                      onChange={(v: string) =>
+                                        updateEventDay(i, { endDate: v })
+                                      }
+                                      disabled={eventStarted}
+                                    />
+                                  </div>
+                                ))}
+                                {daysError ? (
+                                  <div className="text-xs font-medium text-red-600">
+                                    {daysError}
+                                  </div>
+                                ) : (
+                                  <div className="text-xs text-gray-600">
+                                    Tag each ticket to a day (or “All days”) in
+                                    the Ticketing step.
+                                  </div>
+                                )}
+                              </div>
+                            ) : null}
                           </div>
                         ) : null}
                       </div>
@@ -4697,6 +4921,27 @@ const EventJourney = ({
                     value={ticketName}
                     onChange={setTicketName}
                   />
+                  {/* Multi-day "Valid for" picker — tags the ticket to a day or
+                      makes it an all-days festival pass. Hidden for single-day. */}
+                  {markSeparateDays &&
+                  multiDayEligible &&
+                  eventDays.length >= 2 ? (
+                    <Select
+                      label="Valid for *"
+                      value={ticketDayId || eventDays[0]?.dayId || ""}
+                      onChange={(value) => setTicketDayId(value)}
+                      options={[
+                        ...eventDays.map((d, i) => ({
+                          value: d.dayId,
+                          label: d.title || `Day ${i + 1}`,
+                        })),
+                        {
+                          value: ALL_DAYS_TICKET,
+                          label: "All days (festival pass)",
+                        },
+                      ]}
+                    />
+                  ) : null}
                   {/* Single/Couple distinction is irrelevant for table
                       and group bookings — the capacity field already
                       describes the seating unit. */}

@@ -797,6 +797,12 @@ Object.assign(sdk, {
             startDate
             endDate
             markSeparateDays
+            days {
+              dayId
+              title
+              startDate
+              endDate
+            }
             isComingSoon
             genreTagIds
             city
@@ -858,6 +864,7 @@ Object.assign(sdk, {
               _id
               ticketCategory
               ticketName
+              dayId
               ticketType
               ticketCapacity
               ticketSold
