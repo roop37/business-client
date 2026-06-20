@@ -808,10 +808,23 @@ export type ArtistGuestlistEventSummary = {
   eventFlyer?: Maybe<Scalars['String']['output']>;
   eventId: Scalars['ID']['output'];
   isActive: Scalars['Boolean']['output'];
+  isHighlighted: Scalars['Boolean']['output'];
   isPublic: Scalars['Boolean']['output'];
   pendingCount: Scalars['Int']['output'];
   startDate?: Maybe<Scalars['DateTimeISO']['output']>;
   title?: Maybe<Scalars['String']['output']>;
+};
+
+export type ArtistLineupEvent = {
+  __typename?: 'ArtistLineupEvent';
+  city?: Maybe<Scalars['String']['output']>;
+  eventFlyer?: Maybe<Scalars['String']['output']>;
+  eventId: Scalars['String']['output'];
+  guestlistEnabled: Scalars['Boolean']['output'];
+  hostName?: Maybe<Scalars['String']['output']>;
+  startDate?: Maybe<Scalars['DateTimeISO']['output']>;
+  status: Scalars['String']['output'];
+  title: Scalars['String']['output'];
 };
 
 export type ArtistLink = {
@@ -1720,7 +1733,9 @@ export type EventLineupArtist = {
   instagramLink?: Maybe<Scalars['String']['output']>;
   name: Scalars['String']['output'];
   picture?: Maybe<Scalars['String']['output']>;
+  respondedAt?: Maybe<Scalars['DateTimeISO']['output']>;
   spotifyLink?: Maybe<Scalars['String']['output']>;
+  status?: Maybe<EventLineupArtistStatus>;
   tempArtistId?: Maybe<Scalars['String']['output']>;
   youtubeLink?: Maybe<Scalars['String']['output']>;
 };
@@ -1734,6 +1749,12 @@ export type EventLineupArtistInput = {
   tempArtistId?: InputMaybe<Scalars['String']['input']>;
   youtubeLink?: InputMaybe<Scalars['String']['input']>;
 };
+
+export enum EventLineupArtistStatus {
+  Accepted = 'ACCEPTED',
+  Pending = 'PENDING',
+  Rejected = 'REJECTED'
+}
 
 export type EventManageCollaborator = {
   __typename?: 'EventManageCollaborator';
@@ -2275,6 +2296,7 @@ export type Guestlist = {
   eventId: Scalars['String']['output'];
   hostId: Scalars['String']['output'];
   isActive: Scalars['Boolean']['output'];
+  isHighlighted: Scalars['Boolean']['output'];
   isPublic: Scalars['Boolean']['output'];
   updatedAt?: Maybe<Scalars['DateTimeISO']['output']>;
 };
@@ -3399,6 +3421,7 @@ export type Mutation = {
   artistReorderLinks: Array<ArtistLink>;
   artistRequestOtp: ArtistOtpRequestResult;
   artistRequestUploadSignature: ArtistUploadSignature;
+  artistRespondToLineup: Scalars['Boolean']['output'];
   artistRevokeGuestlistEntry: Scalars['Boolean']['output'];
   artistTokenRefresh: ArtistTokenRefreshResponse;
   artistUpdateLink: ArtistLink;
@@ -3459,6 +3482,7 @@ export type Mutation = {
   saveMyHostContentDefaults: HostContentDefaults;
   selectAiBoost: EventOfferGeneration;
   selectEventPricingOption: Event;
+  setArtistGuestlistHighlighted: Guestlist;
   setArtistGuestlistPublic: Guestlist;
   setAutomationActive: AutomationView;
   setAutomationChannel: AutomationView;
@@ -3760,6 +3784,12 @@ export type MutationArtistRequestUploadSignatureArgs = {
 };
 
 
+export type MutationArtistRespondToLineupArgs = {
+  accept: Scalars['Boolean']['input'];
+  eventId: Scalars['String']['input'];
+};
+
+
 export type MutationArtistRevokeGuestlistEntryArgs = {
   entryId: Scalars['String']['input'];
 };
@@ -4049,6 +4079,12 @@ export type MutationSelectAiBoostArgs = {
 
 export type MutationSelectEventPricingOptionArgs = {
   input: SelectEventPricingInput;
+};
+
+
+export type MutationSetArtistGuestlistHighlightedArgs = {
+  eventId: Scalars['String']['input'];
+  isHighlighted: Scalars['Boolean']['input'];
 };
 
 
@@ -4662,6 +4698,20 @@ export type PublicArtistFilterInput = {
   search?: InputMaybe<Scalars['String']['input']>;
 };
 
+export type PublicArtistGuestlist = {
+  __typename?: 'PublicArtistGuestlist';
+  acceptedCount: Scalars['Int']['output'];
+  cap?: Maybe<Scalars['Int']['output']>;
+  code: Scalars['String']['output'];
+  eventCity?: Maybe<Scalars['String']['output']>;
+  eventFlyer?: Maybe<Scalars['String']['output']>;
+  eventId: Scalars['String']['output'];
+  eventTitle: Scalars['String']['output'];
+  guestlistId: Scalars['String']['output'];
+  isHighlighted: Scalars['Boolean']['output'];
+  startDate?: Maybe<Scalars['DateTimeISO']['output']>;
+};
+
 export type PublicArtistListResponse = {
   __typename?: 'PublicArtistListResponse';
   artists: Array<Artist>;
@@ -4720,6 +4770,7 @@ export type Query = {
   artistGuestlistEntries: Array<GuestlistEntry>;
   artistGuestlistEntriesCsv: Scalars['String']['output'];
   artistGuestlistEvents: Array<ArtistGuestlistEventSummary>;
+  artistLineupEvents: Array<ArtistLineupEvent>;
   artistMe: Artist;
   artistMyLinks: Array<ArtistLink>;
   artistMyMerch: Array<ArtistMerch>;
@@ -4824,6 +4875,7 @@ export type Query = {
   myWhatsAppTemplates: WhatsAppTemplatesPaginatedResponse;
   publicArtistEvents: Array<PublicArtistEvent>;
   publicArtistFollowerCounts: ArtistFollowerCounts;
+  publicArtistGuestlists: Array<PublicArtistGuestlist>;
   publicArtistLinks: Array<ArtistLink>;
   publicArtistMerch: Array<ArtistMerch>;
   publicArtistProfile: Artist;
@@ -5410,6 +5462,11 @@ export type QueryPublicArtistEventsArgs = {
 
 
 export type QueryPublicArtistFollowerCountsArgs = {
+  idOrSlug: Scalars['String']['input'];
+};
+
+
+export type QueryPublicArtistGuestlistsArgs = {
   idOrSlug: Scalars['String']['input'];
 };
 
