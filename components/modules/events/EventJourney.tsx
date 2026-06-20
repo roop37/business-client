@@ -3419,8 +3419,8 @@ const EventJourney = ({
                           onCheckedChange={setIsComingSoon}
                         />
                         <ToggleSettingRow
-                          title="Make Event Visible"
-                          subtitle="Visible drafts still need publishing before customers can book."
+                          title="Show on customer site"
+                          subtitle="When on, customers can find this event once it's published. Turn off to hide it without unpublishing."
                           checked={isVisible}
                           onCheckedChange={requestEventVisibilityChange}
                         />
