@@ -14,9 +14,9 @@ import {
   Karla,
   Libre_Caslon_Display,
   Manrope,
-  Roboto_Flex,
   Tenor_Sans,
 } from "next/font/google";
+import localFont from "next/font/local";
 import Head from "next/head";
 import NextNProgress from "nextjs-progressbar";
 import { ReactNode, useEffect } from "react";
@@ -50,8 +50,17 @@ type NextPageWithLayout = NextPage & {
 type AppPropsWithLayout = AppProps & {
   Component: NextPageWithLayout;
 };
-const font = Roboto_Flex({
-  subsets: ["latin"],
+// Business-client workhorse type — DM Sans (local files in /fonts).
+const font = localFont({
+  src: [
+    { path: "../fonts/DMSans-Regular.ttf", weight: "400", style: "normal" },
+    { path: "../fonts/DMSans-Medium.ttf", weight: "500", style: "normal" },
+    { path: "../fonts/DMSans-SemiBold.ttf", weight: "600", style: "normal" },
+    { path: "../fonts/DMSans-Bold.ttf", weight: "700", style: "normal" },
+    { path: "../fonts/DMSans-ExtraBold.ttf", weight: "800", style: "normal" },
+  ],
+  variable: "--font-dm-sans",
+  display: "swap",
 });
 // Website Builder Fonts
 const karla = Karla({
@@ -117,7 +126,7 @@ function MyApp({ Component, pageProps }: AppPropsWithLayout) {
 
   return (
     <div
-      className={`${font.className} ${karla.variable} ${tenor.variable} ${libre.variable} ${figtree.variable} ${bodoniModa.variable} ${manrope.variable}`}
+      className={`${font.className} ${font.variable} ${karla.variable} ${tenor.variable} ${libre.variable} ${figtree.variable} ${bodoniModa.variable} ${manrope.variable}`}
     >
         <NextNProgress color="#191C24" />
         <Head>

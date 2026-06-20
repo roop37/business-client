@@ -123,10 +123,11 @@ export const fetchAutomationEventBreakdown = async (
 // For now the idea goes straight to the product team's inbox via the host's
 // mail client, which keeps the feature live with zero backend surface.
 export const suggestAutomation = async (text: string): Promise<boolean> => {
-  if (typeof window !== "undefined") {
-    const subject = encodeURIComponent("Automation suggestion from a host");
-    const body = encodeURIComponent(text);
-    window.location.href = `mailto:tech@hoizr.com?subject=${subject}&body=${body}`;
-  }
-  return true;
+  // Stored server-side for internal-admin triage (status + priority) — no
+  // longer a mailto that gets lost.
+  const data = await client.request<{ submitAutomationSuggestion: boolean }>(
+    `mutation ($text: String!) { submitAutomationSuggestion(text: $text) }`,
+    { text }
+  );
+  return data.submitAutomationSuggestion;
 };

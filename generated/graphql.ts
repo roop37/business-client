@@ -45,6 +45,9 @@ export enum AccountType {
 
 /** Types of actions performed in the system */
 export enum ActivityActionType {
+  CampaignCreated = 'CAMPAIGN_CREATED',
+  CampaignSent = 'CAMPAIGN_SENT',
+  CampaignUpdated = 'CAMPAIGN_UPDATED',
   CouponCreated = 'COUPON_CREATED',
   CouponDeleted = 'COUPON_DELETED',
   CouponUpdated = 'COUPON_UPDATED',
@@ -1021,6 +1024,34 @@ export type AutomationEventBreakdownRow = {
   eventTitle: Scalars['String']['output'];
   whatsappSent: Scalars['Int']['output'];
 };
+
+export type AutomationSuggestion = {
+  __typename?: 'AutomationSuggestion';
+  _id: Scalars['ID']['output'];
+  adminNote?: Maybe<Scalars['String']['output']>;
+  createdAt?: Maybe<Scalars['DateTimeISO']['output']>;
+  createdBy?: Maybe<Scalars['String']['output']>;
+  hostId: Scalars['String']['output'];
+  hostName?: Maybe<Scalars['String']['output']>;
+  priority: AutomationSuggestionPriority;
+  status: AutomationSuggestionStatus;
+  text: Scalars['String']['output'];
+  updatedAt?: Maybe<Scalars['DateTimeISO']['output']>;
+};
+
+export enum AutomationSuggestionPriority {
+  High = 'HIGH',
+  Low = 'LOW',
+  Medium = 'MEDIUM'
+}
+
+export enum AutomationSuggestionStatus {
+  Declined = 'DECLINED',
+  Done = 'DONE',
+  New = 'NEW',
+  Planned = 'PLANNED',
+  UnderReview = 'UNDER_REVIEW'
+}
 
 export type AutomationView = {
   __typename?: 'AutomationView';
@@ -3409,6 +3440,7 @@ export type Mutation = {
   adminSetPlatformCosts: PlatformCostConfig;
   adminSubmitWhatsAppTemplateToMeta: WhatsAppTemplateSubmissionResult;
   adminTriggerRazorpaySettlementReconcile: RazorpayReconcileSummary;
+  adminUpdateAutomationSuggestion: AutomationSuggestion;
   adminUpdateEvent: Event;
   adminUpdateHost: Host;
   adminUpdateWhatsAppTemplate: WhatsAppMessageTemplate;
@@ -3496,6 +3528,7 @@ export type Mutation = {
   setPrimaryHostPayoutAccount: HostPayoutAccount;
   setPrimaryPayout: Payout;
   startNewHostOnboarding: Scalars['Boolean']['output'];
+  submitAutomationSuggestion: Scalars['Boolean']['output'];
   submitHostFeedback: Scalars['Boolean']['output'];
   submitMyWhatsAppTemplateForReview: WhatsAppMessageTemplate;
   toggleCouponActive: Coupon;
@@ -3704,6 +3737,14 @@ export type MutationAdminSubmitWhatsAppTemplateToMetaArgs = {
 export type MutationAdminTriggerRazorpaySettlementReconcileArgs = {
   fromUnix?: InputMaybe<Scalars['Float']['input']>;
   toUnix?: InputMaybe<Scalars['Float']['input']>;
+};
+
+
+export type MutationAdminUpdateAutomationSuggestionArgs = {
+  adminNote?: InputMaybe<Scalars['String']['input']>;
+  id: Scalars['String']['input'];
+  priority?: InputMaybe<AutomationSuggestionPriority>;
+  status?: InputMaybe<AutomationSuggestionStatus>;
 };
 
 
@@ -4131,6 +4172,11 @@ export type MutationSetPrimaryHostPayoutAccountArgs = {
 
 export type MutationSetPrimaryPayoutArgs = {
   id: Scalars['String']['input'];
+};
+
+
+export type MutationSubmitAutomationSuggestionArgs = {
+  text: Scalars['String']['input'];
 };
 
 
@@ -4727,6 +4773,7 @@ export type PublicArtistListResponse = {
 
 export type Query = {
   __typename?: 'Query';
+  adminAutomationSuggestions: Array<AutomationSuggestion>;
   adminAutomationTemplates: Array<AdminAutomationTemplateView>;
   adminCampaignsReport: AdminCampaignsReport;
   adminCsvExport: Scalars['String']['output'];
@@ -4903,6 +4950,11 @@ export type Query = {
   userSignupVerification: Scalars['Boolean']['output'];
   verify2FASetup: Scalars['Boolean']['output'];
   whatsAppTemplateById: WhatsAppMessageTemplate;
+};
+
+
+export type QueryAdminAutomationSuggestionsArgs = {
+  status?: InputMaybe<AutomationSuggestionStatus>;
 };
 
 

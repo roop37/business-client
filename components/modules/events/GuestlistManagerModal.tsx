@@ -512,7 +512,7 @@ const GuestlistManagerModal: React.FC<Props> = ({
                                     No guests match this filter.
                                   </p>
                                 ) : (
-                                  <div className="divide-y divide-[var(--owner-border-soft)]">
+                                  <div className="max-h-[360px] min-h-[120px] divide-y divide-[var(--owner-border-soft)] overflow-y-auto">
                                     {visible.map((en) => (
                                       <div
                                         key={en._id}

@@ -820,10 +820,10 @@ const EventListCard = ({
       router.push(`/events/${event._id}/create`);
       return;
     }
-    // Everything else (published / completed / paused / collaborator): land on
-    // the event hub page. Config lives behind its "Manage" button; the hub
-    // gates edit + customer access for collaborators itself.
-    router.push(`/events/${event._id}`);
+    // Everything else (published / completed / paused / collaborator): land
+    // directly on Manage Event — the single page that now holds config,
+    // guest lists, and activity (orders/offline/customers). The old hub is gone.
+    router.push(`/events/${event._id}/manage`);
   };
 
   return (
@@ -858,7 +858,7 @@ const EventListCard = ({
               <ActionButton
                 label="View event"
                 Icon={SettingsIcon}
-                onClick={() => router.push(`/events/${event._id}`)}
+                onClick={() => router.push(`/events/${event._id}/manage`)}
               />
               <ActionButton
                 label="Metrics"

@@ -389,6 +389,9 @@ const NavItem = ({
 
 const isActiveFor = (pathname: string, item: TSidebarItem) => {
   if (item.title === "Dashboard") return pathname === "/dashboard";
+  // Teams must NOT light up on /teams/activity-log — that's a sibling nav
+  // item, and the generic startsWith fallback would match both. Exact match.
+  if (item.title === "Teams") return pathname === "/teams";
   if (item.title === "Campaigns") return pathname.startsWith("/campaigns");
   if (item.title === "Rewards & Loyalties")
     return pathname.startsWith("/rewards") || pathname.startsWith("/coupons");
