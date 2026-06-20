@@ -765,6 +765,7 @@ export type Artist = {
   slug?: Maybe<Scalars['String']['output']>;
   soundcloudLink?: Maybe<Scalars['String']['output']>;
   spotifyLink?: Maybe<Scalars['String']['output']>;
+  stageName?: Maybe<Scalars['String']['output']>;
   state?: Maybe<Scalars['String']['output']>;
   status: ArtistStatus;
   tagline?: Maybe<Scalars['String']['output']>;
@@ -923,7 +924,11 @@ export type ArtistOtpRequestResult = {
 };
 
 export type ArtistRequestOtpInput = {
+  email?: InputMaybe<Scalars['String']['input']>;
+  firstName?: InputMaybe<Scalars['String']['input']>;
+  lastName?: InputMaybe<Scalars['String']['input']>;
   phone: Scalars['String']['input'];
+  stageName?: InputMaybe<Scalars['String']['input']>;
 };
 
 export type ArtistRequirements = {
@@ -5899,6 +5904,7 @@ export type UpdateArtistProfileInput = {
   slug?: InputMaybe<Scalars['String']['input']>;
   soundcloudLink?: InputMaybe<Scalars['String']['input']>;
   spotifyLink?: InputMaybe<Scalars['String']['input']>;
+  stageName?: InputMaybe<Scalars['String']['input']>;
   state?: InputMaybe<Scalars['String']['input']>;
   tagline?: InputMaybe<Scalars['String']['input']>;
   twitterLink?: InputMaybe<Scalars['String']['input']>;
