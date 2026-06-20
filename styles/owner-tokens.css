@@ -104,9 +104,11 @@
   --owner-space-12: 48px;
   --owner-space-16: 64px;
 
-  /* Type — family */
-  --owner-font-sans: 'Inter', -apple-system, BlinkMacSystemFont,
-                     'Segoe UI', Roboto, sans-serif;
+  /* Type — family. DM Sans (loaded via next/font/local in _app.tsx as
+     --font-dm-sans) is the business-client workhorse; var() resolves at the
+     consuming element, which sits under the wrapper that defines it. */
+  --owner-font-sans: var(--font-dm-sans), 'DM Sans', -apple-system,
+                     BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   --owner-font-mono: ui-monospace, 'SF Mono', Menlo, monospace;
 }
 
