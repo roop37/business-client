@@ -64,7 +64,11 @@ const AutomationsPage = () => {
         const live = (ev?.getMyEvents ?? [])
           .filter((e: any) => {
             const s = String(e.status ?? "").toUpperCase();
-            if (s === "DRAFT" || s === "CANCELLED" || s === "ARCHIVED") return false;
+            // "Live now" = ONLY a PUBLISHED event currently within its run
+            // window. An unpublished (PENDING/DRAFT) or COMPLETED/CANCELLED
+            // event must never show here — that was surfacing "Untitled
+            // Event / 0 sold" for events that weren't actually live.
+            if (s !== "PUBLISHED") return false;
             const start = e.startDate ? new Date(e.startDate).getTime() : null;
             const end = e.endDate ? new Date(e.endDate).getTime() : null;
             return (start === null || start <= now) && (end === null || end >= now);

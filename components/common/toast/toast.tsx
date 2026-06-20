@@ -48,7 +48,7 @@ export const Toast: FC<ToastProps> = ({ message, type }) => {
 
   return createPortal(
     <div
-      className={`fixed bottom-4 right-4 z-[1000] flex w-full max-w-sm items-center gap-3 rounded-owner-md border p-3.5 shadow-owner-md ${tone.surface}`}
+      className={`fixed bottom-4 right-4 z-[2000] flex w-full max-w-sm items-center gap-3 rounded-owner-md border p-3.5 shadow-owner-md ${tone.surface}`}
       role="alert"
     >
       <div
