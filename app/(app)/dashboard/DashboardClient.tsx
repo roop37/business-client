@@ -352,7 +352,7 @@ export const DashboardClient = () => {
   useEffect(() => {
     const settings = searchParams?.get("settings");
     if (!settings) return;
-    const allowed = ["account", "security", "brand", "alerts"] as const;
+    const allowed = ["account", "security", "brand", "activity"] as const;
     type SettingsTab = (typeof allowed)[number];
     const isAllowed = (s: string): s is SettingsTab =>
       (allowed as readonly string[]).includes(s);

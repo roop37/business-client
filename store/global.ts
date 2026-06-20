@@ -75,8 +75,8 @@ type MenuState = {
   // details" entry), "brand" opens the organisation tab (used by the
   // sidebar Settings entry).
   settingsModalOpen: boolean;
-  settingsModalTab: "account" | "security" | "brand" | "alerts";
-  openSettingsModal: (tab?: "account" | "security" | "brand" | "alerts") => void;
+  settingsModalTab: "account" | "security" | "brand" | "activity";
+  openSettingsModal: (tab?: "account" | "security" | "brand" | "activity") => void;
   closeSettingsModal: () => void;
 
   // Per-event "Run a Campaign" launcher — pops a compact channel

@@ -84,11 +84,11 @@ export const getSidebarList = (): TSidebarItem[] => [
     ],
   },
   {
-    title: "Automations",
-    href: "/automations",
-    icon: Workflow,
+    title: "Orders",
+    href: "/orders",
+    icon: ShoppingBag,
     active: true,
-    id: "sidebar-automations",
+    id: "sidebar-orders",
   },
   {
     title: "Customers",
@@ -105,11 +105,11 @@ export const getSidebarList = (): TSidebarItem[] => [
     id: "sidebar-feedbacks",
   },
   {
-    title: "Orders",
-    href: "/orders",
-    icon: ShoppingBag,
+    title: "Automations",
+    href: "/automations",
+    icon: Workflow,
     active: true,
-    id: "sidebar-orders",
+    id: "sidebar-automations",
   },
   {
     title: "Scanners",
@@ -144,13 +144,7 @@ export const getSidebarList = (): TSidebarItem[] => [
     active: true,
     id: "sidebar-team",
   },
-  {
-    title: "Activity Log",
-    href: "/teams/activity-log",
-    icon: History,
-    active: true,
-    id: "sidebar-activity-log",
-  },
+  // Activity Log moved into the Settings modal; no longer a sidebar item.
   {
     title: "Settings",
     href: "/org-settings",

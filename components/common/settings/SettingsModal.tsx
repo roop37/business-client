@@ -12,8 +12,9 @@ import { endpoint, sdk } from "@/utils/graphqlClient";
 import { GraphQLClient } from "graphql-request";
 import { extractErrorMessage } from "@/utils/utilFUncs";
 import {
-  Bell,
   Building2,
+  History,
+  Loader2,
   MapPin,
   ShieldCheck,
   Sliders,
@@ -21,9 +22,10 @@ import {
   UserCircle2,
   type LucideIcon,
 } from "lucide-react";
+import { fetchActivityLogs, type ActivityLogRow } from "@/utils/activityLogClient";
 import { useCallback, useEffect, useRef, useState } from "react";
 
-type SettingsTab = "account" | "security" | "brand" | "alerts";
+type SettingsTab = "account" | "security" | "brand" | "activity";
 type BrandSection = "org" | "address" | "additional";
 
 type TabDef = {
@@ -36,7 +38,7 @@ const TABS: TabDef[] = [
   { id: "account", label: "Account", Icon: UserCircle2 },
   { id: "security", label: "Security", Icon: ShieldCheck },
   { id: "brand", label: "Organisation", Icon: Building2 },
-  { id: "alerts", label: "Alerts", Icon: Bell },
+  { id: "activity", label: "Activity Log", Icon: History },
 ];
 
 type BrandForm = {
@@ -598,21 +600,85 @@ const SettingsModal = () => {
               )}
             </div>
           ) : null}
-          {activeTab === "alerts" ? (
-            <div className="space-y-3">
-              <h3 className="text-[15px] font-semibold text-owner-fg-1">
-                Alerts
-              </h3>
-              <p className="text-sm text-owner-fg-3">
-                Notification preferences for this workspace are coming soon.
-                Until then we send: ticket sale milestones, scanner offline
-                warnings, refund requests, and the daily summary.
-              </p>
-            </div>
-          ) : null}
+          {activeTab === "activity" ? <ActivitySettingsTab /> : null}
         </div>
       </div>
     </ReusableModal>
+  );
+};
+
+/**
+ * Activity Log — moved here from the standalone /teams/activity-log page so
+ * the whole audit trail lives in Settings. Compact, lazy-loaded list (newest
+ * first); the full filterable table still exists at the route if needed.
+ */
+const ActivitySettingsTab = () => {
+  const [rows, setRows] = useState<ActivityLogRow[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    let alive = true;
+    (async () => {
+      try {
+        const data = await fetchActivityLogs(
+          { pageNumber: 1, rowsPerPage: 50 },
+          undefined,
+          { key: "createdAt", sortType: "Desc" }
+        );
+        if (alive) setRows(data.activityLogs ?? []);
+      } catch (e) {
+        if (alive) setError(extractErrorMessage(e));
+      } finally {
+        if (alive) setLoading(false);
+      }
+    })();
+    return () => {
+      alive = false;
+    };
+  }, []);
+
+  const fmt = (iso?: string) =>
+    iso
+      ? new Intl.DateTimeFormat("en-IN", {
+          timeZone: "Asia/Kolkata",
+          day: "2-digit",
+          month: "short",
+          hour: "numeric",
+          minute: "2-digit",
+          hour12: true,
+        }).format(new Date(iso))
+      : "";
+
+  return (
+    <div className="space-y-3">
+      <h3 className="text-[15px] font-semibold text-owner-fg-1">Activity log</h3>
+      <p className="text-sm text-owner-fg-3">
+        Recent actions across your workspace — newest first.
+      </p>
+      {error ? (
+        <p className="rounded-owner-md border border-owner-danger-bg bg-owner-danger-bg px-3 py-2 text-sm text-owner-danger-text">
+          {error}
+        </p>
+      ) : loading ? (
+        <div className="flex justify-center py-10">
+          <Loader2 className="h-5 w-5 animate-spin text-owner-fg-4" />
+        </div>
+      ) : rows.length === 0 ? (
+        <p className="py-8 text-center text-sm text-owner-fg-4">
+          No activity yet.
+        </p>
+      ) : (
+        <div className="max-h-[360px] divide-y divide-owner-border-soft overflow-y-auto rounded-owner-md border border-owner-border">
+          {rows.map((r) => (
+            <div key={r._id} className="px-3.5 py-2.5">
+              <p className="text-sm text-owner-fg-1">{r.description}</p>
+              <p className="mt-0.5 text-xs text-owner-fg-4">{fmt(r.createdAt)}</p>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
   );
 };
 
