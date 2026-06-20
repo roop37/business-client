@@ -1,5 +1,6 @@
 import EventJourney from "@/components/modules/events/EventJourney";
 import { EventScanners } from "@/components/modules/events/EventScanners";
+import { EventActivityPanel } from "@/components/modules/events/EventActivityPanel";
 import GuestlistManagerModal from "@/components/modules/events/GuestlistManagerModal";
 import useGlobalStore from "@/store/global";
 import { sdk } from "@/utils/graphqlClient";
@@ -419,6 +420,27 @@ const EventOperations = ({
                   </span>
                 </div>
               </button>
+            ) : null}
+
+            {/* Activity — Orders · Offline Tickets · Customers, moved here from
+                the old Event Hub so an event lives on one page. */}
+            {canSeeMetrics ? (
+              <div>
+                <h3 className="mb-3 text-sm font-semibold text-[var(--owner-fg-2)]">
+                  Activity
+                </h3>
+                <EventActivityPanel
+                  eventId={eventId}
+                  tickets={(overview?.tickets ?? []).map((t: any) => ({
+                    _id: String(t._id),
+                    ticketName: t.ticketName,
+                  }))}
+                  canSeeCustomers={
+                    (overview?.totals?.sold ?? 0) > 0 &&
+                    overview?.canAccessCustomerList !== false
+                  }
+                />
+              </div>
             ) : null}
 
             {/* Collaborators & promoters */}
