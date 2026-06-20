@@ -145,7 +145,7 @@ const AutomationsPage = () => {
       setSuggestion("");
       setToastData({
         type: "success",
-        message: "Opening your email — hit send and your idea reaches our team.",
+        message: "Thanks! Your idea reached our team — we review every suggestion.",
       });
     } catch (err) {
       setToastData({ type: "error", message: extractErrorMessage(err) });
