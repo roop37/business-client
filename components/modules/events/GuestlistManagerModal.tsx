@@ -234,25 +234,6 @@ const GuestlistManagerModal: React.FC<Props> = ({
     }
   };
 
-  const toggleActive = async (list: GuestlistConfig) => {
-    setBusy(true);
-    try {
-      await sdk.upsertGuestlist({
-        input: {
-          eventId,
-          contributorType: list.contributorType,
-          contributorId: list.contributorId,
-          isActive: !list.isActive,
-        },
-      });
-      await loadLists();
-    } catch (err) {
-      setToastData({ type: "error", message: extractErrorMessage(err) });
-    } finally {
-      setBusy(false);
-    }
-  };
-
   const copyLink = async (code: string) => {
     const url = `${JOIN_BASE}/${code}`;
     try {
@@ -427,7 +408,7 @@ const GuestlistManagerModal: React.FC<Props> = ({
                   <div
                     key={list._id}
                     className={`rounded-lg border border-[var(--owner-border)] ${
-                      list.isActive ? "" : "opacity-60"
+                      list.isOpen === false ? "opacity-60" : ""
                     }`}
                   >
                     <div className="flex flex-wrap items-center justify-between gap-3 p-3">
@@ -452,27 +433,9 @@ const GuestlistManagerModal: React.FC<Props> = ({
                         </div>
                       </div>
                       <div className="flex flex-wrap items-center gap-2">
-                        {isOwner ? (
-                          <button
-                            type="button"
-                            disabled={busy}
-                            onClick={() => toggleActive(list)}
-                            title={
-                              list.isActive
-                                ? "Guestlist on — tap to turn off"
-                                : "Guestlist off — tap to turn on"
-                            }
-                            className={`rounded-md px-2.5 py-1.5 text-xs font-semibold ${
-                              list.isActive
-                                ? "bg-emerald-500/10 text-emerald-600"
-                                : "bg-[var(--owner-bg-subtle)] text-[var(--owner-fg-3)]"
-                            }`}
-                          >
-                            {list.isActive ? "On" : "Off"}
-                          </button>
-                        ) : null}
                         {/* Owner hard-close: stop NEW joins (existing guests keep
-                            their golden tickets). */}
+                            their golden tickets). The whole-feature on/off lives
+                            in the event-level "Enable guestlist" setting above. */}
                         {isOwner ? (
                           <button
                             type="button"
