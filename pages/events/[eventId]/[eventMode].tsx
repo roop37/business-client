@@ -387,9 +387,10 @@ const EventOperations = ({
               </Link>
             </div>
 
-            {/* Guest lists — managed inline from Manage (open the same manager
-                used on the event hub). */}
-            {!isCollaboratorView ? (
+            {/* Guest lists — managed inline from Manage. Owner sees it always
+                (incl. the off→on prompt); a collaborator sees it only when the
+                guestlist is enabled, to manage THEIR own list. */}
+            {!isCollaboratorView || overview?.guestlistEnabled ? (
               <button
                 type="button"
                 onClick={() => setGuestlistOpen(true)}
@@ -403,7 +404,9 @@ const EventOperations = ({
                     <div className="min-w-0">
                       <p className="font-semibold">Guest lists</p>
                       <p className="text-xs text-[var(--owner-fg-3)]">
-                        {overview?.guestlistEnabled
+                        {isCollaboratorView
+                          ? "Manage your guest list, invite link and guests."
+                          : overview?.guestlistEnabled
                           ? "Manage lists, invite links and guests. Golden tickets scan at the door."
                           : "Off — turn on free guest invites with golden tickets."}
                       </p>
@@ -541,6 +544,8 @@ const EventOperations = ({
         eventId={eventId}
         guestlistEnabled={!!overview?.guestlistEnabled}
         guestlistAutoAccept={overview?.guestlistAutoAccept !== false}
+        guestlistMaxCapacity={overview?.guestlistMaxCapacity ?? null}
+        isCollaboratorView={isCollaboratorView}
         onSettingsChanged={loadOverview}
       />
     </EventShell>

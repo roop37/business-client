@@ -542,6 +542,7 @@ Object.assign(sdk, {
             ticketingEnabled
             guestlistEnabled
             guestlistAutoAccept
+            guestlistMaxCapacity
             isCollaboratorView
             canSeeMetrics
             canRunCampaigns
@@ -648,6 +649,7 @@ Object.assign(sdk, {
       eventId: string;
       guestlistEnabled: boolean;
       guestlistAutoAccept: boolean;
+      guestlistMaxCapacity?: number | null;
     };
   }) =>
     graphQLClient.request(
@@ -672,6 +674,8 @@ Object.assign(sdk, {
             isPublic
             code
             isActive
+            manageEnabled
+            isOpen
           }
         }
       `,
@@ -686,6 +690,8 @@ Object.assign(sdk, {
       cap?: number | null;
       isPublic?: boolean;
       isActive?: boolean;
+      manageEnabled?: boolean;
+      isOpen?: boolean;
     };
   }) =>
     graphQLClient.request(
@@ -700,6 +706,8 @@ Object.assign(sdk, {
             isPublic
             code
             isActive
+            manageEnabled
+            isOpen
           }
         }
       `,
