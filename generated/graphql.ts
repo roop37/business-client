@@ -813,7 +813,9 @@ export type ArtistGuestlistEventSummary = {
   eventId: Scalars['ID']['output'];
   isActive: Scalars['Boolean']['output'];
   isHighlighted: Scalars['Boolean']['output'];
+  isOpen: Scalars['Boolean']['output'];
   isPublic: Scalars['Boolean']['output'];
+  manageEnabled: Scalars['Boolean']['output'];
   pendingCount: Scalars['Int']['output'];
   startDate?: Maybe<Scalars['DateTimeISO']['output']>;
   title?: Maybe<Scalars['String']['output']>;
@@ -1491,6 +1493,7 @@ export type Event = {
   genresPreferred?: Maybe<Array<Genre>>;
   guestlistAutoAccept?: Maybe<Scalars['Boolean']['output']>;
   guestlistEnabled?: Maybe<Scalars['Boolean']['output']>;
+  guestlistMaxCapacity?: Maybe<Scalars['Float']['output']>;
   horizontalFlyer?: Maybe<Scalars['String']['output']>;
   horizontalVideo?: Maybe<Scalars['String']['output']>;
   hostId: Scalars['String']['output'];
@@ -1691,6 +1694,7 @@ export type EventGuestlistSettingsInput = {
   eventId: Scalars['String']['input'];
   guestlistAutoAccept: Scalars['Boolean']['input'];
   guestlistEnabled: Scalars['Boolean']['input'];
+  guestlistMaxCapacity?: InputMaybe<Scalars['Int']['input']>;
 };
 
 export type EventGuide = {
@@ -1839,6 +1843,7 @@ export type EventManageOverview = {
   feeSettlementMode?: Maybe<EventFeeSettlementMode>;
   guestlistAutoAccept: Scalars['Boolean']['output'];
   guestlistEnabled: Scalars['Boolean']['output'];
+  guestlistMaxCapacity?: Maybe<Scalars['Float']['output']>;
   isCollaboratorView?: Maybe<Scalars['Boolean']['output']>;
   isVisible: Scalars['Boolean']['output'];
   pricingOptions?: Maybe<Array<EventManageOverviewPricingOption>>;
@@ -2352,7 +2357,9 @@ export type Guestlist = {
   hostId: Scalars['String']['output'];
   isActive: Scalars['Boolean']['output'];
   isHighlighted: Scalars['Boolean']['output'];
+  isOpen: Scalars['Boolean']['output'];
   isPublic: Scalars['Boolean']['output'];
+  manageEnabled: Scalars['Boolean']['output'];
   updatedAt?: Maybe<Scalars['DateTimeISO']['output']>;
 };
 
@@ -6160,7 +6167,9 @@ export type UpsertGuestlistInput = {
   contributorType: GuestlistContributorType;
   eventId: Scalars['String']['input'];
   isActive?: InputMaybe<Scalars['Boolean']['input']>;
+  isOpen?: InputMaybe<Scalars['Boolean']['input']>;
   isPublic?: InputMaybe<Scalars['Boolean']['input']>;
+  manageEnabled?: InputMaybe<Scalars['Boolean']['input']>;
 };
 
 export type UpsertPhantomArtistInput = {
