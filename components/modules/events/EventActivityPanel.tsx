@@ -7,10 +7,15 @@ import {
   fetchEventCustomers,
   fetchEventOrders,
 } from "@/utils/eventOpsClient";
+import {
+  OfflineOrderRow,
+  fetchMyEventsForOffline,
+  fetchMyOfflineOrders,
+} from "@/utils/offlineTicketClient";
 import { orderStatusClasses, orderStatusLabel } from "@/utils/orderStatus";
 import { extractErrorMessage } from "@/utils/utilFUncs";
 import { format } from "date-fns";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronLeft, ChevronRight, Plus } from "lucide-react";
 import type { ReactNode } from "react";
 import { useCallback, useEffect, useState } from "react";
 
@@ -309,6 +314,151 @@ const CustomersTab = ({ eventId }: { eventId: string }) => {
   );
 };
 
+const OFFLINE_STATUS: Record<string, { label: string; cls: string }> = {
+  ISSUED: { label: "Issued", cls: "bg-emerald-500/10 text-emerald-600" },
+  PAID: { label: "Paid", cls: "bg-emerald-500/10 text-emerald-600" },
+  LINK_SENT: { label: "Link sent", cls: "bg-amber-500/10 text-amber-600" },
+  EXPIRED: { label: "Expired", cls: "bg-gray-500/10 text-[var(--owner-fg-3)]" },
+  CANCELLED: { label: "Cancelled", cls: "bg-gray-500/10 text-[var(--owner-fg-3)]" },
+};
+
+/**
+ * Offline Tickets tab — the LIST of offline orders for this event (issued
+ * tickets + payment links). The "Issue offline ticket" action lives in the
+ * top-right and opens the form as a modal; it's shown only when the viewer can
+ * issue for this event (owner, or collaborator with the offline permission —
+ * mirrors the server gate via `eventsForOfflineIssuing`). The list itself is
+ * always shown: owners see all offline orders for the event, collaborators see
+ * the ones they issued (server-scoped in `myOfflineOrders`).
+ */
+const OfflineTab = ({ eventId }: { eventId: string }) => {
+  const { setToastData } = useGlobalStore();
+  const [rows, setRows] = useState<OfflineOrderRow[]>([]);
+  const [total, setTotal] = useState(0);
+  const [page, setPage] = useState(1);
+  const [loading, setLoading] = useState(false);
+  const [canIssue, setCanIssue] = useState(false);
+  const [modalOpen, setModalOpen] = useState(false);
+  const pageCount = Math.max(Math.ceil(total / PAGE_SIZE), 1);
+
+  const load = useCallback(async () => {
+    setLoading(true);
+    try {
+      const res = await fetchMyOfflineOrders(eventId, page, PAGE_SIZE);
+      setRows(res.items);
+      setTotal(res.total);
+    } catch (e) {
+      setToastData({ type: "error", message: extractErrorMessage(e) });
+    } finally {
+      setLoading(false);
+    }
+  }, [eventId, page, setToastData]);
+
+  useEffect(() => {
+    load();
+  }, [load]);
+
+  // Can this viewer issue offline tickets for THIS event? The server's
+  // eventsForOfflineIssuing already gates on owner OR collaborator-with-
+  // permission + PUBLISHED + not-ended, so membership of this event id is the
+  // exact gate — no extra permission prop needed.
+  useEffect(() => {
+    (async () => {
+      try {
+        const evts = await fetchMyEventsForOffline();
+        setCanIssue(evts.some((e) => e._id === eventId));
+      } catch {
+        /* gate is best-effort; default hides the button */
+      }
+    })();
+  }, [eventId]);
+
+  return (
+    <div>
+      <div className="mb-3 flex items-center justify-between gap-2">
+        <span className="text-xs text-[var(--owner-fg-3)]">
+          {total} offline {total === 1 ? "order" : "orders"}
+        </span>
+        {canIssue ? (
+          <button
+            type="button"
+            onClick={() => setModalOpen(true)}
+            className="inline-flex items-center gap-1.5 rounded-lg bg-[var(--owner-blue-500)] px-3 py-1.5 text-sm font-semibold text-white transition hover:opacity-95"
+          >
+            <Plus size={15} /> Issue offline ticket
+          </button>
+        ) : null}
+      </div>
+
+      {loading ? (
+        <div className="py-12 text-center text-sm text-[var(--owner-fg-4)]">Loading…</div>
+      ) : rows.length === 0 ? (
+        <div className="py-12 text-center text-sm text-[var(--owner-fg-4)]">
+          No offline tickets issued yet.
+        </div>
+      ) : (
+        <div className="max-h-[460px] divide-y divide-[var(--owner-border)] overflow-y-auto rounded-lg border border-[var(--owner-border)] bg-[var(--owner-bg)]">
+          {rows.map((o) => {
+            const name =
+              [o.customerFirstName, o.customerLastName].filter(Boolean).join(" ") ||
+              o.customerPhone ||
+              "—";
+            const st = OFFLINE_STATUS[o.status] ?? {
+              label: o.status,
+              cls: "bg-gray-500/10 text-[var(--owner-fg-3)]",
+            };
+            return (
+              <div
+                key={o._id}
+                className="flex items-center gap-4 px-4 py-3 text-left"
+              >
+                <div className="min-w-0 flex-1">
+                  <div className="truncate text-sm font-medium">
+                    {name}
+                    <span className="ml-1.5 rounded bg-[var(--owner-bg-subtle)] px-1.5 py-0.5 text-[10px] font-semibold text-[var(--owner-fg-3)]">
+                      {o.mode === "ISSUED" ? "Issued" : "Payment link"}
+                    </span>
+                  </div>
+                  <div className="truncate text-xs text-[var(--owner-fg-4)]">
+                    {fmtDate(o.createdAt)}
+                    {o.createdByName
+                      ? ` · by ${o.createdByName}${
+                          o.createdByCollaborator ? " (collab)" : ""
+                        }`
+                      : ""}
+                  </div>
+                </div>
+                <div className="text-right">
+                  <div className="text-sm font-semibold tabular-nums">
+                    {inrFormat(o.amountTotal)}
+                  </div>
+                  <span
+                    className={`inline-block rounded-full px-2 py-0.5 text-[10px] font-medium ${st.cls}`}
+                  >
+                    {st.label}
+                  </span>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
+
+      <Pager page={page} pageCount={pageCount} setPage={setPage} />
+
+      <IssueOfflineTicketModal
+        open={modalOpen}
+        onClose={() => {
+          setModalOpen(false);
+          setPage(1);
+          load();
+        }}
+        presetEventId={eventId}
+      />
+    </div>
+  );
+};
+
 type ActivityTab = "orders" | "offline" | "customers";
 
 export const EventActivityPanel = ({
@@ -349,9 +499,7 @@ export const EventActivityPanel = ({
       </div>
 
       {tab === "orders" ? <OrdersTab eventId={eventId} tickets={tickets} /> : null}
-      {tab === "offline" ? (
-        <IssueOfflineTicketModal inline presetEventId={eventId} />
-      ) : null}
+      {tab === "offline" ? <OfflineTab eventId={eventId} /> : null}
       {tab === "customers" && canSeeCustomers ? (
         <CustomersTab eventId={eventId} />
       ) : null}
