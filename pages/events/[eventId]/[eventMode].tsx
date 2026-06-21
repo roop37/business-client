@@ -374,13 +374,13 @@ const EventOperations = ({
                 the event hub (/events/[id]); Manage is config + settings. */}
             <div className="flex flex-wrap gap-2">
               <Link
-                href={`/reports/sales?eventId=${eventId}`}
+                href={`/reports/sales-summary?eventId=${eventId}`}
                 className="rounded-lg border border-[var(--owner-border)] bg-[var(--owner-bg)] px-4 py-2 text-sm font-medium hover:border-[#c89d75]"
               >
                 See sales report
               </Link>
               <Link
-                href={`/reports/marketing?eventId=${eventId}`}
+                href={`/reports/campaign-performance?eventId=${eventId}`}
                 className="rounded-lg border border-[var(--owner-border)] bg-[var(--owner-bg)] px-4 py-2 text-sm font-medium hover:border-[#c89d75]"
               >
                 See marketing report
