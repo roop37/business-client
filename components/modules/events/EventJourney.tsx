@@ -600,31 +600,53 @@ const genDayId = (): string => {
   return `${Math.random().toString(36).slice(2, 10)}${Date.now().toString(36)}`;
 };
 
-// Split an event date range into Day 1…N — one calendar day each, same daily
-// time window inferred from the overall start/end. UTC throughout to match
-// toDateTimeInput's UTC slicing. Days are editable after generation.
+const DT_PARTS_RE = /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})/;
+const pad2 = (n: number) => String(n).padStart(2, "0");
+
+// Split an event date range into Day 1…N — one calendar day each, with the same
+// daily time window taken from the overall start/end. Operates PURELY on the
+// "YYYY-MM-DDTHH:MM" wall-clock strings (no `new Date()` / UTC conversion) so
+// Day 1's start equals the event start string exactly and the last day's end
+// equals the event end string exactly — the auto-fill is valid by construction
+// and representation-agnostic (works whether the strings are local wall-clock
+// from the picker or UTC-sliced from a loaded event). The earlier version mixed
+// local parsing with UTC field reads, which shifted every day by the timezone
+// offset (e.g. a 5:00 PM IST start became an 11:30 "Day 1", tripping the
+// "starts before the event start" check). Days are editable after generation.
 const buildDaysFromRange = (start: string, end: string): EventDayDraft[] => {
-  if (!start || !end) return [];
-  const s = new Date(start);
-  const e = new Date(end);
-  if (Number.isNaN(s.getTime()) || Number.isNaN(e.getTime()) || e <= s) return [];
+  const ms = DT_PARTS_RE.exec(start);
+  const me = DT_PARTS_RE.exec(end);
+  if (!ms || !me) return [];
+  const startTime = `${ms[4]}:${ms[5]}`;
+  const endTime = `${me[4]}:${me[5]}`;
   const DAY_MS = 24 * 60 * 60 * 1000;
-  const startMidnight = Date.UTC(s.getUTCFullYear(), s.getUTCMonth(), s.getUTCDate());
-  const endMidnight = Date.UTC(e.getUTCFullYear(), e.getUTCMonth(), e.getUTCDate());
-  const n = Math.round((endMidnight - startMidnight) / DAY_MS) + 1;
-  const startMins = s.getUTCHours() * 60 + s.getUTCMinutes();
-  const endMins = e.getUTCHours() * 60 + e.getUTCMinutes();
+  // Calendar-day span only — date components via UTC midnight is tz-agnostic.
+  const startMid = Date.UTC(+ms[1], +ms[2] - 1, +ms[3]);
+  const endMid = Date.UTC(+me[1], +me[2] - 1, +me[3]);
+  if (endMid < startMid) return [];
+  // Overnight window (end time-of-day not after start, e.g. 9pm→2am) → each
+  // day's end falls on the NEXT calendar date, so the number of nights is the
+  // calendar-date difference; a same-day window spans dateDiff+1 days. Zero-
+  // padded HH:MM compares safely as strings.
+  const overnight = endTime <= startTime;
+  const dateDiff = Math.round((endMid - startMid) / DAY_MS);
+  const n = overnight ? dateDiff : dateDiff + 1;
+  if (n < 2) return [];
+  const dateStr = (mid: number) => {
+    const d = new Date(mid);
+    return `${d.getUTCFullYear()}-${pad2(d.getUTCMonth() + 1)}-${pad2(
+      d.getUTCDate()
+    )}`;
+  };
   const out: EventDayDraft[] = [];
   for (let i = 0; i < n; i++) {
-    const base = startMidnight + i * DAY_MS;
-    const dayStart = new Date(base + startMins * 60000);
-    let dayEnd = new Date(base + endMins * 60000);
-    if (dayEnd <= dayStart) dayEnd = new Date(dayEnd.getTime() + DAY_MS); // overnight
+    const dayMid = startMid + i * DAY_MS;
+    const endDayMid = overnight ? dayMid + DAY_MS : dayMid;
     out.push({
       dayId: genDayId(),
       title: `Day ${i + 1}`,
-      startDate: dayStart.toISOString().slice(0, 16),
-      endDate: dayEnd.toISOString().slice(0, 16),
+      startDate: `${dateStr(dayMid)}T${startTime}`,
+      endDate: `${dateStr(endDayMid)}T${endTime}`,
     });
   }
   return out;
@@ -748,6 +770,9 @@ const EventJourney = ({
   const [markSeparateDays, setMarkSeparateDays] = useState(false);
   // Per-day segments for a multi-day event (Day 1…N). Empty = single-day.
   const [eventDays, setEventDays] = useState<EventDayDraft[]>([]);
+  // Day validation is surfaced inline only AFTER a Next/Update attempt — never
+  // live while the host is still entering/editing the days.
+  const [daysSaveAttempted, setDaysSaveAttempted] = useState(false);
   const [isVisible, setIsVisible] = useState(true);
 
   const [city, setCity] = useState("");
@@ -1041,10 +1066,14 @@ const EventJourney = ({
     [multiDayEligible, markSeparateDays, eventDays, startDate, endDate]
   );
 
-  const updateEventDay = (index: number, patch: Partial<EventDayDraft>) =>
+  const updateEventDay = (index: number, patch: Partial<EventDayDraft>) => {
+    // The host is actively fixing the days — drop the post-attempt error until
+    // they try to proceed again.
+    setDaysSaveAttempted(false);
     setEventDays((prev) =>
       prev.map((d, i) => (i === index ? { ...d, ...patch } : d))
     );
+  };
 
   const stateOptions = useMemo(
     () =>
@@ -2679,6 +2708,9 @@ const EventJourney = ({
   };
 
   const saveCurrentStep = async (nextStep = step + 1) => {
+    // Surface day-level validation inline once the host actually tries to
+    // proceed from the basic-details step (the dates + day editor live there).
+    if (step === 1) setDaysSaveAttempted(true);
     const error = validateStep(step);
     if (error) {
       setToastData({ type: "error", message: error });
@@ -3675,7 +3707,7 @@ const EventJourney = ({
                                     />
                                   </div>
                                 ))}
-                                {daysError ? (
+                                {daysSaveAttempted && daysError ? (
                                   <div className="text-xs font-medium text-red-600">
                                     {daysError}
                                   </div>
