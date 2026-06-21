@@ -49,6 +49,10 @@ type GuestlistConfig = {
   isPublic: boolean;
   code: string;
   isActive: boolean;
+  // Owner-controlled: may the contributor administer their own list.
+  manageEnabled?: boolean;
+  // Owner hard-close: does the list accept new joins.
+  isOpen?: boolean;
 };
 
 type GuestlistEntry = {
@@ -73,10 +77,15 @@ interface Props {
   eventId: string;
   guestlistEnabled: boolean;
   guestlistAutoAccept: boolean;
+  /** Event-wide room cap (sum of accepted across all lists). Owner-set. */
+  guestlistMaxCapacity?: number | null;
   /** Refresh the parent overview after a settings change. */
   onSettingsChanged?: () => void;
   /** Render inline (no modal overlay) — used as a tab pane on the event hub. */
   inline?: boolean;
+  /** When true the viewer is a collaborator (sees only their own list, no
+   *  owner-only controls). Default false = event owner. */
+  isCollaboratorView?: boolean;
 }
 
 const GuestlistManagerModal: React.FC<Props> = ({
@@ -85,12 +94,18 @@ const GuestlistManagerModal: React.FC<Props> = ({
   eventId,
   guestlistEnabled,
   guestlistAutoAccept,
+  guestlistMaxCapacity = null,
   onSettingsChanged,
   inline = false,
+  isCollaboratorView = false,
 }) => {
   const { setToastData } = useGlobalStore();
+  const isOwner = !isCollaboratorView;
   const [enabled, setEnabled] = useState(guestlistEnabled);
   const [autoAccept, setAutoAccept] = useState(guestlistAutoAccept);
+  const [maxCap, setMaxCap] = useState<string>(
+    guestlistMaxCapacity != null ? String(guestlistMaxCapacity) : ""
+  );
   const [lists, setLists] = useState<GuestlistConfig[]>([]);
   const [loading, setLoading] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -127,6 +142,7 @@ const GuestlistManagerModal: React.FC<Props> = ({
   const saveSettings = async (next: {
     enabled: boolean;
     autoAccept: boolean;
+    maxCapacity?: number | null;
   }) => {
     setBusy(true);
     try {
@@ -135,11 +151,43 @@ const GuestlistManagerModal: React.FC<Props> = ({
           eventId,
           guestlistEnabled: next.enabled,
           guestlistAutoAccept: next.autoAccept,
+          guestlistMaxCapacity:
+            next.maxCapacity === undefined ? undefined : next.maxCapacity,
         },
       });
       setEnabled(next.enabled);
       setAutoAccept(next.autoAccept);
       onSettingsChanged?.();
+    } catch (err) {
+      setToastData({ type: "error", message: extractErrorMessage(err) });
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  // Persist the event-wide room cap on blur/enter. Empty input = no cap (null).
+  const saveMaxCapacity = async () => {
+    const trimmed = maxCap.trim();
+    const parsed = trimmed === "" ? null : Math.max(0, Math.trunc(Number(trimmed) || 0));
+    await saveSettings({ enabled, autoAccept, maxCapacity: parsed });
+  };
+
+  // Owner-only per-list controls: management permission + hard-close.
+  const setListFlag = async (
+    list: GuestlistConfig,
+    patch: { manageEnabled?: boolean; isOpen?: boolean }
+  ) => {
+    setBusy(true);
+    try {
+      await sdk.upsertGuestlist({
+        input: {
+          eventId,
+          contributorType: list.contributorType,
+          contributorId: list.contributorId,
+          ...patch,
+        },
+      });
+      await loadLists();
     } catch (err) {
       setToastData({ type: "error", message: extractErrorMessage(err) });
     } finally {
@@ -176,25 +224,6 @@ const GuestlistManagerModal: React.FC<Props> = ({
           contributorType: list.contributorType,
           contributorId: list.contributorId,
           isPublic: !list.isPublic,
-        },
-      });
-      await loadLists();
-    } catch (err) {
-      setToastData({ type: "error", message: extractErrorMessage(err) });
-    } finally {
-      setBusy(false);
-    }
-  };
-
-  const toggleActive = async (list: GuestlistConfig) => {
-    setBusy(true);
-    try {
-      await sdk.upsertGuestlist({
-        input: {
-          eventId,
-          contributorType: list.contributorType,
-          contributorId: list.contributorId,
-          isActive: !list.isActive,
         },
       });
       await loadLists();
@@ -279,7 +308,9 @@ const GuestlistManagerModal: React.FC<Props> = ({
 
   const content = (
       <div className="space-y-5 text-sm text-[var(--owner-fg-1)]">
-        {/* Settings */}
+        {/* Event-level settings — owner only. A collaborator sees just their
+            own list below. */}
+        {isOwner ? (
         <div className="space-y-3 rounded-lg border border-[var(--owner-border)] p-4">
           <label className="flex items-center justify-between gap-3">
             <span>
@@ -315,7 +346,33 @@ const GuestlistManagerModal: React.FC<Props> = ({
               className="h-5 w-5 accent-[var(--owner-blue-500)]"
             />
           </label>
+          {/* Event-wide room cap — owner only. Caps total accepted guests
+              across ALL lists so the room can't overfill. Empty = no cap. */}
+          {isOwner ? (
+            <label className="flex items-center justify-between gap-3">
+              <span>
+                <span className="font-medium">Total guest cap</span>
+                <span className="block text-xs text-[var(--owner-fg-3)]">
+                  Max guests across all lists. Blank = no overall limit.
+                </span>
+              </span>
+              <input
+                type="number"
+                min={0}
+                value={maxCap}
+                disabled={busy || !enabled}
+                onChange={(e) => setMaxCap(e.target.value)}
+                onBlur={saveMaxCapacity}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") (e.target as HTMLInputElement).blur();
+                }}
+                placeholder="—"
+                className="w-24 rounded-md border border-[var(--owner-border)] bg-[var(--owner-bg)] px-2 py-1.5 text-sm"
+              />
+            </label>
+          ) : null}
         </div>
+        ) : null}
 
         {!enabled ? (
           <p className="text-xs text-[var(--owner-fg-3)]">
@@ -329,7 +386,7 @@ const GuestlistManagerModal: React.FC<Props> = ({
               </div>
             ) : (
               <>
-                {!hasHostList ? (
+                {isOwner && !hasHostList ? (
                   <button
                     type="button"
                     disabled={busy}
@@ -351,7 +408,7 @@ const GuestlistManagerModal: React.FC<Props> = ({
                   <div
                     key={list._id}
                     className={`rounded-lg border border-[var(--owner-border)] ${
-                      list.isActive ? "" : "opacity-60"
+                      list.isOpen === false ? "opacity-60" : ""
                     }`}
                   >
                     <div className="flex flex-wrap items-center justify-between gap-3 p-3">
@@ -367,27 +424,62 @@ const GuestlistManagerModal: React.FC<Props> = ({
                         </div>
                         <div className="text-xs text-[var(--owner-fg-3)]">
                           {list.cap != null ? `Cap ${list.cap}` : "No cap"} ·{" "}
-                          {list.isPublic ? "Public" : "Private link only"}
+                          {list.isPublic ? "Public" : "Private link only"} ·{" "}
+                          {list.isOpen === false ? "Closed" : "Open"}
+                          {list.contributorType !== "HOST" &&
+                          list.manageEnabled === false
+                            ? " · Org-managed"
+                            : ""}
                         </div>
                       </div>
                       <div className="flex flex-wrap items-center gap-2">
-                        <button
-                          type="button"
-                          disabled={busy}
-                          onClick={() => toggleActive(list)}
-                          title={
-                            list.isActive
-                              ? "Guestlist on — tap to turn off"
-                              : "Guestlist off — tap to turn on"
-                          }
-                          className={`rounded-md px-2.5 py-1.5 text-xs font-semibold ${
-                            list.isActive
-                              ? "bg-emerald-500/10 text-emerald-600"
-                              : "bg-[var(--owner-bg-subtle)] text-[var(--owner-fg-3)]"
-                          }`}
-                        >
-                          {list.isActive ? "On" : "Off"}
-                        </button>
+                        {/* Owner hard-close: stop NEW joins (existing guests keep
+                            their golden tickets). The whole-feature on/off lives
+                            in the event-level "Enable guestlist" setting above. */}
+                        {isOwner ? (
+                          <button
+                            type="button"
+                            disabled={busy}
+                            onClick={() =>
+                              setListFlag(list, { isOpen: list.isOpen === false })
+                            }
+                            title={
+                              list.isOpen === false
+                                ? "Closed to new joins — tap to reopen"
+                                : "Open to new joins — tap to hard-close"
+                            }
+                            className={`rounded-md px-2.5 py-1.5 text-xs font-semibold ${
+                              list.isOpen === false
+                                ? "bg-amber-500/10 text-amber-600"
+                                : "bg-[var(--owner-bg-subtle)] text-[var(--owner-fg-3)]"
+                            }`}
+                          >
+                            {list.isOpen === false ? "Closed" : "Open"}
+                          </button>
+                        ) : null}
+                        {/* Owner: hand management to / take it from the contributor
+                            (not shown on the host's own list). */}
+                        {isOwner && list.contributorType !== "HOST" ? (
+                          <button
+                            type="button"
+                            disabled={busy}
+                            onClick={() =>
+                              setListFlag(list, {
+                                manageEnabled: list.manageEnabled === false,
+                              })
+                            }
+                            title={
+                              list.manageEnabled === false
+                                ? "You manage this list — tap to let the contributor manage it"
+                                : "Contributor can manage — tap to manage it yourself"
+                            }
+                            className="rounded-md border border-[var(--owner-border)] px-2.5 py-1.5 text-xs font-medium hover:border-[#c89d75]"
+                          >
+                            {list.manageEnabled === false
+                              ? "Org-managed"
+                              : "Contributor can manage"}
+                          </button>
+                        ) : null}
                         <button
                           type="button"
                           onClick={() => copyLink(list.code)}
@@ -400,14 +492,19 @@ const GuestlistManagerModal: React.FC<Props> = ({
                           )}
                           {copied === list.code ? "Copied" : "Copy link"}
                         </button>
-                        <button
-                          type="button"
-                          disabled={busy}
-                          onClick={() => togglePublic(list)}
-                          className="rounded-md border border-[var(--owner-border)] px-2.5 py-1.5 text-xs font-medium hover:border-[#c89d75]"
-                        >
-                          {list.isPublic ? "Make private" : "Make public"}
-                        </button>
+                        {/* Owner can always toggle public (incl. force-private);
+                            a contributor only when the owner left them
+                            management rights. */}
+                        {isOwner || list.manageEnabled !== false ? (
+                          <button
+                            type="button"
+                            disabled={busy}
+                            onClick={() => togglePublic(list)}
+                            className="rounded-md border border-[var(--owner-border)] px-2.5 py-1.5 text-xs font-medium hover:border-[#c89d75]"
+                          >
+                            {list.isPublic ? "Make private" : "Make public"}
+                          </button>
+                        ) : null}
                         <button
                           type="button"
                           onClick={() => openEntries(list._id)}

@@ -214,6 +214,18 @@ const ReportDetail = () => {
     setSelectedSideBarMenu("Reports");
   }, [setSelectedSideBarMenu]);
 
+  // Seed the event filter from the URL (?eventId=) when arriving via an event's
+  // "See sales/marketing report" link, so the report scopes + attributes to
+  // that event instead of all events. Runs once the router query hydrates;
+  // the picker can still change it afterwards.
+  useEffect(() => {
+    if (!router.isReady) return;
+    const qid = router.query.eventId;
+    const id = Array.isArray(qid) ? qid[0] : qid;
+    if (id) setEventId(String(id));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [router.isReady]);
+
   // Master event filter — load the host's non-draft events for the picker.
   useEffect(() => {
     (async () => {

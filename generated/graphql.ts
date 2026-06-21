@@ -813,7 +813,9 @@ export type ArtistGuestlistEventSummary = {
   eventId: Scalars['ID']['output'];
   isActive: Scalars['Boolean']['output'];
   isHighlighted: Scalars['Boolean']['output'];
+  isOpen: Scalars['Boolean']['output'];
   isPublic: Scalars['Boolean']['output'];
+  manageEnabled: Scalars['Boolean']['output'];
   pendingCount: Scalars['Int']['output'];
   startDate?: Maybe<Scalars['DateTimeISO']['output']>;
   title?: Maybe<Scalars['String']['output']>;
@@ -1467,6 +1469,7 @@ export type Event = {
   contactForQueriesTables?: Maybe<Scalars['String']['output']>;
   createdAt?: Maybe<Scalars['DateTimeISO']['output']>;
   createdBy?: Maybe<Scalars['String']['output']>;
+  days?: Maybe<Array<EventDay>>;
   description?: Maybe<Scalars['String']['output']>;
   draftedAt?: Maybe<Scalars['DateTimeISO']['output']>;
   endDate?: Maybe<Scalars['DateTimeISO']['output']>;
@@ -1490,6 +1493,7 @@ export type Event = {
   genresPreferred?: Maybe<Array<Genre>>;
   guestlistAutoAccept?: Maybe<Scalars['Boolean']['output']>;
   guestlistEnabled?: Maybe<Scalars['Boolean']['output']>;
+  guestlistMaxCapacity?: Maybe<Scalars['Float']['output']>;
   horizontalFlyer?: Maybe<Scalars['String']['output']>;
   horizontalVideo?: Maybe<Scalars['String']['output']>;
   hostId: Scalars['String']['output'];
@@ -1626,6 +1630,21 @@ export type EventCustomersResponse = {
   total: Scalars['Int']['output'];
 };
 
+export type EventDay = {
+  __typename?: 'EventDay';
+  dayId: Scalars['String']['output'];
+  endDate: Scalars['DateTimeISO']['output'];
+  startDate: Scalars['DateTimeISO']['output'];
+  title: Scalars['String']['output'];
+};
+
+export type EventDayInput = {
+  dayId?: InputMaybe<Scalars['String']['input']>;
+  endDate: Scalars['DateTimeISO']['input'];
+  startDate: Scalars['DateTimeISO']['input'];
+  title: Scalars['String']['input'];
+};
+
 export type EventEvalResultView = {
   __typename?: 'EventEvalResultView';
   aiEvalAdminSummary: Scalars['String']['output'];
@@ -1675,6 +1694,7 @@ export type EventGuestlistSettingsInput = {
   eventId: Scalars['String']['input'];
   guestlistAutoAccept: Scalars['Boolean']['input'];
   guestlistEnabled: Scalars['Boolean']['input'];
+  guestlistMaxCapacity?: InputMaybe<Scalars['Int']['input']>;
 };
 
 export type EventGuide = {
@@ -1716,6 +1736,7 @@ export type EventInput = {
   cityId?: InputMaybe<Scalars['String']['input']>;
   collaboratorToBeAnnounced?: InputMaybe<Scalars['Boolean']['input']>;
   contactForQueriesTables?: InputMaybe<Scalars['String']['input']>;
+  days?: InputMaybe<Array<EventDayInput>>;
   description?: InputMaybe<Scalars['String']['input']>;
   endDate?: InputMaybe<Scalars['DateTimeISO']['input']>;
   eventCategoryId?: InputMaybe<Scalars['String']['input']>;
@@ -1822,6 +1843,7 @@ export type EventManageOverview = {
   feeSettlementMode?: Maybe<EventFeeSettlementMode>;
   guestlistAutoAccept: Scalars['Boolean']['output'];
   guestlistEnabled: Scalars['Boolean']['output'];
+  guestlistMaxCapacity?: Maybe<Scalars['Float']['output']>;
   isCollaboratorView?: Maybe<Scalars['Boolean']['output']>;
   isVisible: Scalars['Boolean']['output'];
   pricingOptions?: Maybe<Array<EventManageOverviewPricingOption>>;
@@ -2135,6 +2157,7 @@ export type EventTicket = {
   collectPartialAdvancePayment?: Maybe<Scalars['Boolean']['output']>;
   coverAmount?: Maybe<Scalars['Float']['output']>;
   coverType?: Maybe<CoverType>;
+  dayId?: Maybe<Scalars['String']['output']>;
   description?: Maybe<Scalars['String']['output']>;
   groupCapacity?: Maybe<Scalars['Float']['output']>;
   gstRate?: Maybe<Scalars['Float']['output']>;
@@ -2160,6 +2183,7 @@ export type EventTicketInput = {
   collectPartialAdvancePayment?: InputMaybe<Scalars['Boolean']['input']>;
   coverAmount?: InputMaybe<Scalars['Float']['input']>;
   coverType?: InputMaybe<CoverType>;
+  dayId?: InputMaybe<Scalars['String']['input']>;
   description?: InputMaybe<Scalars['String']['input']>;
   groupCapacity?: InputMaybe<Scalars['Float']['input']>;
   gstRate?: InputMaybe<Scalars['Float']['input']>;
@@ -2333,7 +2357,9 @@ export type Guestlist = {
   hostId: Scalars['String']['output'];
   isActive: Scalars['Boolean']['output'];
   isHighlighted: Scalars['Boolean']['output'];
+  isOpen: Scalars['Boolean']['output'];
   isPublic: Scalars['Boolean']['output'];
+  manageEnabled: Scalars['Boolean']['output'];
   updatedAt?: Maybe<Scalars['DateTimeISO']['output']>;
 };
 
@@ -4407,6 +4433,7 @@ export type OfflineOrderInput = {
 
 export type OfflineOrderLine = {
   __typename?: 'OfflineOrderLine';
+  dayId?: Maybe<Scalars['String']['output']>;
   isExtra: Scalars['Boolean']['output'];
   itemId: Scalars['String']['output'];
   name: Scalars['String']['output'];
@@ -4442,6 +4469,7 @@ export type OfflinePaymentLinkResponse = {
 };
 
 export type OfflineTicketLineInput = {
+  dayId?: InputMaybe<Scalars['String']['input']>;
   isExtra?: InputMaybe<Scalars['Boolean']['input']>;
   itemId: Scalars['String']['input'];
   name: Scalars['String']['input'];
@@ -4843,6 +4871,7 @@ export type Query = {
   eventOrders: EventOrdersResponse;
   eventPricingOptions: Array<EventPricingOptionResponse>;
   eventTicketOrders: HostCustomerOrdersResponse;
+  eventsForOfflineIssuing: Array<Event>;
   fetchAdminCampaignById: AdminEmailCampaignsObject;
   fetchHostCampaignById: HostEmailCampaignsObject;
   fetchHostPushCampaignById?: Maybe<HostPushCampaign>;
@@ -6138,7 +6167,9 @@ export type UpsertGuestlistInput = {
   contributorType: GuestlistContributorType;
   eventId: Scalars['String']['input'];
   isActive?: InputMaybe<Scalars['Boolean']['input']>;
+  isOpen?: InputMaybe<Scalars['Boolean']['input']>;
   isPublic?: InputMaybe<Scalars['Boolean']['input']>;
+  manageEnabled?: InputMaybe<Scalars['Boolean']['input']>;
 };
 
 export type UpsertPhantomArtistInput = {
