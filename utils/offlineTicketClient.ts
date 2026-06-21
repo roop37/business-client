@@ -45,6 +45,13 @@ export type OfflineEventTicket = {
   ticketName: string;
   ticketPrice: number;
   ticketVisible?: boolean | null;
+  // Multi-day: the day this ticket admits ("ALL_DAYS" or an EventDay.dayId);
+  // null on single-day events.
+  dayId?: string | null;
+};
+export type OfflineEventDay = {
+  dayId: string;
+  title: string;
 };
 export type OfflineEventExtra = {
   _id: string;
@@ -58,6 +65,8 @@ export type OfflineEvent = {
   startDate?: string | null;
   endDate?: string | null;
   status?: string | null;
+  markSeparateDays?: boolean | null;
+  days?: OfflineEventDay[] | null;
   tickets?: OfflineEventTicket[] | null;
   extras?: OfflineEventExtra[] | null;
 };
@@ -65,6 +74,9 @@ export type OfflineEvent = {
 export type OfflineTicketLineInput = {
   itemId: string;
   name: string;
+  // Per-day tag copied from the selected ticket so an offline multi-day ticket
+  // scans valid only on its day (null/all-days behave as before).
+  dayId?: string;
   quantity: number;
   unitPrice?: number;
   isExtra?: boolean;
@@ -103,7 +115,9 @@ export const fetchMyEventsForOffline = async (): Promise<OfflineEvent[]> => {
         startDate
         endDate
         status
-        tickets { _id ticketName ticketPrice ticketVisible }
+        markSeparateDays
+        days { dayId title }
+        tickets { _id ticketName ticketPrice ticketVisible dayId }
         extras { _id name price }
       }
     }`

@@ -3620,8 +3620,19 @@ const EventJourney = ({
                                   <button
                                     type="button"
                                     onClick={() =>
-                                      setEventDays(
-                                        buildDaysFromRange(startDate, endDate)
+                                      // Re-derive the times from the range but
+                                      // KEEP existing dayIds positionally so a
+                                      // host fixing day times never orphans
+                                      // already-tagged tickets. Newly-added days
+                                      // get fresh ids; removed days orphan
+                                      // correctly (server flags it).
+                                      setEventDays((prev) =>
+                                        buildDaysFromRange(startDate, endDate).map(
+                                          (d, i) =>
+                                            prev[i]
+                                              ? { ...d, dayId: prev[i].dayId }
+                                              : d
+                                        )
                                       )
                                     }
                                     disabled={eventStarted}

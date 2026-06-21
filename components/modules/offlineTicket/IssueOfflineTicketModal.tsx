@@ -92,6 +92,19 @@ export const IssueOfflineTicketModal = ({
   );
   const extras = useMemo(() => selectedEvent?.extras ?? [], [selectedEvent]);
 
+  // Resolve a ticket's day tag to a human label for multi-day events ("Day 1",
+  // "All days"); empty on single-day so the badge is hidden.
+  const dayLabelFor = useMemo(() => {
+    const titles = new Map(
+      (selectedEvent?.days ?? []).map((d) => [d.dayId, d.title])
+    );
+    return (dayId?: string | null): string => {
+      if (!dayId || titles.size === 0) return "";
+      if (dayId === "ALL_DAYS") return "All days";
+      return titles.get(dayId) ?? "";
+    };
+  }, [selectedEvent]);
+
   const lines: OfflineTicketLineInput[] = useMemo(() => {
     const out: OfflineTicketLineInput[] = [];
     for (const t of visibleTickets) {
@@ -100,6 +113,9 @@ export const IssueOfflineTicketModal = ({
         out.push({
           itemId: t._id,
           name: t.ticketName,
+          // Carry the ticket's day tag so an offline multi-day ticket scans
+          // valid only on its day (matches the online purchase path).
+          dayId: t.dayId ?? undefined,
           quantity: q,
           unitPrice: t.ticketPrice,
           isExtra: false,
@@ -302,6 +318,7 @@ export const IssueOfflineTicketModal = ({
                         name={t.ticketName}
                         price={t.ticketPrice}
                         qty={ticketQty[t._id] ?? 0}
+                        dayLabel={dayLabelFor(t.dayId)}
                         onMinus={() => step(setTicketQty, t._id, -1)}
                         onPlus={() => step(setTicketQty, t._id, 1)}
                       />
@@ -462,18 +479,27 @@ const LineRow = ({
   name,
   price,
   qty,
+  dayLabel,
   onMinus,
   onPlus,
 }: {
   name: string;
   price: number;
   qty: number;
+  dayLabel?: string;
   onMinus: () => void;
   onPlus: () => void;
 }) => (
   <div className="flex items-center justify-between rounded-owner-md border border-owner-border-soft px-3 py-2">
     <div className="min-w-0">
-      <p className="truncate text-sm text-owner-fg-1">{name}</p>
+      <div className="flex items-center gap-2">
+        <p className="truncate text-sm text-owner-fg-1">{name}</p>
+        {dayLabel ? (
+          <span className="shrink-0 rounded-full bg-owner-border-soft px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-owner-fg-2">
+            {dayLabel}
+          </span>
+        ) : null}
+      </div>
       <p className="text-xs text-owner-fg-3">{rupee(price)}</p>
     </div>
     <div className="flex items-center gap-2">
