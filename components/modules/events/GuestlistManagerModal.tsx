@@ -422,14 +422,38 @@ const GuestlistManagerModal: React.FC<Props> = ({
                             {list.contributorType}
                           </span>
                         </div>
-                        <div className="text-xs text-[var(--owner-fg-3)]">
-                          {list.cap != null ? `Cap ${list.cap}` : "No cap"} ·{" "}
-                          {list.isPublic ? "Public" : "Private link only"} ·{" "}
-                          {list.isOpen === false ? "Closed" : "Open"}
+                        {/* At-a-glance state pills — colour-coded so public vs
+                            private and open vs closed read instantly. */}
+                        <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
+                          <span className="rounded-full bg-[var(--owner-bg-subtle)] px-2 py-0.5 text-[10px] font-semibold text-[var(--owner-fg-3)]">
+                            {list.cap != null ? `Cap ${list.cap}` : "No cap"}
+                          </span>
+                          <span
+                            className={`rounded-full px-2 py-0.5 text-[10px] font-semibold ${
+                              list.isPublic
+                                ? "bg-emerald-500/10 text-emerald-600"
+                                : "bg-[var(--owner-bg-subtle)] text-[var(--owner-fg-3)]"
+                            }`}
+                          >
+                            {list.isPublic ? "Public" : "Private · link only"}
+                          </span>
+                          <span
+                            className={`rounded-full px-2 py-0.5 text-[10px] font-semibold ${
+                              list.isOpen === false
+                                ? "bg-amber-500/10 text-amber-600"
+                                : "bg-[var(--owner-blue-050)] text-[var(--owner-blue-500)]"
+                            }`}
+                          >
+                            {list.isOpen === false
+                              ? "Closed to new joins"
+                              : "Open to joins"}
+                          </span>
                           {list.contributorType !== "HOST" &&
-                          list.manageEnabled === false
-                            ? " · Org-managed"
-                            : ""}
+                          list.manageEnabled === false ? (
+                            <span className="rounded-full bg-[var(--owner-bg-subtle)] px-2 py-0.5 text-[10px] font-semibold text-[var(--owner-fg-3)]">
+                              Organizer-managed
+                            </span>
+                          ) : null}
                         </div>
                       </div>
                       <div className="flex flex-wrap items-center gap-2">
