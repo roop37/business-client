@@ -85,6 +85,7 @@ import {
   CheckCircle2Icon,
   CircleDashedIcon,
   ClockIcon,
+  CopyIcon,
   DoorOpenIcon,
   Edit3Icon,
   EyeIcon,
@@ -1112,6 +1113,43 @@ const EventJourney = ({
   // Multi-city is only meaningful for an eligible multi-day event.
   const multiCityEligible = multiDayEligible && markSeparateDays;
 
+  // Human label for a ticket's day tag on the list rows (multi-day events).
+  // Empty for single-day / untagged so the badge is hidden.
+  const ticketDayLabel = (dayId?: string): string => {
+    if (!markSeparateDays || !multiDayEligible || eventDays.length < 2) return "";
+    if (!dayId) return "";
+    if (dayId === ALL_DAYS_TICKET) return "All days";
+    const idx = eventDays.findIndex((d) => d.dayId === dayId);
+    if (idx < 0) return "";
+    return eventDays[idx].title || `Day ${idx + 1}`;
+  };
+
+  // M4: duplicate a ticket → open the modal prefilled with a fresh copy
+  // (new id, "(Copy)" suffix, zero sold) so the host can tweak + save.
+  const duplicateTicket = (index: number) => {
+    const src = tickets[index];
+    if (!src) return;
+    setTicketEditIndex(null); // brand-new ticket, not an edit
+    setTicketCategory(src.ticketCategory);
+    setTicketName(`${src.ticketName} (Copy)`);
+    setTicketDayId(src.dayId ?? (multiCityEligible ? ALL_DAYS_TICKET : ""));
+    setTicketType(src.ticketType);
+    setTicketPrice(src.ticketPrice);
+    setTicketCapacity(src.ticketCapacity);
+    setCoverType(src.coverType);
+    setTicketGST(src.ticketGST);
+    setGstRate(src.gstRate);
+    setGroupCapacity(src.groupCapacity);
+    setMaxTicketPerUser(src.maxTicketPerUser);
+    setTicketExpiryDateTime(src.ticketExpiryDateTime ?? "");
+    setTicketComingSoon(src.markAsComingSoon);
+    setTicketOnGroundOnly(src.markAsOnGroundOnly);
+    setTicketVisible(src.ticketVisible);
+    setTicketDescription(src.description ?? "");
+    setTicketAdvancedOpen(true);
+    setTicketModalOpen(true);
+  };
+
   const stateOptions = useMemo(
     () =>
       Array.from(
@@ -1218,11 +1256,12 @@ const EventJourney = ({
     setTicketOnGroundOnly(false);
     setTicketVisible(true);
     setTicketDescription("");
-    // Default a new ticket to the first day on a multi-day event so it's never
-    // left untagged; single-day events keep it empty.
+    // Default a new ticket to "All days" (the festival pass) on a multi-day
+    // event so it's valid across every day unless the host narrows it;
+    // single-day events keep it empty.
     setTicketDayId(
-      markSeparateDays && multiDayEligible && eventDays[0]
-        ? eventDays[0].dayId
+      markSeparateDays && multiDayEligible && eventDays.length >= 2
+        ? ALL_DAYS_TICKET
         : ""
     );
     setTicketAdvancedOpen(true);
@@ -4067,8 +4106,15 @@ const EventJourney = ({
                                     className="grid gap-3 border-b border-[var(--owner-bg-subtle)] px-4 py-3 text-sm last:border-b-0 md:grid-cols-[minmax(0,1.4fr)_120px_150px] md:items-center"
                                   >
                                     <div className="min-w-0">
-                                      <div className="truncate font-semibold">
-                                        {ticket.ticketName}
+                                      <div className="flex items-center gap-2">
+                                        <span className="truncate font-semibold">
+                                          {ticket.ticketName}
+                                        </span>
+                                        {ticketDayLabel(ticket.dayId) ? (
+                                          <span className="shrink-0 rounded-full bg-[var(--owner-blue-050)] px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-[var(--owner-blue-500)]">
+                                            {ticketDayLabel(ticket.dayId)}
+                                          </span>
+                                        ) : null}
                                       </div>
                                       <div className="mt-1 text-xs text-[var(--owner-fg-3)]">
                                         {ticket.ticketCategory} ·{" "}
@@ -4107,6 +4153,14 @@ const EventJourney = ({
                                         ) : (
                                           <EyeIcon size={15} />
                                         )}
+                                      </button>
+                                      <button
+                                        type="button"
+                                        onClick={() => duplicateTicket(index)}
+                                        className="inline-flex h-9 w-9 items-center justify-center rounded-md border border-[var(--owner-border)]"
+                                        title="Duplicate ticket"
+                                      >
+                                        <CopyIcon size={15} />
                                       </button>
                                       <button
                                         type="button"
@@ -5094,17 +5148,17 @@ const EventJourney = ({
                   eventDays.length >= 2 ? (
                     <Select
                       label="Valid for *"
-                      value={ticketDayId || eventDays[0]?.dayId || ""}
+                      value={ticketDayId || ALL_DAYS_TICKET}
                       onChange={(value) => setTicketDayId(value)}
                       options={[
-                        ...eventDays.map((d, i) => ({
-                          value: d.dayId,
-                          label: d.title || `Day ${i + 1}`,
-                        })),
                         {
                           value: ALL_DAYS_TICKET,
                           label: "All days (festival pass)",
                         },
+                        ...eventDays.map((d, i) => ({
+                          value: d.dayId,
+                          label: d.title || `Day ${i + 1}`,
+                        })),
                       ]}
                     />
                   ) : null}
