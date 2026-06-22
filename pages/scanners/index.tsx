@@ -33,6 +33,7 @@ type EventRow = {
   status?: string | null;
   startDate?: string | null;
   city?: string | null;
+  eventFlyer?: string | null;
   capacity?: number | null;
   ticketSold?: number | null;
 };
@@ -137,15 +138,26 @@ const ScannersIndex: React.FC & {
         enableSorting: true,
         cell: ({ row }) => (
           <div className="flex items-center gap-3">
-            <div
-              className="grid h-9 w-9 shrink-0 place-items-center rounded-owner-md text-white"
-              style={{
-                background:
-                  "linear-gradient(135deg, #0F8842 0%, #16A150 100%)",
-              }}
-            >
-              <ScanLine size={15} />
-            </div>
+            {/* Compact event-flyer thumbnail (falls back to the scan icon
+                when an event has no flyer). */}
+            {row.original.eventFlyer ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={row.original.eventFlyer}
+                alt={row.original.title || "Event"}
+                className="h-9 w-9 shrink-0 rounded-owner-md object-cover"
+              />
+            ) : (
+              <div
+                className="grid h-9 w-9 shrink-0 place-items-center rounded-owner-md text-white"
+                style={{
+                  background:
+                    "linear-gradient(135deg, #0F8842 0%, #16A150 100%)",
+                }}
+              >
+                <ScanLine size={15} />
+              </div>
+            )}
             <div className="flex flex-col">
               <DataTableTextCell
                 className="cursor-pointer font-semibold"
