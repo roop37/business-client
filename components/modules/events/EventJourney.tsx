@@ -185,11 +185,21 @@ type TicketDraft = {
 // Festival-pass sentinel — mirrors ALL_DAYS_TICKET in @hoizr-technology/shared.
 const ALL_DAYS_TICKET = "ALL_DAYS";
 
+type EventDayCityDraft = {
+  addressLine1: string;
+  city: string;
+  state?: string;
+  pincode?: string;
+};
+
 type EventDayDraft = {
   dayId: string;
   title: string;
   startDate: string; // datetime-local string (UTC-sliced, like toDateTimeInput)
   endDate: string;
+  // Per-day venue for a multi-city event. Undefined ⇒ uses the event's single
+  // top-level location.
+  location?: EventDayCityDraft;
 };
 
 type HoizrExtraTypeValue =
@@ -768,6 +778,8 @@ const EventJourney = ({
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
   const [markSeparateDays, setMarkSeparateDays] = useState(false);
+  // Multi-city: each day has its own venue (only offered when multi-day).
+  const [multiCity, setMultiCity] = useState(false);
   // Per-day segments for a multi-day event (Day 1…N). Empty = single-day.
   const [eventDays, setEventDays] = useState<EventDayDraft[]>([]);
   // Day validation is surfaced inline only AFTER a Next/Update attempt — never
@@ -1074,6 +1086,31 @@ const EventJourney = ({
       prev.map((d, i) => (i === index ? { ...d, ...patch } : d))
     );
   };
+
+  // Patch a single day's per-city venue (multi-city events).
+  const updateEventDayCity = (
+    index: number,
+    patch: Partial<EventDayCityDraft>
+  ) =>
+    setEventDays((prev) =>
+      prev.map((d, i) =>
+        i === index
+          ? {
+              ...d,
+              location: {
+                addressLine1: d.location?.addressLine1 ?? "",
+                city: d.location?.city ?? "",
+                state: d.location?.state,
+                pincode: d.location?.pincode,
+                ...patch,
+              },
+            }
+          : d
+      )
+    );
+
+  // Multi-city is only meaningful for an eligible multi-day event.
+  const multiCityEligible = multiDayEligible && markSeparateDays;
 
   const stateOptions = useMemo(
     () =>
@@ -2288,6 +2325,7 @@ const EventJourney = ({
         setStartDate(toDateTimeInput(event.startDate));
         setEndDate(toDateTimeInput(event.endDate));
         setMarkSeparateDays(Boolean(event.markSeparateDays));
+        setMultiCity(Boolean((event as any).multiCity));
         // Rehydrate days WITH their server dayIds so the ticket "Valid for"
         // picker keeps matching them (re-minting would orphan ticket dayIds).
         setEventDays(
@@ -2297,6 +2335,14 @@ const EventJourney = ({
                 title: d.title ?? "",
                 startDate: toDateTimeInput(d.startDate),
                 endDate: toDateTimeInput(d.endDate),
+                location: d.location?.addressLine1
+                  ? {
+                      addressLine1: d.location.addressLine1 ?? "",
+                      city: d.location.city ?? "",
+                      state: d.location.state ?? undefined,
+                      pincode: d.location.pincode ?? undefined,
+                    }
+                  : undefined,
               }))
             : []
         );
@@ -2555,6 +2601,8 @@ const EventJourney = ({
       startDate: !isComingSoon && startDate ? new Date(startDate) : undefined,
       endDate: !isComingSoon && endDate ? new Date(endDate) : undefined,
       markSeparateDays: multiDayEligible ? markSeparateDays : false,
+      // Multi-city: each day carries its own venue (only when multi-day).
+      multiCity: multiCityEligible ? multiCity : false,
       // Send days[] only for an eligible multi-day event; otherwise [] so the
       // server collapses to single-day and strips ticket dayIds.
       days:
@@ -2564,6 +2612,17 @@ const EventJourney = ({
               title: d.title,
               startDate: new Date(d.startDate),
               endDate: new Date(d.endDate),
+              // Per-day venue only when multi-city is on AND the day has one.
+              location:
+                multiCity && d.location?.addressLine1?.trim()
+                  ? {
+                      addressLine1: d.location.addressLine1.trim(),
+                      city: d.location.city?.trim() || undefined,
+                      state: d.location.state?.trim() || undefined,
+                      pincode: d.location.pincode?.trim() || undefined,
+                      formattedAddress: d.location.addressLine1.trim(),
+                    }
+                  : undefined,
             }))
           : [],
       isVisible,
@@ -3862,6 +3921,70 @@ const EventJourney = ({
                             loading="lazy"
                             referrerPolicy="no-referrer-when-downgrade"
                           />
+                        </div>
+                      ) : null}
+
+                      {/* Multi-city — only for an eligible multi-day event. When
+                          on, each day gets its own venue; the address above is
+                          the default/single venue used by any day left blank. */}
+                      {multiCityEligible ? (
+                        <div className="md:col-span-2">
+                          <ToggleSettingRow
+                            title="Multi-city event"
+                            subtitle="Different city each day? Give each day its own venue. Days left blank use the address above."
+                            checked={multiCity}
+                            onCheckedChange={setMultiCity}
+                            disabled={eventStarted}
+                          />
+                          {multiCity ? (
+                            <div className="mt-3 space-y-3 rounded-xl border border-border bg-gray-50 p-3">
+                              {eventDays.map((day, i) => (
+                                <div
+                                  key={day.dayId}
+                                  className="rounded-lg border border-border bg-background p-3"
+                                >
+                                  <div className="mb-2 text-sm font-semibold">
+                                    {day.title || `Day ${i + 1}`}
+                                  </div>
+                                  <div className="grid gap-2 md:grid-cols-2">
+                                    <input
+                                      value={day.location?.addressLine1 ?? ""}
+                                      onChange={(e) =>
+                                        updateEventDayCity(i, {
+                                          addressLine1: e.target.value,
+                                        })
+                                      }
+                                      disabled={eventStarted}
+                                      placeholder="Venue / address"
+                                      className="rounded-md border border-border bg-background px-3 py-2 text-sm md:col-span-2"
+                                    />
+                                    <input
+                                      value={day.location?.city ?? ""}
+                                      onChange={(e) =>
+                                        updateEventDayCity(i, {
+                                          city: e.target.value,
+                                        })
+                                      }
+                                      disabled={eventStarted}
+                                      placeholder="City"
+                                      className="rounded-md border border-border bg-background px-3 py-2 text-sm"
+                                    />
+                                    <input
+                                      value={day.location?.state ?? ""}
+                                      onChange={(e) =>
+                                        updateEventDayCity(i, {
+                                          state: e.target.value,
+                                        })
+                                      }
+                                      disabled={eventStarted}
+                                      placeholder="State (optional)"
+                                      className="rounded-md border border-border bg-background px-3 py-2 text-sm"
+                                    />
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          ) : null}
                         </div>
                       ) : null}
                     </div>
