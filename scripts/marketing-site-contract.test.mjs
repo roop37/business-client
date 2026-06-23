@@ -4,10 +4,21 @@ import test from "node:test";
 
 const read = (path) => readFileSync(new URL(`../${path}`, import.meta.url), "utf8");
 
-const escapeRegExp = (value) => value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+const sliceBetween = (source, startMarker, endMarker) => {
+  const start = source.indexOf(startMarker);
+  assert.ok(start >= 0, `Missing start marker: ${startMarker}`);
+  const end = source.indexOf(endMarker, start + startMarker.length);
+  assert.ok(end >= 0, `Missing end marker: ${endMarker}`);
+  return source.slice(start, end);
+};
 
 test("marketing catalogue exposes eight current products and a separate coming-soon list", () => {
   const source = read("components/marketing/data/nav-products.ts");
+  const currentCatalogue = sliceBetween(
+    source,
+    "export const MARKETING_PILLARS: MarketingPillar[] = [",
+    "export const ALL_PRODUCTS = MARKETING_PILLARS.flatMap("
+  );
   const currentSlugs = [
     "event-discovery",
     "event-ticketing",
@@ -19,9 +30,11 @@ test("marketing catalogue exposes eight current products and a separate coming-s
     "reports-settlements",
   ];
 
-  for (const slug of currentSlugs) {
-    assert.match(source, new RegExp(`slug:\\s*[\"']${slug}[\"']`));
-  }
+  const actualSlugs = [
+    ...currentCatalogue.matchAll(/slug:\s*["']([^"']+)["']/g),
+  ].map(([_, slug]) => slug);
+
+  assert.deepStrictEqual(actualSlugs, currentSlugs);
 
   assert.match(source, /COMING_SOON_PRODUCTS/);
   assert.match(source, /House Parties \+ Instagram Attendee Filtering/);
@@ -217,16 +230,17 @@ test("homepage contract covers the approved pillars, products, journey, and ai s
   const howItWorks = read("components/marketing/sections/HowHoizrWorks.tsx");
   const aiSupport = read("components/marketing/sections/AiSupport.tsx");
 
-  const pillarLabels = [
-    "Grow Discovery",
-    "Grow Sales",
-    "Grow Repeat Audience",
-    "Run Events",
-  ];
-  for (const label of pillarLabels) {
-    assert.match(navProducts, new RegExp(`label:\\s*[\"']${escapeRegExp(label)}[\"']`));
-    assert.match(outcomePillars, /MARKETING_PILLARS/);
-  }
+  const pillarBlock = sliceBetween(
+    navProducts,
+    "export const MARKETING_PILLARS: MarketingPillar[] = [",
+    "export const ALL_PRODUCTS = MARKETING_PILLARS.flatMap("
+  );
+  const pillarIds = [...pillarBlock.matchAll(/id:\s*["']([^"']+)["']/g)].map(
+    ([_, id]) => id
+  );
+
+  assert.deepStrictEqual(pillarIds, ["discovery", "sales", "repeat", "ops"]);
+  assert.match(outcomePillars, /MARKETING_PILLARS/);
 
   const currentProducts = [
     ["event-discovery", "Event Discovery & Organisation Pages"],
@@ -239,12 +253,21 @@ test("homepage contract covers the approved pillars, products, journey, and ai s
     ["reports-settlements", "Reports, Settlements & Event Intelligence"],
   ];
 
-  for (const [slug, label] of currentProducts) {
-    assert.match(navProducts, new RegExp(`slug:\\s*[\"']${escapeRegExp(slug)}[\"']`));
-    assert.match(navProducts, new RegExp(`label:\\s*[\"']${escapeRegExp(label)}[\"']`));
-    assert.match(currentPlatform, /ALL_PRODUCTS/);
-  }
+  const currentSlugs = [
+    ...pillarBlock.matchAll(/slug:\s*["']([^"']+)["']/g),
+  ].map(([_, slug]) => slug);
 
+  assert.deepStrictEqual(
+    currentSlugs,
+    currentProducts.map(([slug]) => slug)
+  );
+  assert.match(currentPlatform, /ALL_PRODUCTS/);
+
+  const journeyBlock = sliceBetween(
+    siteCopy,
+    "export const ORGANISER_JOURNEY = [",
+    "export const FREE_ACCESS_POINTS = ["
+  );
   const journeyTitles = [
     "Create your organisation",
     "Build the event",
@@ -254,10 +277,11 @@ test("homepage contract covers the approved pillars, products, journey, and ai s
     "Review performance and settlements",
     "Build the next event from the last one",
   ];
-  for (const title of journeyTitles) {
-    assert.match(siteCopy, new RegExp(`title:\\s*[\"']${escapeRegExp(title)}[\"']`));
-    assert.match(howItWorks, /ORGANISER_JOURNEY/);
-  }
+  const actualJourneyTitles = [
+    ...journeyBlock.matchAll(/title:\s*["']([^"']+)["']/g),
+  ].map(([_, title]) => title);
+  assert.deepStrictEqual(actualJourneyTitles, journeyTitles);
+  assert.match(howItWorks, /ORGANISER_JOURNEY/);
 
   const aiItems = [
     "Event evaluation before publishing",
@@ -266,7 +290,12 @@ test("homepage contract covers the approved pillars, products, journey, and ai s
     "Listing-quality, spelling and SEO suggestions",
     "Safe fallback when the configured AI service is unavailable",
   ];
-  for (const item of aiItems) {
-    assert.match(aiSupport, new RegExp(escapeRegExp(item)));
-  }
+  const aiBlock = sliceBetween(
+    aiSupport,
+    "const AI_SUPPORT_POINTS = [",
+    "] as const;"
+  );
+  const actualAiItems = [...aiBlock.matchAll(/"([^"]+)"/g)].map(([_, item]) => item);
+
+  assert.deepStrictEqual(actualAiItems, aiItems);
 });
