@@ -15,6 +15,7 @@ export default function robots(): MetadataRoute.Robots {
         allow: [
           "/",
           "/about",
+          "/book-a-demo",
           "/contact",
           "/how-it-works",
           "/resources",

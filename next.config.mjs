@@ -1,3 +1,8 @@
+import {
+  LEGACY_COMING_SOON_REDIRECTS,
+  LEGACY_CURRENT_PRODUCT_REDIRECTS,
+} from "./components/marketing/data/legacy-product-routes.mjs";
+
 const nextConfig = {
   // tsc + ESLint gates re-enabled — current source compiles clean and
   // only emits non-blocking lint *warnings* (no errors). Leaving these
@@ -17,6 +22,18 @@ const nextConfig = {
         destination: "/about",
         permanent: true,
       },
+      ...Object.entries(LEGACY_CURRENT_PRODUCT_REDIRECTS).map(
+        ([source, destination]) => ({
+          source,
+          destination,
+          permanent: true,
+        })
+      ),
+      ...LEGACY_COMING_SOON_REDIRECTS.map((source) => ({
+        source,
+        destination: "/product#coming-soon",
+        permanent: true,
+      })),
     ];
   },
   images: {

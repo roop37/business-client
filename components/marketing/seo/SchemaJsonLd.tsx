@@ -35,7 +35,7 @@ export const OrganizationJsonLd = () =>
     url: SITE_URL,
     logo: LOGO_URL,
     description:
-      "Hoizr Business is the ticketing, marketing, and operations platform powering India's live-event industry. Event organizers, venues, and promoters publish directly, keep owned fan CRM, use AI event evaluation, compare anonymous peer benchmarks, and run clubs, festivals, comedy nights, and live music events from one stack.",
+      "Hoizr Business is the ticketing, marketing, and operations platform for India's live-event industry.",
     parentOrganization: {
       "@type": "Organization",
       name: LEGAL_NAME,
@@ -69,8 +69,6 @@ export const OrganizationJsonLd = () =>
       "@type": "PostalAddress",
       addressCountry: "IN",
     },
-    // SoftwareApplication fields — picks up rich result eligibility
-    // as an "events ticketing software" listing.
     applicationCategory: "BusinessApplication",
     applicationSubCategory: "Event Ticketing & Marketing Software",
     operatingSystem: "Web, iOS, Android",
@@ -78,11 +76,7 @@ export const OrganizationJsonLd = () =>
       "@type": "Offer",
       priceCurrency: "INR",
       price: "0",
-      description:
-        "Direct event publishing with no subscription wall, setup fee, card-details friction, or starter-tier limitation.",
     },
-    // Audience targeting — Schema.org Audience type signals to AI
-    // search engines + Google who this product is for.
     audience: {
       "@type": "BusinessAudience",
       audienceType:
@@ -98,8 +92,6 @@ export const OrganizationJsonLd = () =>
       "Fan CRM",
       "Event marketing automation",
       "WhatsApp marketing for events",
-      "AI event evaluation for events",
-      "Competitive event benchmarking",
       "Live event operations India",
       "Door scanning",
       "Guestlist management",

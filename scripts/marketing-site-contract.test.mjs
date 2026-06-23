@@ -3,6 +3,10 @@ import { readFileSync } from "node:fs";
 import test from "node:test";
 
 const read = (path) => readFileSync(new URL(`../${path}`, import.meta.url), "utf8");
+const legacyRedirects = await import(
+  new URL("../components/marketing/data/legacy-product-routes.mjs", import.meta.url)
+);
+const nextConfig = (await import(new URL("../next.config.mjs", import.meta.url))).default;
 
 const sliceBetween = (source, startMarker, endMarker) => {
   const start = source.indexOf(startMarker);
@@ -212,18 +216,70 @@ test("coming soon bento is a reusable marketing section", () => {
   assert.match(source, /href="\/book-a-demo"/);
 });
 
-test("legacy product URLs are represented in redirect configuration", () => {
-  const config = read("next.config.mjs");
-  const legacyPaths = [
-    "/product/event-marketplace",
-    "/product/event-listing",
+test("legacy redirect source exports the approved mappings", () => {
+  assert.deepStrictEqual(legacyRedirects.LEGACY_CURRENT_PRODUCT_REDIRECTS, {
+    "/product/event-marketplace": "/product/event-discovery",
+    "/product/event-seo": "/product/event-discovery",
+    "/product/organisation-page": "/product/event-discovery",
+    "/product/listings-management": "/product/event-discovery",
+    "/product/event-listing": "/product/event-ticketing",
+    "/product/smart-upsells": "/product/event-ticketing",
+    "/product/reviews-engine": "/product/reports-settlements",
+    "/product/email-sms-marketing": "/product/marketing-campaigns",
+    "/product/conversation-marketing": "/product/marketing-campaigns",
+    "/product/guestlist-management": "/product/guestlists-collaboration",
+    "/product/reporting-analytics": "/product/reports-settlements",
+    "/product/automations": "/product/reports-settlements",
+    "/product/ai-event-assistant": "/product/event-ticketing",
+  });
+
+  assert.deepStrictEqual(legacyRedirects.LEGACY_COMING_SOON_REDIRECTS, [
+    "/product/find-best-promoters",
+    "/product/find-trending-artists",
     "/product/push-notifications",
+    "/product/loyalty-rewards",
+    "/product/ai-marketing-intelligence",
     "/product/competitive-analysis",
+  ]);
+});
+
+test("next.config returns permanent legacy redirects", async () => {
+  const redirects = await nextConfig.redirects();
+  const expected = [
+    { source: "/pricing", destination: "/about", permanent: true },
+    ...Object.entries(legacyRedirects.LEGACY_CURRENT_PRODUCT_REDIRECTS).map(
+      ([source, destination]) => ({ source, destination, permanent: true })
+    ),
+    ...legacyRedirects.LEGACY_COMING_SOON_REDIRECTS.map((source) => ({
+      source,
+      destination: "/product#coming-soon",
+      permanent: true,
+    })),
   ];
 
-  for (const path of legacyPaths) {
-    assert.match(config, new RegExp(path.replaceAll("/", "\\/")));
-  }
+  assert.deepStrictEqual(redirects, expected);
+});
+
+test("marketing SEO discovery stays current-only and exposes book-a-demo", () => {
+  const sitemap = read("app/sitemap.ts");
+  const robots = read("app/robots.ts");
+  const schema = read("components/marketing/seo/SchemaJsonLd.tsx");
+
+  assert.match(sitemap, /url:\s*`\$\{siteUrl\}\/book-a-demo`/);
+  assert.match(sitemap, /changeFrequency:\s*"monthly"/);
+  assert.match(sitemap, /priority:\s*0\.8/);
+  assert.match(robots, /allow:\s*\[[\s\S]*"\/book-a-demo"[\s\S]*\]/);
+  assert.match(sitemap, /ALL_PRODUCTS/);
+  assert.doesNotMatch(sitemap, /COMING_SOON_PRODUCTS/);
+
+  assert.match(schema, /type="application\/ld\+json"/);
+  assert.ok(
+    schema.includes(String.raw`JSON.stringify(data).replace(/</g, "\\u003c")`)
+  );
+  assert.doesNotMatch(
+    schema,
+    /fallback-generated availability|unsupported AI|future capabilities/i
+  );
 });
 
 test("task 6 beliefs and faq use the approved organiser copy", () => {
