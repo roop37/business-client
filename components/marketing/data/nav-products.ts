@@ -1,8 +1,3 @@
-/**
- * Single source of truth for the marketing nav mega-menu + footer
- * product columns. Slugs match `/product/[slug]` so any new entry
- * automatically gets a working product page and inbound link.
- */
 export type MarketingProduct = {
   slug: string;
   label: string;
@@ -16,142 +11,138 @@ export type MarketingPillar = {
   products: MarketingProduct[];
 };
 
+export type ComingSoonProduct = {
+  title: string;
+  body: string;
+};
+
 export const MARKETING_PILLARS: MarketingPillar[] = [
   {
     id: "discovery",
-    label: "Grow online discovery",
-    tagline: "Get found by fans who don't know you yet.",
+    label: "Grow Discovery",
+    tagline: "Help more people find the event worth leaving home for.",
     products: [
       {
-        slug: "event-marketplace",
-        label: "Event Marketplace",
-        blurb: "Featured placement across Hoizr's discovery surfaces.",
-      },
-      {
-        slug: "event-seo",
-        label: "Event SEO",
-        blurb: "Auto-tuned schema, city pages, and meta for every show.",
-      },
-      {
-        slug: "organisation-page",
-        label: "Organisation page",
-        blurb: "A polished home for your brand, lineup, and history.",
-      },
-      {
-        slug: "reviews-engine",
-        label: "Reviews Engine",
-        blurb: "Turn happy attendees into Google reviews on autopilot.",
-      },
-      {
-        slug: "listings-management",
-        label: "Listings Management",
-        blurb: "One inbox for Google, Maps, and discovery sites.",
+        slug: "event-discovery",
+        label: "Event Discovery & Organisation Pages",
+        blurb:
+          "Publish search-ready event pages and keep your organisation visible between events.",
       },
     ],
   },
   {
     id: "sales",
-    label: "Grow online sales",
-    tagline: "Convert visitors into ticket buyers.",
+    label: "Grow Sales",
+    tagline: "Turn interest into paid, free or RSVP attendance.",
     products: [
       {
-        slug: "event-listing",
-        label: "Event Listing",
-        blurb: "Fast, conversion-optimised event pages with cart locks.",
+        slug: "event-ticketing",
+        label: "Event Ticketing & Checkout",
+        blurb:
+          "Run ticket tiers, multi-day access, add-ons, promo codes and checkout from one event setup.",
       },
       {
-        slug: "smart-upsells",
-        label: "Smart Upsells",
-        blurb: "Add-ons that lift average order without nagging fans.",
-      },
-      {
-        slug: "find-best-promoters",
-        label: "Find Best Promoters",
-        blurb: "A vetted promoter network ranked by actual sell-through.",
-      },
-      {
-        slug: "find-trending-artists",
-        label: "Find Trending Artists",
-        blurb: "Book lineups that already pull in your city.",
+        slug: "offline-ticketing",
+        label: "Offline Sales & Payment Links",
+        blurb:
+          "Issue real tickets at the door or send a payment link without breaking order and inventory records.",
       },
     ],
   },
   {
     id: "repeat",
-    label: "Grow repeat fans",
-    tagline: "Bring last night's crowd back next weekend.",
+    label: "Grow Repeat Audience",
+    tagline: "Use every event to build the audience for the next one.",
     products: [
       {
+        slug: "audience-management",
+        label: "Audience & Customer Management",
+        blurb:
+          "Understand who bought, attended and returned, with customer history tied to your events.",
+      },
+      {
         slug: "marketing-campaigns",
-        label: "Marketing Campaigns",
-        blurb: "Plan, schedule, and ship multi-channel drops.",
-      },
-      {
-        slug: "email-sms-marketing",
-        label: "Email & SMS Marketing",
-        blurb: "Owned-channel outreach to your CRM, not a marketplace's.",
-      },
-      {
-        slug: "push-notifications",
-        label: "Push Notifications",
-        blurb: "Door-drops, on-sale alerts, and last-call nudges.",
-      },
-      {
-        slug: "conversation-marketing",
-        label: "Conversation Marketing",
-        blurb: "High-intent chat campaigns without exposing vendor plumbing.",
-      },
-      {
-        slug: "loyalty-rewards",
-        label: "Loyalty & Rewards",
-        blurb: "Tier perks that turn a fan into a regular.",
+        label: "Email & WhatsApp Campaigns",
+        blurb:
+          "Reach relevant audiences with scheduled campaigns and connect engagement to ticket sales.",
       },
     ],
   },
   {
     id: "ops",
-    label: "Run your events",
-    tagline: "Pull off the night without the chaos.",
+    label: "Run Events",
+    tagline: "Keep the team, guestlist, door and event numbers connected.",
     products: [
       {
-        slug: "reporting-analytics",
-        label: "Reporting & Analytics",
-        blurb: "Sell-through, sources, and settlement — in plain English.",
+        slug: "guestlists-collaboration",
+        label: "Guestlists, Collaborators & Teams",
+        blurb:
+          "Control invite links, approvals, collaborator access and team permissions without spreadsheet hand-offs.",
       },
       {
         slug: "door-scanning",
-        label: "Door Scanning",
-        blurb: "Door staff, QR scanning, instant guestlist visibility.",
+        label: "Door Scanning & Event Operations",
+        blurb:
+          "Give door staff secure scanner access and validate paid, offline and guestlist tickets.",
       },
       {
-        slug: "automations",
-        label: "Automations",
-        blurb: "Recipes that handle marketing, refunds, and follow-ups.",
-      },
-      {
-        slug: "ai-event-assistant",
-        label: "AI Event Assistant",
-        blurb: "Event evaluation, offer context, and audience picks tuned by AI.",
-      },
-      {
-        slug: "ai-marketing-intelligence",
-        label: "AI Marketing Intelligence",
-        blurb: "AI splits your marketing budget across SMS, push, email, and WhatsApp — with reasoning.",
-      },
-      {
-        slug: "competitive-analysis",
-        label: "Competitive Analysis",
-        blurb: "See how peer event organizers perform in your city, format, and price band — and what the top quartile does differently.",
-      },
-      {
-        slug: "guestlist-management",
-        label: "Guestlist Management",
-        blurb: "Promoter caps, invite QR, live arrivals at the door.",
+        slug: "reports-settlements",
+        label: "Reports, Settlements & Event Intelligence",
+        blurb:
+          "Review sales, attendance, campaigns, settlements, automations and event feedback in one reporting layer.",
       },
     ],
   },
 ];
 
-export const ALL_PRODUCTS: MarketingProduct[] = MARKETING_PILLARS.flatMap(
+export const ALL_PRODUCTS = MARKETING_PILLARS.flatMap(
   (pillar) => pillar.products
 );
+
+export const COMING_SOON_PRODUCTS: ComingSoonProduct[] = [
+  {
+    title: "House Parties + Instagram Attendee Filtering",
+    body:
+      "Create private house-party experiences and use Instagram-connected attendee context to shape who sees and joins them.",
+  },
+  {
+    title: "Push Campaigns",
+    body:
+      "Send timely on-sale, last-call and event updates to opted-in audiences.",
+  },
+  {
+    title: "SMS Campaigns",
+    body:
+      "Reach customer segments with campaign reporting connected to event sales.",
+  },
+  {
+    title: "Loyalty & Rewards",
+    body:
+      "Recognise repeat attendance with early access, priority entry and organiser-defined benefits.",
+  },
+  {
+    title: "Expanded Automation Journeys",
+    body:
+      "Build multi-step event journeys with timing, conditions and channel fallback.",
+  },
+  {
+    title: "AI Marketing Intelligence",
+    body:
+      "Get explainable recommendations for audience, channel mix, budget and timing.",
+  },
+  {
+    title: "Competitive Event Benchmarks",
+    body:
+      "Compare event performance with anonymised, relevant market cohorts.",
+  },
+  {
+    title: "Advanced Audience Segmentation",
+    body:
+      "Create reusable segments using customer, purchase and attendance behaviour.",
+  },
+  {
+    title: "Guestlist Invitations, Waitlists and +1s",
+    body:
+      "Send invitations directly, promote waitlisted guests and manage group arrivals.",
+  },
+];
