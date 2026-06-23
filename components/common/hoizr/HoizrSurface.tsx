@@ -77,6 +77,9 @@ export const HoizrStatusPill = ({ status }: { status: string }) => {
     normalized.includes("cancel") ||
     normalized.includes("fail") ||
     normalized.includes("blocked");
+  // "Ongoing" = happening right now — its own info tone so it stands apart
+  // from the green "Published"/"Completed" pills.
+  const ongoing = normalized.includes("ongoing");
   const scheduled =
     normalized.includes("pending") ||
     normalized.includes("scheduled") ||
@@ -90,6 +93,8 @@ export const HoizrStatusPill = ({ status }: { status: string }) => {
 
   const tone = danger
     ? "bg-owner-danger-bg text-owner-danger-text"
+    : ongoing
+    ? "bg-owner-info-bg text-owner-info-text"
     : completed
     ? "bg-owner-success-bg text-owner-success-text"
     : scheduled

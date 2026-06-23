@@ -6,7 +6,7 @@ import { useHostTypeLabel } from "@/hooks/useHostTypeLabel";
 import useGlobalStore from "@/store/global";
 import useHostsStore from "@/store/host";
 import { sdk } from "@/utils/graphqlClient";
-import { extractErrorMessage } from "@/utils/utilFUncs";
+import { eventDisplayStatus, extractErrorMessage } from "@/utils/utilFUncs";
 import {
   CalendarDaysIcon,
   CheckCircle2Icon,
@@ -843,7 +843,15 @@ const EventListCard = ({
           </>
         ) : null
       }
-      topRightBadge={<HoizrStatusPill status={event.status || "Draft"} />}
+      topRightBadge={
+        <HoizrStatusPill
+          status={eventDisplayStatus(
+            event.status,
+            event.startDate,
+            event.endDate
+          )}
+        />
+      }
       note={
         isCollab ? (
           <p className="text-[12px] text-[#7E2BD6]">

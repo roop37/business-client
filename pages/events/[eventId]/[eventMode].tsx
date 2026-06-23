@@ -4,7 +4,7 @@ import { EventActivityPanel } from "@/components/modules/events/EventActivityPan
 import GuestlistManagerModal from "@/components/modules/events/GuestlistManagerModal";
 import useGlobalStore from "@/store/global";
 import { sdk } from "@/utils/graphqlClient";
-import { extractErrorMessage } from "@/utils/utilFUncs";
+import { eventDisplayStatus, extractErrorMessage } from "@/utils/utilFUncs";
 import {
   CalendarDaysIcon,
   DoorOpenIcon,
@@ -14,6 +14,7 @@ import {
   MegaphoneIcon,
   PencilIcon,
   QrCodeIcon,
+  ScanLineIcon,
   SettingsIcon,
   SparklesIcon,
   TicketIcon,
@@ -114,6 +115,26 @@ const EventOperations = ({
       ? Math.min(100, Math.round((overview.totals.sold / overview.totals.capacity) * 100))
       : 0;
   const isCollaboratorView = Boolean(overview?.isCollaboratorView);
+  // Door scanning window — mirrors the server scanner gates: opens 2h before
+  // the event starts, closes 24h after it ends. Surfaced so the host knows
+  // exactly when staff can scan.
+  const scanWindowLabel = (() => {
+    if (!overview?.startDate) return "";
+    const fmt = (d: Date) =>
+      new Intl.DateTimeFormat("en-IN", {
+        day: "2-digit",
+        month: "short",
+        hour: "numeric",
+        minute: "2-digit",
+        hour12: true,
+      }).format(d);
+    const opens = new Date(new Date(overview.startDate).getTime() - 2 * 60 * 60 * 1000);
+    const end = overview.endDate ? new Date(overview.endDate) : null;
+    const closes = end ? new Date(end.getTime() + 24 * 60 * 60 * 1000) : null;
+    return closes
+      ? `Scanning ${fmt(opens)} – ${fmt(closes)}`
+      : `Scanning opens ${fmt(opens)}`;
+  })();
   const canSeeMetrics = !isCollaboratorView || overview?.canSeeMetrics === true;
   const canRunCampaigns =
     !isCollaboratorView || overview?.canRunCampaigns === true;
@@ -157,7 +178,12 @@ const EventOperations = ({
                   {overview?.title || "Untitled Event"}
                 </h2>
                 <p className="mt-1 text-xs text-[var(--owner-fg-3)]">
-                  {overview?.status} · {overview?.scannersCount ?? 0} scanner
+                  {eventDisplayStatus(
+                    overview?.status,
+                    overview?.startDate,
+                    overview?.endDate
+                  )}{" "}
+                  · {overview?.scannersCount ?? 0} scanner
                   {(overview?.scannersCount ?? 0) === 1 ? "" : "s"}
                   {overview?.selectedPricingPlan
                     ? ` · ${overview.selectedPricingPlan} plan` +
@@ -166,6 +192,12 @@ const EventOperations = ({
                         : "")
                     : ""}
                 </p>
+                {scanWindowLabel ? (
+                  <p className="mt-1 inline-flex items-center gap-1.5 text-[11px] text-[var(--owner-fg-4)]">
+                    <ScanLineIcon size={12} />
+                    {scanWindowLabel}
+                  </p>
+                ) : null}
               </div>
             </div>
             <div className="flex items-center gap-2">
