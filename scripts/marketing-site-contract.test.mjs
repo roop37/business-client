@@ -508,11 +508,30 @@ test("task 9 how-it-works uses the approved seven-step organiser journey", () =>
   assert.match(source, /Book a Demo/);
   assert.doesNotMatch(source, /Get started/);
   assert.doesNotMatch(source, /See the flow/);
+  assert.doesNotMatch(source, /title:\s*"Finance"/);
+  assert.doesNotMatch(source, /title:\s*"Door staff"/);
   assert.doesNotMatch(source, /creates cross-channel audience filters/i);
   assert.doesNotMatch(source, /allocates campaign budgets/i);
   assert.doesNotMatch(source, /chooses channels/i);
   assert.doesNotMatch(source, /builds complete campaigns/i);
   assert.doesNotMatch(source, /promoter code/i);
+
+  const teamRolesBlock = sliceBetween(
+    source,
+    "const TEAM_ROLES:",
+    "const FAQS:"
+  );
+  const actualRoleTitles = [
+    ...teamRolesBlock.matchAll(/title:\s*["']([^"']+)["']/g),
+  ].map(([_, title]) => title);
+  assert.deepStrictEqual(actualRoleTitles, [
+    "Owner",
+    "Manager",
+    "Marketing",
+    "Staff",
+  ]);
+  assert.doesNotMatch(teamRolesBlock, /Finance/);
+  assert.doesNotMatch(teamRolesBlock, /Door staff/);
 
   const journeyBlock = sliceBetween(
     siteCopy,

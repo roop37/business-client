@@ -11,7 +11,6 @@ import {
   ScanLine,
   Send,
   Users,
-  Wallet,
   type LucideIcon,
 } from "lucide-react";
 import { MarketingShell } from "@/components/marketing/MarketingShell";
@@ -85,29 +84,29 @@ const TEAM_ROLES: {
     icon: Users,
     title: "Owner",
     body:
-      "The owner sees the organisation, event readiness, collaborators and the overall publishing flow.",
-    points: ["Organisation", "Publishing", "Collaborators", "Readiness"],
+      "The owner can be given the broadest organisation permissions, including setup and access management, depending on how the account is configured.",
+    points: ["Setup", "Access", "Publishing", "Permissions"],
   },
   {
     icon: Send,
-    title: "Marketing",
+    title: "Manager",
     body:
-      "The marketing team works from the event context, audience records and campaign surfaces that belong to the current event.",
-    points: ["Audience records", "Campaigns", "Reminders", "Post-event follow-up"],
+      "Managers can be granted operational permissions for the event, such as coordinating approvals, publishing help or oversight, when the owner assigns them.",
+    points: ["Operational access", "Approvals", "Oversight", "Event support"],
   },
   {
-    icon: Wallet,
-    title: "Finance",
+    icon: ChartNoAxesCombined,
+    title: "Marketing",
     body:
-      "Finance handles payout details, settlement review and the numbers the event needs after the night ends.",
-    points: ["Payouts", "Settlements", "Refunds", "Exports"],
+      "Marketing access can be scoped to audience and campaign surfaces for the specific event or events the account grants them.",
+    points: ["Audience", "Campaigns", "Event scope", "Permissioned access"],
   },
   {
     icon: ScanLine,
-    title: "Door staff",
+    title: "Staff",
     body:
-      "Door staff get only the scanning, guestlist and arrival tools they need to keep entry moving.",
-    points: ["Scanning", "Guestlists", "Arrivals", "Exceptions"],
+      "Staff can be given event-level access such as scanning or guestlist work when those permissions are enabled for them.",
+    points: ["Scanning", "Guestlists", "Arrivals", "Scoped access"],
   },
 ];
 
