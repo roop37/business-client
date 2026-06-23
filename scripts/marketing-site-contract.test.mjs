@@ -167,14 +167,19 @@ test("marketing footer uses the approved public routes and labels", () => {
 
 test("public marketing copy avoids stale pricing and access claims", () => {
   const source = [
+    read("app/about/page.tsx"),
     read("app/api/waitlist/route.ts"),
     read("components/marketing/about/AboutPromise.tsx"),
     read("components/marketing/blog/blog-data.ts"),
+    read("components/marketing/sections/Hero.tsx"),
     read("components/marketing/sections/AiOfferSpotlight.tsx"),
+    read("components/marketing/sections/OperationsBento.tsx"),
     read("components/marketing/sections/PricingTeaserCards.tsx"),
   ].join("\n");
 
   const blockedPhrases = [
+    "generic rate card",
+    "AI rate quote",
     "lowest ticket commission",
     "lowered commission",
     "tailored commission",

@@ -19,7 +19,7 @@ const HERO_VERTICALS = ["comedy", "clubbing", "dining", "festivals", "concerts"]
 const HERO_BADGES: { icon: LucideIcon; label: string }[] = [
   { icon: BadgeCheck, label: "No gatekeeping" },
   { icon: Ticket, label: "Direct ticketing" },
-  { icon: Sparkles, label: "AI rate quote" },
+  { icon: Sparkles, label: "Event evaluation" },
   { icon: Users, label: "Your fan CRM" },
   { icon: ScanLine, label: "Door + scanners" },
   { icon: BarChart3, label: "Settlement-ready" },

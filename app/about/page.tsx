@@ -274,9 +274,10 @@ export default function AboutPage() {
             <div className="space-y-5 text-[17px] leading-[1.65] text-[var(--m-ink-2)]">
               <p>
                 Hoizr is built around a simple operating belief: Indian
-                organizers should not need a subscription wall, a generic rate
-                card, or a maze of disconnected tools before they can publish a
-                serious event.
+                organizers should not need a subscription wall or a maze of
+                disconnected tools before they can publish a serious event.
+                Instead, they should get clear event-specific guidance and
+                available options from the start.
               </p>
               <p>
                 The product is opinionated because event work is operational.

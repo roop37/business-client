@@ -100,7 +100,7 @@ export const OperationsBento = () => {
           minHeight={420}
           eyebrow="AI Event Assistant"
           title="AI studies your event."
-          body="One scoped AI feature, done well. Hoizr reads your event's format, city, scale, ticket mix, and listing quality, then returns the best possible offer."
+          body="One scoped AI feature, done well. Hoizr reads your event's format, city, scale, ticket mix, and listing quality, then shows event-specific guidance and available options."
           href="/product/ai-event-assistant"
           visual={
             <BrandImageVisual
