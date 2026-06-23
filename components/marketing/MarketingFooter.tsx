@@ -3,18 +3,11 @@
 import Link from "next/link";
 import { MARKETING_PILLARS } from "./data/nav-products";
 
-const COMPANY_LINKS = [
-  { label: "Home", href: "/" },
-  { label: "About", href: "/about" },
-  { label: "How it works", href: "/how-it-works" },
-];
-const RESOURCE_LINKS = [
-  { label: "Find Event", href: "https://hoizr.com" },
+const EXPLORE_LINKS = [
+  { label: "How It Works", href: "/how-it-works" },
   { label: "Resources", href: "/resources" },
-  { label: "Flyer stickers", href: "/resources#stickers" },
-  { label: "Playbooks", href: "/resources#playbooks" },
-  { label: "Blog", href: "/blog" },
-  { label: "Help center", href: "/help" },
+  { label: "Book a Demo", href: "/book-a-demo" },
+  { label: "Find Events", href: "https://hoizr.com" },
 ];
 const SUPPORT_LINKS = [
   { label: "Contact", href: "/contact" },
@@ -72,19 +65,9 @@ export const MarketingFooter = () => {
             </div>
           ))}
           <div>
-            <div className="hm-eyebrow mb-3 !text-white/45">Company</div>
+            <div className="hm-eyebrow mb-3 !text-white/45">Explore</div>
             <ul className="space-y-2">
-              {COMPANY_LINKS.map((l) => (
-                <li key={l.href}>
-                  <Link href={l.href} className="text-[13.5px] font-medium text-white/76 transition-colors duration-200 hover:text-[var(--m-acid)] hover:[text-shadow:0_0_14px_rgba(214,255,63,0.55)]">
-                    {l.label}
-                  </Link>
-                </li>
-              ))}
-            </ul>
-            <div className="hm-eyebrow mt-6 mb-3 !text-white/45">Resources</div>
-            <ul className="space-y-2">
-              {RESOURCE_LINKS.map((l) => (
+              {EXPLORE_LINKS.map((l) => (
                 <li key={l.href}>
                   <Link
                     href={l.href}
@@ -124,7 +107,7 @@ export const MarketingFooter = () => {
                   href="/signup"
                   className="text-[13.5px] font-medium text-white/76 transition-colors duration-200 hover:text-[var(--m-acid)] hover:[text-shadow:0_0_14px_rgba(214,255,63,0.55)]"
                 >
-                  Get started
+                  Get Started
                 </Link>
               </li>
             </ul>

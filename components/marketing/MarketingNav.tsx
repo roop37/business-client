@@ -14,13 +14,8 @@ const RESOURCE_LINKS = [
   { label: "Flyer stickers", href: "/resources#stickers", blurb: "Download Hoizr PNG stickers for posters, reels, stories, and venue screens." },
   { label: "Playbooks", href: "/resources#playbooks", blurb: "Short, opinionated guides for India's live nights — door ops, on-sale day, refund policy, teardown." },
   { label: "Blog", href: "/blog", blurb: "Migration playbooks, fan-CRM tactics, AI event strategy — for Indian event organizers." },
-  { label: "How Hoizr works", href: "/how-it-works", blurb: "Quick onboarding, same-day verification, and the operating flow from signup to a sold-out night." },
+  { label: "How It Works", href: "/how-it-works", blurb: "Quick onboarding, same-day verification, and the operating flow from signup to a sold-out night." },
   { label: "Help center", href: "/help", blurb: "Support routes, dashboard basics, launch-day checks, and weekend escalation." },
-];
-
-const COMPANY_LINKS = [
-  { label: "About", href: "/about", blurb: "Why Hoizr exists and who is building it." },
-  { label: "Contact", href: "/contact", blurb: "Talk to Hoizr about events, venues, partnerships, or support." },
 ];
 
 const NAV_BLOG_CARDS = [
@@ -185,36 +180,13 @@ export const MarketingNav = () => {
           </div>
 
           <Link
-            href="https://hoizr.com"
-            target="_blank"
-            rel="noreferrer"
+            href="/how-it-works"
             onClick={closeNow}
             onMouseEnter={closeNow}
             className="rounded-full px-3.5 py-2 text-[14px] font-medium text-[var(--m-ink-2)] hover:bg-[rgba(0,0,0,0.05)]"
           >
-            Find Event
+            How It Works
           </Link>
-
-          <div
-            onMouseEnter={() => openMenu("company", true)}
-            className="relative"
-          >
-            <button
-              type="button"
-              onClick={() => toggleMenu("company")}
-              aria-expanded={open === "company"}
-              className="inline-flex items-center gap-1.5 rounded-full px-3.5 py-2 text-[14px] font-medium text-[var(--m-ink-2)] hover:bg-[rgba(0,0,0,0.05)] transition-colors"
-            >
-              Company
-              <motion.span
-                animate={{ rotate: open === "company" ? 180 : 0 }}
-                transition={{ type: "spring", stiffness: 300, damping: 22 }}
-                className="inline-flex"
-              >
-                <ChevronDown size={14} />
-              </motion.span>
-            </button>
-          </div>
 
           <div
             onMouseEnter={() => openMenu("resources", true)}
@@ -236,6 +208,15 @@ export const MarketingNav = () => {
               </motion.span>
             </button>
           </div>
+
+          <Link
+            href="/book-a-demo"
+            onClick={closeNow}
+            onMouseEnter={closeNow}
+            className="rounded-full px-3.5 py-2 text-[14px] font-medium text-[var(--m-ink-2)] hover:bg-[rgba(0,0,0,0.05)]"
+          >
+            Book a Demo
+          </Link>
         </nav>
 
         <div className="hidden lg:flex items-center gap-2">
@@ -253,7 +234,7 @@ export const MarketingNav = () => {
             onMouseEnter={closeNow}
             className="hm-btn hm-btn-primary text-[14px] py-2.5 px-4"
           >
-            Get started
+            Get Started
           </Link>
         </div>
 
@@ -372,48 +353,18 @@ export const MarketingNav = () => {
                     onClick={closeNow}
                     className="font-semibold text-[var(--m-forest-700)] hover:underline"
                   >
-                    Get started →
+                    Get Started →
                   </Link>
                 </div>
-              </div>
-            </div>
-          </motion.div>
-        )}
-
-        {open === "company" && (
-          <motion.div
-            key="company-menu"
-            initial={{ opacity: 0, y: -8 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -8 }}
-            transition={{ duration: 0.22, ease: EASE }}
-            className="absolute left-1/2 top-full -translate-x-1/2"
-          >
-            <div className="mx-auto w-[620px] px-6 pb-6">
-              <div className="rounded-[24px] border border-[var(--m-border)] bg-[var(--m-surface-elevated)] p-4 shadow-[var(--m-shadow-pop)]">
-                <ul className="grid grid-cols-2 gap-1">
-                  {COMPANY_LINKS.map((item, i) => (
-                    <motion.li
-                      key={item.href}
-                      initial={{ opacity: 0, y: 6 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ duration: 0.24, ease: EASE, delay: i * 0.025 }}
-                    >
-                      <Link
-                        href={item.href}
-                        onClick={closeNow}
-                        className="block rounded-xl p-3 transition-colors hover:bg-[var(--m-canvas-2)]"
-                      >
-                        <div className="text-[14px] font-semibold text-[var(--m-ink-1)]">
-                          {item.label}
-                        </div>
-                        <div className="mt-0.5 text-[12.5px] leading-snug text-[var(--m-ink-3)]">
-                          {item.blurb}
-                        </div>
-                      </Link>
-                    </motion.li>
-                  ))}
-                </ul>
+                <div className="mt-3 border-t border-[var(--m-border)] pt-4">
+                  <Link
+                    href="/product#coming-soon"
+                    onClick={closeNow}
+                    className="inline-flex font-semibold text-[var(--m-forest-700)] hover:underline"
+                  >
+                    See what is Coming Soon
+                  </Link>
+                </div>
               </div>
             </div>
           </motion.div>
@@ -506,7 +457,7 @@ export const MarketingNav = () => {
           ~60px-tall nav strip and only the close `X` ends up visible). */}
       {mounted && createPortal(
       <AnimatePresence>
-        {mobileOpen && (
+              {mobileOpen && (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -551,26 +502,14 @@ export const MarketingNav = () => {
                 </motion.div>
               ))}
               <div className="pt-4 border-t border-[var(--m-border)] grid gap-1">
-                <Link onClick={() => setMobileOpen(false)} href="https://hoizr.com" target="_blank" rel="noreferrer" className="rounded-xl px-3 py-2.5 -mx-3 text-[15px] font-medium hover:bg-[var(--m-canvas-2)]">
-                  Find Event
-                </Link>
-                <Link onClick={() => setMobileOpen(false)} href="/about" className="rounded-xl px-3 py-2.5 -mx-3 text-[15px] font-medium hover:bg-[var(--m-canvas-2)]">
-                  About
-                </Link>
-                <Link onClick={() => setMobileOpen(false)} href="/contact" className="rounded-xl px-3 py-2.5 -mx-3 text-[15px] font-medium hover:bg-[var(--m-canvas-2)]">
-                  Contact
-                </Link>
                 <Link onClick={() => setMobileOpen(false)} href="/how-it-works" className="rounded-xl px-3 py-2.5 -mx-3 text-[15px] font-medium hover:bg-[var(--m-canvas-2)]">
-                  How it works
+                  How It Works
                 </Link>
                 <Link onClick={() => setMobileOpen(false)} href="/resources" className="rounded-xl px-3 py-2.5 -mx-3 text-[15px] font-medium hover:bg-[var(--m-canvas-2)]">
                   Resources
                 </Link>
-                <Link onClick={() => setMobileOpen(false)} href="/resources#stickers" className="rounded-xl px-3 py-2.5 -mx-3 text-[15px] font-medium hover:bg-[var(--m-canvas-2)]">
-                  Flyer stickers
-                </Link>
-                <Link onClick={() => setMobileOpen(false)} href="/blog" className="rounded-xl px-3 py-2.5 -mx-3 text-[15px] font-medium hover:bg-[var(--m-canvas-2)]">
-                  Blog
+                <Link onClick={() => setMobileOpen(false)} href="/book-a-demo" className="rounded-xl px-3 py-2.5 -mx-3 text-[15px] font-medium hover:bg-[var(--m-canvas-2)]">
+                  Book a Demo
                 </Link>
               </div>
               <div className="flex flex-col gap-2">
@@ -586,7 +525,7 @@ export const MarketingNav = () => {
                   onClick={() => setMobileOpen(false)}
                   className="hm-btn hm-btn-primary w-full"
                 >
-                  Get started
+                  Get Started
                 </Link>
               </div>
             </div>

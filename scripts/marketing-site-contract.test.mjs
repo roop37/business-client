@@ -55,6 +55,89 @@ test("public CTA language uses Get Started and Book a Demo", () => {
   assert.doesNotMatch(source, /Get started free/i);
 });
 
+test("marketing nav uses the approved public routes and CTA labels", () => {
+  const source = read("components/marketing/MarketingNav.tsx");
+
+  const desktopHeader = sliceBetween(
+    source,
+    '<nav className="hidden lg:flex items-center gap-1 lg:ml-10 xl:ml-16">',
+    'className="lg:hidden inline-flex h-10 w-10 items-center justify-center rounded-full hover:bg-[rgba(0,0,0,0.05)]"'
+  );
+
+  const desktopOrder = [
+    "Products",
+    'href="/how-it-works"',
+    "How It Works",
+    "Resources",
+    'href="/book-a-demo"',
+    "Book a Demo",
+    'href="/login"',
+    "Login",
+    'href="/signup"',
+    "Get Started",
+  ];
+
+  let previousIndex = -1;
+  for (const snippet of desktopOrder) {
+    const index = desktopHeader.indexOf(snippet);
+    assert.ok(index >= 0, `Missing desktop header snippet: ${snippet}`);
+    assert.ok(index > previousIndex, `Desktop header snippet out of order: ${snippet}`);
+    previousIndex = index;
+  }
+
+  assert.doesNotMatch(desktopHeader, /Find Event/);
+  assert.doesNotMatch(desktopHeader, /Get started/);
+
+  const mobileMenu = sliceBetween(
+    source,
+    '<div className="px-6 py-6 space-y-8">',
+    "document.body,"
+  );
+  const mobileOrder = [
+    'href="/how-it-works"',
+    "How It Works",
+    'href="/resources"',
+    "Resources",
+    'href="/book-a-demo"',
+    "Book a Demo",
+    'href="/login"',
+    "Login",
+    'href="/signup"',
+    "Get Started",
+  ];
+
+  previousIndex = -1;
+  for (const snippet of mobileOrder) {
+    const index = mobileMenu.indexOf(snippet);
+    assert.ok(index >= 0, `Missing mobile menu snippet: ${snippet}`);
+    assert.ok(index > previousIndex, `Mobile menu snippet out of order: ${snippet}`);
+    previousIndex = index;
+  }
+
+  assert.doesNotMatch(mobileMenu, /Find Event/);
+  assert.doesNotMatch(mobileMenu, /Get started/);
+});
+
+test("marketing footer uses the approved public routes and labels", () => {
+  const source = read("components/marketing/MarketingFooter.tsx");
+
+  assert.match(source, /MARKETING_PILLARS\.map/);
+  assert.match(source, /label: "How It Works", href: "\/how-it-works"/);
+  assert.match(source, /label: "Resources", href: "\/resources"/);
+  assert.match(source, /label: "Book a Demo", href: "\/book-a-demo"/);
+  assert.match(source, /label: "Find Events", href: "https:\/\/hoizr\.com"/);
+  assert.match(source, /href="\/login"/);
+  assert.match(source, /href="\/signup"/);
+  assert.match(source, /Get Started/);
+  assert.match(source, /label: "Contact", href: "\/contact"/);
+  assert.match(source, /label: "contact@hoizr\.com", href: "mailto:contact@hoizr\.com"/);
+  assert.match(source, /label: "tech@hoizr\.com", href: "mailto:tech@hoizr\.com"/);
+  assert.match(source, /https:\/\/business\.hoizr\.com\/legal\/privacy/);
+  assert.match(source, /https:\/\/business\.hoizr\.com\/legal\/terms/);
+  assert.match(source, /https:\/\/business\.hoizr\.com\/legal\/cookies/);
+  assert.match(source, /https:\/\/business\.hoizr\.com\/legal\/entity/);
+});
+
 test("demo page embeds Zcal and does not reference Calendly", () => {
   const source = read("app/book-a-demo/page.tsx");
 
