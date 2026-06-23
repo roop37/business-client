@@ -188,26 +188,14 @@ export const MarketingNav = () => {
             How It Works
           </Link>
 
-          <div
-            onMouseEnter={() => openMenu("resources", true)}
-            className="relative"
+          <Link
+            href="/about"
+            onClick={closeNow}
+            onMouseEnter={closeNow}
+            className="rounded-full px-3.5 py-2 text-[14px] font-medium text-[var(--m-ink-2)] hover:bg-[rgba(0,0,0,0.05)]"
           >
-            <button
-              type="button"
-              onClick={() => toggleMenu("resources")}
-              aria-expanded={open === "resources"}
-              className="inline-flex items-center gap-1.5 rounded-full px-3.5 py-2 text-[14px] font-medium text-[var(--m-ink-2)] hover:bg-[rgba(0,0,0,0.05)] transition-colors"
-            >
-              Resources
-              <motion.span
-                animate={{ rotate: open === "resources" ? 180 : 0 }}
-                transition={{ type: "spring", stiffness: 300, damping: 22 }}
-                className="inline-flex"
-              >
-                <ChevronDown size={14} />
-              </motion.span>
-            </button>
-          </div>
+            About
+          </Link>
 
           <Link
             href="/book-a-demo"
@@ -226,7 +214,7 @@ export const MarketingNav = () => {
             onMouseEnter={closeNow}
             className="rounded-full px-3.5 py-2 text-[14px] font-medium text-[var(--m-ink-2)] hover:bg-[rgba(0,0,0,0.05)]"
           >
-            Login
+            Log in
           </Link>
           <Link
             href="/signup"
@@ -505,8 +493,8 @@ export const MarketingNav = () => {
                 <Link onClick={() => setMobileOpen(false)} href="/how-it-works" className="rounded-xl px-3 py-2.5 -mx-3 text-[15px] font-medium hover:bg-[var(--m-canvas-2)]">
                   How It Works
                 </Link>
-                <Link onClick={() => setMobileOpen(false)} href="/resources" className="rounded-xl px-3 py-2.5 -mx-3 text-[15px] font-medium hover:bg-[var(--m-canvas-2)]">
-                  Resources
+                <Link onClick={() => setMobileOpen(false)} href="/about" className="rounded-xl px-3 py-2.5 -mx-3 text-[15px] font-medium hover:bg-[var(--m-canvas-2)]">
+                  About
                 </Link>
                 <Link onClick={() => setMobileOpen(false)} href="/book-a-demo" className="rounded-xl px-3 py-2.5 -mx-3 text-[15px] font-medium hover:bg-[var(--m-canvas-2)]">
                   Book a Demo
@@ -518,7 +506,7 @@ export const MarketingNav = () => {
                   onClick={() => setMobileOpen(false)}
                   className="hm-btn hm-btn-ghost w-full border border-[var(--m-border)]"
                 >
-                  Login
+                  Log in
                 </Link>
                 <Link
                   href="/signup"

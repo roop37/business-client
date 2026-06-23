@@ -3,11 +3,12 @@
 import Link from "next/link";
 import { MARKETING_PILLARS } from "./data/nav-products";
 
-const EXPLORE_LINKS = [
+const COMPANY_LINKS = [
+  { label: "About", href: "/about" },
   { label: "How It Works", href: "/how-it-works" },
-  { label: "Resources", href: "/resources" },
   { label: "Book a Demo", href: "/book-a-demo" },
-  { label: "Find Events", href: "https://hoizr.com" },
+  { label: "Log in", href: "/login" },
+  { label: "Get Started", href: "/signup" },
 ];
 const SUPPORT_LINKS = [
   { label: "Contact", href: "/contact" },
@@ -24,7 +25,6 @@ const LEGAL_LINKS = [
   { label: "Cookies", href: "https://business.hoizr.com/legal/cookies" },
   { label: "GST · CIN", href: "https://business.hoizr.com/legal/entity" },
 ];
-const isHttpHref = (href: string) => /^https?:\/\//.test(href);
 
 export const MarketingFooter = () => {
   return (
@@ -65,16 +65,11 @@ export const MarketingFooter = () => {
             </div>
           ))}
           <div>
-            <div className="hm-eyebrow mb-3 !text-white/45">Explore</div>
+            <div className="hm-eyebrow mb-3 !text-white/45">Company</div>
             <ul className="space-y-2">
-              {EXPLORE_LINKS.map((l) => (
+              {COMPANY_LINKS.map((l) => (
                 <li key={l.href}>
-                  <Link
-                    href={l.href}
-                    target={isHttpHref(l.href) ? "_blank" : undefined}
-                    rel={isHttpHref(l.href) ? "noreferrer" : undefined}
-                    className="text-[13.5px] font-medium text-white/76 transition-colors duration-200 hover:text-[var(--m-acid)] hover:[text-shadow:0_0_14px_rgba(214,255,63,0.55)]"
-                  >
+                  <Link href={l.href} className="text-[13.5px] font-medium text-white/76 transition-colors duration-200 hover:text-[var(--m-acid)] hover:[text-shadow:0_0_14px_rgba(214,255,63,0.55)]">
                     {l.label}
                   </Link>
                 </li>
@@ -91,25 +86,6 @@ export const MarketingFooter = () => {
                   </Link>
                 </li>
               ))}
-            </ul>
-            <div className="hm-eyebrow mt-6 mb-3 !text-white/45">Account</div>
-            <ul className="space-y-2">
-              <li>
-                <Link
-                  href="/login"
-                  className="text-[13.5px] font-medium text-white/76 transition-colors duration-200 hover:text-[var(--m-acid)] hover:[text-shadow:0_0_14px_rgba(214,255,63,0.55)]"
-                >
-                  Login
-                </Link>
-              </li>
-              <li>
-                <Link
-                  href="/signup"
-                  className="text-[13.5px] font-medium text-white/76 transition-colors duration-200 hover:text-[var(--m-acid)] hover:[text-shadow:0_0_14px_rgba(214,255,63,0.55)]"
-                >
-                  Get Started
-                </Link>
-              </li>
             </ul>
             <div className="hm-eyebrow mt-6 mb-3 !text-white/45">Follow</div>
             <a

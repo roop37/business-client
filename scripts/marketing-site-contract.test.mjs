@@ -68,11 +68,12 @@ test("marketing nav uses the approved public routes and CTA labels", () => {
     "Products",
     'href="/how-it-works"',
     "How It Works",
-    "Resources",
+    'href="/about"',
+    "About",
     'href="/book-a-demo"',
     "Book a Demo",
     'href="/login"',
-    "Login",
+    "Log in",
     'href="/signup"',
     "Get Started",
   ];
@@ -86,6 +87,7 @@ test("marketing nav uses the approved public routes and CTA labels", () => {
   }
 
   assert.doesNotMatch(desktopHeader, /Find Event/);
+  assert.doesNotMatch(desktopHeader, /Resources/);
   assert.doesNotMatch(desktopHeader, /Get started/);
 
   const mobileMenu = sliceBetween(
@@ -96,12 +98,12 @@ test("marketing nav uses the approved public routes and CTA labels", () => {
   const mobileOrder = [
     'href="/how-it-works"',
     "How It Works",
-    'href="/resources"',
-    "Resources",
+    'href="/about"',
+    "About",
     'href="/book-a-demo"',
     "Book a Demo",
     'href="/login"',
-    "Login",
+    "Log in",
     'href="/signup"',
     "Get Started",
   ];
@@ -115,20 +117,26 @@ test("marketing nav uses the approved public routes and CTA labels", () => {
   }
 
   assert.doesNotMatch(mobileMenu, /Find Event/);
+  assert.doesNotMatch(mobileMenu, /Resources/);
   assert.doesNotMatch(mobileMenu, /Get started/);
+
+  assert.match(source, /usePathname\(\)/);
+  assert.match(source, /setMobileOpen\(false\);/);
+  assert.match(source, /onClick=\{closeNow\}/);
+  assert.match(source, /onClick=\{\(\) => setMobileOpen\(false\)\}/);
 });
 
 test("marketing footer uses the approved public routes and labels", () => {
   const source = read("components/marketing/MarketingFooter.tsx");
 
   assert.match(source, /MARKETING_PILLARS\.map/);
+  assert.match(source, /<div className="hm-eyebrow mb-3 !text-white\/45">Company<\/div>/);
+  assert.match(source, /label: "About", href: "\/about"/);
   assert.match(source, /label: "How It Works", href: "\/how-it-works"/);
-  assert.match(source, /label: "Resources", href: "\/resources"/);
   assert.match(source, /label: "Book a Demo", href: "\/book-a-demo"/);
-  assert.match(source, /label: "Find Events", href: "https:\/\/hoizr\.com"/);
-  assert.match(source, /href="\/login"/);
-  assert.match(source, /href="\/signup"/);
+  assert.match(source, /label: "Get Started", href: "\/signup"/);
   assert.match(source, /Get Started/);
+  assert.match(source, /label: "Log in", href: "\/login"/);
   assert.match(source, /label: "Contact", href: "\/contact"/);
   assert.match(source, /label: "contact@hoizr\.com", href: "mailto:contact@hoizr\.com"/);
   assert.match(source, /label: "tech@hoizr\.com", href: "mailto:tech@hoizr\.com"/);
@@ -136,6 +144,8 @@ test("marketing footer uses the approved public routes and labels", () => {
   assert.match(source, /https:\/\/business\.hoizr\.com\/legal\/terms/);
   assert.match(source, /https:\/\/business\.hoizr\.com\/legal\/cookies/);
   assert.match(source, /https:\/\/business\.hoizr\.com\/legal\/entity/);
+  assert.doesNotMatch(source, /label: "Resources", href: "\/resources"/);
+  assert.doesNotMatch(source, /Explore/);
 });
 
 test("demo page embeds Zcal and does not reference Calendly", () => {
