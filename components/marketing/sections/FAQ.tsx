@@ -2,6 +2,7 @@
 
 import { AnimatePresence, motion } from "framer-motion";
 import { useState } from "react";
+import Link from "next/link";
 import { FaqJsonLd } from "../seo/SchemaJsonLd";
 
 const EASE = [0.2, 0.6, 0.2, 1] as const;
@@ -9,35 +10,35 @@ const EASE = [0.2, 0.6, 0.2, 1] as const;
 const ITEMS: { q: string; a: string }[] = [
   {
     q: "Who is Hoizr built for?",
-    a: "Hoizr is built for Indian event organizers, venues, and promoters — clubs, festivals, comedy promoters, party crews, and nightclub operators across Mumbai, Bangalore, Delhi, Pune, Hyderabad, Chennai, and Goa. The platform is tuned to how Indian fans actually book, pay, and show up: WhatsApp-first promotion, guestlist culture, INR per-event settlement, and refund policies that account for monsoon postponements.",
+    a: "Hoizr is built for Indian event organisers running parties, club nights, concerts, festivals, comedy, free and RSVP events, and exclusive or non-exclusive experiences.",
   },
   {
-    q: "What's included with Hoizr?",
-    a: "The full operating stack: direct ticketing, organisation page, fan CRM, campaigns, AI event evaluation, door scanning, automations, reporting, and settlement workflows. No subscription tiers or card-details friction.",
+    q: "What can I use today?",
+    a: "Current capabilities include event publishing, ticketing, add-ons, promo codes, offline issuing, payment links, customer records, email and WhatsApp campaigns, guestlists, collaborators, teams, scanners, reports, payouts, settlements, selected automations and event evaluation.",
   },
   {
-    q: "How do I get started?",
-    a: "Set up your organisation workspace, add your first event, and publish directly when the required event details are ready. No subscription wall or card-details friction.",
+    q: "What does Coming Soon mean?",
+    a: "Coming Soon capabilities are part of the product roadmap but are not currently available as complete organiser workflows. They are always labelled separately on this site.",
   },
   {
-    q: "Can I run Hoizr alongside other ticketing platforms?",
-    a: "Yes. You decide where each ticket type sells. Plenty of our event organizers keep a percentage on marketplaces for top-of-funnel reach and route everything past their core fanbase through Hoizr — which keeps the email, the phone, and the loyalty progression in your CRM, not the marketplace's.",
+    q: "Does it cost anything to create an account?",
+    a: "Signup is free. Hoizr does not require a setup fee, subscription or card details to create the organisation and begin building events.",
   },
   {
-    q: "Do I need a subscription to publish?",
-    a: "No. Hoizr does not put publishing behind a subscription tier, setup fee, listing fee, monthly minimum, or card requirement for event organizers.",
+    q: "How do paid-event payouts work?",
+    a: "Paid events require an active verified payout profile before publishing. The organiser workspace shows payout-account status, settlement history and available settlement statements.",
   },
   {
-    q: "How do payouts work?",
-    a: "Settlement timing is confirmed for your event before launch. Your statement stays clear: what sold, what was refunded, and what is due.",
+    q: "Can collaborators and team members use the workspace?",
+    a: "Yes. Organisers can invite team members with roles and permissions, and event collaborators can receive event-specific access such as metrics, campaigns, customers or offline ticket issuing.",
   },
   {
-    q: "Is there a contract or commitment?",
-    a: "No long-term contract. Hoizr is month-to-month. If we stop being the right partner, you keep your event history, your fan CRM, and your branding — and you can take everything with you.",
+    q: "Can I run free or RSVP events?",
+    a: "Yes. Hoizr supports free and RSVP events alongside exclusive and non-exclusive paid event formats.",
   },
   {
-    q: "What does the AI event evaluation do?",
-    a: "It studies the event format, city, scale, ticket mix, listing quality, and demand signals, then provides the best possible offer and lowered commission where the event qualifies.",
+    q: "Can I see the platform before signing up?",
+    a: "Yes. Book a guided tour and the Hoizr team will walk through the current platform around your event format and operating needs.",
   },
 ];
 
@@ -60,8 +61,15 @@ export const FAQ = () => {
             Your top questions, answered.
           </h2>
           <p className="mt-4 text-[15px] leading-relaxed text-[var(--m-ink-3)]">
-            Anything missing? Bring it to your setup call — we&apos;ll go through it
-            specific to your venue, format, and city.
+            Want a guided tour?{" "}
+            <Link
+              href="/book-a-demo"
+              className="font-medium text-[var(--m-ink-1)] underline decoration-[var(--m-border)] underline-offset-4"
+            >
+              Book a demo
+            </Link>{" "}
+            and the Hoizr team will walk through the current platform around
+            your event format and operating needs.
           </p>
         </div>
 

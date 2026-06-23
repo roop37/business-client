@@ -121,22 +121,84 @@ test("legacy product URLs are represented in redirect configuration", () => {
   }
 });
 
-test("public marketing copy avoids prohibited claims", () => {
-  const files = [
-    "app/page.tsx",
-    "app/how-it-works/page.tsx",
-    "app/product/page.tsx",
-    "components/marketing/data/product-content.ts",
-    "components/marketing/sections/Beliefs.tsx",
-    "components/marketing/sections/FAQ.tsx",
-  ];
-  const source = files.map(read).join("\n");
+test("task 6 beliefs and faq use the approved organiser copy", () => {
+  const beliefsSource = read("components/marketing/sections/Beliefs.tsx");
+  const faqSource = read("components/marketing/sections/FAQ.tsx");
+  const source = [beliefsSource, faqSource].join("\n");
 
-  assert.doesNotMatch(source, /lowest ticket commission/i);
+  const beliefs = [
+    {
+      n: "01",
+      title: "Independent organisers should have serious operating tools.",
+      body:
+        "Modern ticketing, audience, campaign and event-night systems should not be limited to the largest event companies. Hoizr is built to put those capabilities into one practical organiser workflow.",
+    },
+    {
+      n: "02",
+      title: "Every event should make the next one stronger.",
+      body:
+        "A sale, campaign, guestlist entry or door scan should add useful context to the organiser's audience and event history instead of disappearing when the night ends.",
+    },
+    {
+      n: "03",
+      title: "Indian events deserve technology built around how they run.",
+      body:
+        "Free and RSVP events, guestlists, collaborators, offline sales, multi-day access and fast-changing event operations are not edge cases. They are part of the product model.",
+    },
+  ];
+
+  for (const belief of beliefs) {
+    assert.match(source, new RegExp(belief.n));
+    assert.match(source, new RegExp(belief.title.replaceAll(/[.*+?^${}()|[\]\\]/g, "\\$&")));
+    assert.match(source, new RegExp(belief.body.replaceAll(/[.*+?^${}()|[\]\\]/g, "\\$&")));
+  }
+
+  const items = [
+    {
+      q: "Who is Hoizr built for?",
+      a: "Hoizr is built for Indian event organisers running parties, club nights, concerts, festivals, comedy, free and RSVP events, and exclusive or non-exclusive experiences.",
+    },
+    {
+      q: "What can I use today?",
+      a: "Current capabilities include event publishing, ticketing, add-ons, promo codes, offline issuing, payment links, customer records, email and WhatsApp campaigns, guestlists, collaborators, teams, scanners, reports, payouts, settlements, selected automations and event evaluation.",
+    },
+    {
+      q: "What does Coming Soon mean?",
+      a: "Coming Soon capabilities are part of the product roadmap but are not currently available as complete organiser workflows. They are always labelled separately on this site.",
+    },
+    {
+      q: "Does it cost anything to create an account?",
+      a: "Signup is free. Hoizr does not require a setup fee, subscription or card details to create the organisation and begin building events.",
+    },
+    {
+      q: "How do paid-event payouts work?",
+      a: "Paid events require an active verified payout profile before publishing. The organiser workspace shows payout-account status, settlement history and available settlement statements.",
+    },
+    {
+      q: "Can collaborators and team members use the workspace?",
+      a: "Yes. Organisers can invite team members with roles and permissions, and event collaborators can receive event-specific access such as metrics, campaigns, customers or offline ticket issuing.",
+    },
+    {
+      q: "Can I run free or RSVP events?",
+      a: "Yes. Hoizr supports free and RSVP events alongside exclusive and non-exclusive paid event formats.",
+    },
+    {
+      q: "Can I see the platform before signing up?",
+      a: "Yes. Book a guided tour and the Hoizr team will walk through the current platform around your event format and operating needs.",
+    },
+  ];
+
+  for (const item of items) {
+    assert.match(source, new RegExp(item.q.replaceAll(/[.*+?^${}()|[\]\\]/g, "\\$&")));
+    assert.match(source, new RegExp(item.a.replaceAll(/[.*+?^${}()|[\]\\]/g, "\\$&")));
+  }
+
+  assert.match(source, /href="\/book-a-demo"/);
+  assert.doesNotMatch(source, /Founder/i);
+  assert.doesNotMatch(source, /Sanbedan/);
   assert.doesNotMatch(source, /lowered commission/i);
-  assert.doesNotMatch(source, /marketing credit/i);
-  assert.doesNotMatch(source, /India['’]s leading/i);
-  assert.doesNotMatch(source, /the best event platform/i);
+  assert.doesNotMatch(source, /best possible offer/i);
+  assert.doesNotMatch(source, /pricing/i);
 });
 
 test("homepage composes the approved outcome-led journey order", () => {

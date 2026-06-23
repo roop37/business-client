@@ -4,41 +4,26 @@ import { motion } from "framer-motion";
 
 const EASE = [0.2, 0.6, 0.2, 1] as const;
 
-type Belief = {
-  n: string;
-  title: string;
-  body: string;
-  /** When present, render as a personal-voice note. */
-  signoff?: { name: string; role: string };
-};
-
-const BELIEFS: Belief[] = [
+const BELIEFS = [
   {
     n: "01",
-    title: "Better competition makes everyone sharper.",
+    title: "Independent organisers should have serious operating tools.",
     body:
-      "Hoizr is built to create a stronger event market, not just another ticketing surface. When operators can see clean benchmarks, own their audience, and study what actually worked, the whole ecosystem levels up.",
+      "Modern ticketing, audience, campaign and event-night systems should not be limited to the largest event companies. Hoizr is built to put those capabilities into one practical organiser workflow.",
   },
   {
     n: "02",
-    title: "AI should not be a feature only national chains can afford.",
+    title: "Every event should make the next one stronger.",
     body:
-      "The best technology is invisible. Hoizr puts event-specific AI evaluation behind a simple event workflow, so a one-venue operator in Pune can study the night with the discipline of a national festival circuit.",
+      "A sale, campaign, guestlist entry or door scan should add useful context to the organiser's audience and event history instead of disappearing when the night ends.",
   },
   {
     n: "03",
-    title: "We win when your room is full.",
+    title: "Indian events deserve technology built around how they run.",
     body:
-      "Most platforms ask organizers to accept generic terms before they understand the night. Hoizr starts with the event itself — format, city, scale, and ticket mix — then gives you the best possible offer and lowered commission where eligible.",
+      "Free and RSVP events, guestlists, collaborators, offline sales, multi-day access and fast-changing event operations are not edge cases. They are part of the product model.",
   },
-  {
-    n: "04",
-    title: "India can become the live-night market everyone watches.",
-    body:
-      "The ambition is bigger than software. Hoizr should help Indian venues, festivals, comedy rooms, party crews, and promoters operate with the discipline of the best global circuits — while keeping the local chaos, taste, and energy that make Indian nights different.",
-    signoff: { name: "Sanbedan", role: "Founder, Hoizr" },
-  },
-];
+] as const;
 
 export const Beliefs = () => {
   return (
@@ -62,65 +47,41 @@ export const Beliefs = () => {
             What we believe.
           </h2>
           <p className="mt-4 text-[15px] leading-relaxed text-[var(--m-ink-3)]">
-            Four positions behind the product. They show up in how Hoizr
-            handles pricing, discovery, fan data, benchmarks, and event-night
+            Three principles behind the product. They show up in how Hoizr
+            handles audience, campaigns, event history, and event-night
             operations.
           </p>
         </motion.div>
 
         <div className="space-y-12 md:space-y-16">
-          {BELIEFS.map((b, i) => {
-            const isFounder = Boolean(b.signoff);
-            return (
-              <motion.article
-                key={b.n}
-                initial={{ opacity: 0, y: 24 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true, margin: "-80px" }}
-                transition={{ duration: 0.7, ease: EASE, delay: i * 0.05 }}
-                className="border-t border-[var(--m-border)] pt-10"
-              >
-                <div className="flex items-baseline gap-5">
-                  <div
-                    className="hoizr-mark text-[var(--m-ink-4)] text-[18px]"
-                    style={{ letterSpacing: "0.1em" }}
-                  >
-                    {b.n}
-                  </div>
-                  <h3
-                    className={`leading-tight tracking-[-0.02em] text-[var(--m-ink-1)] ${
-                      isFounder ? "hm-cursive" : "font-semibold"
-                    }`}
-                    style={{ fontSize: "clamp(24px, 2.8vw, 34px)" }}
-                  >
-                    {b.title}
-                  </h3>
+          {BELIEFS.map((b, i) => (
+            <motion.article
+              key={b.n}
+              initial={{ opacity: 0, y: 24 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true, margin: "-80px" }}
+              transition={{ duration: 0.7, ease: EASE, delay: i * 0.05 }}
+              className="border-t border-[var(--m-border)] pt-10"
+            >
+              <div className="flex items-baseline gap-5">
+                <div
+                  className="hoizr-mark text-[var(--m-ink-4)] text-[18px]"
+                  style={{ letterSpacing: "0.1em" }}
+                >
+                  {b.n}
                 </div>
-                <p className="mt-5 pl-0 md:pl-[60px] text-[17px] leading-[1.6] text-[var(--m-ink-2)] max-w-[640px]">
-                  {b.body}
-                </p>
-                {b.signoff ? (
-                  <div className="mt-6 pl-0 md:pl-[60px] flex items-center gap-3">
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img
-                      src="https://res.cloudinary.com/duhefgqh4/image/upload/v1748974724/IMG_0652_slotkd__1_ehtwxq.jpg"
-                      alt={b.signoff.name}
-                      className="h-10 w-10 shrink-0 rounded-full object-cover"
-                      draggable={false}
-                    />
-                    <div className="text-[13.5px]">
-                      <div className="font-semibold text-[var(--m-ink-1)]">
-                        {b.signoff.name}
-                      </div>
-                      <div className="text-[var(--m-ink-3)]">
-                        {b.signoff.role}
-                      </div>
-                    </div>
-                  </div>
-                ) : null}
-              </motion.article>
-            );
-          })}
+                <h3
+                  className="font-semibold leading-tight tracking-[-0.02em] text-[var(--m-ink-1)]"
+                  style={{ fontSize: "clamp(24px, 2.8vw, 34px)" }}
+                >
+                  {b.title}
+                </h3>
+              </div>
+              <p className="mt-5 pl-0 md:pl-[60px] text-[17px] leading-[1.6] text-[var(--m-ink-2)] max-w-[640px]">
+                {b.body}
+              </p>
+            </motion.article>
+          ))}
         </div>
       </div>
     </section>
