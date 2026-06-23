@@ -151,6 +151,15 @@ test("marketing footer uses the approved public routes and labels", () => {
 test("demo page embeds Zcal and does not reference Calendly", () => {
   const source = read("app/book-a-demo/page.tsx");
 
+  assert.match(source, /title:\s*"Book a Hoizr guided tour"/);
+  assert.match(
+    source,
+    /description:\s*"Book a guided tour of Hoizr's ticketing, audience, campaigns and event operations platform for Indian event organisers\."/
+  );
+  assert.match(source, /alternates:\s*\{\s*canonical:\s*"\/book-a-demo"\s*\}/);
+  assert.match(source, /title="Book a Hoizr guided product tour"/);
+  assert.match(source, /id="zcal-invite"/);
+  assert.match(source, /className="block min-h-\[779px\] w-full min-w-\[320px\] border-0"/);
   assert.match(source, /Take a Guided Tour\./);
   assert.match(source, /ticket sales and customer engagement/);
   assert.match(source, /https:\/\/zcal\.co\/i\/2wlfsHdI\?embed=1&embedType=iframe/);
