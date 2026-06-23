@@ -1,23 +1,18 @@
 import type { Metadata } from "next";
-import { blogs } from "@/components/marketing/blog/blog-data";
 import { MarketingShell } from "@/components/marketing/MarketingShell";
-import { AiOfferSpotlight } from "@/components/marketing/sections/AiOfferSpotlight";
-import { AiSeoPanel } from "@/components/marketing/sections/AiSeoPanel";
+import { AiSupport } from "@/components/marketing/sections/AiSupport";
 import { Beliefs } from "@/components/marketing/sections/Beliefs";
-import { DiscoveryBento } from "@/components/marketing/sections/DiscoveryBento";
+import { ComingSoonBento } from "@/components/marketing/sections/ComingSoonBento";
+import { CurrentPlatform } from "@/components/marketing/sections/CurrentPlatform";
 import { FAQ } from "@/components/marketing/sections/FAQ";
 import { FinalCTA } from "@/components/marketing/sections/FinalCTA";
-import { FounderCard } from "@/components/marketing/sections/FounderCard";
-import { FounderQuoteBanner } from "@/components/marketing/sections/FounderQuoteBanner";
+import { EventFormats } from "@/components/marketing/sections/EventFormats";
 import { Hero } from "@/components/marketing/sections/Hero";
-import { OperationsBento } from "@/components/marketing/sections/OperationsBento";
-import { PillarGrid } from "@/components/marketing/sections/PillarGrid";
-import { Playbooks } from "@/components/marketing/sections/Playbooks";
-import { PricingTeaserCards } from "@/components/marketing/sections/PricingTeaserCards";
-import { ProductStoryGallery } from "@/components/marketing/sections/ProductStoryGallery";
-import { RepeatFansBento } from "@/components/marketing/sections/RepeatFansBento";
-// ValueMarquee retired in favour of the founder quote banner.
-// import { ValueMarquee } from "@/components/marketing/sections/ValueMarquee";
+import { HowHoizrWorks } from "@/components/marketing/sections/HowHoizrWorks";
+import { OutcomePillars } from "@/components/marketing/sections/OutcomePillars";
+import { PlatformComparison } from "@/components/marketing/sections/PlatformComparison";
+import { ProblemStatement } from "@/components/marketing/sections/ProblemStatement";
+import { FreeAccess } from "@/components/marketing/sections/FreeAccess";
 
 export const metadata: Metadata = {
   title:
@@ -53,33 +48,19 @@ export const metadata: Metadata = {
 };
 
 export default function Home() {
-  const playbookBlogTeasers = blogs.slice(0, 2).map(
-    ({ id, title, excerpt, image, date, category, readTime }) => ({
-      id,
-      title,
-      excerpt,
-      image,
-      date,
-      category,
-      readTime,
-    })
-  );
-
   return (
     <MarketingShell>
       <Hero />
-      <FounderQuoteBanner />
-      <PricingTeaserCards />
-      <PillarGrid />
-      <ProductStoryGallery />
-      <AiSeoPanel />
-      <DiscoveryBento />
-      <RepeatFansBento />
-      <OperationsBento />
-      <AiOfferSpotlight />
-      <Playbooks blogTeasers={playbookBlogTeasers} />
+      <EventFormats />
+      <ProblemStatement />
+      <OutcomePillars />
+      <PlatformComparison />
+      <HowHoizrWorks />
+      <CurrentPlatform />
+      <AiSupport />
+      <FreeAccess />
+      <ComingSoonBento />
       <Beliefs />
-      <FounderCard />
       <FAQ />
       <FinalCTA />
     </MarketingShell>

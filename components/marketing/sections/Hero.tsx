@@ -95,11 +95,12 @@ export const Hero = () => {
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.7, ease: EASE, delay: 0.35 }}
-          className="hm-lead mx-auto mt-6 max-w-[640px]"
+          className="hm-lead mx-auto mt-6 max-w-[680px]"
         >
-          Hoizr is the ticketing, marketing, and ops stack built for the way
-          India actually goes out. Publish events directly, keep your fan CRM,
-          and let AI study each event for the best possible offer.
+          Sell tickets, understand your audience and bring them back for the
+          next event. Hoizr connects event publishing, ticketing, campaigns
+          and event operations in one platform built for Indian event
+          organisers.
         </motion.p>
 
         <motion.div
@@ -109,13 +110,20 @@ export const Hero = () => {
           className="mt-9 flex flex-wrap items-center justify-center gap-3"
         >
           <Link href="/signup" className="hm-btn hm-btn-primary">
-            Get started
+            Get Started
             <ArrowRight size={16} />
           </Link>
-          <Link href="/how-it-works" className="hm-btn hm-btn-ghost border border-[var(--m-border)]">
-            See how it works
+          <Link
+            href="/book-a-demo"
+            className="hm-btn hm-btn-ghost border border-[var(--m-border)]"
+          >
+            Book a Demo
           </Link>
         </motion.div>
+
+        <p className="mt-4 text-[13px] font-medium text-[var(--m-ink-3)]">
+          Free signup. No setup fee. No subscription. No card details required.
+        </p>
 
         <HeroStage />
       </div>

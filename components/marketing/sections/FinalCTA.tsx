@@ -1,8 +1,9 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { ArrowRight, PlayCircle } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 import Link from "next/link";
+import Image from "next/image";
 
 const EASE = [0.2, 0.6, 0.2, 1] as const;
 
@@ -20,50 +21,50 @@ export const FinalCTA = () => {
         transition={{ duration: 0.8, ease: EASE }}
         className="relative overflow-hidden rounded-[var(--m-r-2xl)] bg-[var(--m-ink-1)] px-8 py-20 text-center text-white md:px-16 md:py-28"
       >
-        <img
+        <Image
           src="/marketing/brand/metallic-line-banner.png"
           alt=""
           aria-hidden
-          className="absolute inset-0 h-full w-full object-cover"
+          fill
+          sizes="100vw"
+          className="object-cover"
           draggable={false}
         />
         <div className="relative">
-        <span className="inline-flex items-center gap-2 rounded-full bg-white/10 border border-white/15 px-3 py-1.5 text-[12px] font-semibold tracking-wider text-white/95 backdrop-blur">
-          <span className="h-1.5 w-1.5 rounded-full bg-[var(--m-acid)]" />
-          Full event operating stack
-        </span>
+          <span className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-3 py-1.5 text-[12px] font-semibold tracking-wider text-white/95 backdrop-blur">
+            <span className="h-1.5 w-1.5 rounded-full bg-[var(--m-acid)]" />
+            Full event operating stack
+          </span>
 
-        <h2
-          className="mt-7 font-bold leading-[0.98] tracking-[-0.03em] text-white text-balance mx-auto max-w-[860px]"
-          style={{
-            fontFamily: "var(--m-font-display)",
-            fontSize: "clamp(44px, 7vw, 88px)",
-          }}
-        >
-          The easiest way to grow your events in India.
-        </h2>
-
-        <p className="mt-6 text-[17px] leading-relaxed text-white/75 max-w-[560px] mx-auto">
-          Direct sales. Owned fan CRM. AI event evaluation. No setup fee, no
-          subscription, no card details required. Publish events directly.
-        </p>
-
-        <div className="mt-10 flex items-center justify-center gap-3 flex-wrap">
-          <Link href="/signup" className="hm-btn hm-btn-acid">
-            Get started
-            <ArrowRight size={16} />
-          </Link>
-          <Link
-            href="/how-it-works"
-            className="hm-btn hm-btn-on-dark border border-white/15"
-            style={{ background: "transparent", color: "white" }}
+          <h2
+            className="mx-auto mt-7 max-w-[860px] text-balance font-bold leading-[0.98] tracking-[-0.03em] text-white"
+            style={{
+              fontFamily: "var(--m-font-display)",
+              fontSize: "clamp(44px, 7vw, 88px)",
+            }}
           >
-            <PlayCircle size={16} />
-            See how it works
-          </Link>
-        </div>
-        </div>
+            Build the audience for this event — and the next one.
+          </h2>
 
+          <p className="mx-auto mt-6 max-w-[560px] text-[17px] leading-relaxed text-white/75">
+            Publish, sell, engage and operate from one organiser platform built
+            for India.
+          </p>
+
+          <div className="mt-10 flex flex-wrap items-center justify-center gap-3">
+            <Link href="/signup" className="hm-btn hm-btn-acid">
+              Get Started
+              <ArrowRight size={16} />
+            </Link>
+            <Link
+              href="/book-a-demo"
+              className="hm-btn hm-btn-on-dark border border-white/15"
+              style={{ background: "transparent", color: "white" }}
+            >
+              Book a Demo
+            </Link>
+          </div>
+        </div>
       </motion.div>
     </section>
   );
