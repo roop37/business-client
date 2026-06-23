@@ -50,7 +50,7 @@ export default function BookADemoPage() {
             loading="lazy"
             scrolling="no"
             id="zcal-invite"
-            className="block min-h-[779px] w-full min-w-[320px] border-0"
+            className="block min-h-[544px] h-[544px] w-full min-w-[320px] border-0 md:h-[779px]"
           />
         </div>
 

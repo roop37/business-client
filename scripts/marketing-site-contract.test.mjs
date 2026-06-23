@@ -159,7 +159,10 @@ test("demo page embeds Zcal and does not reference Calendly", () => {
   assert.match(source, /alternates:\s*\{\s*canonical:\s*"\/book-a-demo"\s*\}/);
   assert.match(source, /title="Book a Hoizr guided product tour"/);
   assert.match(source, /id="zcal-invite"/);
-  assert.match(source, /className="block min-h-\[779px\] w-full min-w-\[320px\] border-0"/);
+  assert.match(
+    source,
+    /className="block min-h-\[544px\] h-\[544px\] w-full min-w-\[320px\] border-0 md:h-\[779px\]"/
+  );
   assert.match(source, /Take a Guided Tour\./);
   assert.match(source, /ticket sales and customer engagement/);
   assert.match(source, /https:\/\/zcal\.co\/i\/2wlfsHdI\?embed=1&embedType=iframe/);
