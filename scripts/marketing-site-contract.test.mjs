@@ -466,3 +466,78 @@ test("homepage contract covers the approved pillars, products, journey, and ai s
 
   assert.deepStrictEqual(actualAiItems, aiItems);
 });
+
+test("task 9 how-it-works uses the approved seven-step organiser journey", () => {
+  const source = read("app/how-it-works/page.tsx");
+  const siteCopy = read("components/marketing/data/site-copy.ts");
+
+  assert.match(
+    source,
+    /import \{\s*ORGANISER_JOURNEY\s*\} from "@\/components\/marketing\/data\/site-copy";/
+  );
+
+  const journeyIconsBlock = sliceBetween(
+    source,
+    "const journeyIcons = [",
+    "] as const;"
+  );
+  const actualIcons = [
+    ...journeyIconsBlock.matchAll(/^\s*([A-Z][A-Za-z0-9]+),/gm),
+  ].map(([_, icon]) => icon);
+  assert.deepStrictEqual(actualIcons, [
+    "Building2",
+    "CalendarPlus2",
+    "BadgeCheck",
+    "Send",
+    "ScanLine",
+    "ChartNoAxesCombined",
+    "RefreshCw",
+  ]);
+
+  assert.match(source, /ORGANISER_JOURNEY\.map/);
+  assert.doesNotMatch(source, /OPERATING_FLOW/);
+  assert.match(
+    source,
+    /From the first event draft to the report after doors close\./
+  );
+  assert.match(
+    source,
+    /Hoizr keeps event setup, ticket sales, audience engagement, guestlists, entry and reporting connected so the next decision starts with the context from the last one\./
+  );
+  assert.match(source, /Get Started/);
+  assert.match(source, /Book a Demo/);
+  assert.doesNotMatch(source, /Get started/);
+  assert.doesNotMatch(source, /See the flow/);
+  assert.doesNotMatch(source, /creates cross-channel audience filters/i);
+  assert.doesNotMatch(source, /allocates campaign budgets/i);
+  assert.doesNotMatch(source, /chooses channels/i);
+  assert.doesNotMatch(source, /builds complete campaigns/i);
+  assert.doesNotMatch(source, /promoter code/i);
+
+  const journeyBlock = sliceBetween(
+    siteCopy,
+    "export const ORGANISER_JOURNEY = [",
+    "export const FREE_ACCESS_POINTS = ["
+  );
+  const journeyTitles = [
+    "Create your organisation",
+    "Build the event",
+    "Publish and start selling",
+    "Reach your audience",
+    "Manage guestlists and entry",
+    "Review performance and settlements",
+    "Build the next event from the last one",
+  ];
+  const actualJourneyTitles = [
+    ...journeyBlock.matchAll(/title:\s*["']([^"']+)["']/g),
+  ].map(([_, title]) => title);
+  assert.deepStrictEqual(actualJourneyTitles, journeyTitles);
+
+  const howToJsonLdBlock = sliceBetween(
+    source,
+    "const howToJsonLd = {",
+    "export default function HowItWorksPage()"
+  );
+  assert.match(howToJsonLdBlock, /ORGANISER_JOURNEY\.map/);
+  assert.doesNotMatch(howToJsonLdBlock, /SMS|push|loyalty/i);
+});

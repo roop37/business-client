@@ -2,64 +2,48 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import {
   ArrowRight,
-  BarChart3,
-  Brain,
+  BadgeCheck,
   Building2,
-  CalendarDays,
-  CalendarPlus,
+  CalendarPlus2,
+  ChartNoAxesCombined,
   CheckCircle2,
-  ClipboardCheck,
-  CreditCard,
-  Filter,
-  Megaphone,
-  MessageSquare,
-  PieChart,
-  QrCode,
-  Rocket,
+  RefreshCw,
   ScanLine,
   Send,
-  ShieldCheck,
-  Sparkles,
-  Target,
-  Ticket,
   Users,
   Wallet,
-  Wand2,
   type LucideIcon,
 } from "lucide-react";
 import { MarketingShell } from "@/components/marketing/MarketingShell";
-import { AiOfferSpotlight } from "@/components/marketing/sections/AiOfferSpotlight";
-import { FinalCTA } from "@/components/marketing/sections/FinalCTA";
 import {
   BreadcrumbJsonLd,
   FaqJsonLd,
   JsonLdScript,
 } from "@/components/marketing/seo/SchemaJsonLd";
+import { ORGANISER_JOURNEY } from "@/components/marketing/data/site-copy";
+import { FinalCTA } from "@/components/marketing/sections/FinalCTA";
 
 const SITE_URL = "https://business.hoizr.com";
 
 export const metadata: Metadata = {
-  title:
-    "How Hoizr works for Indian event organizers, venues & promoters",
-  description:
-    "A detailed walkthrough of how Hoizr takes Indian event organizers from workspace setup to direct event publishing, AI event evaluation, ticket sales, campaigns, door scanning, reporting, and settlement-ready operations.",
+  title: "How Hoizr works for Indian event organisers",
+  description: "From the first event draft to the report after doors close.",
   keywords: [
     "how Hoizr works",
+    "event organiser journey",
+    "guestlist and entry",
     "event ticketing workflow India",
-    "AI event evaluation",
-    "event organizer onboarding India",
-    "door scanning operations",
-    "fan CRM for events",
-    "event marketing automation India",
+    "reports and settlements",
+    "event operations",
   ],
   alternates: {
     canonical: "/how-it-works",
     languages: { "en-IN": "/how-it-works", "x-default": "/how-it-works" },
   },
   openGraph: {
-    title: "How Hoizr works for Indian event organizers & venues",
+    title: "How Hoizr works for Indian event organisers",
     description:
-      "One workspace for event setup, direct ticket sales, owned fan CRM, AI event evaluation, campaigns, guestlist, door scanning, reporting, and settlement-ready event ops.",
+      "Hoizr keeps event setup, ticket sales, audience engagement, guestlists, entry and reporting connected so the next decision starts with the context from the last one.",
     url: "/how-it-works",
     type: "website",
     siteName: "Hoizr",
@@ -69,313 +53,102 @@ export const metadata: Metadata = {
         url: "/opengraph-image.webp",
         width: 1200,
         height: 630,
-        alt: "How Hoizr works — workflow for Indian event organizers, venues, and promoters",
+        alt: "How Hoizr works for Indian event organisers",
       },
     ],
   },
 };
 
-type FlowStep = {
-  n: string;
-  icon: LucideIcon;
-  eyebrow: string;
-  title: string;
-  body: string;
-  details: string[];
-};
+const journeyIcons = [
+  Building2,
+  CalendarPlus2,
+  BadgeCheck,
+  Send,
+  ScanLine,
+  ChartNoAxesCombined,
+  RefreshCw,
+] as const;
 
-type TeamView = {
+const JOURNEY_STEPS = ORGANISER_JOURNEY.map((step, index) => ({
+  ...step,
+  n: String(index + 1).padStart(2, "0"),
+  icon: journeyIcons[index],
+}));
+
+const TEAM_ROLES: {
   icon: LucideIcon;
   title: string;
   body: string;
   points: string[];
-};
-
-const OPERATING_FLOW: FlowStep[] = [
+}[] = [
   {
-    n: "01",
-    icon: Building2,
-    eyebrow: "Create workspace",
-    title: "Set up your organisation once.",
+    icon: Users,
+    title: "Owner",
     body:
-      "Hoizr starts with the organizer workspace: legal entity, public brand profile, default venue details, team access, payout details, and the permanent organisation page fans can revisit.",
-    details: [
-      "Organisation page with upcoming and past events",
-      "Team roles for owner, marketer, finance, and door staff",
-      "Default policies, venue details, and brand assets",
-    ],
-  },
-  {
-    n: "02",
-    icon: CalendarPlus,
-    eyebrow: "Build the event",
-    title: "Create the listing, ticket ladder, and operating rules.",
-    body:
-      "Add the lineup, date, venue, ticket phases, capacity, add-ons, guestlist rules, refund window, and collaborator access. Hoizr turns that setup into a public event page and an internal runbook.",
-    details: [
-      "Ticket phases, access types, add-ons, and cart controls",
-      "Refund rules, age notes, venue instructions, and entry policy",
-      "Lineup, collaborators, and door rules flow into one runbook",
-    ],
-  },
-  {
-    n: "03",
-    icon: Sparkles,
-    eyebrow: "AI event evaluation",
-    title: "Let AI study the event before you publish.",
-    body:
-      "Hoizr reads the event format, city, expected scale, ticket mix, and listing completeness, then provides the best possible offer and lowered commission where the event qualifies.",
-    details: [
-      "Event-specific context, not a one-size-fits-all public card",
-      "Offer is tied to the specific event, not your entire account",
-      "AI context stays visible before you publish",
-    ],
-  },
-  {
-    n: "04",
-    icon: Ticket,
-    eyebrow: "Sell direct",
-    title: "Publish, track sources, and keep the buyer relationship.",
-    body:
-      "The event goes live with direct ticket checkout, source tracking, promoter links, and fan CRM capture. Every buyer strengthens the organizer account instead of disappearing into a marketplace.",
-    details: [
-      "Source tracking for campaigns, creators, and promoter links",
-      "Buyer records flow into owned fan CRM",
-      "Ticket inventory and phases stay visible in real time",
-    ],
-  },
-  {
-    n: "05",
-    icon: Megaphone,
-    eyebrow: "Campaigns",
-    title: "Bring the right audience back into the funnel.",
-    body:
-      "Use CRM segments to send on-sale drops, reminders, last-call pushes, and post-event flows across owned channels. Buyers move out of sales flows and into arrival or loyalty flows.",
-    details: [
-      "Segments by purchase history, attendance, city, and interest",
-      "Campaign calendar for email, SMS, WhatsApp, push, and in-app",
-      "Suppression logic keeps paid buyers from seeing stale sales nudges",
-    ],
-  },
-  {
-    n: "06",
-    icon: ScanLine,
-    eyebrow: "Door ops",
-    title: "Run scanners, guestlist, and live arrivals from one view.",
-    body:
-      "Door staff scan QR tickets, check guestlist entries, issue wristbands, and see live arrivals. The event organizer can watch capacity, no-shows, and promoter arrivals while the line is moving.",
-    details: [
-      "Multi-scanner setup with simple staff access",
-      "Guestlist caps, invite QRs, and promoter arrival counters",
-      "Refunded, duplicated, or already-scanned tickets are clearly flagged",
-    ],
-  },
-  {
-    n: "07",
-    icon: BarChart3,
-    eyebrow: "After the show",
-    title: "Review, settle, and prepare the next drop.",
-    body:
-      "The morning after, Hoizr gives the team sell-through, sources, arrivals, refunds, and settlement-ready numbers. The fan CRM updates so the next weekend starts warmer.",
-    details: [
-      "Revenue, source, ticket phase, and promoter reporting",
-      "Settlement-ready statement for finance review",
-      "Audience segments ready for the next event campaign",
-    ],
-  },
-];
-
-const QUICK_ONBOARD_STEPS: { icon: LucideIcon; title: string; body: string }[] = [
-  {
-    icon: Rocket,
-    title: "Sign up in minutes",
-    body:
-      "Email or phone, organisation basics, and the first event you want to publish. No long forms, no mandatory sales call.",
-  },
-  {
-    icon: ShieldCheck,
-    title: "Verification runs in the background",
-    body:
-      "GSTIN (if applicable), bank, and KYC submitted once. Hoizr's verification queue runs while you keep building your event.",
-  },
-  {
-    icon: Sparkles,
-    title: "Publish directly when ready",
-    body:
-      "Once the required event and organizer details are ready, publish directly from the dashboard. No card details or subscription required.",
-  },
-];
-
-const TEAM_VIEWS: TeamView[] = [
-  {
-    icon: ShieldCheck,
-    title: "Owner view",
-    body:
-      "The owner sees the business layer: event health, ticket revenue, AI offer context, collaborators, source performance, and settlement status.",
-    points: ["Event health", "AI offer", "Revenue", "Payout status"],
+      "The owner sees the organisation, event readiness, collaborators and the overall publishing flow.",
+    points: ["Organisation", "Publishing", "Collaborators", "Readiness"],
   },
   {
     icon: Send,
-    title: "Marketing view",
+    title: "Marketing",
     body:
-      "The marketing team works from CRM segments, campaign drafts, source links, reminder cadence, and post-event flows without touching finance settings.",
-    points: ["CRM segments", "Campaign calendar", "Source links", "Buyer suppression"],
-  },
-  {
-    icon: Users,
-    title: "Promoter view",
-    body:
-      "Promoters get controlled links and guestlist caps. Event organizers see what each collaborator issued, sold, and actually brought through the door.",
-    points: ["Invite codes", "Ticket links", "Caps", "Arrivals"],
-  },
-  {
-    icon: QrCode,
-    title: "Door view",
-    body:
-      "Door staff see only the tools they need: scan, validate, check guestlist, resolve obvious exceptions, and keep the queue moving.",
-    points: ["QR scanning", "Guestlist", "Live count", "Exceptions"],
+      "The marketing team works from the event context, audience records and campaign surfaces that belong to the current event.",
+    points: ["Audience records", "Campaigns", "Reminders", "Post-event follow-up"],
   },
   {
     icon: Wallet,
-    title: "Finance view",
+    title: "Finance",
     body:
-      "Finance gets itemised numbers for gross sales, refunds, taxes where applicable, payout status, and settlement-ready exports.",
-    points: ["Gross sales", "Refunds", "Taxes", "Settlement"],
-  },
-];
-
-const AI_CAPABILITIES: { icon: LucideIcon; title: string; body: string; tag: string }[] = [
-  {
-    icon: Sparkles,
-    tag: "Event evaluation",
-    title: "Reads the event before it goes live.",
-    body: "Format, city, expected scale, ticket mix, listing completeness — Hoizr quietly studies all of it and quotes the lowest commission we can offer for that specific show.",
+      "Finance handles payout details, settlement review and the numbers the event needs after the night ends.",
+    points: ["Payouts", "Settlements", "Refunds", "Exports"],
   },
   {
-    icon: Wand2,
-    tag: "Listing tweaks",
-    title: "Suggests small tweaks that lift conversion.",
-    body: "AI flags weak titles, missing schema, low-detail descriptions, soft pricing ladders, and listing gaps. You get a checklist of small tweaks that compound into a better event page.",
-  },
-  {
-    icon: Filter,
-    tag: "Audience filters",
-    title: "Generates the audience filters for you.",
-    body: "Instead of building segments by hand, AI proposes the filters worth sending to — 'fans who came last quarter', 'opened but didn't buy', 'genre + city + price tolerance' — already wired into the campaign builder.",
-  },
-  {
-    icon: PieChart,
-    tag: "Budget allocation",
-    title: "Splits your marketing budget across channels.",
-    body: "Hoizr reads your customer list and the event, then proposes a split. Example: spend 60% on SMS to repeat buyers because they have shown up before — and shift the rest to push for new-customer acquisition.",
-  },
-  {
-    icon: Target,
-    tag: "Channel logic",
-    title: "Tells you why each rupee goes where.",
-    body: "Every recommendation comes with the reasoning — past attendance, response rates, opt-in mix — so you can override with context rather than fight a black box.",
-  },
-  {
-    icon: Brain,
-    tag: "Coming soon",
-    title: "Filter-driven campaigns, like email-builder filters on every channel.",
-    body: "The same filter logic that builds email segments will compose multi-channel campaigns end-to-end — pick a hypothesis, AI builds the send, you approve.",
-  },
-];
-
-const PLATFORM_MODULES = [
-  {
-    href: "/product/event-listing",
-    icon: Ticket,
-    title: "Event Listing",
-    body: "Conversion-ready pages with ticket phases, add-ons, source links, policy notes, and checkout.",
-  },
-  {
-    href: "/product/marketing-campaigns",
-    icon: MessageSquare,
-    title: "Marketing Campaigns",
-    body: "One campaign workspace for owned-channel drops, reminders, last-call nudges, and post-event flows.",
-  },
-  {
-    href: "/product/guestlist-management",
-    icon: Users,
-    title: "Guestlist Management",
-    body: "Promoter caps, invite QRs, live arrivals, and accountability without spreadsheet arguments.",
-  },
-  {
-    href: "/product/door-scanning",
     icon: ScanLine,
-    title: "Door Scanning",
-    body: "Multi-scanner setup, QR validation, arrival counters, and clear exception states for door teams.",
-  },
-  {
-    href: "/product/reporting-analytics",
-    icon: BarChart3,
-    title: "Reporting & Analytics",
-    body: "Sell-through, source performance, arrival data, refund view, and settlement-ready numbers.",
-  },
-  {
-    href: "/product/ai-event-assistant",
-    icon: Sparkles,
-    title: "AI Event Assistant",
-    body: "AI studies format, city, scale, ticket mix, and listing quality to provide the best possible offer.",
-  },
-  {
-    href: "/product/ai-marketing-intelligence",
-    icon: Brain,
-    title: "AI Marketing Intelligence",
-    body: "Reads your CRM and the event, then splits your budget across SMS, push, email, and WhatsApp with reasoning attached.",
-  },
-  {
-    href: "/product/competitive-analysis",
-    icon: BarChart3,
-    title: "Competitive Analysis",
-    body: "See how peer event organizers in your city, format, and price band actually perform — and what the top quartile does differently.",
+    title: "Door staff",
+    body:
+      "Door staff get only the scanning, guestlist and arrival tools they need to keep entry moving.",
+    points: ["Scanning", "Guestlists", "Arrivals", "Exceptions"],
   },
 ];
 
-const FAQS = [
+const FAQS: { q: string; a: string }[] = [
   {
-    q: "Can I publish an event before the full organisation setup is complete?",
-    a: "You can draft the event early, but Hoizr expects the organizer workspace, payout details, policies, and public organisation profile to be ready before the event is pushed live.",
+    q: "Can I publish before the full organisation setup is complete?",
+    a: "You can draft the event early, but the organiser workspace, payout details, policies and public organisation profile should be ready before the event goes live.",
   },
   {
-    q: "Does Hoizr replace my marketing tools?",
-    a: "Hoizr gives event organizers one campaign workspace tied to buyer and attendance data. It is designed for on-sale, reminder, last-call, and post-event flows that directly connect to ticketing and CRM.",
+    q: "What can I use today?",
+    a: "Current capabilities include event publishing, ticketing, add-ons, promo codes, offline issuing, payment links, customer records, email and WhatsApp campaigns, guestlists, collaborators, teams, scanners, reports, payouts, settlements, selected automations and event evaluation.",
   },
   {
-    q: "How does AI event evaluation work?",
-    a: "Hoizr reviews event context such as format, city, scale, ticket mix, and listing completeness, then provides the best possible offer and lowered commission where the event qualifies. It is scoped to the event, not a permanent account-wide public rate.",
+    q: "Can collaborators and team members use the workspace?",
+    a: "Yes. Organisers can invite team members with roles and permissions, and event collaborators can receive event-specific access such as metrics, campaigns, customers or offline ticket issuing.",
   },
   {
-    q: "Can multiple door staff scan at the same time?",
-    a: "Yes. Hoizr is designed around multi-scanner door operations, simple staff access, live arrival counters, and clear states for valid, refunded, duplicated, or already-scanned tickets.",
+    q: "Can I run free or RSVP events?",
+    a: "Yes. Hoizr supports free and RSVP events alongside exclusive and non-exclusive paid event formats.",
   },
   {
-    q: "What happens after the event ends?",
-    a: "The event organizer gets sell-through, source, attendance, refund, and settlement-ready reporting. The fan CRM also updates so the next campaign can target buyers and attendees with better context.",
+    q: "Can I see the platform before signing up?",
+    a: "Yes. Book a guided tour and the Hoizr team will walk through the current platform around your event format and operating needs.",
   },
 ];
 
 const howToJsonLd = {
   "@context": "https://schema.org",
   "@type": "HowTo",
-  name: "How Hoizr works for Indian event organizers, venues & promoters",
+  name: "How Hoizr works for Indian event organisers",
   description:
-    "From organizer workspace setup to event publishing, AI event evaluation, ticket sales, campaigns, door scanning, and settlement-ready reporting on Hoizr.",
+    "Hoizr keeps event setup, ticket sales, audience engagement, guestlists, entry and reporting connected so the next decision starts with the context from the last one.",
   inLanguage: "en-IN",
   totalTime: "PT15M",
   url: `${SITE_URL}/how-it-works`,
   image: `${SITE_URL}/opengraph-image.webp`,
-  step: OPERATING_FLOW.map((step, index) => ({
+  step: ORGANISER_JOURNEY.map((step, index) => ({
     "@type": "HowToStep",
     position: index + 1,
     name: step.title,
     text: step.body,
-    itemListElement: step.details.map((detail) => ({
-      "@type": "HowToTip",
-      text: detail,
-    })),
   })),
 };
 
@@ -391,20 +164,16 @@ export default function HowItWorksPage() {
       />
       <FaqJsonLd items={FAQS} />
 
-      <HowItWorksHero />
-      <OperatingFlow />
-      <AiCoPilot />
-      <QuickOnboarding />
-      <TeamViews />
-      <PlatformModules />
+      <Hero />
+      <Journey />
+      <TeamRoles />
       <HowItWorksFAQ />
-      <AiOfferSpotlight />
       <FinalCTA />
     </MarketingShell>
   );
 }
 
-const HowItWorksHero = () => (
+const Hero = () => (
   <section className="hm-section pt-12 md:pt-16">
     <div className="grid items-center gap-10 lg:grid-cols-[minmax(0,0.95fr)_minmax(420px,0.72fr)]">
       <div>
@@ -416,182 +185,105 @@ const HowItWorksHero = () => (
             fontSize: "clamp(42px, 6.6vw, 88px)",
           }}
         >
-          From first setup to the morning-after report.
+          From the first event draft to the report after doors close.
         </h1>
         <p className="hm-lead mt-7 max-w-[660px]">
-          Hoizr is not just a checkout link. It is the operating system for
-          the event: listing, AI event evaluation, direct sales, fan CRM,
-          campaigns, guestlist, door scanning, reporting, and settlement-ready
-          numbers.
+          Hoizr keeps event setup, ticket sales, audience engagement,
+          guestlists, entry and reporting connected so the next decision starts
+          with the context from the last one.
         </p>
         <div className="mt-8 flex flex-wrap gap-3">
-          {["No subscription wall", "Owned fan CRM", "Event-specific AI offer", "Live door ops"].map(
-            (item) => (
-              <span
-                key={item}
-                className="inline-flex items-center gap-2 rounded-full border border-[var(--m-border)] bg-[var(--m-surface)] px-4 py-2 text-[13px] font-semibold text-[var(--m-ink-2)]"
-              >
-                <span className="h-1.5 w-1.5 rounded-full bg-[var(--m-acid)]" />
-                {item}
-              </span>
-            )
-          )}
-        </div>
-        <div className="mt-9 flex flex-wrap gap-3">
           <Link href="/signup" className="hm-btn hm-btn-primary">
-            Get started
+            Get Started
             <ArrowRight size={16} />
           </Link>
           <Link
-            href="#operating-flow"
+            href="/book-a-demo"
             className="hm-btn hm-btn-ghost border border-[var(--m-border)]"
           >
-            See the flow
+            Book a Demo
           </Link>
         </div>
       </div>
 
-      <div className="relative overflow-hidden rounded-[28px] bg-[var(--m-forest-700)] p-4 text-white shadow-[var(--m-shadow-pop)] md:p-5">
-        <div className="absolute inset-0 opacity-35">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            src="/images/playbooks/Backstage-tech-control-in-ambient-lighting.png"
-            alt=""
-            aria-hidden
-            className="h-full w-full object-cover"
-            draggable={false}
-          />
-        </div>
-        <div
-          aria-hidden
-          className="absolute inset-0 bg-[linear-gradient(180deg,rgba(8,8,7,0.28),rgba(8,8,7,0.92))]"
-        />
-        <div className="relative z-10">
-          <div className="rounded-[18px] border border-white/12 bg-white/10 p-3 backdrop-blur">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src="/images/playbooks/Event-management-dashboard-overview.png"
-              alt="Hoizr dashboard overview"
-              className="aspect-[16/10] w-full rounded-[12px] object-cover"
-              draggable={false}
-            />
-          </div>
-          <div className="mt-5 grid gap-3 sm:grid-cols-3">
-            {[
-              ["1,842", "Tickets sold"],
-              ["Live", "Door status"],
-              ["Ready", "Settlement"],
-            ].map(([value, label]) => (
-              <div
-                key={label}
-                className="rounded-[16px] border border-white/12 bg-black/26 p-4 backdrop-blur"
+      <div className="rounded-[28px] border border-[var(--m-border)] bg-[var(--m-surface)] p-6 shadow-[var(--m-shadow-card)] md:p-8">
+        <div className="grid gap-3">
+          {JOURNEY_STEPS.map((step, index) => (
+            <div
+              key={step.title}
+              className="flex items-start gap-4 rounded-[20px] border border-[var(--m-border)] bg-[var(--m-canvas)] p-4"
+            >
+              <span
+                className={`grid h-11 w-11 place-items-center rounded-2xl ${
+                  index === 2
+                    ? "bg-[var(--m-forest-700)] text-[var(--m-acid)]"
+                    : "bg-[var(--m-canvas-2)] text-[var(--m-forest-700)]"
+                }`}
               >
-                <div className="font-semibold text-[var(--m-acid)]">{value}</div>
-                <div className="mt-1 text-[12px] text-white/68">{label}</div>
-              </div>
-            ))}
-          </div>
-          <div className="mt-5 rounded-[18px] border border-white/12 bg-black/28 p-5">
-            <div className="flex items-center gap-3">
-              <span className="grid h-10 w-10 place-items-center rounded-2xl bg-[var(--m-acid)] text-black">
-                <Rocket size={18} />
+                <step.icon size={18} />
               </span>
               <div>
-                <div className="text-[13px] font-semibold uppercase tracking-[0.12em] text-white/55">
-                  Launch path
+                <div className="text-[11px] font-semibold uppercase tracking-[0.14em] text-[var(--m-ink-4)]">
+                  {step.n}
                 </div>
-                <div className="mt-1 text-[18px] font-semibold">
-                  Workspace to live event in one guided flow.
+                <div className="mt-1 text-[15px] font-semibold text-[var(--m-ink-1)]">
+                  {step.title}
                 </div>
               </div>
             </div>
-          </div>
+          ))}
         </div>
       </div>
     </div>
   </section>
 );
 
-const OperatingFlow = () => (
-  <section id="operating-flow" className="hm-section">
+const Journey = () => (
+  <section className="hm-section">
     <div className="grid gap-10 lg:grid-cols-[320px,1fr]">
       <div className="lg:sticky lg:top-32 lg:self-start">
-        <div className="hm-eyebrow">Operating flow</div>
-        <h2 className="hm-h2 mt-3">The platform follows the real event lifecycle.</h2>
-        <p className="mt-5 text-[15.5px] leading-relaxed text-[var(--m-ink-3)]">
-          Each step feeds the next one. The listing creates the checkout. The
-          checkout builds the CRM. The CRM powers campaigns. The door creates
-          attendance data. Reporting tells you what to change before the next
-          show.
+        <div className="hm-eyebrow">Seven-step journey</div>
+        <h2 className="hm-h2 mt-3">Each step hands context to the next one.</h2>
+        <p className="hm-lead mt-5 max-w-[600px]">
+          The organiser story stays in one flow: create the organisation,
+          build the event, publish, reach the audience, manage entry, review
+          the numbers and start the next event with better context.
         </p>
       </div>
 
       <div className="space-y-4">
-        {OPERATING_FLOW.map((step, index) => (
+        {JOURNEY_STEPS.map((step, index) => (
           <article
-            key={step.n}
-            className={`relative overflow-hidden rounded-[26px] border border-[var(--m-border)] p-6 md:p-7 ${
+            key={step.title}
+            className={`rounded-[26px] border p-6 md:p-7 ${
               index === 2
-                ? "hm-forest-panel"
-                : "bg-[var(--m-surface)] text-[var(--m-ink-1)]"
+                ? "border-[var(--m-forest-700)] bg-[var(--m-forest-700)] text-white shadow-[var(--m-shadow-pop)]"
+                : "border-[var(--m-border)] bg-[var(--m-surface)] text-[var(--m-ink-1)] shadow-[var(--m-shadow-card)]"
             }`}
           >
-            <div className="grid gap-5 md:grid-cols-[128px,1fr]">
-              <div className="flex items-start gap-3">
-                <span
-                  className={`hoizr-mark text-[40px] leading-none ${
-                    index === 2
-                      ? "text-[var(--m-acid)] [text-shadow:0_0_18px_rgba(214,255,63,0.55)]"
-                      : "text-[var(--m-ink-5)]"
-                  }`}
-                >
-                  {step.n}
-                </span>
-                <span
-                  className={`grid h-11 w-11 place-items-center rounded-2xl ${
-                    index === 2
-                      ? "bg-white/10 text-[var(--m-acid)]"
-                      : "bg-[var(--m-forest-700)] text-[var(--m-acid)]"
-                  }`}
-                >
-                  <step.icon size={19} strokeWidth={1.8} />
-                </span>
+            <div className="flex items-start gap-4">
+              <div
+                className={`hoizr-mark text-[38px] leading-none ${
+                  index === 2 ? "text-[var(--m-acid)]" : "text-[var(--m-ink-4)]"
+                }`}
+              >
+                {step.n}
               </div>
-              <div>
+              <div className="min-w-0 flex-1">
                 <div
-                  className={`text-[11px] font-bold uppercase tracking-[0.13em] ${
+                  className={`text-[11px] font-semibold uppercase tracking-[0.14em] ${
                     index === 2 ? "text-white/60" : "text-[var(--m-ink-4)]"
                   }`}
                 >
-                  {step.eyebrow}
-                </div>
-                <h3
-                  className="mt-2 font-semibold leading-tight tracking-[-0.02em]"
-                  style={{ fontSize: "clamp(22px, 2.5vw, 30px)" }}
-                >
                   {step.title}
-                </h3>
+                </div>
                 <p
-                  className={`mt-4 max-w-[660px] text-[15px] leading-[1.65] ${
-                    index === 2 ? "text-white/82" : "text-[var(--m-ink-3)]"
+                  className={`mt-3 text-[15px] leading-[1.65] ${
+                    index === 2 ? "text-white/84" : "text-[var(--m-ink-2)]"
                   }`}
                 >
                   {step.body}
                 </p>
-                <div className="mt-5 grid gap-2 md:grid-cols-3">
-                  {step.details.map((detail) => (
-                    <div
-                      key={detail}
-                      className={`rounded-[16px] p-3 text-[12.5px] leading-snug ${
-                        index === 2
-                          ? "border border-white/12 bg-white/8 text-white/76"
-                          : "border border-[var(--m-border)] bg-[var(--m-canvas-2)] text-[var(--m-ink-3)]"
-                      }`}
-                    >
-                      {detail}
-                    </div>
-                  ))}
-                </div>
               </div>
             </div>
           </article>
@@ -601,160 +293,38 @@ const OperatingFlow = () => (
   </section>
 );
 
-const AiCoPilot = () => (
-  <section id="ai-co-pilot" className="hm-section">
-    <div className="rounded-[32px] bg-[var(--m-forest-700)] p-6 text-white shadow-[var(--m-shadow-pop)] md:p-12">
-      <div className="grid gap-10 lg:grid-cols-[minmax(0,0.95fr)_minmax(0,1.05fr)] lg:items-start">
-        <div className="lg:sticky lg:top-32 lg:self-start">
-          <div className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/8 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.16em] text-[var(--m-acid)]">
-            <Sparkles size={12} />
-            AI co-pilot · inside the platform
-          </div>
-          <h2
-            className="mt-5 font-bold leading-[1.04] tracking-[-0.025em]"
-            style={{ fontFamily: "var(--m-font-display)", fontSize: "clamp(34px, 4.8vw, 58px)" }}
-          >
-            One AI that <span className="text-[var(--m-acid)]">studies your event</span> and helps you spend smarter.
-          </h2>
-          <p className="mt-6 max-w-[540px] text-[15.5px] leading-[1.7] text-white/78">
-            Hoizr is quietly AI-native. The same engine that quotes your event-specific commission also reviews your listing, generates the right audience filters, and tells you exactly where to spend your marketing budget — channel by channel, segment by segment, with the reasoning attached.
-          </p>
-          <div className="mt-7 grid gap-3 sm:grid-cols-2 max-w-[520px]">
-            {[
-              "Tied to your event, not generic benchmarks",
-              "Suggestions, never silent auto-pilot",
-              "Reasoning shown for every recommendation",
-              "Improves with every event you run",
-            ].map((line) => (
-              <div
-                key={line}
-                className="rounded-[14px] border border-white/12 bg-white/8 px-3 py-2.5 text-[12.5px] leading-snug text-white/80"
-              >
-                {line}
-              </div>
-            ))}
-          </div>
-          <div className="mt-8 rounded-[20px] border border-white/14 bg-black/28 p-5 max-w-[540px]">
-            <div className="text-[11px] font-bold uppercase tracking-[0.16em] text-[var(--m-acid)]">
-              Worked example
-            </div>
-            <p className="mt-3 text-[14.5px] leading-[1.7] text-white/85">
-              &ldquo;Your list is 4,200 fans. 1,400 of them attended a comedy night in the last 90 days. Spend 60% of this budget on SMS to that group — they convert at ~3×. Send the remaining 40% as push to lookalike new fans in Bandra and Andheri. Save email for the post-event flow, not the on-sale push.&rdquo;
-            </p>
-            <div className="mt-4 text-[11.5px] uppercase tracking-[0.14em] text-white/45">
-              Hoizr AI · suggested allocation for your next event
-            </div>
-          </div>
-        </div>
-
-        <div className="grid gap-3 sm:grid-cols-2">
-          {AI_CAPABILITIES.map((cap) => (
-            <article
-              key={cap.title}
-              className="flex h-full flex-col rounded-[22px] border border-white/12 bg-white/8 p-5 backdrop-blur"
-            >
-              <div className="flex items-center justify-between">
-                <span className="grid h-10 w-10 place-items-center rounded-2xl bg-black/30 text-[var(--m-acid)]">
-                  <cap.icon size={18} strokeWidth={1.8} />
-                </span>
-                <span className="rounded-full bg-black/30 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-[0.14em] text-white/65">
-                  {cap.tag}
-                </span>
-              </div>
-              <h3 className="mt-4 text-[17px] font-semibold leading-snug tracking-[-0.01em]">
-                {cap.title}
-              </h3>
-              <p className="mt-3 text-[13.5px] leading-[1.6] text-white/75">
-                {cap.body}
-              </p>
-            </article>
-          ))}
-        </div>
-      </div>
-    </div>
-  </section>
-);
-
-const QuickOnboarding = () => (
-  <section className="hm-section">
-    <div className="rounded-[32px] bg-[var(--m-surface)] p-6 shadow-[var(--m-shadow-card)] md:p-9">
-      <div className="grid gap-8 lg:grid-cols-[360px,1fr]">
-        <div>
-          <div className="hm-eyebrow">Quick onboarding · Quick verification</div>
-          <h2 className="hm-h2 mt-3">
-            Onboarding is quick. Verification is quicker.
-          </h2>
-          <p className="mt-5 text-[15.5px] leading-relaxed text-[var(--m-ink-3)]">
-            Hoizr opens your account fast and clears verification in parallel
-            — no long forms, no week-long waiting on documents. Most event organizers
-            move from signup to publish-ready in under a day.
-          </p>
-        </div>
-
-        <div className="grid gap-3">
-          {QUICK_ONBOARD_STEPS.map((step) => (
-            <article
-              key={step.title}
-              className="grid gap-4 rounded-[20px] border border-[var(--m-border)] bg-[var(--m-canvas)] p-5 sm:grid-cols-[56px,1fr]"
-            >
-              <span className="grid h-12 w-12 place-items-center rounded-2xl bg-[var(--m-forest-700)] text-[var(--m-acid)]">
-                <step.icon size={20} />
-              </span>
-              <div className="min-w-0">
-                <h3 className="text-[17px] font-semibold tracking-[-0.01em]">
-                  {step.title}
-                </h3>
-                <p className="mt-2 text-[14px] leading-relaxed text-[var(--m-ink-3)]">
-                  {step.body}
-                </p>
-              </div>
-            </article>
-          ))}
-          <p className="mt-2 text-[12.5px] text-[var(--m-ink-4)]">
-            Stuck mid-onboarding? Email{" "}
-            <a
-              href="mailto:contact@hoizr.com"
-              className="font-semibold text-[var(--m-forest-700)] hover:underline"
-            >
-              contact@hoizr.com
-            </a>{" "}
-            — the team unblocks verification queues in IST hours.
-          </p>
-        </div>
-      </div>
-    </div>
-  </section>
-);
-
-const TeamViews = () => (
+const TeamRoles = () => (
   <section className="hm-section">
     <div className="max-w-[760px]">
-      <div className="hm-eyebrow">Role-based workspace</div>
-      <h2 className="hm-h2 mt-3">Every team sees the part of the night they own.</h2>
+      <div className="hm-eyebrow">Roles and permissions</div>
+      <h2 className="hm-h2 mt-3">
+        Current access stays scoped to the work each person actually does.
+      </h2>
       <p className="hm-lead mt-5 max-w-[620px]">
-        A founder, marketer, promoter, door staff member, and finance lead do
-        not need the same dashboard. Hoizr keeps permissions and context clean.
+        Organisers can invite team members with roles and permissions, and
+        collaborators can be scoped to event-specific access when they need
+        metrics, campaigns, customers or offline ticket issuing.
       </p>
     </div>
 
-    <div className="mt-10 grid gap-4 md:grid-cols-2 lg:grid-cols-5">
-      {TEAM_VIEWS.map((view) => (
+    <div className="mt-10 grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+      {TEAM_ROLES.map((role) => (
         <article
-          key={view.title}
-          className="flex min-h-[320px] flex-col rounded-[24px] border border-[var(--m-border)] bg-[var(--m-surface)] p-5"
+          key={role.title}
+          className="flex min-h-[280px] flex-col rounded-[24px] border border-[var(--m-border)] bg-[var(--m-surface)] p-5"
         >
           <span className="grid h-11 w-11 place-items-center rounded-2xl bg-[var(--m-forest-700)] text-[var(--m-acid)]">
-            <view.icon size={19} />
+            <role.icon size={19} />
           </span>
           <h3 className="mt-5 text-[19px] font-semibold tracking-[-0.015em]">
-            {view.title}
+            {role.title}
           </h3>
           <p className="mt-3 text-[13.5px] leading-relaxed text-[var(--m-ink-3)]">
-            {view.body}
+            {role.body}
           </p>
           <div className="mt-auto pt-5">
             <div className="flex flex-wrap gap-2">
-              {view.points.map((point) => (
+              {role.points.map((point) => (
                 <span
                   key={point}
                   className="rounded-full bg-[var(--m-canvas-2)] px-2.5 py-1 text-[11px] font-semibold text-[var(--m-ink-3)]"
@@ -770,61 +340,12 @@ const TeamViews = () => (
   </section>
 );
 
-const PlatformModules = () => (
-  <section className="hm-section">
-    <div className="flex flex-col gap-5 md:flex-row md:items-end md:justify-between">
-      <div className="max-w-[720px]">
-        <div className="hm-eyebrow">Platform modules</div>
-        <h2 className="hm-h2 mt-3">The pieces that make the flow work.</h2>
-        <p className="hm-lead mt-5 max-w-[600px]">
-          Each product page goes deeper, but these are the core modules that
-          show up in the operating flow.
-        </p>
-      </div>
-      <Link
-        href="/product/event-listing"
-        className="hm-btn hm-btn-ghost self-start border border-[var(--m-border)] md:self-auto"
-      >
-        Explore products
-        <ArrowRight size={15} />
-      </Link>
-    </div>
-
-    <div className="mt-10 grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-      {PLATFORM_MODULES.map((module) => (
-        <Link
-          key={module.href}
-          href={module.href}
-          className="group rounded-[24px] border border-[var(--m-border)] bg-[var(--m-surface)] p-6 transition hover:-translate-y-0.5 hover:shadow-[var(--m-shadow-card)]"
-        >
-          <span className="grid h-11 w-11 place-items-center rounded-2xl bg-[var(--m-canvas-2)] text-[var(--m-forest-700)]">
-            <module.icon size={19} />
-          </span>
-          <h3 className="mt-5 text-[21px] font-semibold tracking-[-0.015em] text-[var(--m-ink-1)]">
-            {module.title}
-          </h3>
-          <p className="mt-3 min-h-[72px] text-[14px] leading-relaxed text-[var(--m-ink-3)]">
-            {module.body}
-          </p>
-          <span className="mt-5 inline-flex items-center gap-1.5 text-[13px] font-semibold text-[var(--m-forest-700)]">
-            Learn more
-            <ArrowRight
-              size={14}
-              className="transition-transform group-hover:translate-x-0.5"
-            />
-          </span>
-        </Link>
-      ))}
-    </div>
-  </section>
-);
-
 const HowItWorksFAQ = () => (
   <section className="hm-section">
     <div className="grid gap-10 lg:grid-cols-[320px,1fr]">
       <div>
         <div className="hm-eyebrow">Common questions</div>
-        <h2 className="hm-h2 mt-3">What event organizers usually ask before switching.</h2>
+        <h2 className="hm-h2 mt-3">What organisers usually ask before switching.</h2>
       </div>
       <div className="overflow-hidden rounded-[26px] border border-[var(--m-border)] bg-[var(--m-surface)]">
         {FAQS.map((item) => (
