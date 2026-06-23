@@ -43,7 +43,7 @@ export const blogs: Blog[] = [
     excerpt:
       "The first 24 hours decide the tone of the whole campaign. Here is how to plan the drop, segment the first blast, and keep momentum after launch.",
     content: `<h3>The first day is a choreography problem</h3>
-<p>On-sale day is not just the moment you publish a ticket link. It is the first public signal of demand, pricing confidence, and campaign discipline. The best event organizers treat launch day like show night: roles are assigned, timing is locked, and every channel knows what it is supposed to do.</p>
+<p>On-sale day is not just the moment you publish a ticket link. It is the first public signal of demand, launch confidence, and campaign discipline. The best event organizers treat launch day like show night: roles are assigned, timing is locked, and every channel knows what it is supposed to do.</p>
 
 <p>Before the link goes live, decide who gets the first message. Past buyers, high-intent followers, promoters, artist communities, and venue regulars should not all receive the same copy at the same minute.</p>
 
@@ -60,7 +60,7 @@ export const blogs: Blog[] = [
 <p>A launch page should answer the questions fans ask before they DM you: lineup, venue, date, entry rules, age policy, refund policy, and ticket phases. If any of those are missing, the campaign loses energy to clarification.</p>
 
 <h3>What to watch inside Hoizr</h3>
-<p>Track first-day sell-through by source, ticket tier, promoter link, and returning buyer rate. If your warm list is buying but paid traffic is not, change the creative. If the first phase is stuck, avoid opening another phase too early. On-sale day should give you decisions, not just vanity numbers.</p>`,
+<p>Track first-day sell-through by source, ticket tier, promoter link, and returning buyer share. If your warm list is buying but paid traffic is not, change the creative. If the first phase is stuck, avoid opening another phase too early. On-sale day should give you decisions, not just vanity numbers.</p>`,
     image: "/images/playbooks/Backstage-atmosphere-at-a-live-event.png",
     date: "May 23, 2026",
     category: "Playbooks",
@@ -143,7 +143,7 @@ export const blogs: Blog[] = [
 </ul>
 
 <h3>Where Hoizr AI helps</h3>
-<p>Hoizr can read event format, city, scale, ticket mix, and listing quality before providing the best possible offer and lowered commission where the event qualifies. The same context helps event organizers think about price tiers more honestly before publishing.</p>`,
+<p>Hoizr can read event format, city, scale, ticket mix, and listing quality before providing event-specific guidance where the event qualifies. The same context helps event organizers think about ticket tiers more honestly before publishing.</p>`,
     image: "/images/playbooks/Nightclub-vibes-DJ-in-the-mix .png",
     date: "May 23, 2026",
     category: "Playbooks",
@@ -224,14 +224,14 @@ export const blogs: Blog[] = [
 <h3>Why We Are Building Hoizr Now</h3>
 <p>Indian organizers do not need another generic event listing page. They need infrastructure that understands how events actually run in Mumbai, Bangalore, Delhi, Pune, Hyderabad, Chennai, Goa, and the next wave of Tier-2 cities.</p>
 
-<p>A nightclub operator needs clean guestlist control. A comedy promoter needs pricing that respects smaller rooms. A festival event organizer needs ticket phases, tiered sales, and source tracking. A live music venue needs repeat-fan data. A promoter needs invite caps, QR-based entry, and live arrival visibility.</p>
+<p>A nightclub operator needs clean guestlist control. A comedy promoter needs ticket structure that respects smaller rooms. A festival event organizer needs ticket phases, tiered sales, and source tracking. A live music venue needs repeat-fan data. A promoter needs invite caps, QR-based entry, and live arrival visibility.</p>
 
 <p>Hoizr Business is being designed around these real operator problems instead of forcing every event into the same global template.</p>
 
-<h3>Platform Access, Event-Specific AI Offers</h3>
+<h3>Platform Access, Event-Specific AI Guidance</h3>
 <p>One of Hoizr's biggest principles is simple: organizers should be able to create an account and publish without a subscription, setup fee, listing fee, or card details.</p>
 
-<p>A 150-person comedy night, a club residency, a warehouse gig, and a multi-stage festival all have different economics. Hoizr's AI studies the event format, city, ticket mix, scale, and listing quality before surfacing the best possible offer and lowered commission where the event qualifies.</p>
+<p>A 150-person comedy night, a club residency, a warehouse gig, and a multi-stage festival all have different operating realities. Hoizr's AI studies the event format, city, ticket mix, scale, and listing quality before surfacing event-specific guidance where the event qualifies.</p>
 
 <p>That means organizers get clearer event context before publishing instead of being forced through a generic template.</p>
 
@@ -264,15 +264,15 @@ export const blogs: Blog[] = [
 <ul>
   <li>Send on-sale announcements to past buyers</li>
   <li>Run last-call campaigns before ticket closure</li>
-  <li>Reach repeat attendees with loyalty-led offers</li>
+  <li>Reach repeat attendees with loyalty-led outreach</li>
   <li>Use WhatsApp-first communication where it makes sense for India</li>
   <li>Understand which sources actually drove ticket revenue</li>
 </ul>
 
-<h3>AI Offers Without Fake Magic</h3>
-<p>Hoizr is not claiming that AI will magically sell out an event. The first AI layer is practical: event evaluation and offer context.</p>
+<h3>AI Guidance Without Fake Magic</h3>
+<p>Hoizr is not claiming that AI will magically sell out an event. The first AI layer is practical: event evaluation and event context.</p>
 
-<p>The system is being built to read event quality, ticket structure, listing completeness, city context, and event format before giving the event organizer the best possible offer. The goal is to make event decisions more transparent and more useful than a flat public template.</p>
+<p>The system is being built to read event quality, ticket structure, listing completeness, city context, and event format before giving the event organizer event-specific guidance. The goal is to make event decisions more transparent and more useful than a flat public template.</p>
 
 <p>For event organizers, this means a clearer decision before publishing, without needing to enter card details just to start.</p>
 
@@ -359,7 +359,7 @@ export const blogs: Blog[] = [
 <h3>Why This Matters More in India</h3>
 <p>Indian events are deeply relationship-driven. People discover events through Instagram, WhatsApp, friend circles, college groups, artist communities, venue pages, and local promoters.</p>
 
-<p>That means the organizer's audience is not just a spreadsheet. It is a living community. The more clearly a event organizer understands that community, the better they can price, promote, program, and repeat.</p>
+<p>That means the organizer's audience is not just a spreadsheet. It is a living community. The more clearly a event organizer understands that community, the better they can position, promote, program, and repeat.</p>
 
 <p>Hoizr Business is being built for that Indian reality: WhatsApp-first communication, city-wise scenes, guestlist culture, repeat weekend programming, and organizer-owned fan relationships.</p>
 
@@ -474,7 +474,7 @@ export const blogs: Blog[] = [
     content: `<h3>A Checkout Link Is Not Enough Anymore</h3>
 <p>For years, event technology has been reduced to one question: where do we sell tickets?</p>
 
-<p>That question is still important, but it is no longer enough. Indian organizers now need to manage discovery, pricing, guestlist, promoters, marketing, door scanning, customer data, refunds, reports, and settlement.</p>
+<p>That question is still important, but it is no longer enough. Indian organizers now need to manage discovery, ticket structure, guestlist, promoters, marketing, door scanning, customer data, refunds, reports, and settlement.</p>
 
 <p>A simple ticketing page cannot carry that entire workflow.</p>
 
@@ -546,15 +546,15 @@ export const blogs: Blog[] = [
   },
   {
     id: "how-indian-event-hosts-should-think-about-lower-commission",
-    title: "How Indian Event Organizers Should Think About AI Offers",
+    title: "How Indian Event Organizers Should Think About AI Guidance",
     excerpt:
-      "Hoizr AI studies each event before publishing so event organizers can see the best possible offer, lowered commission where eligible, and the operating context behind it.",
-    content: `<h3>AI Offers Are Event Context, Not a Paid Plan</h3>
+      "Hoizr AI studies each event before publishing so event organizers can see event-specific guidance where eligible, and the operating context behind it.",
+    content: `<h3>AI Guidance Is Event Context, Not a Paid Plan</h3>
 <p>Hoizr does not put publishing behind a subscription wall, setup fee, listing fee, or card-details requirement before an organizer can start.</p>
 
-<p>The AI offer layer exists for a different reason: every event has a different shape. A comedy room with 120 seats does not operate like a multi-stage festival. A club night with table sales does not operate like a seated cultural show.</p>
+<p>The AI guidance layer exists for a different reason: every event has a different shape. A comedy room with 120 seats does not operate like a multi-stage festival. A club night with table sales does not operate like a seated cultural show.</p>
 
-<blockquote>Platform access stays open. Event offers should still respect the event.</blockquote>
+<blockquote>Platform access stays open. Event guidance should still respect the event.</blockquote>
 
 <h3>What the AI Studies</h3>
 <p>Hoizr looks at practical inputs: listing quality, event format, city context, ticket structure, expected audience, capacity, and event completeness. The output is an event-specific recommendation before publishing.</p>
@@ -564,13 +564,13 @@ export const blogs: Blog[] = [
   <li>City and demand context</li>
   <li>Ticket mix and phase structure</li>
   <li>Listing completeness and operational readiness</li>
-  <li>Signals that can qualify an event for lowered commission</li>
+  <li>Signals that can shape event-specific guidance</li>
 </ul>
 
 <h3>Why Event Organizers Should Care</h3>
 <p>Indian organizers work with venue minimums, artist budgets, production costs, hospitality, marketing pressure, guestlist expectations, and last-minute changes. A generic template does not explain that reality well.</p>
 
-<p>AI event evaluation gives event organizers clearer context before launch. It does not replace judgment, but it helps the organizer understand what Hoizr can offer for that specific night.</p>
+<p>AI event evaluation gives event organizers clearer context before launch. It does not replace judgment, but it helps the organizer understand what Hoizr can support for that specific night.</p>
 
 <h3>What Organizers Should Ask Before Choosing a Platform</h3>
 <ul>
@@ -614,13 +614,13 @@ export const blogs: Blog[] = [
   <li>Is it exclusive to one platform?</li>
   <li>Will guestlist be allowed?</li>
   <li>Will promoters receive invite access?</li>
-  <li>Will ticket prices increase in phases?</li>
+  <li>Will ticket tiers increase in phases?</li>
 </ul>
 
-<p>These decisions affect pricing, capacity, door flow, marketing, and settlement. Hoizr Business is being designed so event organizers can structure these choices before the event goes live.</p>
+<p>These decisions affect access, capacity, door flow, marketing, and settlement. Hoizr Business is being designed so event organizers can structure these choices before the event goes live.</p>
 
 <h3>2. Build Ticket Tiers Around Real Demand</h3>
-<p>Indian events often need more than one ticket type. A club night may need early bird, general access, couple entry, VIP, and table-linked options. A festival may need phase-wise ticketing. A comedy show may need seat categories or limited early pricing.</p>
+<p>Indian events often need more than one ticket type. A club night may need early bird, general access, couple entry, VIP, and table-linked options. A festival may need phase-wise ticketing. A comedy show may need seat categories or limited early access.</p>
 
 <p>The mistake many event organizers make is creating too many tiers without a clear reason. Every tier should answer one question: why should the buyer act now?</p>
 
@@ -962,12 +962,12 @@ export const blogs: Blog[] = [
 
 <p>Different events still have different operating realities. A small comedy room, a club night, an independent gig, a cultural show, and a festival do not carry the same scale or risk.</p>
 
-<p>The goal is for AI to study the event context and present the best possible offer, including lowered commission where the event qualifies.</p>
+<p>The goal is for AI to study the event context and present event-specific guidance where the event qualifies.</p>
 
 <h3>Our Position on AI</h3>
-<p>Hoizr will not use AI language as decoration. The AI scope is practical: event evaluation and offer context.</p>
+<p>Hoizr will not use AI language as decoration. The AI scope is practical: event evaluation and event context.</p>
 
-<p>The platform is being built to evaluate event details, listing quality, ticket structure, and expected audience signals before presenting offer options to the event organizer.</p>
+<p>The platform is being built to evaluate event details, listing quality, ticket structure, and expected audience signals before presenting event-specific options to the event organizer.</p>
 
 <p>That is the kind of AI we believe is useful: not vague magic, but decision support for real event operations.</p>
 

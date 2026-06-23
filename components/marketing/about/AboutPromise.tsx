@@ -20,22 +20,22 @@ const CARDS: PromiseCard[] = [
     eyebrow: "No gatekeeping",
     title: "The full stack from day one.",
     body: "Event organizers can publish directly and use the full platform without a subscription wall, starter tier, or gated plan.",
-    ctaLabel: "Get started",
+    ctaLabel: "Get Started",
     ctaHref: "/signup",
     Icon: BadgeCheck,
   },
   {
     eyebrow: "AI event evaluation",
-    title: "The offer is studied event by event.",
-    body: "Hoizr AI evaluates format, city, scale, ticket mix, and listing quality, then surfaces the best possible offer and lowered commission where the event qualifies.",
+    title: "The event is studied event by event.",
+    body: "Hoizr AI evaluates format, city, scale, ticket mix, and listing quality, then surfaces event-specific guidance where the event qualifies.",
     ctaLabel: "See how AI helps",
-    ctaHref: "/product/ai-event-assistant",
+    ctaHref: "/product/event-ticketing",
     Icon: Sparkles,
   },
   {
     eyebrow: "Collaborators",
     title: "Pool audiences. Boost sales.",
-    body: "Add another event organizer as a collaborator — they get the event on their dashboard and you both run campaigns against the combined customer base.",
+    body: "Add another event organizer as a collaborator — they get the event on their dashboard and both teams can work from the same event context.",
     ctaLabel: "How collaborators work",
     ctaHref: "/how-it-works#collaborators",
     Icon: Users,
@@ -60,6 +60,7 @@ export const AboutPromise = () => {
                on the inner content. */
             className="relative overflow-hidden rounded-3xl bg-[var(--m-forest-700)] px-7 py-10 md:px-10 md:py-12 text-white"
           >
+            {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src="/marketing/brand/metallic-line-banner.png"
               alt=""

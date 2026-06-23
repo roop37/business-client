@@ -1,7 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { ArrowRight, Brain, FileSearch, Gauge, Radar, Sparkles } from "lucide-react";
+import { ArrowRight, Brain, FileSearch, Gauge, Sparkles } from "lucide-react";
 import Link from "next/link";
 
 const EASE = [0.2, 0.6, 0.2, 1] as const;
@@ -19,8 +19,8 @@ const STEPS = [
   },
   {
     icon: Gauge,
-    label: "03 · You get the best possible offer",
-    body: "The result is an event-specific recommendation that explains what Hoizr can offer for the night, including lowered commission where the event qualifies.",
+    label: "03 · You get event-specific guidance",
+    body: "The result is an event-specific recommendation that explains what Hoizr can support for the night.",
   },
   {
     icon: Sparkles,
@@ -30,9 +30,8 @@ const STEPS = [
 ];
 
 /**
- * AI Offer spotlight. Positions Hoizr's AI as event evaluation: it
- * studies the night and explains the best possible offer, including
- * lowered commission where the event qualifies.
+ * AI spotlight. Positions Hoizr's AI as event evaluation: it
+ * studies the night and explains the event-specific guidance.
  */
 export const AiOfferSpotlight = () => {
   return (
@@ -52,14 +51,13 @@ export const AiOfferSpotlight = () => {
               <span className="font-semibold">AI event evaluation</span>
             </span>
             <h2 className="hm-h2 mt-5">
-              AI studies your event and returns the best possible offer.
+              AI studies your event and returns event-specific guidance.
             </h2>
             <p className="hm-lead mt-5 max-w-[520px]">
               Hoizr puts the full operating stack in your workspace from day
-              one. For event economics, the AI evaluates your format, city,
+              one. For event evaluation, the AI evaluates your format, city,
               scale, ticket mix, demand signals, and listing quality, then
-              provides the best possible offer and lowered commission where
-              the event qualifies.
+              provides event-specific guidance where the event qualifies.
             </p>
 
             <ol className="mt-10 space-y-6">
@@ -89,27 +87,13 @@ export const AiOfferSpotlight = () => {
 
             <div className="mt-10">
               <Link href="/signup" className="hm-btn hm-btn-primary">
-                Get started
+                Get Started
                 <ArrowRight size={16} />
               </Link>
             </div>
-
-            {/* Roadmap teaser — clearly labelled as upcoming, not live. */}
-            <div className="mt-8 rounded-2xl border border-dashed border-[var(--m-border-strong)] bg-[var(--m-canvas-2)] p-4">
-              <div className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.14em] text-[var(--m-ink-4)]">
-                <Radar size={13} className="text-[var(--m-forest-700)]" />
-                Next on the AI roadmap
-              </div>
-              <p className="mt-2 text-[13.5px] leading-relaxed text-[var(--m-ink-3)]">
-                Hoizr will continuously scan your live event and surface
-                optimisations — sell-through dips, channel under-performance,
-                lineup risk — directly in your dashboard. Coming soon for every
-                Hoizr account.
-              </p>
-            </div>
           </motion.div>
 
-          {/* Right — studio-feel offer mock on metallic black */}
+          {/* Right — studio-feel event mock on metallic black */}
           <motion.div
             initial={{ opacity: 0, y: 32 }}
             whileInView={{ opacity: 1, y: 0 }}
@@ -117,7 +101,7 @@ export const AiOfferSpotlight = () => {
             transition={{ duration: 0.8, ease: EASE, delay: 0.15 }}
             className="flex items-center justify-center"
           >
-            <RateStudioMock />
+            <EventStudioMock />
           </motion.div>
         </div>
       </div>
@@ -125,7 +109,7 @@ export const AiOfferSpotlight = () => {
   );
 };
 
-const RateStudioMock = () => {
+const EventStudioMock = () => {
   return (
     <div className="relative w-full max-w-[460px]">
       <div className="relative overflow-hidden rounded-[32px] bg-[#050504] p-7 shadow-[0_30px_80px_rgba(0,0,0,0.35)]">
@@ -191,14 +175,14 @@ const RateStudioMock = () => {
             ))}
           </div>
 
-          {/* The result card shows the event-specific offer without public
-              pricing templates or subscription language. */}
+          {/* The result card shows the event-specific guidance without extra
+              promotional language. */}
           <div className="mt-5 rounded-2xl border border-[var(--m-acid)]/40 bg-[#143821] p-4">
             <div className="text-[11px] font-semibold uppercase tracking-[0.14em] text-[var(--m-acid)]">
-              AI offer
+              Event-specific guidance
             </div>
             <div className="mt-1.5 text-[16px] font-bold leading-tight text-white">
-              Best possible offer for this night.
+              What Hoizr can support for this night.
             </div>
             <div className="mt-3 grid grid-cols-2 gap-2 text-[11px] text-white/70">
               <div className="rounded-lg bg-white/[0.04] px-2.5 py-2">
@@ -206,15 +190,15 @@ const RateStudioMock = () => {
                   Platform access
                 </div>
                 <div className="mt-0.5 font-medium text-white">
-                  No subscription wall
+                  Open by default
                 </div>
               </div>
               <div className="rounded-lg bg-white/[0.04] px-2.5 py-2">
                 <div className="font-semibold uppercase tracking-[0.08em] text-white/45">
-                  Commission direction
+                  Event context
                 </div>
                 <div className="mt-0.5 font-medium text-white">
-                  Lowered where eligible
+                  Reviewed by AI
                 </div>
               </div>
             </div>
@@ -225,20 +209,18 @@ const RateStudioMock = () => {
           </div>
 
           <div className="mt-5 flex items-center justify-between text-[11.5px] text-white/55">
-            <span>Offer context shown before publish</span>
+            <span>Event context shown before publish</span>
             <span className="font-semibold text-[var(--m-acid)]">View →</span>
           </div>
         </div>
       </div>
-
-      {/* Annotation chips floating around the studio */}
       <motion.div
         initial={{ opacity: 0, x: -16 }}
         whileInView={{ opacity: 1, x: 0 }}
         viewport={{ once: true }}
         transition={{ duration: 0.6, ease: EASE, delay: 0.6 }}
         className="absolute -left-3 top-24 z-10 hidden items-center gap-2 rounded-full bg-white px-3 py-1.5 text-[11px] font-semibold text-[var(--m-ink-1)] shadow-lg md:flex"
-      >
+        >
         <span className="h-1.5 w-1.5 rounded-full bg-[var(--m-forest-500)]" />
         Reads your event
       </motion.div>

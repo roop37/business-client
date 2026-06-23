@@ -16,6 +16,19 @@ const sliceBetween = (source, startMarker, endMarker) => {
   return source.slice(start, end);
 };
 
+const escapeRegex = (value) =>
+  value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+
+const assertNoExactPhrases = (source, phrases, label) => {
+  for (const phrase of phrases) {
+    assert.doesNotMatch(
+      source,
+      new RegExp(escapeRegex(phrase), "i"),
+      `${label} still includes blocked phrase: ${phrase}`
+    );
+  }
+};
+
 test("marketing catalogue exposes eight current products and a separate coming-soon list", () => {
   const source = read("components/marketing/data/nav-products.ts");
   const currentCatalogue = sliceBetween(
@@ -150,6 +163,51 @@ test("marketing footer uses the approved public routes and labels", () => {
   assert.match(source, /https:\/\/business\.hoizr\.com\/legal\/entity/);
   assert.doesNotMatch(source, /label: "Resources", href: "\/resources"/);
   assert.doesNotMatch(source, /Explore/);
+});
+
+test("public marketing copy avoids stale pricing and access claims", () => {
+  const source = [
+    read("app/api/waitlist/route.ts"),
+    read("components/marketing/about/AboutPromise.tsx"),
+    read("components/marketing/blog/blog-data.ts"),
+    read("components/marketing/sections/AiOfferSpotlight.tsx"),
+    read("components/marketing/sections/PricingTeaserCards.tsx"),
+  ].join("\n");
+
+  const blockedPhrases = [
+    "lowest ticket commission",
+    "lowered commission",
+    "tailored commission",
+    "commission quote",
+    "marketing credit",
+    "top up credits",
+    "best possible offer",
+    "India's leading",
+    "the best event platform",
+    "Start for free",
+    "Calendly",
+    "find best promoters",
+    "find trending artists",
+  ];
+
+  assertNoExactPhrases(source, blockedPhrases, "public marketing copy");
+
+  const legal = read("components/marketing/legal/content.ts");
+  const aiParagraphMatch = legal.match(
+    /AI Event Assistant may study event format, city, scale, ticket mix, and listing quality to provide event-specific guidance where the event qualifies\.[^\n]*/
+  );
+  assert.ok(aiParagraphMatch, "Missing AI/product-pricing legal paragraph");
+  assertNoExactPhrases(
+    aiParagraphMatch[0],
+    blockedPhrases,
+    "legal AI paragraph"
+  );
+
+  assert.match(legal, /commissions promised/);
+  assert.match(
+    legal,
+    /Any commission, fee, employment, tax, or operational arrangement between the Event organizer and those users is the Event organizer's responsibility\./
+  );
 });
 
 test("demo page embeds Zcal and does not reference Calendly", () => {

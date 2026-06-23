@@ -1,27 +1,27 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { ArrowUpRight, Handshake, PercentCircle } from "lucide-react";
+import { ArrowUpRight, Gauge, Handshake } from "lucide-react";
 import Link from "next/link";
 
 const EASE = [0.2, 0.6, 0.2, 1] as const;
 
 const CARDS = [
   {
-    eyebrow: "Lowest commission",
-    title: "The lowest ticket commission in India.",
+    eyebrow: "Event readiness",
+    title: "See what the event needs before you publish.",
     body:
-      "Hoizr quotes a single per-event commission with no convenience-fee games. Share your event context and we will give you the strongest offer we can make for that night.",
-    cta: "See your event commission",
-    Icon: PercentCircle,
+      "Hoizr reads the format, city, capacity, ticket mix, and listing quality, then shows event-specific guidance for that night.",
+    cta: "See event guidance",
+    Icon: Gauge,
     action: "link",
-    href: "/signup",
+    href: "/product/event-ticketing",
   },
   {
     eyebrow: "Collaborators",
     title: "Pool audiences. Boost sales.",
     body:
-      "Add another event organizer as a collaborator. They get the event on their dashboard and both teams can campaign against the combined customer base.",
+      "Add another event organizer as a collaborator. They get the event on their dashboard and both teams can work from the same event context.",
     cta: "How collaborators work",
     Icon: Handshake,
     action: "link",
@@ -34,14 +34,14 @@ export const PricingTeaserCards = () => {
     <section className="hm-section pt-0">
       <div className="mb-9 flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
         <div>
-          <div className="hm-eyebrow">Commission advantage</div>
+          <div className="hm-eyebrow">Event readiness</div>
           <h2 className="hm-h2 mt-3 max-w-[760px]">
-            The economics should be visible before the pitch call.
+            The event should be clearer before the pitch call.
           </h2>
         </div>
         <p className="max-w-[430px] text-[15.5px] leading-relaxed text-[var(--m-ink-3)]">
-          No public rate cards, no hidden tiers. Hoizr studies the event and
-          quotes the best commission offer we can make for that night.
+          No hidden steps, no guesswork. Hoizr studies the event and shows
+          event-specific guidance for that night.
         </p>
       </div>
 

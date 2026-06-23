@@ -183,7 +183,7 @@ function renderUserEmail({
           <p style="margin:0 0 18px;">Here&rsquo;s what happens next:</p>
           <ul style="margin:0 0 22px;padding:0 0 0 20px;color:#1d1d1f;">
             <li style="margin:0 0 6px;line-height:1.55;">You can publish directly without a subscription wall, setup fee, listing fee, or starter-tier limitation.</li>
-            <li style="margin:0 0 6px;line-height:1.55;">Hoizr AI studies the event and provides the best possible offer, including lowered commission where the event qualifies.</li>
+            <li style="margin:0 0 6px;line-height:1.55;">Hoizr AI studies the event and provides event-specific guidance where the event qualifies.</li>
             <li style="margin:0;line-height:1.55;">Verification (KYC / bank / GSTIN, if applicable) runs alongside event setup.</li>
           </ul>
           <p style="margin:0 0 18px;">

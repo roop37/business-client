@@ -197,7 +197,7 @@ const LEGAL_CONTENT: Record<LegalSlug, LegalContent> = {
         body: [
           "Hoizr organizer access is not gated behind a subscription, setup fee, listing fee, or card-details requirement before publishing events.",
           "Event organizers set event ticket prices, ticket types, complimentary access, guestlists, and RSVP rules. Customers may pay the ticket value, applicable taxes, and any payment-provider or legal charges shown during checkout.",
-          "AI Event Assistant may study event format, city, scale, ticket mix, and listing quality to provide the best possible offer and lowered commission where the event qualifies. Offer details, if any, are shown in the relevant event workflow before publishing or settlement.",
+          "AI Event Assistant may study event format, city, scale, ticket mix, and listing quality to provide event-specific guidance where the event qualifies. Offer details, if any, are shown in the relevant event workflow before publishing or settlement.",
         ],
       },
       {
