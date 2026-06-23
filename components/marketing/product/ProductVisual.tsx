@@ -10,31 +10,6 @@ type ProductVisualProps = {
   className?: string;
 };
 
-const FALLBACK_STORY_IMAGES: Record<string, string> = {
-  "reviews-engine": "/marketing/product/event-review-platform.png",
-};
-
-const PRODUCT_VISUAL_IMAGES: Record<string, string> = {
-  "event-marketplace": "/marketing/product/EventMarketplaceInsta.png",
-  "event-seo": "/marketing/product/AISEOnewinsta.png",
-  "organisation-page": "/marketing/product/organisationpagenew.png",
-  "listings-management": "/marketing/product/ listingsmanagementnew.png",
-  "event-listing": "/marketing/product/eventListingnew.png",
-  "smart-upsells": "/marketing/product/Add-onsnew.png",
-  "find-best-promoters": "/marketing/product/Promoternew.png",
-  "find-trending-artists": "/marketing/product/TrendingArtistsnew.png",
-  "marketing-campaigns": "/marketing/product/Multi-channel-marketing-new.png",
-  "email-sms-marketing": "/marketing/product/Owned-channel-outreach-campaign.png",
-  "push-notifications": "/marketing/product/Push-notifications-app.png",
-  "conversation-marketing": "/marketing/product/Conversation-marketing-UI.png",
-  "loyalty-rewards": "/marketing/product/Loyalty-rewards-new.png",
-  "reporting-analytics": "/marketing/product/Futuristic-analytics-dashboard.png",
-  "door-scanning": "/marketing/product/Door-staff-QR.png",
-  automations: "/marketing/product/Futuristic-automation-UI-design-new  .png",
-  "ai-event-assistant": "/marketing/product/AI-event-assistant-UI-new .png",
-  "guestlist-management": "/marketing/product/Guestlist-management-UI.png",
-};
-
 const EASE = [0.2, 0.7, 0.2, 1] as const;
 
 /**
@@ -55,9 +30,7 @@ export const ProductVisual = ({
   className = "",
 }: ProductVisualProps) => {
   const storyImage =
-    PRODUCT_VISUAL_IMAGES[slug] ??
-    FALLBACK_STORY_IMAGES[slug] ??
-    getProductStoryImageSrc("event-marketplace");
+    getProductStoryImageSrc(slug) ?? "/marketing/brand/metallic-line-portrait.png";
 
   return (
     <div className={`relative ${className}`}>
@@ -94,7 +67,7 @@ export const ProductVisual = ({
       >
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
-          src={storyImage ?? "/marketing/brand/metallic-line-portrait.png"}
+          src={storyImage}
           alt=""
           aria-hidden
           className={`block h-auto w-full rounded-[24px] shadow-[0_22px_50px_-20px_rgba(15,15,15,0.25)] ${
