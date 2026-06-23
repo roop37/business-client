@@ -7,44 +7,15 @@ import {
   BreadcrumbJsonLd,
   JsonLdScript,
 } from "@/components/marketing/seo/SchemaJsonLd";
+import { ComingSoonBento } from "@/components/marketing/sections/ComingSoonBento";
 
 const SITE_URL = "https://business.hoizr.com";
 
 export const metadata: Metadata = {
-  title: "Hoizr products for event organizers, venues & promoters",
+  title: "Hoizr products for Indian event organisers",
   description:
-    "Explore Hoizr products for Indian event organizers, venues, and promoters: ticketing, event SEO, fan CRM, marketing campaigns, door scanning, guestlist management, analytics, and AI event evaluation.",
-  keywords: [
-    "Hoizr products",
-    "event ticketing platform India",
-    "event marketing platform India",
-    "fan CRM for events",
-    "door scanning India",
-    "guestlist management India",
-    "AI event evaluation",
-    "event analytics India",
-  ],
-  alternates: {
-    canonical: "/product",
-    languages: { "en-IN": "/product", "x-default": "/product" },
-  },
-  openGraph: {
-    title: "Hoizr products for event organizers, venues & promoters",
-    description:
-      "Ticketing, fan CRM, marketing, discovery, door ops, and analytics for India's live-event operators.",
-    url: "/product",
-    type: "website",
-    siteName: "Hoizr",
-    locale: "en_IN",
-    images: [
-      {
-        url: "/opengraph-image.webp",
-        width: 1200,
-        height: 630,
-        alt: "Hoizr products for Indian event organizers and venues",
-      },
-    ],
-  },
+    "Explore Hoizr ticketing, audience, campaign, guestlist, scanning, reporting and settlement tools for Indian event organisers.",
+  alternates: { canonical: "/product" },
 };
 
 const productHubJsonLd = {
@@ -134,6 +105,8 @@ export default function ProductIndexPage() {
               </section>
             ))}
           </div>
+
+          <ComingSoonBento />
         </div>
       </section>
     </MarketingShell>

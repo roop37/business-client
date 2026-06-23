@@ -58,6 +58,40 @@ test("marketing metadata only enumerates current products", () => {
   assert.doesNotMatch(sitemap, /COMING_SOON_PRODUCTS/);
 });
 
+test("product hub uses the new current-products metadata and coming-soon section", () => {
+  const source = read("app/product/page.tsx");
+
+  assert.match(source, /title:\s*"Hoizr products for Indian event organisers"/);
+  assert.match(
+    source,
+    /description:\s*"Explore Hoizr ticketing, audience, campaign, guestlist, scanning, reporting and settlement tools for Indian event organisers\."/
+  );
+  assert.match(source, /alternates:\s*\{\s*canonical:\s*"\/product"\s*\}/);
+  assert.match(source, /ComingSoonBento/);
+  assert.match(source, /MARKETING_PILLARS\.map/);
+});
+
+test("product hero uses Get Started and Book a Demo CTAs", () => {
+  const source = read("components/marketing/product/ProductHero.tsx");
+
+  assert.match(source, /href="\/signup"/);
+  assert.match(source, /<span>Get Started<\/span>/);
+  assert.match(source, /href="\/book-a-demo"/);
+  assert.match(source, /Book a Demo/);
+  assert.doesNotMatch(source, /Why Hoizr/);
+  assert.doesNotMatch(source, /Get started<\/span>/);
+});
+
+test("coming soon bento is a reusable marketing section", () => {
+  const source = read("components/marketing/sections/ComingSoonBento.tsx");
+
+  assert.match(source, /"use client";/);
+  assert.match(source, /COMING_SOON_PRODUCTS/);
+  assert.match(source, /The next layer of audience and event tools\./);
+  assert.match(source, /Book a Demo/);
+  assert.match(source, /href="\/book-a-demo"/);
+});
+
 test("legacy product URLs are represented in redirect configuration", () => {
   const config = read("next.config.mjs");
   const legacyPaths = [

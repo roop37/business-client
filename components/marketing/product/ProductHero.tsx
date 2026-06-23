@@ -123,15 +123,15 @@ export const ProductHero = ({ content }: { content: ProductContent }) => {
             transition={{ duration: 0.7, ease: EASE, delay: 0.45 }}
           >
             <Link href="/signup" className="hm-btn hm-btn-primary">
-              <span>Get started</span>
+              <span>Get Started</span>
               <ArrowRight size={16} />
             </Link>
             <Link
-              href="/about"
+              href="/book-a-demo"
               className="hm-btn hm-btn-ghost border border-[var(--m-border)]"
             >
               <PlayCircle size={16} />
-              Why Hoizr
+              Book a Demo
             </Link>
           </motion.div>
         </motion.div>
