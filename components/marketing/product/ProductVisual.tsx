@@ -10,29 +10,28 @@ type ProductVisualProps = {
   className?: string;
 };
 
-const FALLBACK_STORY_IMAGES: Record<string, string> = {
-  "reviews-engine": "/marketing/product/event-review-platform.png",
-};
-
 const PRODUCT_VISUAL_IMAGES: Record<string, string> = {
-  "event-marketplace": "/marketing/product/EventMarketplaceInsta.png",
-  "event-seo": "/marketing/product/AISEOnewinsta.png",
-  "organisation-page": "/marketing/product/organisationpagenew.png",
-  "listings-management": "/marketing/product/ listingsmanagementnew.png",
-  "event-listing": "/marketing/product/eventListingnew.png",
+  // Sell tickets
+  "event-ticketing": "/marketing/product/eventListingnew.png",
+  "free-rsvp-events": "/marketing/product/EventMarketplaceInsta.png",
   "smart-upsells": "/marketing/product/Add-onsnew.png",
-  "find-best-promoters": "/marketing/product/Promoternew.png",
-  "find-trending-artists": "/marketing/product/TrendingArtistsnew.png",
-  "marketing-campaigns": "/marketing/product/Multi-channel-marketing-new.png",
-  "email-sms-marketing": "/marketing/product/Owned-channel-outreach-campaign.png",
-  "push-notifications": "/marketing/product/Push-notifications-app.png",
-  "conversation-marketing": "/marketing/product/Conversation-marketing-UI.png",
-  "loyalty-rewards": "/marketing/product/Loyalty-rewards-new.png",
-  "reporting-analytics": "/marketing/product/Futuristic-analytics-dashboard.png",
-  "door-scanning": "/marketing/product/Door-staff-QR.png",
+  "offline-ticketing": "/marketing/product/Door-staff-QR.png",
+  // Own your audience
+  "fan-crm": "/marketing/product/Owned-channel-outreach-campaign.png",
+  "organisation-page": "/marketing/product/organisationpagenew.png",
+  "event-discovery": "/marketing/product/AISEOnewinsta.png",
+  // Grow repeat fans
+  "email-marketing": "/marketing/product/Multi-channel-marketing-new.png",
+  "whatsapp-marketing": "/marketing/product/Conversation-marketing-UI.png",
   automations: "/marketing/product/Futuristic-automation-UI-design-new  .png",
-  "ai-event-assistant": "/marketing/product/AI-event-assistant-UI-new .png",
+  // Run the night
   "guestlist-management": "/marketing/product/Guestlist-management-UI.png",
+  "door-scanning": "/marketing/product/Door-staff-QR.png",
+  // Get paid & decide
+  "reporting-analytics": "/marketing/product/Futuristic-analytics-dashboard.png",
+  "ai-event-assistant": "/marketing/product/AI-event-assistant-UI-new .png",
+  // For artists
+  "artist-vertical": "/marketing/product/TrendingArtistsnew.png",
 };
 
 const EASE = [0.2, 0.7, 0.2, 1] as const;
@@ -56,8 +55,8 @@ export const ProductVisual = ({
 }: ProductVisualProps) => {
   const storyImage =
     PRODUCT_VISUAL_IMAGES[slug] ??
-    FALLBACK_STORY_IMAGES[slug] ??
-    getProductStoryImageSrc("event-marketplace");
+    getProductStoryImageSrc(slug) ??
+    "/marketing/brand/metallic-line-portrait.png";
 
   return (
     <div className={`relative ${className}`}>

@@ -30,7 +30,7 @@ export const FinalCTA = () => {
         <div className="relative">
         <span className="inline-flex items-center gap-2 rounded-full bg-white/10 border border-white/15 px-3 py-1.5 text-[12px] font-semibold tracking-wider text-white/95 backdrop-blur">
           <span className="h-1.5 w-1.5 rounded-full bg-[var(--m-acid)]" />
-          Full event operating stack
+          One platform for the whole night
         </span>
 
         <h2
@@ -40,12 +40,13 @@ export const FinalCTA = () => {
             fontSize: "clamp(44px, 7vw, 88px)",
           }}
         >
-          The easiest way to grow your events in India.
+          Run your next night like you own the crowd.
         </h2>
 
         <p className="mt-6 text-[17px] leading-relaxed text-white/75 max-w-[560px] mx-auto">
-          Direct sales. Owned fan CRM. AI event evaluation. No setup fee, no
-          subscription, no card details required. Publish events directly.
+          Direct ticketing, your own fan CRM, WhatsApp and email, and a door
+          that works offline. Free to start — no setup fee, no subscription, no
+          card.
         </p>
 
         <div className="mt-10 flex items-center justify-center gap-3 flex-wrap">
@@ -54,12 +55,12 @@ export const FinalCTA = () => {
             <ArrowRight size={16} />
           </Link>
           <Link
-            href="/how-it-works"
+            href="/book-a-demo"
             className="hm-btn hm-btn-on-dark border border-white/15"
             style={{ background: "transparent", color: "white" }}
           >
             <PlayCircle size={16} />
-            See how it works
+            Book a demo
           </Link>
         </div>
         </div>

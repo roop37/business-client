@@ -14,14 +14,14 @@ import {
 import Link from "next/link";
 import { BlurImage } from "../visuals/BlurImage";
 const EASE = [0.2, 0.6, 0.2, 1] as const;
-const HERO_VERTICALS = ["comedy", "clubbing", "dining", "festivals", "concerts"];
+const HERO_VERTICALS = ["club nights", "festivals", "comedy", "concerts", "house parties"];
 
 const HERO_BADGES: { icon: LucideIcon; label: string }[] = [
-  { icon: BadgeCheck, label: "No gatekeeping" },
-  { icon: Ticket, label: "Direct ticketing" },
-  { icon: Sparkles, label: "AI rate quote" },
+  { icon: BadgeCheck, label: "Free to start" },
+  { icon: Ticket, label: "Online + cash tickets" },
   { icon: Users, label: "Your fan CRM" },
-  { icon: ScanLine, label: "Door + scanners" },
+  { icon: ScanLine, label: "Offline door scanning" },
+  { icon: Sparkles, label: "AI rate where eligible" },
   { icon: BarChart3, label: "Settlement-ready" },
 ];
 
@@ -54,7 +54,7 @@ export const Hero = () => {
           <span className="hm-chip max-w-full flex-wrap justify-center text-center leading-snug">
             <span className="hm-chip-dot shrink-0" />
             <span className="font-semibold text-[var(--m-ink-1)]">
-              For India&apos;s Top Organizers &amp; Venues
+              Built for Indian event organizers
             </span>
             <span className="hidden text-[var(--m-ink-4)] sm:inline">
               : {HERO_VERTICALS.join(" · ")}
@@ -78,7 +78,7 @@ export const Hero = () => {
             }}
             className="block"
           >
-            Fill the room.
+            Sell out the night.
           </motion.span>
           <motion.span
             variants={{
@@ -87,7 +87,7 @@ export const Hero = () => {
             }}
             className="block text-[var(--m-forest-600)]"
           >
-            Keep the room.
+            Own every fan.
           </motion.span>
         </motion.h1>
 
@@ -97,9 +97,10 @@ export const Hero = () => {
           transition={{ duration: 0.7, ease: EASE, delay: 0.35 }}
           className="hm-lead mx-auto mt-6 max-w-[640px]"
         >
-          Hoizr is the ticketing, marketing, and ops stack built for the way
-          India actually goes out. Publish events directly, keep your fan CRM,
-          and let AI study each event for the best possible offer.
+          Hoizr is the ticketing, marketing, and door platform for Indian
+          nights — where every buyer becomes your customer, not a
+          marketplace&apos;s. Sell online or in cash, fill the room, and bring
+          the same crowd back.
         </motion.p>
 
         <motion.div
@@ -112,8 +113,11 @@ export const Hero = () => {
             Get started
             <ArrowRight size={16} />
           </Link>
-          <Link href="/how-it-works" className="hm-btn hm-btn-ghost border border-[var(--m-border)]">
-            See how it works
+          <Link
+            href="/book-a-demo"
+            className="hm-btn border border-[var(--m-border-strong)] bg-[var(--m-surface)] text-[var(--m-ink-1)] transition-colors hover:border-[var(--m-forest-500)] hover:bg-[var(--m-canvas-2)]"
+          >
+            Book a demo
           </Link>
         </motion.div>
 

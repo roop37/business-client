@@ -1,27 +1,32 @@
+/**
+ * Per-product story image (reuses existing art in /public/marketing and
+ * /public/images). Slugs that have no good existing image return null —
+ * the gallery and product pages fall back to a brand panel, so a missing
+ * entry never breaks a page. Filenames with stray spaces are intentional
+ * (that's how the assets are named on disk).
+ */
 export const PRODUCT_STORY_IMAGES: Record<string, string> = {
-  "event-marketplace": "/marketing/product/EventMarketplaceInsta.png",
-  "event-seo": "/marketing/product/AISEOnewinsta.png",
-  "organisation-page": "/marketing/product/organisationpagenew.png",
-  "reviews-engine": "/marketing/product/event-review-platform.png",
-  "listings-management": "/marketing/product/ listingsmanagementnew.png",
-  "event-listing": "/marketing/product/eventListingnew.png",
+  // Sell tickets
+  "event-ticketing": "/marketing/product/eventListingnew.png",
+  "free-rsvp-events": "/marketing/product/EventMarketplaceInsta.png",
   "smart-upsells": "/marketing/product/Add-onsnew.png",
-  "find-best-promoters": "/marketing/product/Promoternew.png",
-  "find-trending-artists": "/marketing/product/TrendingArtistsnew.png",
-  "marketing-campaigns": "/images/hero/Marketing-Campaigns-home-Grow-repeat-fans.png",
-  "email-sms-marketing": "/images/hero/Email-SMS-Marketing-home-Grow-repeat-fans.png",
-  "push-notifications": "/images/hero/Push-Notifications-Home-Grow-repeat-fans.png",
-  "conversation-marketing": "/images/hero/Conversation-Marketing-home-Grow-repeat-fans.png",
-  "loyalty-rewards": "/images/hero/Loyalty-Rewards-home-Grow-repeat-fans.png",
-  "reporting-analytics": "/images/hero/Reporting-Analytics-Home-run-your-events.png",
+  "offline-ticketing": "/marketing/product/Door-staff-QR.png",
+  // Own your audience
+  "fan-crm": "/marketing/product/Owned-channel-outreach-campaign.png",
+  "organisation-page": "/marketing/product/organisationpagenew.png",
+  "event-discovery": "/marketing/product/AISEOnewinsta.png",
+  // Grow repeat fans
+  "email-marketing": "/images/hero/Email-SMS-Marketing-home-Grow-repeat-fans.png",
+  "whatsapp-marketing": "/marketing/product/Conversation-marketing-UI.png",
+  automations: "/marketing/product/Futuristic-automation-UI-design-new  .png",
+  // Run the night
+  "guestlist-management": "/marketing/product/Guestlist-management-UI.png",
   "door-scanning": "/images/hero/Door-Scanning-hero-run-your-event.png",
-  automations: "/images/hero/Automations-home-Run-your-events.png",
-  "ai-event-assistant": "/images/hero/AI-Event-Assistant-home-Run-your-events.png",
-  // The new AI/intelligence pages reuse the AI Event Assistant 4:5
-  // hero (claude × hoizr) until dedicated artwork ships.
-  "ai-marketing-intelligence": "/images/hero/AI-Event-Assistant-home-Run-your-events.png",
-  "competitive-analysis": "/images/hero/AI-Event-Assistant-home-Run-your-events.png",
-  "guestlist-management": "/images/hero/%20Guestlist-Management-home-Run-your-events.png",
+  // Get paid & decide
+  "reporting-analytics": "/marketing/product/Futuristic-analytics-dashboard.png",
+  "ai-event-assistant": "/marketing/product/AI-event-assistant-UI-new .png",
+  // For artists
+  "artist-vertical": "/marketing/product/TrendingArtistsnew.png",
 };
 
 export const getProductStoryImageSrc = (slug: string) =>
