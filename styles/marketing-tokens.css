@@ -157,16 +157,17 @@
   font-family: var(--m-font-display);
   font-weight: 700;
   font-size: clamp(48px, 8vw, 104px);
-  line-height: 1.0;
-  letter-spacing: -0.035em;
+  /* Line-height / tracking tuned for Manrope (looser than the old Bodoni). */
+  line-height: 1.06;
+  letter-spacing: -0.025em;
   text-wrap: balance;
 }
 .hoizr-marketing .hm-h2 {
   font-family: var(--m-font-display);
   font-weight: 700;
   font-size: clamp(36px, 4.8vw, 60px);
-  line-height: 1.06;
-  letter-spacing: -0.025em;
+  line-height: 1.12;
+  letter-spacing: -0.02em;
   text-wrap: balance;
 }
 .hoizr-marketing .hm-h3 {

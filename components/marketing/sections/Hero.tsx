@@ -44,7 +44,7 @@ export const Hero = () => {
       {/* Hero background intentionally empty — the marketing canvas
           colour underneath does all the work. PixelBlast removed per
           spec. */}
-      <div className="hm-section relative pt-12 pb-14 text-center md:pt-20 md:pb-20">
+      <div className="hm-section relative pt-12 pb-6 text-center md:pt-20 md:pb-8">
         <motion.div
           initial={{ opacity: 0, y: 8 }}
           animate={{ opacity: 1, y: 0 }}
