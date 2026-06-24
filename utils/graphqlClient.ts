@@ -805,11 +805,18 @@ Object.assign(sdk, {
             startDate
             endDate
             markSeparateDays
+            multiCity
             days {
               dayId
               title
               startDate
               endDate
+              location {
+                addressLine1
+                city
+                state
+                pincode
+              }
             }
             isComingSoon
             genreTagIds

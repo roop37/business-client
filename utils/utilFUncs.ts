@@ -435,6 +435,28 @@ export const formatReportType = (value: string) => {
       return "";
   }
 };
+/**
+ * Derive the DISPLAY status of an event from its stored status + dates. A
+ * PUBLISHED event whose window contains "now" shows as "Ongoing"; one whose end
+ * has passed shows "Completed" even if the cron hasn't flipped it yet. Anything
+ * else returns the raw status untouched. Pure (caller passes `now` or defaults).
+ */
+export const eventDisplayStatus = (
+  status?: string | null,
+  startDate?: string | Date | null,
+  endDate?: string | Date | null,
+  now: Date = new Date()
+): string => {
+  const raw = String(status ?? "").trim();
+  if (!/^published$/i.test(raw)) return raw || "Draft";
+  const t = now.getTime();
+  const s = startDate ? new Date(startDate).getTime() : NaN;
+  const e = endDate ? new Date(endDate).getTime() : NaN;
+  if (!Number.isNaN(e) && t > e) return "Completed";
+  if (!Number.isNaN(s) && t >= s && (Number.isNaN(e) || t <= e)) return "Ongoing";
+  return raw; // Published (upcoming)
+};
+
 export const formatOrderStatus = (value: string) => {
   const c = value as OrderStatus;
   switch (c) {

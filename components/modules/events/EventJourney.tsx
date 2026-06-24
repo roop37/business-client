@@ -85,6 +85,7 @@ import {
   CheckCircle2Icon,
   CircleDashedIcon,
   ClockIcon,
+  CopyIcon,
   DoorOpenIcon,
   Edit3Icon,
   EyeIcon,
@@ -185,11 +186,21 @@ type TicketDraft = {
 // Festival-pass sentinel — mirrors ALL_DAYS_TICKET in @hoizr-technology/shared.
 const ALL_DAYS_TICKET = "ALL_DAYS";
 
+type EventDayCityDraft = {
+  addressLine1: string;
+  city: string;
+  state?: string;
+  pincode?: string;
+};
+
 type EventDayDraft = {
   dayId: string;
   title: string;
   startDate: string; // datetime-local string (UTC-sliced, like toDateTimeInput)
   endDate: string;
+  // Per-day venue for a multi-city event. Undefined ⇒ uses the event's single
+  // top-level location.
+  location?: EventDayCityDraft;
 };
 
 type HoizrExtraTypeValue =
@@ -768,6 +779,8 @@ const EventJourney = ({
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
   const [markSeparateDays, setMarkSeparateDays] = useState(false);
+  // Multi-city: each day has its own venue (only offered when multi-day).
+  const [multiCity, setMultiCity] = useState(false);
   // Per-day segments for a multi-day event (Day 1…N). Empty = single-day.
   const [eventDays, setEventDays] = useState<EventDayDraft[]>([]);
   // Day validation is surfaced inline only AFTER a Next/Update attempt — never
@@ -1075,6 +1088,68 @@ const EventJourney = ({
     );
   };
 
+  // Patch a single day's per-city venue (multi-city events).
+  const updateEventDayCity = (
+    index: number,
+    patch: Partial<EventDayCityDraft>
+  ) =>
+    setEventDays((prev) =>
+      prev.map((d, i) =>
+        i === index
+          ? {
+              ...d,
+              location: {
+                addressLine1: d.location?.addressLine1 ?? "",
+                city: d.location?.city ?? "",
+                state: d.location?.state,
+                pincode: d.location?.pincode,
+                ...patch,
+              },
+            }
+          : d
+      )
+    );
+
+  // Multi-city is only meaningful for an eligible multi-day event.
+  const multiCityEligible = multiDayEligible && markSeparateDays;
+
+  // Human label for a ticket's day tag on the list rows (multi-day events).
+  // Empty for single-day / untagged so the badge is hidden.
+  const ticketDayLabel = (dayId?: string): string => {
+    if (!markSeparateDays || !multiDayEligible || eventDays.length < 2) return "";
+    if (!dayId) return "";
+    if (dayId === ALL_DAYS_TICKET) return "All days";
+    const idx = eventDays.findIndex((d) => d.dayId === dayId);
+    if (idx < 0) return "";
+    return eventDays[idx].title || `Day ${idx + 1}`;
+  };
+
+  // M4: duplicate a ticket → open the modal prefilled with a fresh copy
+  // (new id, "(Copy)" suffix, zero sold) so the host can tweak + save.
+  const duplicateTicket = (index: number) => {
+    const src = tickets[index];
+    if (!src) return;
+    setTicketEditIndex(null); // brand-new ticket, not an edit
+    setTicketCategory(src.ticketCategory);
+    setTicketName(`${src.ticketName} (Copy)`);
+    setTicketDayId(src.dayId ?? (multiCityEligible ? ALL_DAYS_TICKET : ""));
+    setTicketType(src.ticketType);
+    setTicketPrice(src.ticketPrice);
+    setTicketCapacity(src.ticketCapacity);
+    setCoverType(src.coverType);
+    setTicketGST(src.ticketGST);
+    setGstRate(src.gstRate);
+    setGroupCapacity(src.groupCapacity);
+    setMaxTicketPerUser(src.maxTicketPerUser);
+    setTicketExpiryDateTime(src.ticketExpiryDateTime ?? "");
+    setTicketComingSoon(src.markAsComingSoon);
+    setTicketOnGroundOnly(src.markAsOnGroundOnly);
+    setTicketVisible(src.ticketVisible);
+    setTicketDescription(src.description ?? "");
+    setTicketAdvancedOpen(true);
+    setTicketModalOpen(true);
+  };
+
   const stateOptions = useMemo(
     () =>
       Array.from(
@@ -1181,11 +1256,12 @@ const EventJourney = ({
     setTicketOnGroundOnly(false);
     setTicketVisible(true);
     setTicketDescription("");
-    // Default a new ticket to the first day on a multi-day event so it's never
-    // left untagged; single-day events keep it empty.
+    // Default a new ticket to "All days" (the festival pass) on a multi-day
+    // event so it's valid across every day unless the host narrows it;
+    // single-day events keep it empty.
     setTicketDayId(
-      markSeparateDays && multiDayEligible && eventDays[0]
-        ? eventDays[0].dayId
+      markSeparateDays && multiDayEligible && eventDays.length >= 2
+        ? ALL_DAYS_TICKET
         : ""
     );
     setTicketAdvancedOpen(true);
@@ -2288,6 +2364,7 @@ const EventJourney = ({
         setStartDate(toDateTimeInput(event.startDate));
         setEndDate(toDateTimeInput(event.endDate));
         setMarkSeparateDays(Boolean(event.markSeparateDays));
+        setMultiCity(Boolean((event as any).multiCity));
         // Rehydrate days WITH their server dayIds so the ticket "Valid for"
         // picker keeps matching them (re-minting would orphan ticket dayIds).
         setEventDays(
@@ -2297,6 +2374,14 @@ const EventJourney = ({
                 title: d.title ?? "",
                 startDate: toDateTimeInput(d.startDate),
                 endDate: toDateTimeInput(d.endDate),
+                location: d.location?.addressLine1
+                  ? {
+                      addressLine1: d.location.addressLine1 ?? "",
+                      city: d.location.city ?? "",
+                      state: d.location.state ?? undefined,
+                      pincode: d.location.pincode ?? undefined,
+                    }
+                  : undefined,
               }))
             : []
         );
@@ -2555,6 +2640,8 @@ const EventJourney = ({
       startDate: !isComingSoon && startDate ? new Date(startDate) : undefined,
       endDate: !isComingSoon && endDate ? new Date(endDate) : undefined,
       markSeparateDays: multiDayEligible ? markSeparateDays : false,
+      // Multi-city: each day carries its own venue (only when multi-day).
+      multiCity: multiCityEligible ? multiCity : false,
       // Send days[] only for an eligible multi-day event; otherwise [] so the
       // server collapses to single-day and strips ticket dayIds.
       days:
@@ -2564,6 +2651,17 @@ const EventJourney = ({
               title: d.title,
               startDate: new Date(d.startDate),
               endDate: new Date(d.endDate),
+              // Per-day venue only when multi-city is on AND the day has one.
+              location:
+                multiCity && d.location?.addressLine1?.trim()
+                  ? {
+                      addressLine1: d.location.addressLine1.trim(),
+                      city: d.location.city?.trim() || undefined,
+                      state: d.location.state?.trim() || undefined,
+                      pincode: d.location.pincode?.trim() || undefined,
+                      formattedAddress: d.location.addressLine1.trim(),
+                    }
+                  : undefined,
             }))
           : [],
       isVisible,
@@ -3864,6 +3962,70 @@ const EventJourney = ({
                           />
                         </div>
                       ) : null}
+
+                      {/* Multi-city — only for an eligible multi-day event. When
+                          on, each day gets its own venue; the address above is
+                          the default/single venue used by any day left blank. */}
+                      {multiCityEligible ? (
+                        <div className="md:col-span-2">
+                          <ToggleSettingRow
+                            title="Multi-city event"
+                            subtitle="Different city each day? Give each day its own venue. Days left blank use the address above."
+                            checked={multiCity}
+                            onCheckedChange={setMultiCity}
+                            disabled={eventStarted}
+                          />
+                          {multiCity ? (
+                            <div className="mt-3 space-y-3 rounded-xl border border-border bg-gray-50 p-3">
+                              {eventDays.map((day, i) => (
+                                <div
+                                  key={day.dayId}
+                                  className="rounded-lg border border-border bg-background p-3"
+                                >
+                                  <div className="mb-2 text-sm font-semibold">
+                                    {day.title || `Day ${i + 1}`}
+                                  </div>
+                                  <div className="grid gap-2 md:grid-cols-2">
+                                    <input
+                                      value={day.location?.addressLine1 ?? ""}
+                                      onChange={(e) =>
+                                        updateEventDayCity(i, {
+                                          addressLine1: e.target.value,
+                                        })
+                                      }
+                                      disabled={eventStarted}
+                                      placeholder="Venue / address"
+                                      className="rounded-md border border-border bg-background px-3 py-2 text-sm md:col-span-2"
+                                    />
+                                    <input
+                                      value={day.location?.city ?? ""}
+                                      onChange={(e) =>
+                                        updateEventDayCity(i, {
+                                          city: e.target.value,
+                                        })
+                                      }
+                                      disabled={eventStarted}
+                                      placeholder="City"
+                                      className="rounded-md border border-border bg-background px-3 py-2 text-sm"
+                                    />
+                                    <input
+                                      value={day.location?.state ?? ""}
+                                      onChange={(e) =>
+                                        updateEventDayCity(i, {
+                                          state: e.target.value,
+                                        })
+                                      }
+                                      disabled={eventStarted}
+                                      placeholder="State (optional)"
+                                      className="rounded-md border border-border bg-background px-3 py-2 text-sm"
+                                    />
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          ) : null}
+                        </div>
+                      ) : null}
                     </div>
                   </StepSection>
                 ) : null}
@@ -3944,8 +4106,15 @@ const EventJourney = ({
                                     className="grid gap-3 border-b border-[var(--owner-bg-subtle)] px-4 py-3 text-sm last:border-b-0 md:grid-cols-[minmax(0,1.4fr)_120px_150px] md:items-center"
                                   >
                                     <div className="min-w-0">
-                                      <div className="truncate font-semibold">
-                                        {ticket.ticketName}
+                                      <div className="flex items-center gap-2">
+                                        <span className="truncate font-semibold">
+                                          {ticket.ticketName}
+                                        </span>
+                                        {ticketDayLabel(ticket.dayId) ? (
+                                          <span className="shrink-0 rounded-full bg-[var(--owner-blue-050)] px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-[var(--owner-blue-500)]">
+                                            {ticketDayLabel(ticket.dayId)}
+                                          </span>
+                                        ) : null}
                                       </div>
                                       <div className="mt-1 text-xs text-[var(--owner-fg-3)]">
                                         {ticket.ticketCategory} ·{" "}
@@ -3984,6 +4153,14 @@ const EventJourney = ({
                                         ) : (
                                           <EyeIcon size={15} />
                                         )}
+                                      </button>
+                                      <button
+                                        type="button"
+                                        onClick={() => duplicateTicket(index)}
+                                        className="inline-flex h-9 w-9 items-center justify-center rounded-md border border-[var(--owner-border)]"
+                                        title="Duplicate ticket"
+                                      >
+                                        <CopyIcon size={15} />
                                       </button>
                                       <button
                                         type="button"
@@ -4971,17 +5148,17 @@ const EventJourney = ({
                   eventDays.length >= 2 ? (
                     <Select
                       label="Valid for *"
-                      value={ticketDayId || eventDays[0]?.dayId || ""}
+                      value={ticketDayId || ALL_DAYS_TICKET}
                       onChange={(value) => setTicketDayId(value)}
                       options={[
-                        ...eventDays.map((d, i) => ({
-                          value: d.dayId,
-                          label: d.title || `Day ${i + 1}`,
-                        })),
                         {
                           value: ALL_DAYS_TICKET,
                           label: "All days (festival pass)",
                         },
+                        ...eventDays.map((d, i) => ({
+                          value: d.dayId,
+                          label: d.title || `Day ${i + 1}`,
+                        })),
                       ]}
                     />
                   ) : null}
