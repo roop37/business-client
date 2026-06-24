@@ -120,8 +120,10 @@
 }
 
 /* ---------- Wordmark ---------- */
+/* The HOIZR logo keeps its original Bodoni Moda serif face even though
+   the rest of the marketing site moved to Manrope (Roop, 2026-06-24). */
 .hoizr-marketing .hoizr-mark {
-  font-family: var(--m-font-display);
+  font-family: var(--font-bodoni-moda), "Didot", Georgia, serif;
   font-weight: 700;
   letter-spacing: 0.04em;
   line-height: 1;
