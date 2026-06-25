@@ -153,6 +153,41 @@
     "height": 1402,
     "mtime": 1779568093013.7139
   },
+  "/images/home/ai-scan-home.png": {
+    "hash": "UDPQBJ0000kR_4Rlxu.79Fxu-;%M?aNFD%Rj",
+    "dataURL": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABgAAAAOCAMAAAACJixMAAAAJFBMVEXx8vTr7vDIydPg4ua1t8HY2uDQ0di+v8zm6eymqLGXmqGDho7YLNUSAAAACXBIWXMAAAsTAAALEwEAmpwYAAAAkUlEQVR42l2PURLEIAhDETBoe//7bgDb3Vn8UPMmEGS7avjegWlrrTHGWjY15AAPWMkNoAe467QxRKQASYPw0LlSf4lc1EgU1rpkswJpUcVjKEuCmxZMJnp0Ek5P0En/dMhNyztYxgEoQIt9BzTQAs7lejee7qRyXZkL9lOpc3MWVwGQocGA9VLxqojoOzV+Qj+MMgU/1zAa7wAAAABJRU5ErkJggg==",
+    "width": 1672,
+    "height": 941,
+    "mtime": 1782390376640.723
+  },
+  "/images/home/guestlist-home.png": {
+    "hash": "U79sn$W=02sR~8Iq0i=_$yWCNes.Shj[smW:",
+    "dataURL": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABgAAAAOCAMAAAACJixMAAAAGFBMVEUNDhEbGhswKiJGOylkVTpYSjJ6ZT6UdkDuUVs/AAAACXBIWXMAAAsTAAALEwEAmpwYAAAAWklEQVR42n2OSQ7AMAgDWQz5/48biJRQGtVHj8ZAlGEWNbgDKsx0wiLRD4dNUvoQfMz4F+Af4AbmCW/Hz1N2A8i+LwUw0yrwFhqIfgNpQBdIoRuWQy+wlEjpH+9EAqClYa3QAAAAAElFTkSuQmCC",
+    "width": 1672,
+    "height": 941,
+    "mtime": 1782385947419.9873
+  },
+  "/images/home/manage-event-home.png": {
+    "hash": "UBM7x|8{00NE00xwM_-;00t7~qITR%%LxuIV",
+    "dataURL": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABgAAAAOCAMAAAACJixMAAAASFBMVEX19fQLCwzCwcYsLjG3uLvu7e0+QEPW1ddKS1FXWWCeoKJ8fIPp6ere3eAbHB5maG2srbysra2jpLCPkZRzdHvMzM+XlqGFhpPy70K5AAAACXBIWXMAAAsTAAALEwEAmpwYAAAAtUlEQVR42mWQSw4EIQgFEW1Fbdu/3v+mA2bSs5havsoDAij1aEueISLLaP08SikQQXnEwxgjZ2/1c4S2fuzV6iGEHjOxgVPYreB0wpxYd+aOCB9XQZfui7nvhGHQEZYLJ4fD7ermNSCTlplvDpcznQ8AWR3wl8OVcMXswVofWby5iLbjAKI/McvqW8RYxn1PEtw0LSwRudfpUnJfJprSGguZZRDRvBQG+HFcCfKM1ZkVQmullA8leAw0qr6a4wAAAABJRU5ErkJggg==",
+    "width": 1672,
+    "height": 941,
+    "mtime": 1782389389810.2827
+  },
+  "/images/home/marketing-hero.png": {
+    "hash": "URNTzYIB9F~qWBRjt7xuIU%MIUD$?bt7IUIU",
+    "dataURL": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABgAAAAOCAMAAAACJixMAAAAM1BMVEWqqqqgn5+TkZFgXFtGRUX29vfOzs6GhYXEw8N6eHjZ2NltbW3n5+e1srI0NTbu7u4jJCSVn/pkAAAACXBIWXMAAAsTAAALEwEAmpwYAAAAnklEQVR42o2QSw7DMAhEwVC+wcn9T1tcN1IrddHZWPZYw/DgmkyZ7rrlnknE84KLU8cWIgAg4tDkCyZp33G9Q5mImBkoTeDEssLOUCyJoxWGycAO60sH+yg5Hq0zwN8GOjGTwv9Gjd9RYjBUB1icX4ZEWEGXjePTSLSI1V522bvuzNF7mb2crb3g7KELxVJVrQMbyWxW1AhvhhvjgvgEvv8Im9ZaRnIAAAAASUVORK5CYII=",
+    "width": 1672,
+    "height": 941,
+    "mtime": 1782387794788.7795
+  },
+  "/images/home/offline-ticket-hero.png": {
+    "hash": "UEH.Tjxb00M{?IWVE1s:00ay~qj[ozayV@j[",
+    "dataURL": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABgAAAAOCAMAAAACJixMAAAAM1BMVEUMDA3q6+xfYWLX2do/QUOKjI729/kTFBUdHyEsLTCwsrR3eXpoamycnp9QUVPKzMy9vr6rHYnhAAAACXBIWXMAAAsTAAALEwEAmpwYAAAAi0lEQVR42o2QSxIDIQgFESUg4Of+pw3qJDWpmkV6+bqeAgAALLV0dAsce6nCsGGO3KltyHv5CqmR6xzBVPJPhUVKtzZzCvJo1o/g9QOS5vQKUlbCIsts4b+iPgv/R+DDU3CJkc5Uatfnu7LGHTkYesa9FomKNZ1B5Hi7SVTQaHPP1+7riuiO54ZLvAESuAiZUyos6wAAAABJRU5ErkJggg==",
+    "width": 1672,
+    "height": 941,
+    "mtime": 1782385965675.178
+  },
   "/images/pexels-maumascaro-801863_st01gd.jpg": {
     "hash": "UJ9Qmq?b%Mof~q?b%Mof?b-;%Mt7xu%Mxut7",
     "dataURL": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABgAAAAQCAMAAAA7+k+nAAAAJ1BMVEUQEBAaGhokJCQzMzMsLCxVVVU+Pj5HR0djY2N3d3eUlJS3t7fV1dX24096AAAACXBIWXMAAAsTAAALEwEAmpwYAAAAg0lEQVR42m2OQRLDIAwDhW1CgP7/vZUI0KbNXtBojQH9RXqrZzk8wiKOknMuBzpNl8jDhC/ROmkU0zh7RdQm6hR+XZA4a1XLfgoZJuRNuVbRaAI6mQY+XvcR4F/wuybDZLAFh2MHijSxz4RpACLhV6aEzXJzA3BTj/W+9d/job+9pPQG8VwFQvhLY7cAAAAASUVORK5CYII=",
@@ -200,7 +235,7 @@
     "dataURL": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABgAAAAPCAMAAADJev/pAAAABlBMVEX3+fju8/CKViHCAAAACXBIWXMAAAsTAAALEwEAmpwYAAAASElEQVR42nWPWxIAMAQD4/6X7ssQGjH9sSUB20KV3Z4/xgFIBQTDqZwD6n8CUP1c+mUbCeWo7j53y+/q6AWH2Jl+wk34tMlJC3KXAHokDMxPAAAAAElFTkSuQmCC",
     "width": 1586,
     "height": 992,
-    "mtime": 1782321885263.5017
+    "mtime": 1782373028815.3909
   },
   "/images/playbooks/Nightclub-entrance-with-wristband-check.png": {
     "hash": "U25zdg,CIo]:}G=F,:-C9~=Z$fElE*NvEgS2",
@@ -354,42 +389,42 @@
     "dataURL": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABgAAAAPCAMAAADJev/pAAAABlBMVEX3+fju8/CKViHCAAAACXBIWXMAAAsTAAALEwEAmpwYAAAASElEQVR42nWPWxIAMAQD4/6X7ssQGjH9sSUB20KV3Z4/xgFIBQTDqZwD6n8CUP1c+mUbCeWo7j53y+/q6AWH2Jl+wk34tMlJC3KXAHokDMxPAAAAAElFTkSuQmCC",
     "width": 1586,
     "height": 992,
-    "mtime": 1782323969941.3728
+    "mtime": 1782373028816.2422
   },
   "/marketing/home/get-paid.png": {
     "hash": "U6SPe9?HsA~X?uMxNs%3kB%2EKae?]%Mi|NF",
     "dataURL": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABgAAAAPCAMAAADJev/pAAAABlBMVEX3+fju8/CKViHCAAAACXBIWXMAAAsTAAALEwEAmpwYAAAASElEQVR42nWPWxIAMAQD4/6X7ssQGjH9sSUB20KV3Z4/xgFIBQTDqZwD6n8CUP1c+mUbCeWo7j53y+/q6AWH2Jl+wk34tMlJC3KXAHokDMxPAAAAAElFTkSuQmCC",
     "width": 1586,
     "height": 992,
-    "mtime": 1782323969938.9036
+    "mtime": 1782373028816.8848
   },
   "/marketing/home/grow-repeat-fans.png": {
     "hash": "U6SPe9?HsA~X?uMxNs%3kB%2EKae?]%Mi|NF",
     "dataURL": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABgAAAAPCAMAAADJev/pAAAABlBMVEX3+fju8/CKViHCAAAACXBIWXMAAAsTAAALEwEAmpwYAAAASElEQVR42nWPWxIAMAQD4/6X7ssQGjH9sSUB20KV3Z4/xgFIBQTDqZwD6n8CUP1c+mUbCeWo7j53y+/q6AWH2Jl+wk34tMlJC3KXAHokDMxPAAAAAElFTkSuQmCC",
     "width": 1586,
     "height": 992,
-    "mtime": 1782323969933.6375
+    "mtime": 1782373028817.4646
   },
   "/marketing/home/own-fan-crm.png": {
     "hash": "U6SPe9?HsA~X?uMxNs%3kB%2EKae?]%Mi|NF",
     "dataURL": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABgAAAAPCAMAAADJev/pAAAABlBMVEX3+fju8/CKViHCAAAACXBIWXMAAAsTAAALEwEAmpwYAAAASElEQVR42nWPWxIAMAQD4/6X7ssQGjH9sSUB20KV3Z4/xgFIBQTDqZwD6n8CUP1c+mUbCeWo7j53y+/q6AWH2Jl+wk34tMlJC3KXAHokDMxPAAAAAElFTkSuQmCC",
     "width": 1586,
     "height": 992,
-    "mtime": 1782323969927.3284
+    "mtime": 1782373028818.0508
   },
   "/marketing/home/run-the-night.png": {
     "hash": "U6SPe9?HsA~X?uMxNs%3kB%2EKae?]%Mi|NF",
     "dataURL": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABgAAAAPCAMAAADJev/pAAAABlBMVEX3+fju8/CKViHCAAAACXBIWXMAAAsTAAALEwEAmpwYAAAASElEQVR42nWPWxIAMAQD4/6X7ssQGjH9sSUB20KV3Z4/xgFIBQTDqZwD6n8CUP1c+mUbCeWo7j53y+/q6AWH2Jl+wk34tMlJC3KXAHokDMxPAAAAAElFTkSuQmCC",
     "width": 1586,
     "height": 992,
-    "mtime": 1782323969936.3428
+    "mtime": 1782373028819.5247
   },
   "/marketing/home/sell-tickets.png": {
     "hash": "U6SPe9?HsA~X?uMxNs%3kB%2EKae?]%Mi|NF",
     "dataURL": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABgAAAAPCAMAAADJev/pAAAABlBMVEX3+fju8/CKViHCAAAACXBIWXMAAAsTAAALEwEAmpwYAAAASElEQVR42nWPWxIAMAQD4/6X7ssQGjH9sSUB20KV3Z4/xgFIBQTDqZwD6n8CUP1c+mUbCeWo7j53y+/q6AWH2Jl+wk34tMlJC3KXAHokDMxPAAAAAElFTkSuQmCC",
     "width": 1586,
     "height": 992,
-    "mtime": 1782323969930.665
+    "mtime": 1782373028820.36
   },
   "/marketing/product/ listingsmanagementnew.png": {
     "hash": "U35hc8%MD$WB~qxuD%WB.8t7IUWBtRj]WAax",
@@ -508,49 +543,49 @@
     "dataURL": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAA4AAAAYCAMAAAD9GTxlAAAAM1BMVEUMKV8ONXkNULEYQosGEzMPRpsIHUcDCiQOLmoKI1UtVZkKWMEiPnQHGD48V4gzSnohV6kQxh8RAAAACXBIWXMAAAsTAAALEwEAmpwYAAAAi0lEQVR42l3OCw6EMAhFUZB+QMXp/lc7DzAZnWuMPUmLpePYOtriy0bFlVRwW/u+rwUJGLrCqzMN6hDCDileVzkp8qnkVLt5ZmpOXSRWyqwEYn4oopFkrAivjUZxNwh+kx40C3qrs0n7sfb6xH/5SYZU70mT6gKhpGGKZcNBH5W7N7A1x1PNSfPVH7+j6Qi6ZlMuQAAAAABJRU5ErkJggg==",
     "width": 941,
     "height": 1672,
-    "mtime": 1782324051672.8186
+    "mtime": 1782373028828.9282
   },
   "/marketing/product/artist-vertical.png": {
     "hash": "U25r3]IS?dMx-n-;9ERkI9.8M{j[IAo#oft7",
     "dataURL": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAA4AAAAYCAMAAAD9GTxlAAAAD1BMVEUgIiYUFhkqLTI3O0RJTlsWHGX2AAAACXBIWXMAAAsTAAALEwEAmpwYAAAAXklEQVR42n3OUQ7AIAgD0EK5/5kHFdEs2fhQHwoIM4NN5BEZN90ng1LFShRJbh+qYh53STbWXgvZgyAUgTYZMZA28cGaZ6dWlEX6+n1Z9CGTff1PO7xru9W+dQzjzQdAlQH0sYcKWQAAAABJRU5ErkJggg==",
     "width": 941,
     "height": 1672,
-    "mtime": 1782324051675.79
+    "mtime": 1782373028836.99
   },
   "/marketing/product/automations.png": {
     "hash": "UV4p2%o%WBbztpogV?beogjWabflW@b0j]kD",
     "dataURL": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAA4AAAAYCAMAAAD9GTxlAAAAMFBMVEUDCyIGEzAJHkYIGT0LIk4LJ1oNLmg4W5sXRZMSN3cUS58PXMMOUbAQPYUnXa8sTIg12vC5AAAACXBIWXMAAAsTAAALEwEAmpwYAAAAjUlEQVR42l3OCQ7EIAwDwHCFEI7+/7drA6qqtVBgRGshvQ83Hx371CikfzhWrWuBPksUil7LG+her4205zl0MIldV596yZhNzUn8GGokHjEbglHIQWpT1RIDnuH4TAtWvsSRyYm0hgsmgqi6pITF/A0h51beAtn64a4k0+Yu4d1hehNIDB52hAkS3vmXH37cCCjeer6tAAAAAElFTkSuQmCC",
     "width": 941,
     "height": 1672,
-    "mtime": 1782324051660.775
+    "mtime": 1782373028844.6646
   },
   "/marketing/product/coupons.png": {
     "hash": "U67K*p9D-=D%RN_49FxuxuRjayM{RjWBazWB",
     "dataURL": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAA4AAAAYCAMAAAD9GTxlAAAAHlBMVEUqLDA0NjohIycaGx4+QUcRERNLUVxgZnJ2fImMkp9cl3qMAAAACXBIWXMAAAsTAAALEwEAmpwYAAAAb0lEQVR42nXNURLDIAgE0AVE4/0vHGA1te2EH3ijLHCDiEDNPAquyW2YSmutXESyCcoP+f1gmsysoBpWMEvJHOXTcZh70SIxxCUeWBGqyd5jStRrD5qyigNmhwacTo5xJW3z+uGE06/0f66kb855Aw2EA5dArMKIAAAAAElFTkSuQmCC",
     "width": 941,
     "height": 1672,
-    "mtime": 1782323969945.8755
+    "mtime": 1782373028851.4998
   },
   "/marketing/product/door-scanning.png": {
     "hash": "U75=CK%MD%Rj_NxuITWB-;ofM_ayt7WBRjfQ",
     "dataURL": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAA4AAAAYCAMAAAD9GTxlAAAAElBMVEUVFxsMDhIhJCc1NjpKTE9eX2O3MstHAAAACXBIWXMAAAsTAAALEwEAmpwYAAAATUlEQVR42pXKSQ7AMAhDUQPu/a/chEkJi0r9K54M1IyPR1NFk4NmimaMiyRdyW0yfpsxuqOkJooV0PajiKPBmY8St9zTP8q1nZTNs2++7VEB4v4xuocAAAAASUVORK5CYII=",
     "width": 941,
     "height": 1672,
-    "mtime": 1782324051666.0283
+    "mtime": 1782373028858.6233
   },
   "/marketing/product/email-marketing.png": {
     "hash": "U45X[Yt79Fj[~qofD%fQ-;j[M{ofxuWBWBog",
     "dataURL": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAA4AAAAYCAMAAAD9GTxlAAAAD1BMVEUbHSARExcmKCw2ODxOT1JwHwIiAAAACXBIWXMAAAsTAAALEwEAmpwYAAAAWUlEQVR42m3O2w6AMAwCUAr+/zdrwblLZHvYCW0ygNSVSMRKNqWvDDXVw3re8iZSW81yPfQQJxlykOLGZCd+CfZplgn6mpWvgSudao7xlZFZO1FHW6/CmYM3rGkBy3bL/7QAAAAASUVORK5CYII=",
     "width": 941,
     "height": 1672,
-    "mtime": 1782324051653.038
+    "mtime": 1782373028865.0554
   },
   "/marketing/product/event-discovery.png": {
     "hash": "UK3JWio%WAkatWjVaHkGabaFaGjwWua%jrf,",
     "dataURL": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAA4AAAAYCAMAAAD9GTxlAAAALVBMVEUNLXYKIVkHG0wGFkABBR0LJ2kEEDMPM4QDCygNOJIgO3gLRKsLUsIfSJYdVK/LbLIlAAAACXBIWXMAAAsTAAALEwEAmpwYAAAAgklEQVR42l3KQRaDMAgEUAIiIknuf9wOGFvtLID/BhIRbmQRPVyZhLkpefSL3CAbcxE6zzHmnGGgQhdHkc7yGE6NiYppS5oVzd0UxDK8GGYywpMZbUL9tqIEe1Ghm56PqX21WbE8yOAOPsudXjropyLpQwe1L4oi6wbAta9stL3yxw+tEwddrN0CFAAAAABJRU5ErkJggg==",
     "width": 941,
     "height": 1672,
-    "mtime": 1782324051649.649
+    "mtime": 1782373028871.5261
   },
   "/marketing/product/event-review-platform.png": {
     "hash": "UN4C=9tUV@XDtpoeaIW[V=abnzj[WFb0kEkE",
@@ -564,7 +599,7 @@
     "dataURL": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAA4AAAAYCAMAAAD9GTxlAAAAIVBMVEUGEjgJImIIHFALGUIKJnADDCsWJEwcKlcPLIYwP2koNV5586gZAAAACXBIWXMAAAsTAAALEwEAmpwYAAAAhklEQVR42lWQWRIEIQhD2YSW+x94COJMTz4sn6bCQmstIhVhZhEiQJOxKJXUPcJsUD0y994Zrof2fmH+43jTdYKyFP1JIhIt72DUZy5yBRpUHV18StVCEfAZPPRCUJvt92snq+q1gSca4wLZ7gPGl8Nsg6eta8aeOgdJi96qLWKTfba+l4Mf0r4E33nQLBUAAAAASUVORK5CYII=",
     "width": 941,
     "height": 1672,
-    "mtime": 1782324051621.9497
+    "mtime": 1782373028878.3086
   },
   "/marketing/product/eventListingnew.png": {
     "hash": "U842#_tWM^j;%JoZRikEnbaYabkGNlWZoaa$",
@@ -578,42 +613,42 @@
     "dataURL": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAA4AAAAYCAMAAAD9GTxlAAAAHlBMVEUqLDA0NjohIycaGx4+QUcRERNLUVxgZnJ2fImMkp9cl3qMAAAACXBIWXMAAAsTAAALEwEAmpwYAAAAb0lEQVR42nXNURLDIAgE0AVE4/0vHGA1te2EH3ijLHCDiEDNPAquyW2YSmutXESyCcoP+f1gmsysoBpWMEvJHOXTcZh70SIxxCUeWBGqyd5jStRrD5qyigNmhwacTo5xJW3z+uGE06/0f66kb855Aw2EA5dArMKIAAAAAElFTkSuQmCC",
     "width": 941,
     "height": 1672,
-    "mtime": 1782324051642.188
+    "mtime": 1782373028880.716
   },
   "/marketing/product/free-rsvp-events.png": {
     "hash": "U56a^.xu8_WB~qofD%of%Lj[M{j[%Na{M{jt",
     "dataURL": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAA4AAAAYCAMAAAD9GTxlAAAAElBMVEUWGB4sMDkiJS06PUZNT1RlZ21Q3dZAAAAACXBIWXMAAAsTAAALEwEAmpwYAAAAU0lEQVR42o3MSQ7AMAgDQDD0/19uccISKYf6NrJBoOb+RNxU5SCa3mQ+kbTZYpgJiSQ1qTeGi/mq22KuOU7vWzqCK6fWL2oSZ4tqsbUowMC2/MgLFZMCQRORKyQAAAAASUVORK5CYII=",
     "width": 941,
     "height": 1672,
-    "mtime": 1782324051633.1113
+    "mtime": 1782373028886.596
   },
   "/marketing/product/guestlist-management.png": {
     "hash": "U15hrv00?c00~I?w4ntRH;_400%NOxI9%LD$",
     "dataURL": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAA4AAAAYCAMAAAD9GTxlAAAAG1BMVEUXGyIrLzUSFRk2O0MeIyobJjhAS14mMUZZY3M3KA+DAAAACXBIWXMAAAsTAAALEwEAmpwYAAAAfklEQVR42kXPSQLAIAwCwGBS9f8vLogLPY01i9GiAFREU8JE+YAEMn0gFqWsiojDdMWlKtToMhG40Ul4StWHkdljz6RHdrE8QJyhi1yIPvR6HEgqa/vH/bfPuarKrcz6VtRJ3Br9clBkf5dttyoXc2eOcPgIvqid8BJIfdvAD2hcA89EhznWAAAAAElFTkSuQmCC",
     "width": 941,
     "height": 1672,
-    "mtime": 1782324051664.0647
+    "mtime": 1782373028892.9214
   },
   "/marketing/product/offline-ticketing.png": {
     "hash": "U75=CK%MD%Rj_NxuITWB-;ofM_ayt7WBRjfQ",
     "dataURL": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAA4AAAAYCAMAAAD9GTxlAAAAElBMVEUVFxsMDhIhJCc1NjpKTE9eX2O3MstHAAAACXBIWXMAAAsTAAALEwEAmpwYAAAATUlEQVR42pXKSQ7AMAhDUQPu/a/chEkJi0r9K54M1IyPR1NFk4NmimaMiyRdyW0yfpsxuqOkJooV0PajiKPBmY8St9zTP8q1nZTNs2++7VEB4v4xuocAAAAASUVORK5CYII=",
     "width": 941,
     "height": 1672,
-    "mtime": 1782324051627.8738
+    "mtime": 1782373028896.1013
   },
   "/marketing/product/orders-refunds.png": {
     "hash": "U67K*p9D-=D%RN_49FxuxuRjayM{RjWBazWB",
     "dataURL": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAA4AAAAYCAMAAAD9GTxlAAAAHlBMVEUqLDA0NjohIycaGx4+QUcRERNLUVxgZnJ2fImMkp9cl3qMAAAACXBIWXMAAAsTAAALEwEAmpwYAAAAb0lEQVR42nXNURLDIAgE0AVE4/0vHGA1te2EH3ijLHCDiEDNPAquyW2YSmutXESyCcoP+f1gmsysoBpWMEvJHOXTcZh70SIxxCUeWBGqyd5jStRrD5qyigNmhwacTo5xJW3z+uGE06/0f66kb855Aw2EA5dArMKIAAAAAElFTkSuQmCC",
     "width": 941,
     "height": 1672,
-    "mtime": 1782323969950.719
+    "mtime": 1782373028898.8242
   },
   "/marketing/product/organisation-page.png": {
     "hash": "U35hc8t7D$WB~qxuD$ayxuofIUj[xuM{fPaz",
     "dataURL": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAA4AAAAYCAMAAAD9GTxlAAAADFBMVEUSFRkeICQxMzZFR0rU0e8gAAAACXBIWXMAAAsTAAALEwEAmpwYAAAASElEQVR42q3MUQrAMAgD0CS7/503NFY3aL+WUtqnEJDSFZFI7Mkv0dSJSuKhk2TBZHybjUEMomLm6e2ryi9qvBrG2G1xu/2X3Ep7AUVgTcJKAAAAAElFTkSuQmCC",
     "width": 941,
     "height": 1672,
-    "mtime": 1782324051645.9873
+    "mtime": 1782373028907.789
   },
   "/marketing/product/organisationpagenew.png": {
     "hash": "U35hc8t7D$WB~qxuD$ayxuofIUj[xuM{fPaz",
@@ -627,35 +662,35 @@
     "dataURL": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAA4AAAAYCAMAAAD9GTxlAAAAHlBMVEUqLDA0NjohIycaGx4+QUcRERNLUVxgZnJ2fImMkp9cl3qMAAAACXBIWXMAAAsTAAALEwEAmpwYAAAAb0lEQVR42nXNURLDIAgE0AVE4/0vHGA1te2EH3ijLHCDiEDNPAquyW2YSmutXESyCcoP+f1gmsysoBpWMEvJHOXTcZh70SIxxCUeWBGqyd5jStRrD5qyigNmhwacTo5xJW3z+uGE06/0f66kb855Aw2EA5dArMKIAAAAAElFTkSuQmCC",
     "width": 941,
     "height": 1672,
-    "mtime": 1782323969953.1118
+    "mtime": 1782373028910.5374
   },
   "/marketing/product/reporting-analytics.png": {
     "hash": "U45}v_-:IUIU~q-;IURjadt7RiozD%M{t7oe",
     "dataURL": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAA4AAAAYCAMAAAD9GTxlAAAAD1BMVEUdHyQoKzARExY1OD1LTFCmvjttAAAACXBIWXMAAAsTAAALEwEAmpwYAAAAY0lEQVR42n3QSxbAIAgDwADe/8w14aNdtKycgPoU7oAZAGfBNyI6IIPFQJOxdsmkJO/2cJG4u/LZawzy4EMbNHO9U27u2G5qDHpBXlGsSvo//atr6nqdZ3qyWEH+2Aw0J33xAYHSAe/d35rEAAAAAElFTkSuQmCC",
     "width": 941,
     "height": 1672,
-    "mtime": 1782324051669.3464
+    "mtime": 1782373028918.411
   },
   "/marketing/product/smart-upsells.png": {
     "hash": "U27UM88^02D$00_4%1x]_2RjD%WA~qM_D%WA",
     "dataURL": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAA4AAAAYCAMAAAD9GTxlAAAAGFBMVEUZGx4hIycrLTEJCQsREhRKTlU5PENdYm5cdwF9AAAACXBIWXMAAAsTAAALEwEAmpwYAAAAcUlEQVR42k2Q0RbAIAhCmTX7/z8eIrV4qQtmHjHGLI0WiAC2A9JTKssYVBswtWHMOAVXqvy5xE988Iw4vxjDGdQD3dC1eSEpEX9t5oumeRD7JWntJiFanpn3l9RYd5FQkcjpMfY25Ainxy9G7a8d8voA5cYDR/x1cygAAAAASUVORK5CYII=",
     "width": 941,
     "height": 1672,
-    "mtime": 1782324051638.2236
+    "mtime": 1782373028926.5125
   },
   "/marketing/product/teams-permissions.png": {
     "hash": "U67K*p9D-=D%RN_49FxuxuRjayM{RjWBazWB",
     "dataURL": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAA4AAAAYCAMAAAD9GTxlAAAAHlBMVEUqLDA0NjohIycaGx4+QUcRERNLUVxgZnJ2fImMkp9cl3qMAAAACXBIWXMAAAsTAAALEwEAmpwYAAAAb0lEQVR42nXNURLDIAgE0AVE4/0vHGA1te2EH3ijLHCDiEDNPAquyW2YSmutXESyCcoP+f1gmsysoBpWMEvJHOXTcZh70SIxxCUeWBGqyd5jStRrD5qyigNmhwacTo5xJW3z+uGE06/0f66kb855Aw2EA5dArMKIAAAAAElFTkSuQmCC",
     "width": 941,
     "height": 1672,
-    "mtime": 1782323969948.433
+    "mtime": 1782373028931.57
   },
   "/marketing/product/whatsapp-marketing.png": {
     "hash": "U66H$Ixu9Fay~qt7D%ay%Mj[M{j[ogWBRjkC",
     "dataURL": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAA4AAAAYCAMAAAD9GTxlAAAAD1BMVEUgIiUTFBguMDNDREhYWl0PC3BcAAAACXBIWXMAAAsTAAALEwEAmpwYAAAAUUlEQVR42o3LAQ7AIAgDwLbs/2+eiIIsy7JqjJcCAJldHjNhKKmTUT5mUaXA4DizZOx6FFxWkIMrQaQad4veVjpJv//IpD7bY5dVTu73/LzyBoF7AZn6f9mCAAAAAElFTkSuQmCC",
     "width": 941,
     "height": 1672,
-    "mtime": 1782324051657.0315
+    "mtime": 1782373028939.2368
   },
   "/marketing/utils/Q1.png": {
     "hash": "U51zASkEVnkYo,f4ace-MHflo,f9VnflkFf,",
