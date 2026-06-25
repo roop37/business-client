@@ -65,7 +65,7 @@ export const AiSection = () => {
             className="relative"
           >
             <BlurImage
-              src="/images/home/ai-scan-home.png"
+              src="/images/home/AI-SCAN.png"
               alt="Hoizr AI event evaluation"
               width={1600}
               height={1000}
