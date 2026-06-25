@@ -68,7 +68,10 @@
      uses the same optimised-loading pipeline as the rest of the app.
      Generic fallbacks are listed for the brief SSR moment before
      Next.js hydrates the className. */
-  --m-font-display: var(--font-bodoni-moda), "Didot", Georgia, serif;
+  /* Manrope is the Hoizr business-client font — used for headings AND
+     body across the marketing site so it matches the product UI.
+     (Bodoni Moda retired as the display face per Roop, 2026-06-24.) */
+  --m-font-display: var(--font-manrope), -apple-system, BlinkMacSystemFont, "Helvetica Neue", Arial, sans-serif;
   --m-font-sans: var(--font-manrope), -apple-system, BlinkMacSystemFont, "Helvetica Neue", Arial, sans-serif;
   --m-font-mono: ui-monospace, "JetBrains Mono", "SF Mono", Menlo, monospace;
 
@@ -117,8 +120,10 @@
 }
 
 /* ---------- Wordmark ---------- */
+/* The HOIZR logo keeps its original Bodoni Moda serif face even though
+   the rest of the marketing site moved to Manrope (Roop, 2026-06-24). */
 .hoizr-marketing .hoizr-mark {
-  font-family: var(--m-font-display);
+  font-family: var(--font-bodoni-moda), "Didot", Georgia, serif;
   font-weight: 700;
   letter-spacing: 0.04em;
   line-height: 1;
@@ -152,16 +157,17 @@
   font-family: var(--m-font-display);
   font-weight: 700;
   font-size: clamp(48px, 8vw, 104px);
-  line-height: 1.0;
-  letter-spacing: -0.035em;
+  /* Line-height / tracking tuned for Manrope (looser than the old Bodoni). */
+  line-height: 1.06;
+  letter-spacing: -0.025em;
   text-wrap: balance;
 }
 .hoizr-marketing .hm-h2 {
   font-family: var(--m-font-display);
   font-weight: 700;
   font-size: clamp(36px, 4.8vw, 60px);
-  line-height: 1.06;
-  letter-spacing: -0.025em;
+  line-height: 1.12;
+  letter-spacing: -0.02em;
   text-wrap: balance;
 }
 .hoizr-marketing .hm-h3 {

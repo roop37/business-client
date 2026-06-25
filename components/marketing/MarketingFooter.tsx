@@ -7,6 +7,7 @@ const COMPANY_LINKS = [
   { label: "Home", href: "/" },
   { label: "About", href: "/about" },
   { label: "How it works", href: "/how-it-works" },
+  { label: "Book a demo", href: "/book-a-demo" },
 ];
 const RESOURCE_LINKS = [
   { label: "Find Event", href: "https://hoizr.com" },
