@@ -65,11 +65,11 @@ export const AiSection = () => {
             className="relative"
           >
             <BlurImage
-              src="/marketing/product/AI-event-assistant-UI-new .png"
+              src="/marketing/home/ai-evaluation.png"
               alt="Hoizr AI event evaluation"
-              width={1100}
-              height={1100}
-              sizes="(max-width: 1024px) 100vw, 460px"
+              width={1600}
+              height={1000}
+              sizes="(max-width: 1024px) 100vw, 520px"
               className="h-auto w-full rounded-[20px] border border-white/10 object-cover shadow-[0_24px_60px_-24px_rgba(0,0,0,0.6)]"
             />
           </motion.div>

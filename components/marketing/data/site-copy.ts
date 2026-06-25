@@ -56,7 +56,7 @@ export const FEATURE_BLOCKS = [
       "Ready-made segments: repeat, dormant, top-spend",
       "Export it anytime — no ransom on your own crowd",
     ],
-    image: "/marketing/product/Owned-channel-outreach-campaign.png",
+    image: "/marketing/home/own-fan-crm.png",
     cta: { label: "See the Fan CRM", slug: "fan-crm" },
   },
   {
@@ -69,7 +69,7 @@ export const FEATURE_BLOCKS = [
       "Cash tickets and payment links at the door",
       "Free, RSVP, and invite-only nights, first-class",
     ],
-    image: "/marketing/product/eventListingnew.png",
+    image: "/marketing/home/sell-tickets.png",
     cta: { label: "See Ticketing", slug: "event-ticketing" },
   },
   {
@@ -82,7 +82,7 @@ export const FEATURE_BLOCKS = [
       "Abandoned-cart recovery and sell-out nudges",
       "Revenue attributed to each send — real ROI",
     ],
-    image: "/marketing/product/Multi-channel-marketing-new.png",
+    image: "/marketing/home/grow-repeat-fans.png",
     cta: { label: "See Marketing", slug: "whatsapp-marketing" },
   },
   {
@@ -95,7 +95,7 @@ export const FEATURE_BLOCKS = [
       "No reused screenshots, no double entries",
       "Works offline, syncs when signal returns",
     ],
-    image: "/marketing/product/Guestlist-management-UI.png",
+    image: "/marketing/home/run-the-night.png",
     cta: { label: "See Door & Guestlist", slug: "door-scanning" },
   },
 ] as const;

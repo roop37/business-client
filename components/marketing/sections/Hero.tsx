@@ -54,7 +54,7 @@ export const Hero = () => {
           <span className="hm-chip max-w-full flex-wrap justify-center text-center leading-snug">
             <span className="hm-chip-dot shrink-0" />
             <span className="font-semibold text-[var(--m-ink-1)]">
-              Built for Indian event organizers
+              Built for Indian event organizers &amp; Venues
             </span>
             <span className="hidden text-[var(--m-ink-4)] sm:inline">
               : {HERO_VERTICALS.join(" · ")}

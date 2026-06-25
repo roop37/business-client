@@ -57,10 +57,10 @@ export const GetPaidSection = () => {
           className="relative"
         >
           <BlurImage
-            src="/marketing/product/Futuristic-analytics-dashboard.png"
+            src="/marketing/home/get-paid.png"
             alt="Settlement and reporting in Hoizr"
-            width={1200}
-            height={900}
+            width={1600}
+            height={1000}
             sizes="(max-width: 1024px) 100vw, 520px"
             className="h-auto w-full rounded-[20px] border border-[var(--m-border)] object-cover shadow-[0_18px_44px_-20px_rgba(15,15,15,0.25)]"
           />

@@ -78,10 +78,10 @@ export const FeatureBlocks = () => {
                 <BlurImage
                   src={block.image}
                   alt={block.headline}
-                  width={1200}
-                  height={760}
+                  width={1600}
+                  height={1000}
                   sizes="(max-width: 1024px) 100vw, 560px"
-                  className="h-[260px] w-full rounded-[24px] border border-[var(--m-border)] object-cover shadow-[0_22px_50px_-20px_rgba(15,15,15,0.28)] md:h-[340px]"
+                  className="h-[260px] w-full rounded-[24px] border border-[var(--m-border)] object-cover shadow-[0_22px_50px_-20px_rgba(15,15,15,0.28)] md:h-[360px]"
                 />
               </motion.div>
             </div>

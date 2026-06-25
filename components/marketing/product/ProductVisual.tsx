@@ -10,30 +10,6 @@ type ProductVisualProps = {
   className?: string;
 };
 
-const PRODUCT_VISUAL_IMAGES: Record<string, string> = {
-  // Sell tickets
-  "event-ticketing": "/marketing/product/eventListingnew.png",
-  "free-rsvp-events": "/marketing/product/EventMarketplaceInsta.png",
-  "smart-upsells": "/marketing/product/Add-onsnew.png",
-  "offline-ticketing": "/marketing/product/Door-staff-QR.png",
-  // Own your audience
-  "fan-crm": "/marketing/product/Owned-channel-outreach-campaign.png",
-  "organisation-page": "/marketing/product/organisationpagenew.png",
-  "event-discovery": "/marketing/product/AISEOnewinsta.png",
-  // Grow repeat fans
-  "email-marketing": "/marketing/product/Multi-channel-marketing-new.png",
-  "whatsapp-marketing": "/marketing/product/Conversation-marketing-UI.png",
-  automations: "/marketing/product/Futuristic-automation-UI-design-new  .png",
-  // Run the night
-  "guestlist-management": "/marketing/product/Guestlist-management-UI.png",
-  "door-scanning": "/marketing/product/Door-staff-QR.png",
-  // Get paid & decide
-  "reporting-analytics": "/marketing/product/Futuristic-analytics-dashboard.png",
-  "ai-event-assistant": "/marketing/product/AI-event-assistant-UI-new .png",
-  // For artists
-  "artist-vertical": "/marketing/product/TrendingArtistsnew.png",
-};
-
 const EASE = [0.2, 0.7, 0.2, 1] as const;
 
 /**
@@ -54,7 +30,6 @@ export const ProductVisual = ({
   className = "",
 }: ProductVisualProps) => {
   const storyImage =
-    PRODUCT_VISUAL_IMAGES[slug] ??
     getProductStoryImageSrc(slug) ??
     "/marketing/brand/metallic-line-portrait.png";
 
@@ -80,7 +55,7 @@ export const ProductVisual = ({
           single spring bounce so it still feels alive when it
           arrives in viewport. */}
       <motion.div
-        className="relative"
+        className={compact ? "absolute inset-0" : "relative"}
         initial={{ opacity: 0, scale: 0.94, y: 16 }}
         whileInView={{ opacity: 1, scale: 1, y: 0 }}
         viewport={{ once: true, margin: "-80px" }}
@@ -96,9 +71,13 @@ export const ProductVisual = ({
           src={storyImage ?? "/marketing/brand/metallic-line-portrait.png"}
           alt=""
           aria-hidden
-          className={`block h-auto w-full rounded-[24px] shadow-[0_22px_50px_-20px_rgba(15,15,15,0.25)] ${
-            compact ? "" : ""
-          }`}
+          className={
+            compact
+              ? // Related-product card: fill the aspect-[9/16] box and crop,
+                // so any source aspect renders cleanly instead of breaking.
+                "h-full w-full rounded-[24px] object-cover"
+              : "block h-auto w-full rounded-[24px] shadow-[0_22px_50px_-20px_rgba(15,15,15,0.25)]"
+          }
           draggable={false}
         />
       </motion.div>
