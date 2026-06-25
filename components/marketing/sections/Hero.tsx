@@ -21,7 +21,7 @@ const HERO_BADGES: { icon: LucideIcon; label: string }[] = [
   { icon: Ticket, label: "Online + cash tickets" },
   { icon: Users, label: "Your fan CRM" },
   { icon: ScanLine, label: "Offline door scanning" },
-  { icon: Sparkles, label: "AI rate where eligible" },
+  { icon: Sparkles, label: "AI Event Analysis" },
   { icon: BarChart3, label: "Settlement-ready" },
 ];
 

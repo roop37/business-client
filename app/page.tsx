@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { MarketingShell } from "@/components/marketing/MarketingShell";
 import { AiSection } from "@/components/marketing/sections/AiSection";
 import { Beliefs } from "@/components/marketing/sections/Beliefs";
-import { ComingSoon } from "@/components/marketing/sections/ComingSoon";
+// import { ComingSoon } from "@/components/marketing/sections/ComingSoon"; // hidden for now — not shown on the home page yet
 import { EventFormats } from "@/components/marketing/sections/EventFormats";
 import { FAQ } from "@/components/marketing/sections/FAQ";
 import { FeatureBlocks } from "@/components/marketing/sections/FeatureBlocks";
@@ -58,7 +58,7 @@ export default function Home() {
       <GetPaidSection />
       <AiSection />
       <FreeToStart />
-      <ComingSoon />
+      {/* <ComingSoon /> */}{/* hidden for now — not shown on the home page yet */}
       <Beliefs />
       <FounderCard />
       <FAQ />
