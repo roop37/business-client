@@ -1,6 +1,7 @@
 import CButton from "@/components/common/button/button";
 import { ButtonType } from "@/components/common/button/interface";
 import BlockerLayout from "@/components/layouts/blockerLayout";
+import useGlobalStore from "@/store/global";
 import { sdk } from "@/utils/graphqlClient";
 import { GetServerSideProps } from "next";
 import { useRouter } from "next/router";
@@ -10,6 +11,9 @@ const AdminVerificationPending: React.FC & {
   getLayout?: (page: React.ReactNode) => React.ReactNode;
 } = () => {
   const router = useRouter();
+  // No dashboard/payout PAGE is reachable while verification is pending — payout
+  // details are added via the global modal popped OVER this blocker instead.
+  const showPayoutFormModal = useGlobalStore((s) => s.showPayoutFormModal);
 
   return (
     <div className="w-full max-w-xl p-8 bg-white rounded-xl shadow-sm border border-gray-300">
@@ -26,7 +30,7 @@ const AdminVerificationPending: React.FC & {
           <CButton
             variant={ButtonType.Primary}
             className="w-full"
-            onClick={() => router.push("/payment/payouts")}
+            onClick={() => showPayoutFormModal(true)}
           >
             Add payout details
           </CButton>
