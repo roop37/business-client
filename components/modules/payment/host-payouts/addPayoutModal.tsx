@@ -84,7 +84,7 @@ interface Props {
 }
 
 const AddPayoutModal: React.FC<Props> = ({ isOpen, onClose, onCreated }) => {
-  const { setToastData } = useGlobalStore();
+  const { setToastData, payoutFormIsUpdate } = useGlobalStore();
   const [submitting, setSubmitting] = useState(false);
   const [ifscLookupLoading, setIfscLookupLoading] = useState(false);
   // Pending form snapshot waiting for the Section 24(IX) declaration to be
@@ -154,6 +154,8 @@ const AddPayoutModal: React.FC<Props> = ({ isOpen, onClose, onCreated }) => {
 
   const closeAndReset = () => {
     reset();
+    // Clear the "update" flag so the next open defaults back to "Add".
+    useGlobalStore.getState().setPayoutFormIsUpdate(false);
     onClose();
   };
 
@@ -247,7 +249,7 @@ const AddPayoutModal: React.FC<Props> = ({ isOpen, onClose, onCreated }) => {
     <ReusableModal
       isOpen={isOpen}
       onClose={closeAndReset}
-      title="Add Payout Account"
+      title={payoutFormIsUpdate ? "Update Payout Account" : "Add Payout Account"}
       width="ml"
       comments="Funds from paid events are settled to the primary verified account. Verification typically takes 1 to 4 hours."
     >

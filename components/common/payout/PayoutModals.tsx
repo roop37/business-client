@@ -21,6 +21,7 @@ const PayoutModals = () => {
     showPayoutPromptModal,
     payoutFormModal,
     showPayoutFormModal,
+    setPayoutFormIsUpdate,
     payoutPendingVerificationModal,
     showPayoutPendingVerificationModal,
     hostUnderReviewModal,
@@ -74,6 +75,7 @@ const PayoutModals = () => {
               variant={ButtonType.Primary}
               type="button"
               onClick={() => {
+                setPayoutFormIsUpdate(false);
                 showPayoutPromptModal(false);
                 showPayoutFormModal(true);
               }}
