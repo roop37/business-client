@@ -88,6 +88,15 @@ const labelForType = (raw: string) =>
     .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
     .join(" ");
 
+// Scanner login email is DERIVED from the name and never user-editable:
+// `<slug(name)>@scan.hoizr.com`. The server re-derives this authoritatively;
+// we show the same value read-only so the host sees the login id up front.
+const SCANNER_EMAIL_DOMAIN = "scan.hoizr.com";
+const deriveScannerEmail = (name: string) => {
+  const local = name.trim().toLowerCase().replace(/[^a-z0-9]+/g, "");
+  return local ? `${local}@${SCANNER_EMAIL_DOMAIN}` : "";
+};
+
 const emptyForm: FormState = {
   name: "",
   scannerName: "",
@@ -207,16 +216,19 @@ export const EventScanners = ({ eventId }: { eventId: string }) => {
 
   const handleSubmit = async () => {
     const trimmedName = form.name.trim();
-    const trimmedEmail = form.email.trim();
     if (!trimmedName) {
       setToastData({ type: "error", message: "Name is required" });
       return;
     }
-    if (editingId === null) {
-      if (!trimmedEmail || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmedEmail)) {
-        setToastData({ type: "error", message: "A valid email is required" });
-        return;
-      }
+    // Email is derived from the name (server is authoritative); guard that the
+    // name yields a usable login local-part before submitting.
+    const derivedEmail = deriveScannerEmail(trimmedName);
+    if (editingId === null && !derivedEmail) {
+      setToastData({
+        type: "error",
+        message: "Use letters or numbers in the name (it becomes the login id).",
+      });
+      return;
     }
 
     setSubmitting(true);
@@ -226,10 +238,11 @@ export const EventScanners = ({ eventId }: { eventId: string }) => {
           input: {
             eventId,
             name: trimmedName,
+            // "Description" maps to the display/scanner name; falls back to name.
             scannerName: form.scannerName.trim() || trimmedName,
             scannerType: form.scannerType.trim() || "main_door",
-            email: trimmedEmail,
-            phone: form.phone.trim() || undefined,
+            // Derived + read-only; server re-derives authoritatively.
+            email: derivedEmail,
           },
         });
         const created = result.createScanner;
@@ -721,24 +734,36 @@ export const EventScanners = ({ eventId }: { eventId: string }) => {
             </div>
             <div className="min-h-0 flex-1 space-y-4 overflow-y-auto p-5">
               <label className="block text-sm font-medium">
-                Person&apos;s Name *
+                Name *
                 <input
                   value={form.name}
+                  disabled={editingId !== null}
                   onChange={(event) =>
-                    setForm((current) => {
-                      const next = { ...current, name: event.target.value };
-                      if (!current.scannerName.trim()) {
-                        next.scannerName = event.target.value;
-                      }
-                      return next;
-                    })
+                    setForm((current) => ({
+                      ...current,
+                      name: event.target.value,
+                    }))
                   }
-                  className="input input-primary mt-1 h-10 w-full px-3 text-sm"
+                  className="input input-primary mt-1 h-10 w-full px-3 text-sm disabled:opacity-60"
                   placeholder="e.g. Riya Sharma"
                 />
               </label>
+              {editingId === null ? (
+                <label className="block text-sm font-medium">
+                  Login email
+                  <input
+                    value={deriveScannerEmail(form.name) || `…@${SCANNER_EMAIL_DOMAIN}`}
+                    readOnly
+                    disabled
+                    className="input input-primary mt-1 h-10 w-full px-3 text-sm opacity-70"
+                  />
+                  <span className="mt-1 block text-xs text-[var(--owner-fg-3)]">
+                    Auto-created from the name — this is the scanner&apos;s login id and can&apos;t be changed.
+                  </span>
+                </label>
+              ) : null}
               <label className="block text-sm font-medium">
-                Display (scanner) name
+                Description (optional)
                 <input
                   value={form.scannerName}
                   onChange={(event) =>
@@ -748,11 +773,11 @@ export const EventScanners = ({ eventId }: { eventId: string }) => {
                     }))
                   }
                   className="input input-primary mt-1 h-10 w-full px-3 text-sm"
-                  placeholder="Defaults to person's name"
+                  placeholder="e.g. Evening shift, VIP entrance"
                 />
               </label>
               <div className="block text-sm font-medium">
-                Scanner type
+                Door / gate (optional)
                 <div className="mt-1 flex flex-wrap gap-2">
                   {SCANNER_TYPE_PRESETS.map((preset) => (
                     <button
@@ -801,47 +826,11 @@ export const EventScanners = ({ eventId }: { eventId: string }) => {
                         scannerType: event.target.value.replace(/\s+/g, "_"),
                       }))
                     }
-                    placeholder="Custom type (e.g. side_gate)"
+                    placeholder="Custom (e.g. side_gate)"
                     className="input input-primary mt-2 h-10 w-full px-3 text-sm"
                   />
                 ) : null}
               </div>
-              <label className="block text-sm font-medium">
-                Email * <span className="text-xs text-[var(--owner-fg-3)]">(login id)</span>
-                <input
-                  type="email"
-                  value={form.email}
-                  onChange={(event) =>
-                    setForm((current) => ({
-                      ...current,
-                      email: event.target.value,
-                    }))
-                  }
-                  disabled={editingId !== null}
-                  className="input input-primary mt-1 h-10 w-full px-3 text-sm disabled:opacity-60"
-                />
-                {editingId !== null ? (
-                  <span className="mt-1 block text-xs text-[var(--owner-fg-3)]">
-                    Email cannot be changed after creation.
-                  </span>
-                ) : null}
-              </label>
-              <label className="block text-sm font-medium">
-                Phone (optional)
-                <input
-                  type="tel"
-                  inputMode="numeric"
-                  maxLength={10}
-                  value={form.phone}
-                  onChange={(event) =>
-                    setForm((current) => ({
-                      ...current,
-                      phone: event.target.value.replace(/\D/g, "").slice(0, 10),
-                    }))
-                  }
-                  className="input input-primary mt-1 h-10 w-full px-3 text-sm"
-                />
-              </label>
             </div>
             <div className="flex shrink-0 justify-end gap-2 border-t border-[var(--owner-border)] px-5 py-4">
               <button
