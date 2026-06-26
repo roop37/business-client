@@ -18,6 +18,7 @@ import MainLayout from "@/components/layouts/mainBodyLayout";
 import { PermissionTypeEnum } from "@/generated/graphql";
 import useGlobalStore from "@/store/global";
 import { sdk } from "@/utils/graphqlClient";
+import { verificationGateRedirect } from "@/lib/auth/verificationGate";
 import { hasAccess } from "@/utils/hasAccess";
 import { extractErrorMessage } from "@/utils/utilFUncs";
 import { ColumnDef, createColumnHelper } from "@tanstack/react-table";
@@ -411,6 +412,9 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
         },
       };
     }
+
+    const _vGate = verificationGateRedirect(journey);
+    if (_vGate) return _vGate;
     const me = userResponse?.meUser;
     if (!me) {
       return { redirect: { destination: "/login", permanent: false } };

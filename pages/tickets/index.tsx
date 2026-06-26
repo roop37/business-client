@@ -13,6 +13,7 @@ import MainLayout from "@/components/layouts/mainBodyLayout";
 import { PermissionTypeEnum } from "@/generated/graphql";
 import useGlobalStore from "@/store/global";
 import { sdk } from "@/utils/graphqlClient";
+import { verificationGateRedirect } from "@/lib/auth/verificationGate";
 import { hasAccess } from "@/utils/hasAccess";
 import { extractErrorMessage } from "@/utils/utilFUncs";
 import { ColumnDef, createColumnHelper } from "@tanstack/react-table";
@@ -70,11 +71,14 @@ const formatDate = (value?: string | null) => {
   if (!value) return "Not scheduled";
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return "Not scheduled";
+  // Fed a stored UTC instant (event.startDate) — render in IST so the booked
+  // date matches the editor and customer site regardless of viewer timezone.
   return new Intl.DateTimeFormat("en-IN", {
     day: "2-digit",
     month: "short",
     hour: "2-digit",
     minute: "2-digit",
+    timeZone: "Asia/Kolkata",
   }).format(date);
 };
 
@@ -416,6 +420,9 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
         },
       };
     }
+
+    const _vGate = verificationGateRedirect(journey);
+    if (_vGate) return _vGate;
 
     if (userResponse?.meUser) {
       const canAccessMenu = hasAccess(

@@ -4,6 +4,7 @@ import { EventActivityPanel } from "@/components/modules/events/EventActivityPan
 import GuestlistManagerModal from "@/components/modules/events/GuestlistManagerModal";
 import useGlobalStore from "@/store/global";
 import { sdk } from "@/utils/graphqlClient";
+import { verificationGateRedirect } from "@/lib/auth/verificationGate";
 import { eventDisplayStatus, extractErrorMessage } from "@/utils/utilFUncs";
 import {
   CalendarDaysIcon,
@@ -121,12 +122,15 @@ const EventOperations = ({
   const scanWindowLabel = (() => {
     if (!overview?.startDate) return "";
     const fmt = (d: Date) =>
+      // Door-scan window derives from the event's stored UTC instants — render
+      // in IST so the times match the editor on every browser timezone.
       new Intl.DateTimeFormat("en-IN", {
         day: "2-digit",
         month: "short",
         hour: "numeric",
         minute: "2-digit",
         hour12: true,
+        timeZone: "Asia/Kolkata",
       }).format(d);
     const opens = new Date(new Date(overview.startDate).getTime() - 2 * 60 * 60 * 1000);
     const end = overview.endDate ? new Date(overview.endDate) : null;
@@ -1104,6 +1108,9 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
         },
       };
     }
+
+    const _vGate = verificationGateRedirect(journey);
+    if (_vGate) return _vGate;
     return { props: {} };
   } catch (error) {
     return {

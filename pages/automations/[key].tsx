@@ -7,6 +7,7 @@ import {
 } from "@/components/common/owner";
 import MainLayout from "@/components/layouts/mainBodyLayout";
 import { sdk } from "@/utils/graphqlClient";
+import { verificationGateRedirect } from "@/lib/auth/verificationGate";
 import {
   fetchAutomation,
   fetchAutomationEventBreakdown,
@@ -249,6 +250,9 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
         },
       };
     }
+
+    const _vGate = verificationGateRedirect(journey);
+    if (_vGate) return _vGate;
     return { props: {} };
   } catch {
     return { redirect: { destination: "/login", permanent: false } };

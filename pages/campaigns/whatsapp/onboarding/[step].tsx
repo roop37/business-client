@@ -5,6 +5,7 @@ import WhatsAppBasics from "@/components/modules/whatsappCampaignOnboarding/What
 import WhatsAppContent from "@/components/modules/whatsappCampaignOnboarding/WhatsAppContent";
 import WhatsAppSchedule from "@/components/modules/whatsappCampaignOnboarding/WhatsAppSchedule";
 import { sdk } from "@/utils/graphqlClient";
+import { verificationGateRedirect } from "@/lib/auth/verificationGate";
 import { GetServerSideProps } from "next";
 
 const WhatsAppOnboardingPage = ({ repo }: { repo?: { step: string } }) => {
@@ -54,6 +55,9 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
         },
       };
     }
+
+    const _vGate = verificationGateRedirect(journey);
+    if (_vGate) return _vGate;
     return {
       props: { repo: { step: context.query["step"]?.toString() ?? "" } },
     };

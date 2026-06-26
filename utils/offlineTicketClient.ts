@@ -169,6 +169,7 @@ export type OfflineOrderRow = {
   shortCode?: string | null;
   issuedOrderId?: string | null;
   linkedOrderId?: string | null;
+  openedAt?: string | null;
   createdAt?: string | null;
 };
 
@@ -244,7 +245,7 @@ export const fetchMyOfflineOrders = async (
         items {
           _id eventId customerFirstName customerLastName customerEmail customerPhone
           amountTotal mode status createdByName createdByCollaborator
-          shortCode issuedOrderId linkedOrderId createdAt
+          shortCode issuedOrderId linkedOrderId openedAt createdAt
         }
       }
     }`,

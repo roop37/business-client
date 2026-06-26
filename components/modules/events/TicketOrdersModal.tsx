@@ -5,6 +5,7 @@ import ReusableModal from "@/components/common/modal/modal";
 import useGlobalStore from "@/store/global";
 import { extractErrorMessage } from "@/utils/utilFUncs";
 import { format } from "date-fns";
+import { formatInTimeZone } from "date-fns-tz";
 import { GraphQLClient } from "graphql-request";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import React, { useCallback, useEffect, useState } from "react";
@@ -171,7 +172,11 @@ const TicketOrdersList: React.FC<{ target: TicketOrdersTarget }> = ({
                   {o.createdAt
                     ? format(new Date(o.createdAt), "d MMM yyyy, h:mm a")
                     : o.eventDate
-                    ? format(new Date(o.eventDate), "d MMM yyyy")
+                    ? formatInTimeZone(
+                        new Date(o.eventDate),
+                        "Asia/Kolkata",
+                        "d MMM yyyy"
+                      )
                     : "—"}
                 </div>
               </div>

@@ -102,10 +102,23 @@ import {
   UsersRoundIcon,
   XIcon,
 } from "lucide-react";
+import { fromZonedTime, formatInTimeZone } from "date-fns-tz";
 import { useRouter } from "next/router";
 import type { ReactNode } from "react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import AsyncSelect from "react-select/async";
+
+// Platform timezone. Hosts enter event wall-clock times in IST and we store true
+// UTC instants; every interpret/display goes through this single zone (India has
+// no DST). See toDateTimeInput / fromZonedTime usages below.
+const IST_TZ = "Asia/Kolkata";
+
+// Per-user purchase cap defaults. RSVP/Guestlist entries are gated tighter (a
+// couple at most) than paid tiers; both stay editable in the ticket form.
+const DEFAULT_MAX_PER_USER = 10;
+const RSVP_MAX_PER_USER = 2;
+const defaultMaxPerUser = (category: TicketCategoryValue) =>
+  category === "GUESTLIST" ? RSVP_MAX_PER_USER : DEFAULT_MAX_PER_USER;
 
 type EventJourneyMode = "create" | "update";
 type EventTypeValue = "FREE" | "EXCLUSIVE" | "NON_EXCLUSIVE";
@@ -196,7 +209,7 @@ type EventDayCityDraft = {
 type EventDayDraft = {
   dayId: string;
   title: string;
-  startDate: string; // datetime-local string (UTC-sliced, like toDateTimeInput)
+  startDate: string; // datetime-local string (IST wall-clock, like toDateTimeInput)
   endDate: string;
   // Per-day venue for a multi-city event. Undefined ⇒ uses the event's single
   // top-level location.
@@ -583,7 +596,11 @@ const formatPercentDelta = (value: number) =>
 
 const formatDate = (value?: string) => {
   if (!value) return "Date pending";
-  const date = new Date(value);
+  // `value` is an IST wall-clock string ("YYYY-MM-DDTHH:mm") from the picker /
+  // toDateTimeInput — NOT a UTC instant. Parse it AS IST (a bare `new Date()`
+  // would read it in the browser's tz) and render it in IST so the preview
+  // matches the picker on every browser, regardless of the viewer's timezone.
+  const date = fromZonedTime(value, IST_TZ);
   if (Number.isNaN(date.getTime())) return "Date pending";
   return new Intl.DateTimeFormat("en-IN", {
     weekday: "short",
@@ -591,14 +608,19 @@ const formatDate = (value?: string) => {
     month: "short",
     hour: "2-digit",
     minute: "2-digit",
+    timeZone: IST_TZ,
   }).format(date);
 };
 
+// Convert a stored UTC instant into the "YYYY-MM-DDTHH:mm" wall-clock string the
+// datetime pickers expect, rendered in IST. Pairs with the fromZonedTime(...,IST)
+// conversions on save: an instant of 2026-06-26T13:15Z reads back as the IST
+// wall-clock "2026-06-26T18:45" — matching what the customer site shows.
 const toDateTimeInput = (value?: string | Date | null) => {
   if (!value) return "";
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return "";
-  return date.toISOString().slice(0, 16);
+  return formatInTimeZone(date, IST_TZ, "yyyy-MM-dd'T'HH:mm");
 };
 
 // Stable client-side id for a new day. The server keeps any dayId we send
@@ -1238,7 +1260,9 @@ const EventJourney = ({
   };
 
   const resetTicketDraft = () => {
-    setTicketCategory(eventType === "FREE" ? "GUESTLIST" : "NORMAL");
+    const nextCategory: TicketCategoryValue =
+      eventType === "FREE" ? "GUESTLIST" : "NORMAL";
+    setTicketCategory(nextCategory);
     setTicketName("");
     setTicketType("SINGLE");
     setTicketPrice(0);
@@ -1250,7 +1274,9 @@ const EventJourney = ({
     setTicketGST(hostGstEligible ? "CGST_SGST_18" : "NONE");
     setGstRate(0);
     setGroupCapacity(4);
-    setMaxTicketPerUser(10);
+    // RSVP/Guestlist tickets default to a tight 2-per-user cap; paid tiers to
+    // 10. Either default stays editable in the ticket form.
+    setMaxTicketPerUser(defaultMaxPerUser(nextCategory));
     setTicketExpiryDateTime("");
     setTicketComingSoon(false);
     setTicketOnGroundOnly(false);
@@ -2637,8 +2663,10 @@ const EventJourney = ({
       eventFlyer: eventFlyer || undefined,
       eventType: [eventType],
       isComingSoon,
-      startDate: !isComingSoon && startDate ? new Date(startDate) : undefined,
-      endDate: !isComingSoon && endDate ? new Date(endDate) : undefined,
+      startDate:
+        !isComingSoon && startDate ? fromZonedTime(startDate, IST_TZ) : undefined,
+      endDate:
+        !isComingSoon && endDate ? fromZonedTime(endDate, IST_TZ) : undefined,
       markSeparateDays: multiDayEligible ? markSeparateDays : false,
       // Multi-city: each day carries its own venue (only when multi-day).
       multiCity: multiCityEligible ? multiCity : false,
@@ -2649,8 +2677,8 @@ const EventJourney = ({
           ? eventDays.map((d) => ({
               dayId: d.dayId,
               title: d.title,
-              startDate: new Date(d.startDate),
-              endDate: new Date(d.endDate),
+              startDate: fromZonedTime(d.startDate, IST_TZ),
+              endDate: fromZonedTime(d.endDate, IST_TZ),
               // Per-day venue only when multi-city is on AND the day has one.
               location:
                 multiCity && d.location?.addressLine1?.trim()
@@ -2693,10 +2721,10 @@ const EventJourney = ({
       allowWalkIns,
       requiresIDVerification,
       ticketSalesStartDate: ticketSalesStartDate
-        ? new Date(ticketSalesStartDate)
+        ? fromZonedTime(ticketSalesStartDate, IST_TZ)
         : undefined,
       ticketSalesEndDate: ticketSalesEndDate
-        ? new Date(ticketSalesEndDate)
+        ? fromZonedTime(ticketSalesEndDate, IST_TZ)
         : undefined,
       ticketingTerms: ticketingTerms || undefined,
       refundPolicy: refundPolicy || undefined,
@@ -2737,7 +2765,7 @@ const EventJourney = ({
             ticketInfo: ticket.ticketInfo || undefined,
             maxTicketPerUser: Number(ticket.maxTicketPerUser) || 10,
             ticketExpiryDateTime: ticket.ticketExpiryDateTime
-              ? new Date(ticket.ticketExpiryDateTime)
+              ? fromZonedTime(ticket.ticketExpiryDateTime, IST_TZ)
               : undefined,
             coverType:
               ticket.ticketCategory === "GUESTLIST"
@@ -5123,7 +5151,20 @@ const EventJourney = ({
                           ? "Select Exclusive or Non-Exclusive event category to create ticketed entries."
                           : undefined
                       }
-                      onClick={() => setTicketCategory(category.value)}
+                      onClick={() => {
+                        // On a fresh ticket where the host hasn't touched the
+                        // per-user cap (it still equals the current category's
+                        // default), move it to the new category's default so an
+                        // RSVP/Guestlist tier lands on 2 and a paid tier on 10.
+                        // Never overwrite a value the host has customized.
+                        if (
+                          ticketEditIndex === null &&
+                          maxTicketPerUser === defaultMaxPerUser(ticketCategory)
+                        ) {
+                          setMaxTicketPerUser(defaultMaxPerUser(category.value));
+                        }
+                        setTicketCategory(category.value);
+                      }}
                       className={`rounded-lg border px-3 py-3 text-left text-sm font-semibold disabled:cursor-not-allowed disabled:opacity-45 ${
                         ticketCategory === category.value
                           ? "border-[var(--owner-blue-500)] bg-white"

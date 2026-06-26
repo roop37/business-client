@@ -13,6 +13,7 @@ import {
   type ActivityLogRow,
 } from "@/utils/activityLogClient";
 import { sdk } from "@/utils/graphqlClient";
+import { verificationGateRedirect } from "@/lib/auth/verificationGate";
 import { hasAccess } from "@/utils/hasAccess";
 import { extractErrorMessage } from "@/utils/utilFUncs";
 import { ColumnDef, createColumnHelper } from "@tanstack/react-table";
@@ -243,6 +244,9 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
         },
       };
     }
+
+    const _vGate = verificationGateRedirect(journey);
+    if (_vGate) return _vGate;
 
     if (userResponse?.meUser) {
       const { permissions } = userResponse.meUser;

@@ -103,6 +103,17 @@ export const Hero = () => {
           the same crowd back.
         </motion.p>
 
+        <motion.p
+          initial={{ opacity: 0, y: 12 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.7, ease: EASE, delay: 0.42 }}
+          className="mx-auto mt-3 max-w-[560px] text-[14px] font-semibold text-[var(--m-ink-2)]"
+        >
+          Hoizr is invite-only right now, opening to select Venues and Event
+          Organizations across India — onboard to apply and we&apos;ll check
+          your eligibility.
+        </motion.p>
+
         <motion.div
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
