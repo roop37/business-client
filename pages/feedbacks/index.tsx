@@ -1,6 +1,7 @@
 import { Card, PageHeader, StatTile } from "@/components/common/owner";
 import MainLayout from "@/components/layouts/mainBodyLayout";
 import { sdk } from "@/utils/graphqlClient";
+import { verificationGateRedirect } from "@/lib/auth/verificationGate";
 import {
   fetchHostEventFeedback,
   type HostEventFeedbackRow,
@@ -153,6 +154,9 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
         },
       };
     }
+
+    const _vGate = verificationGateRedirect(journey);
+    if (_vGate) return _vGate;
     return { props: {} };
   } catch {
     return { redirect: { destination: "/login", permanent: false } };

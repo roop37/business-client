@@ -17,6 +17,7 @@ import CouponEditor from "@/components/modules/coupons/CouponEditor";
 import CouponDetailModal from "@/components/modules/coupons/CouponDetailModal";
 import useGlobalStore from "@/store/global";
 import { sdk } from "@/utils/graphqlClient";
+import { verificationGateRedirect } from "@/lib/auth/verificationGate";
 import {
   deleteCoupon,
   fetchEventsForCoupons,
@@ -391,6 +392,9 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
         },
       };
     }
+
+    const _vGate = verificationGateRedirect(journey);
+    if (_vGate) return _vGate;
     return { props: {} };
   } catch {
     return { redirect: { destination: "/login", permanent: false } };

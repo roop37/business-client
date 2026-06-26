@@ -15,27 +15,27 @@ const AdminVerificationPending: React.FC & {
     <div className="w-full max-w-xl p-8 bg-white rounded-xl shadow-sm border border-gray-300">
       <div className="flex flex-col items-start space-y-5">
         <h1 className="text-2xl font-semibold text-gray-900">
-          Business verification is pending
+          Verification in progress
         </h1>
         <p className="text-gray-600">
-          Your business onboarding has been submitted to the internal team. You
-          can continue setting up the business profile while verification is in
-          progress.
+          Your profile is submitted and under internal review — usually within
+          1–8 hours. You can add your payout details now so you&apos;re ready to
+          go live the moment verification clears.
         </p>
-        <div className="flex w-full gap-2">
-          <CButton
-            variant={ButtonType.Secondary}
-            className="w-full"
-            onClick={() => router.push("/dashboard")}
-          >
-            Open Dashboard
-          </CButton>
+        <div className="flex w-full flex-col gap-2 sm:flex-row">
           <CButton
             variant={ButtonType.Primary}
             className="w-full"
-            onClick={() => router.push("/onboarding-host/host-type")}
+            onClick={() => router.push("/payment/payouts")}
           >
-            Continue Business Setup
+            Add payout details
+          </CButton>
+          <CButton
+            variant={ButtonType.Secondary}
+            className="w-full"
+            onClick={() => router.push("/select-host")}
+          >
+            Switch organization
           </CButton>
         </div>
       </div>
@@ -69,26 +69,30 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
     );
 
     const journey = response.meUserJourney;
-    if (!journey.businessOnboardingCompleted) {
+
+    // Not onboarded yet → finish onboarding first (the blocker is only for
+    // onboarded-but-unverified hosts). suggestedRoute already points at the
+    // right next onboarding step.
+    if (!journey.hostOnboardingCompleted || !journey.hostId) {
       return {
         redirect: {
-          destination: "/onboarding/user/business-details",
+          destination: journey.suggestedRoute || "/onboarding-host/host-type",
           permanent: false,
         },
       };
     }
 
+    // Already verified → no reason to sit on the blocker; go to the dashboard.
     if (journey.isAdminVerified) {
       return {
         redirect: {
-          destination: journey.hostOnboardingCompleted
-            ? "/dashboard"
-            : "/onboarding-host/host-type",
+          destination: "/dashboard",
           permanent: false,
         },
       };
     }
 
+    // Onboarded but awaiting verification → render the blocker.
     return { props: {} };
   } catch (error) {
     return {

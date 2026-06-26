@@ -6,6 +6,7 @@ import { useHostTypeLabel } from "@/hooks/useHostTypeLabel";
 import useGlobalStore from "@/store/global";
 import useHostsStore from "@/store/host";
 import { sdk } from "@/utils/graphqlClient";
+import { verificationGateRedirect } from "@/lib/auth/verificationGate";
 import { eventDisplayStatus, extractErrorMessage } from "@/utils/utilFUncs";
 import {
   CalendarDaysIcon,
@@ -92,12 +93,15 @@ const formatDate = (value?: string) => {
   if (!value) return "Date pending";
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return "Date pending";
+  // event.startDate is a stored UTC instant — render it in IST so the card date
+  // matches the editor and the customer site on every browser timezone.
   return new Intl.DateTimeFormat("en-IN", {
     day: "2-digit",
     month: "short",
     year: "numeric",
     hour: "2-digit",
     minute: "2-digit",
+    timeZone: "Asia/Kolkata",
   }).format(date);
 };
 
@@ -1012,6 +1016,9 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
         },
       };
     }
+
+    const _vGate = verificationGateRedirect(journey);
+    if (_vGate) return _vGate;
     return { props: {} };
   } catch (error) {
     return {

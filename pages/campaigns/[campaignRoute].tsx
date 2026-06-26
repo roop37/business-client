@@ -7,6 +7,7 @@ import PushCampaigns from "@/components/modules/campaign/push/PushCampaigns";
 import WhatsAppSection from "@/components/modules/whatsappCampaign/WhatsAppSection";
 import useGlobalStore from "@/store/global";
 import { sdk } from "@/utils/graphqlClient";
+import { verificationGateRedirect } from "@/lib/auth/verificationGate";
 
 import { GetServerSideProps } from "next";
 import { useRouter } from "next/router";
@@ -177,6 +178,9 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
         }
       };
     }
+
+    const _vGate = verificationGateRedirect(journey);
+    if (_vGate) return _vGate;
 
     return {
       props: {

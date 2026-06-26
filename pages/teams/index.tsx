@@ -26,6 +26,7 @@ import useUserStore from "@/store/user";
 import useUserManagementStore from "@/store/userManagement";
 import { useHostTypeLabel } from "@/hooks/useHostTypeLabel";
 import { sdk } from "@/utils/graphqlClient";
+import { verificationGateRedirect } from "@/lib/auth/verificationGate";
 import { hasAccess } from "@/utils/hasAccess";
 import {
   extractErrorMessage,
@@ -545,6 +546,9 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
         },
       };
     }
+
+    const _vGate = verificationGateRedirect(journey);
+    if (_vGate) return _vGate;
 
     if (userResponse?.meUser) {
       const { _id, firstName, status, permissions } = userResponse.meUser;

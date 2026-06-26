@@ -5,6 +5,7 @@ import CampaignSchedule from "@/components/modules/campaignOnboarding/scheduleCa
 import TemplateEdit from "@/components/modules/campaignOnboarding/templateEdit";
 import TemplateSelect from "@/components/modules/campaignOnboarding/templateSelect";
 import { sdk } from "@/utils/graphqlClient";
+import { verificationGateRedirect } from "@/lib/auth/verificationGate";
 import { GetServerSideProps } from "next";
 
 type CampaignOnboardingRepo = {
@@ -71,6 +72,9 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
         },
       };
     }
+
+    const _vGate = verificationGateRedirect(journey);
+    if (_vGate) return _vGate;
 
     return {
       props: {

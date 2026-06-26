@@ -9,6 +9,7 @@ import CustomSwitch from "@/components/common/customSwitch/customSwitch";
 import MainLayout from "@/components/layouts/mainBodyLayout";
 import useGlobalStore from "@/store/global";
 import { sdk } from "@/utils/graphqlClient";
+import { verificationGateRedirect } from "@/lib/auth/verificationGate";
 import {
   fetchAutomations,
   setAutomationActive,
@@ -394,6 +395,9 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
         },
       };
     }
+
+    const _vGate = verificationGateRedirect(journey);
+    if (_vGate) return _vGate;
     return { props: {} };
   } catch {
     return { redirect: { destination: "/login", permanent: false } };

@@ -18,6 +18,7 @@ import MainLayout from "@/components/layouts/mainBodyLayout";
 import useGlobalStore from "@/store/global";
 import { PermissionTypeEnum } from "@/generated/graphql";
 import { sdk } from "@/utils/graphqlClient";
+import { verificationGateRedirect } from "@/lib/auth/verificationGate";
 import { hasAccess } from "@/utils/hasAccess";
 import {
   fetchHostOrders,
@@ -462,6 +463,9 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
         },
       };
     }
+
+    const _vGate = verificationGateRedirect(journey);
+    if (_vGate) return _vGate;
     if (userResponse?.meUser) {
       const canAccess = hasAccess(
         userResponse.meUser.permissions,
