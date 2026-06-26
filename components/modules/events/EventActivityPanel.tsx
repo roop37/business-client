@@ -403,10 +403,18 @@ const OfflineTab = ({ eventId }: { eventId: string }) => {
               [o.customerFirstName, o.customerLastName].filter(Boolean).join(" ") ||
               o.customerPhone ||
               "—";
-            const st = OFFLINE_STATUS[o.status] ?? {
-              label: o.status,
-              cls: "bg-gray-500/10 text-[var(--owner-fg-3)]",
-            };
+            // A payment link that's been opened but not yet paid gets its own
+            // "Opened" badge so the host can tell it from a never-opened link.
+            const st =
+              o.status === "LINK_SENT" && o.openedAt
+                ? {
+                    label: "Opened, not paid",
+                    cls: "bg-sky-500/10 text-sky-600",
+                  }
+                : OFFLINE_STATUS[o.status] ?? {
+                    label: o.status,
+                    cls: "bg-gray-500/10 text-[var(--owner-fg-3)]",
+                  };
             return (
               <div
                 key={o._id}
