@@ -28,6 +28,7 @@ import { extractErrorMessage } from "@/utils/utilFUncs";
 import {
   hasAnyPayoutAccount,
   hasVerifiedPrimaryPayout,
+  isRejectedOnlyPayout,
 } from "@/utils/payout-eligibility";
 
 const AI_OFFER_PREFIX = "ai:";
@@ -731,6 +732,8 @@ const EventJourney = ({
   const {
     setToastData,
     showPayoutPromptModal,
+    showPayoutFormModal,
+    setPayoutFormIsUpdate,
     showPayoutPendingVerificationModal,
     showHostUnderReviewModal,
     setPayoutModalSaveDraftHandler,
@@ -1008,7 +1011,14 @@ const EventJourney = ({
 
     try {
       const accounts = await fetchHostPayoutAccounts();
+      // Only a REJECTED payout → open the form to fix it (Update), not "Add".
+      if (isRejectedOnlyPayout(accounts)) {
+        setPayoutFormIsUpdate(true);
+        showPayoutFormModal(true);
+        return false;
+      }
       if (!hasAnyPayoutAccount(accounts)) {
+        setPayoutFormIsUpdate(false);
         showPayoutPromptModal(true);
         return false;
       }
@@ -1025,11 +1035,21 @@ const EventJourney = ({
 
     try {
       const accounts = await fetchHostPayoutAccounts();
+      // Their only payout was DECLINED → send them to fix/replace it (the form
+      // opens as "Update payout"), NOT the misleading "pending verification"
+      // modal (which only makes sense for a PENDING payout).
+      if (isRejectedOnlyPayout(accounts)) {
+        setPayoutFormIsUpdate(true);
+        showPayoutFormModal(true);
+        return false;
+      }
       if (!hasAnyPayoutAccount(accounts)) {
+        setPayoutFormIsUpdate(false);
         showPayoutPromptModal(true);
         return false;
       }
       if (!hasVerifiedPrimaryPayout(accounts)) {
+        // A usable (PENDING) payout exists but isn't verified yet — correct.
         showPayoutPendingVerificationModal(true);
         return false;
       }

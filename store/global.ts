@@ -32,6 +32,10 @@ type MenuState = {
   showPayoutPromptModal: (value: boolean) => void;
   payoutFormModal: boolean;
   showPayoutFormModal: (value: boolean) => void;
+  // True when the payout form is opened to FIX a rejected payout — the modal
+  // then reads "Update payout" instead of "Add payout".
+  payoutFormIsUpdate: boolean;
+  setPayoutFormIsUpdate: (value: boolean) => void;
 
   // Soft "your payout is awaiting verification" modal — shown when a
   // host tries to publish a paid event before admin has marked their
@@ -124,6 +128,8 @@ const useGlobalStore = create<MenuState>((set) => ({
   showPayoutPromptModal: (e: boolean) => set({ payoutPromptModal: e }),
   payoutFormModal: false,
   showPayoutFormModal: (e: boolean) => set({ payoutFormModal: e }),
+  payoutFormIsUpdate: false,
+  setPayoutFormIsUpdate: (e: boolean) => set({ payoutFormIsUpdate: e }),
 
   payoutPendingVerificationModal: false,
   showPayoutPendingVerificationModal: (e: boolean) =>
