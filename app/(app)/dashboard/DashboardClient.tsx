@@ -162,7 +162,7 @@ const dashboardMarketingCards = [
   {
     kicker: "Campaign engine",
     title: "Turn the next event into an owned-audience push",
-    body: "Top up credits, draft email, and line up direct customer sends before tickets go live.",
+    body: "Draft email, schedule WhatsApp outreach, and line up direct customer sends before tickets go live.",
     actionLabel: "Open campaigns",
     href: "/campaigns/email",
     icon: <Megaphone size={16} />,
