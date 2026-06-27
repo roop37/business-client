@@ -754,14 +754,14 @@ export type Artist = {
   coverImage?: Maybe<Scalars['String']['output']>;
   createdAt?: Maybe<Scalars['DateTimeISO']['output']>;
   email?: Maybe<Scalars['String']['output']>;
-  firstName: Scalars['String']['output'];
+  firstName?: Maybe<Scalars['String']['output']>;
   genres?: Maybe<Array<Genre>>;
   instagramLink?: Maybe<Scalars['String']['output']>;
   isAdminVerified: Scalars['Boolean']['output'];
   isDeleted: Scalars['Boolean']['output'];
   isTemp: Scalars['Boolean']['output'];
   lastLoginAt?: Maybe<Scalars['DateTimeISO']['output']>;
-  lastName: Scalars['String']['output'];
+  lastName?: Maybe<Scalars['String']['output']>;
   merchStoreLink?: Maybe<Scalars['String']['output']>;
   phone?: Maybe<Scalars['String']['output']>;
   profilePhoto?: Maybe<Scalars['String']['output']>;
@@ -1511,6 +1511,7 @@ export type Event = {
   lookingForArtist?: Maybe<Scalars['Boolean']['output']>;
   markSeparateDays?: Maybe<Scalars['Boolean']['output']>;
   maxCapacity?: Maybe<Scalars['Float']['output']>;
+  multiCity?: Maybe<Scalars['Boolean']['output']>;
   offerDescription?: Maybe<Scalars['String']['output']>;
   paymentMethods?: Maybe<Array<Scalars['String']['output']>>;
   payoutProfile?: Maybe<Scalars['String']['output']>;
@@ -1634,6 +1635,7 @@ export type EventDay = {
   __typename?: 'EventDay';
   dayId: Scalars['String']['output'];
   endDate: Scalars['DateTimeISO']['output'];
+  location?: Maybe<AddressInfo>;
   startDate: Scalars['DateTimeISO']['output'];
   title: Scalars['String']['output'];
 };
@@ -1641,6 +1643,7 @@ export type EventDay = {
 export type EventDayInput = {
   dayId?: InputMaybe<Scalars['String']['input']>;
   endDate: Scalars['DateTimeISO']['input'];
+  location?: InputMaybe<AddressInfoInput>;
   startDate: Scalars['DateTimeISO']['input'];
   title: Scalars['String']['input'];
 };
@@ -1763,6 +1766,7 @@ export type EventInput = {
   lookingForArtist?: InputMaybe<Scalars['Boolean']['input']>;
   markSeparateDays?: InputMaybe<Scalars['Boolean']['input']>;
   maxCapacity?: InputMaybe<Scalars['Float']['input']>;
+  multiCity?: InputMaybe<Scalars['Boolean']['input']>;
   offerDescription?: InputMaybe<Scalars['String']['input']>;
   paymentMethods?: InputMaybe<Array<Scalars['String']['input']>>;
   payoutProfile?: InputMaybe<Scalars['String']['input']>;
@@ -2381,6 +2385,7 @@ export type GuestlistEntry = {
   guestName?: Maybe<Scalars['String']['output']>;
   guestPhone?: Maybe<Scalars['String']['output']>;
   guestlistId: Scalars['String']['output'];
+  offlineOrderId?: Maybe<Scalars['String']['output']>;
   qrCodeData?: Maybe<Scalars['String']['output']>;
   qrCodeHash?: Maybe<Scalars['String']['output']>;
   qrHashVersion?: Maybe<Scalars['Int']['output']>;
@@ -3782,6 +3787,7 @@ export type MutationAdminUpdateEventArgs = {
 export type MutationAdminUpdateHostArgs = {
   hostId: Scalars['String']['input'];
   isAdminVerified?: InputMaybe<Scalars['Boolean']['input']>;
+  reason?: InputMaybe<Scalars['String']['input']>;
   status?: InputMaybe<HostStatus>;
 };
 
@@ -4415,6 +4421,7 @@ export type OfflineOrder = {
   linkedOrderId?: Maybe<Scalars['String']['output']>;
   mode: OfflineOrderMode;
   notes?: Maybe<Scalars['String']['output']>;
+  openedAt?: Maybe<Scalars['DateTimeISO']['output']>;
   paidAt?: Maybe<Scalars['DateTimeISO']['output']>;
   shortCode?: Maybe<Scalars['String']['output']>;
   status: OfflineOrderStatus;
