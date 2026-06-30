@@ -1,12 +1,17 @@
 import {
   Badge,
-  Card,
   OwnerButton,
-  OwnerTable,
   PageHeader,
 } from "@/components/common/owner";
 import type { BadgeTone } from "@/components/common/owner";
-import EmptyStateView from "@/components/common/emptyTableView/emptyTableView";
+import DataTable from "@/components/common/dataTable";
+import DataTableTextCell from "@/components/common/dataTable/common/textCell";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import FullPageModal from "@/components/common/modal/fullPageModal";
 import ReusableModal from "@/components/common/modal/modal";
 import CustomJoyrideTooltip from "@/components/joyride";
@@ -15,11 +20,13 @@ import AddTeamMemberForm from "@/components/modules/userManagement/forms/addTeam
 import EditTeamMemberPermissionForm from "@/components/modules/userManagement/forms/editTeamMemberPermissionForm";
 import EditTeamMemberRoleForm from "@/components/modules/userManagement/forms/editTeamMemberRoleForm";
 import { TeamsRowType } from "@/components/modules/userManagement/interface";
-import { PermissionTypeEnum, UserStatus } from "@/generated/graphql";
+import { PermissionTypeEnum, UserStatus, WalkthroughKey } from "@/generated/graphql";
 import useGlobalStore from "@/store/global";
 import useUserStore from "@/store/user";
 import useUserManagementStore from "@/store/userManagement";
+import { useHostTypeLabel } from "@/hooks/useHostTypeLabel";
 import { sdk } from "@/utils/graphqlClient";
+import { verificationGateRedirect } from "@/lib/auth/verificationGate";
 import { hasAccess } from "@/utils/hasAccess";
 import {
   extractErrorMessage,
@@ -30,18 +37,10 @@ import { GetServerSideProps } from "next";
 import React, { useEffect, useMemo, useState } from "react";
 import Joyride, { STATUS } from "react-joyride";
 import useAddTeamMemberFormStore from "../../store/addTeamMemberStore";
-import {
-  Filter,
-  Megaphone,
-  MoreVertical,
-  Pencil,
-  ScanLine,
-  ShieldCheck,
-  Trash2,
-  UserCheck,
-  UserPlus,
-  UsersRound,
-} from "lucide-react";
+import { ColumnDef, createColumnHelper } from "@tanstack/react-table";
+import { UserPlus } from "lucide-react";
+import { MdDeleteOutline, MdOutlineEdit } from "react-icons/md";
+import { MdOutlineManageAccounts } from "react-icons/md";
 
 type NextPageWithLayout = React.FC & {
   getLayout?: (page: React.ReactNode) => React.ReactNode;
@@ -55,58 +54,9 @@ type UserRepo = {
 
 type RoleFilter = "all" | "Owner" | "Manager" | "Marketing" | "Staff";
 
-const roleCards = [
-  {
-    role: "Owner",
-    title: "Owner",
-    description: "Full workspace control",
-    Icon: ShieldCheck,
-    tone: "info" as BadgeTone,
-  },
-  {
-    role: "Manager",
-    title: "Manager",
-    description: "Events, tickets, and reports",
-    Icon: UserCheck,
-    tone: "success" as BadgeTone,
-  },
-  {
-    role: "Marketing",
-    title: "Marketer",
-    description: "Campaigns and audience tools",
-    Icon: Megaphone,
-    tone: "warning" as BadgeTone,
-  },
-  {
-    role: "Staff",
-    title: "Door staff",
-    description: "Scanner and check-in access",
-    Icon: ScanLine,
-    tone: "neutral" as BadgeTone,
-  },
-];
-
-const walkthroughDone = (userId?: string, tour = "teams") => {
-  if (typeof window === "undefined" || !userId) return true;
-  return localStorage.getItem(`hoizr.walkthrough.${userId}.${tour}`) === "done";
-};
-
-const markWalkthroughDone = (userId?: string, tour = "teams") => {
-  if (typeof window === "undefined" || !userId) return;
-  localStorage.setItem(`hoizr.walkthrough.${userId}.${tour}`, "done");
-};
-
 const memberName = (member: TeamsRowType) =>
   [member.firstName, member.lastName].filter(Boolean).join(" ") ||
   "Unnamed member";
-
-const initialsFor = (name: string) =>
-  name
-    .split(" ")
-    .map((part) => part[0])
-    .join("")
-    .slice(0, 2)
-    .toUpperCase();
 
 const roleLabel = (role?: string | null) => formatUserRole(role ?? "") || "Staff";
 
@@ -134,6 +84,7 @@ const Teams: NextPageWithLayout = () => {
   const { setSelectedSideBarMenu, setToastData } = useGlobalStore();
   const { resetForm } = useAddTeamMemberFormStore();
   const { meUser } = useUserStore();
+  const hostLabel = useHostTypeLabel();
   const {
     setIsEditTeamMember,
     setIsEditTeamMemberId,
@@ -198,23 +149,15 @@ const Teams: NextPageWithLayout = () => {
   }, [isAddTeamMemberModalOpen, isEditTeamMember, setToastData]);
 
   useEffect(() => {
-    const fetchData = async () => {
+    if (!meUser?._id) {
       setLoadingMeUser(true);
-      try {
-        const response = await sdk.MeUser();
-        if (response?.meUser) {
-          useUserStore.getState().setMeUser(response.meUser);
-          setShowWalkthrough(!walkthroughDone(response.meUser._id, "teams"));
-        }
-      } catch (error) {
-        setToastData({ message: extractErrorMessage(error), type: "error" });
-      } finally {
-        setLoadingMeUser(false);
-      }
-    };
-
-    fetchData();
-  }, [setToastData]);
+      return;
+    }
+    setShowWalkthrough(
+      !(meUser.completedWalkthroughs ?? []).includes(WalkthroughKey.Teams)
+    );
+    setLoadingMeUser(false);
+  }, [meUser]);
 
   const onEditRole = (id: string) => {
     setIsEditTeamMember(true);
@@ -279,15 +222,6 @@ const Teams: NextPageWithLayout = () => {
     }
   };
 
-  const roleSummary = useMemo(
-    () =>
-      roleCards.map((card) => ({
-        ...card,
-        count: data.filter((member) => roleMatches(member, card.role)).length,
-      })),
-    [data]
-  );
-
   const filteredMembers = useMemo(() => {
     const search = query.trim().toLowerCase();
     return data.filter((member) => {
@@ -305,6 +239,126 @@ const Teams: NextPageWithLayout = () => {
       return roleOk && (!search || haystack.includes(search));
     });
   }, [data, query, roleFilter]);
+
+  const columnHelper = createColumnHelper<TeamsRowType>();
+  const columns: ColumnDef<TeamsRowType, any>[] = useMemo(
+    () => [
+      columnHelper.accessor("firstName", {
+        header: "Member",
+        enableColumnFilter: true,
+        filterFn: "auto",
+        enableSorting: true,
+        cell: ({ row }) => {
+          const name = memberName(row.original);
+          return (
+            <div className="flex flex-col">
+              <DataTableTextCell value={name} className="font-semibold" />
+              <span className="text-[12px] text-owner-fg-4">
+                {row.original.email || "No email"}
+              </span>
+            </div>
+          );
+        },
+      }),
+      columnHelper.accessor("role", {
+        header: "Role",
+        enableColumnFilter: true,
+        filterFn: "auto",
+        enableSorting: true,
+        cell: ({ row }) => (
+          <Badge tone={roleTone(row.original.role)}>
+            {roleLabel(row.original.role)}
+          </Badge>
+        ),
+      }),
+      columnHelper.display({
+        id: "permissions",
+        header: "Permissions",
+        cell: ({ row }) => {
+          const isActive =
+            (row.original.onboardingStatus as UserStatus) === UserStatus.Active;
+          return (
+            <DataTableTextCell
+              value={isActive ? "Workspace access" : "Pending invite"}
+            />
+          );
+        },
+      }),
+      columnHelper.accessor("phone", {
+        header: "Phone",
+        enableColumnFilter: true,
+        filterFn: "auto",
+        enableSorting: false,
+        cell: ({ row }) => (
+          <DataTableTextCell value={row.original.phone || "N/A"} />
+        ),
+      }),
+      columnHelper.accessor("status", {
+        header: "Status",
+        enableColumnFilter: true,
+        filterFn: "auto",
+        enableSorting: true,
+        cell: ({ row }) => {
+          const status = row.original.onboardingStatus as UserStatus;
+          return <Badge tone={statusTone(status)}>{statusLabel(status)}</Badge>;
+        },
+      }),
+      columnHelper.display({
+        id: "actions",
+        header: "Actions",
+        cell: ({ row }) => {
+          const member = row.original;
+          const isActive =
+            (member.onboardingStatus as UserStatus) === UserStatus.Active;
+          return (
+            <TooltipProvider>
+              <div className="flex items-center justify-center gap-3">
+                {isActive ? (
+                  <>
+                    <Tooltip>
+                      <TooltipTrigger>
+                        <MdOutlineEdit
+                          className="text-primary text-lg cursor-pointer"
+                          onClick={() => onEditRole(member._id ?? "")}
+                        />
+                      </TooltipTrigger>
+                      <TooltipContent className="bg-black text-white max-w-xs">
+                        <p>Edit role</p>
+                      </TooltipContent>
+                    </Tooltip>
+                    <Tooltip>
+                      <TooltipTrigger>
+                        <MdOutlineManageAccounts
+                          className="text-primary text-lg cursor-pointer"
+                          onClick={() => onEditPermissions(member._id ?? "")}
+                        />
+                      </TooltipTrigger>
+                      <TooltipContent className="bg-black text-white max-w-xs">
+                        <p>Edit permissions</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </>
+                ) : null}
+                <Tooltip>
+                  <TooltipTrigger>
+                    <MdDeleteOutline
+                      className="text-primary text-lg cursor-pointer"
+                      onClick={() => handleDeleteMember(member._id ?? "")}
+                    />
+                  </TooltipTrigger>
+                  <TooltipContent className="bg-black text-white max-w-xs">
+                    <p>Delete member</p>
+                  </TooltipContent>
+                </Tooltip>
+              </div>
+            </TooltipProvider>
+          );
+        },
+      }),
+    ],
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [columnHelper]
+  );
 
   return (
     <div className="min-w-0">
@@ -335,8 +389,20 @@ const Teams: NextPageWithLayout = () => {
         callback={async (joyrideData) => {
           const finishedStatuses: string[] = [STATUS.FINISHED, STATUS.SKIPPED];
           if (finishedStatuses.includes(joyrideData.status) && meUser) {
-            markWalkthroughDone(meUser._id, "teams");
             setShowWalkthrough(false);
+            useUserStore
+              .getState()
+              .markWalkthroughCompleteLocal(WalkthroughKey.Teams);
+            try {
+              await sdk.MarkWalkthroughDone({
+                input: { walkthrough: WalkthroughKey.Teams },
+              });
+            } catch (error) {
+              setToastData({
+                message: extractErrorMessage(error),
+                type: "error",
+              });
+            }
           }
         }}
         tooltipComponent={CustomJoyrideTooltip}
@@ -344,7 +410,7 @@ const Teams: NextPageWithLayout = () => {
 
       <PageHeader
         title="Teams"
-        subtitle="Invite host team members, assign roles, and keep permissions aligned with the current workspace."
+        subtitle={`Invite ${hostLabel.lower} team members, assign roles, and keep permissions aligned with the current workspace.`}
         actions={
           <OwnerButton leadingIcon={<UserPlus size={16} />} onClick={handleAddMember}>
             Invite member
@@ -352,153 +418,34 @@ const Teams: NextPageWithLayout = () => {
         }
       />
 
-      <div className="mb-7 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-        {roleSummary.map(({ title, description, count, Icon, tone }) => (
-          <Card key={title} padding={22}>
-            <div className="mb-8 flex items-start justify-between gap-3">
-              <span className="flex h-10 w-10 items-center justify-center rounded-owner-md bg-owner-blue-050 text-owner-blue-500">
-                <Icon size={20} />
-              </span>
-              <span className="text-[28px] font-semibold leading-none text-owner-fg-1 tabular-nums">
-                {count}
-              </span>
-            </div>
-            <div className="flex items-center gap-2">
-              <Badge tone={tone}>{title}</Badge>
-            </div>
-            <p className="mt-3 text-[13px] leading-5 text-owner-fg-4">
-              {description}
-            </p>
-          </Card>
-        ))}
+      <div className="mb-3 flex justify-end">
+        <select
+          value={roleFilter}
+          onChange={(event) => setRoleFilter(event.target.value as RoleFilter)}
+          className="h-10 rounded-owner-md border border-owner-border bg-owner-bg px-3 text-[14px] font-medium text-owner-fg-2 shadow-owner-sm"
+        >
+          <option value="all">All roles</option>
+          <option value="Owner">Owner</option>
+          <option value="Manager">Manager</option>
+          <option value="Marketing">Marketing</option>
+          <option value="Staff">Door staff</option>
+        </select>
       </div>
 
-      <OwnerTable
-        rowCount={filteredMembers.length}
-        loading={loading}
-        empty={
-          <EmptyStateView
-            title="No team members found, start by adding your first team member."
-            buttonOnClick={handleAddMember}
-            buttonTitle="Invite member"
-          />
-        }
-        className="mb-6"
-      >
-        <OwnerTable.Toolbar>
-          <OwnerTable.SearchInput
-            value={query}
-            onChange={setQuery}
-            placeholder="Search by member, email, phone, or role"
-            className="flex-1"
-          />
-          <div className="flex flex-wrap items-center gap-2">
-            <OwnerButton variant="secondary" leadingIcon={<Filter size={16} />}>
-              Filter
-            </OwnerButton>
-            <select
-              value={roleFilter}
-              onChange={(event) => setRoleFilter(event.target.value as RoleFilter)}
-              className="h-10 rounded-owner-md border border-owner-border bg-owner-bg px-3 text-[14px] font-medium text-owner-fg-2 shadow-owner-sm"
-            >
-              <option value="all">All roles</option>
-              <option value="Owner">Owner</option>
-              <option value="Manager">Manager</option>
-              <option value="Marketing">Marketing</option>
-              <option value="Staff">Door staff</option>
-            </select>
-          </div>
-        </OwnerTable.Toolbar>
-
-        <OwnerTable.Head>
-          <OwnerTable.HeaderCell width="32%">Member</OwnerTable.HeaderCell>
-          <OwnerTable.HeaderCell>Role</OwnerTable.HeaderCell>
-          <OwnerTable.HeaderCell>Permissions</OwnerTable.HeaderCell>
-          <OwnerTable.HeaderCell>Last active</OwnerTable.HeaderCell>
-          <OwnerTable.HeaderCell>Status</OwnerTable.HeaderCell>
-          <OwnerTable.HeaderCell align="right">Actions</OwnerTable.HeaderCell>
-        </OwnerTable.Head>
-
-        <OwnerTable.Body>
-          {filteredMembers.map((member, index) => {
-            const name = memberName(member);
-            const status = member.onboardingStatus as UserStatus;
-            const isActive = status === UserStatus.Active;
-            return (
-              <OwnerTable.Row key={member._id || `${member.email}-${index}`}>
-                <OwnerTable.Cell>
-                  <div className="flex items-center gap-3">
-                    <div
-                      className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-[12px] font-bold text-white"
-                      style={{
-                        background: `linear-gradient(135deg, hsl(${
-                          index * 47
-                        }, 70%, 60%), hsl(${index * 47 + 40}, 70%, 50%))`,
-                      }}
-                    >
-                      {initialsFor(name)}
-                    </div>
-                    <div className="min-w-0">
-                      <div className="truncate font-semibold text-owner-fg-1">
-                        {name}
-                      </div>
-                      <div className="mt-1 truncate text-[12px] text-owner-fg-4">
-                        {member.email || "No email"}
-                      </div>
-                    </div>
-                  </div>
-                </OwnerTable.Cell>
-                <OwnerTable.Cell>
-                  <Badge tone={roleTone(member.role)}>{roleLabel(member.role)}</Badge>
-                </OwnerTable.Cell>
-                <OwnerTable.Cell muted>
-                  {isActive ? "Workspace access" : "Pending invite"}
-                </OwnerTable.Cell>
-                <OwnerTable.Cell muted>Not tracked</OwnerTable.Cell>
-                <OwnerTable.Cell>
-                  <Badge tone={statusTone(status)}>{statusLabel(status)}</Badge>
-                </OwnerTable.Cell>
-                <OwnerTable.Cell align="right">
-                  <div className="flex justify-end gap-2">
-                    {isActive ? (
-                      <>
-                        <button
-                          type="button"
-                          aria-label="Edit role"
-                          onClick={() => onEditRole(member._id ?? "")}
-                          className="inline-flex h-8 w-8 items-center justify-center rounded-owner-sm border border-owner-border bg-owner-bg text-owner-fg-3 transition hover:bg-owner-bg-subtle hover:text-owner-blue-500"
-                        >
-                          <Pencil size={15} />
-                        </button>
-                        <button
-                          type="button"
-                          aria-label="Edit permissions"
-                          onClick={() => onEditPermissions(member._id ?? "")}
-                          className="inline-flex h-8 w-8 items-center justify-center rounded-owner-sm border border-owner-border bg-owner-bg text-owner-fg-3 transition hover:bg-owner-bg-subtle hover:text-owner-blue-500"
-                        >
-                          <MoreVertical size={15} />
-                        </button>
-                      </>
-                    ) : null}
-                    <button
-                      type="button"
-                      aria-label="Delete member"
-                      onClick={() => handleDeleteMember(member._id ?? "")}
-                      className="inline-flex h-8 w-8 items-center justify-center rounded-owner-sm border border-owner-border bg-owner-bg text-owner-fg-3 transition hover:bg-owner-danger-bg hover:text-owner-danger-text"
-                    >
-                      <Trash2 size={15} />
-                    </button>
-                  </div>
-                </OwnerTable.Cell>
-              </OwnerTable.Row>
-            );
-          })}
-        </OwnerTable.Body>
-
-        <OwnerTable.Footer
-          summary={`${filteredMembers.length.toLocaleString("en-IN")} of ${data.length.toLocaleString("en-IN")} members`}
+      <div className="mb-6">
+        <DataTable
+          totalRows={filteredMembers.length}
+          columns={columns}
+          data={filteredMembers}
+          loading={loading}
+          manualPagination={false}
+          hideDownloadButton
+          pageSize={10}
+          searchFilter={query}
+          setSearchFilter={setQuery}
+          addClickHandler={handleAddMember}
         />
-      </OwnerTable>
+      </div>
 
       <ReusableModal
         isOpen={showDeleteConfirmationModal}
@@ -599,6 +546,9 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
         },
       };
     }
+
+    const _vGate = verificationGateRedirect(journey);
+    if (_vGate) return _vGate;
 
     if (userResponse?.meUser) {
       const { _id, firstName, status, permissions } = userResponse.meUser;

@@ -54,6 +54,9 @@ export type HostAssetKind =
   | "host-logo"
   | "host-settings"
   | "event-flyer"
+  | "event-horizontal-flyer"
+  | "event-sneak-peek"
+  | "event-gallery"
   | "event-table-layout"
   | "event-instagram"
   | "event-extra"
@@ -89,6 +92,12 @@ export const buildHostAssetFolder = ({
       return `${root}/settings`;
     case "event-flyer":
       return `${root}/events/${event}/flyer`;
+    case "event-horizontal-flyer":
+      return `${root}/events/${event}/horizontal-flyer`;
+    case "event-sneak-peek":
+      return `${root}/events/${event}/sneak-peek`;
+    case "event-gallery":
+      return `${root}/events/${event}/gallery`;
     case "event-table-layout":
       return `${root}/events/${event}/table-layout`;
     case "event-instagram":
@@ -107,6 +116,7 @@ type UploadResult = {
   publicId: string;
   width?: number;
   height?: number;
+  duration?: number;
 };
 
 type UploadArgs = FolderArgs & {
@@ -115,7 +125,7 @@ type UploadArgs = FolderArgs & {
   // can destroy the old asset server-side once the new one lands.
   // Skip when this is the first upload (no previous asset to clean).
   previousUrl?: string | null;
-  resourceType?: "image" | "raw";
+  resourceType?: "image" | "video" | "raw";
 };
 
 const isSameAsset = (newUrl: string, oldUrl?: string | null) => {
@@ -147,7 +157,11 @@ export const uploadHostAsset = async ({
   formData.append("folder", folderPath);
 
   const endpoint = `https://api.cloudinary.com/v1_1/${CLOUD_NAME}/${
-    resourceType === "raw" ? "raw" : "image"
+    resourceType === "raw"
+      ? "raw"
+      : resourceType === "video"
+        ? "video"
+        : "image"
   }/upload`;
 
   const response = await fetch(endpoint, {
@@ -171,6 +185,7 @@ export const uploadHostAsset = async ({
     public_id: string;
     width?: number;
     height?: number;
+    duration?: number;
   };
 
   // Best-effort cleanup of the previous asset. We don't await throwing
@@ -194,5 +209,6 @@ export const uploadHostAsset = async ({
     publicId: json.public_id,
     width: json.width,
     height: json.height,
+    duration: json.duration,
   };
 };

@@ -1,5 +1,6 @@
 "use client";
 
+import { WalkthroughKey } from "@/generated/graphql";
 import useAuthStore from "@/store/auth";
 import useGlobalStore from "@/store/global";
 import useMasterStore from "@/store/masters";
@@ -17,7 +18,7 @@ import {
 import { useCallback, useEffect, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { FaSpinner } from "react-icons/fa";
-import Joyride, { STATUS } from "react-joyride";
+import Joyride, { STATUS, type Step } from "react-joyride";
 import CButton from "../common/button/button";
 import { ButtonType } from "../common/button/interface";
 import ReusableModal from "../common/modal/modal";
@@ -56,19 +57,96 @@ const tenor = Tenor_Sans({
   display: "swap",
 });
 
-const walkthroughDone = (userId?: string, tour = "main") => {
-  if (typeof window === "undefined" || !userId) return true;
-  return (
-    localStorage.getItem(`hoizr.walkthrough.${userId}.${tour}`) === "done" ||
-    localStorage.getItem(`hoizr.walkthrough.${tour}.done`) === "done"
-  );
+const isWalkthroughCompleted = (
+  completed: WalkthroughKey[] | undefined,
+  key: WalkthroughKey
+) => (completed ?? []).includes(key);
+
+export type WalkthroughStep = Step & {
+  imageSrc?: string;
+  imageAlt?: string;
 };
 
-const markWalkthroughDone = (userId?: string, tour = "main") => {
-  if (typeof window === "undefined" || !userId) return;
-  localStorage.setItem(`hoizr.walkthrough.${userId}.${tour}`, "done");
-  localStorage.setItem(`hoizr.walkthrough.${tour}.done`, "done");
-};
+const walkthroughFallbackImage = "/walkthrough/metallic-line-banner.png";
+
+const withWalkthroughImage = (step: Step): WalkthroughStep => ({
+  ...step,
+  imageSrc: walkthroughFallbackImage,
+  imageAlt: "Hoizr platform walkthrough preview",
+});
+
+const mainWalkthroughSteps: WalkthroughStep[] = [
+  withWalkthroughImage({
+    title: "Welcome to Hoizr",
+    content:
+      "Let's walk through the places you will use most to create events, sell tickets, run campaigns, and manage payouts.",
+    placement: "center",
+    target: "body",
+  }),
+  withWalkthroughImage({
+    title: "Sidebar",
+    content:
+      "Use the sidebar to move between operations, marketing, ticket sales, customer data, and payments.",
+    target: "#app-sidebar",
+    placement: "right",
+  }),
+  withWalkthroughImage({
+    title: "Dashboard",
+    content:
+      "Start here for event performance, ticket sales, upcoming events, and recent activity.",
+    target: "#sidebar-dashboard",
+    placement: "right",
+  }),
+  withWalkthroughImage({
+    title: "Events",
+    content:
+      "Create and manage event drafts, ticketing, collaborators, lineup, and publishing.",
+    target: "#sidebar-events",
+    placement: "right",
+  }),
+  withWalkthroughImage({
+    title: "Campaigns",
+    content:
+      "Create campaigns, manage saved campaigns, and track metrics from your marketing activity.",
+    target: "#sidebar-campaigns",
+    placement: "right",
+  }),
+  withWalkthroughImage({
+    title: "Rewards and Loyalties",
+    content:
+      "Configure loyalty settings and offers for customers who keep coming back.",
+    target: "#sidebar-rewards",
+    placement: "right",
+  }),
+  withWalkthroughImage({
+    title: "Customers",
+    content:
+      "View customer profiles, segments, and purchase behavior for future campaigns.",
+    target: "#sidebar-customers",
+    placement: "right",
+  }),
+  withWalkthroughImage({
+    title: "Ticket Sales",
+    content:
+      "Track ticket purchases, guestlist entries, and sales activity for your events.",
+    target: "#sidebar-ticket-sales",
+    placement: "right",
+  }),
+  withWalkthroughImage({
+    title: "Payment",
+    content:
+      "Add payout profiles and review settlement details for paid events.",
+    target: "#sidebar-payment",
+    placement: "right",
+  }),
+  withWalkthroughImage({
+    title: "Account Settings",
+    content:
+      "Use the account menu for profile, business, and workspace controls.",
+    target: "#nav-account-management",
+    placement: "bottom",
+  }),
+];
 
 const MainLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   // Configs
@@ -101,18 +179,15 @@ const MainLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     setSelectedHost,
     setSelectedHostTaxRateId,
     setSelectedHostId,
-    setOnlineOrderingActive,
+    setSelectedHostType,
     setHostLogo,
     setHostAddress,
-    setHostAvailability,
     setHostEmail,
     setHostPhone,
     setFacebookLink,
     setInstagramLink,
     setGoogleMapsLink,
     setTimezone,
-    setDeliveryConfig,
-    setHasEdgeDevice,
   } = useHostsStore();
   const { setTaxRate, taxRate } = useAuthStore();
   const { setMasterStates, setMasterTimezones, setCuisinesOptions } =
@@ -209,7 +284,7 @@ const MainLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
 
       setIsSaveButtonEnabled(false);
 
-      fetchUserRestaurants();
+      fetchUserRestaurants(true);
       setIsShowTaxSettings(false);
     } catch (error) {
       console.error("Error submitting tax rate:", error);
@@ -217,7 +292,10 @@ const MainLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     }
   };
 
-  const fetchUserDetails = useCallback(async () => {
+  const fetchUserDetails = useCallback(async (force = false) => {
+    if (!force && useUserStore.getState().meUser?._id) {
+      return;
+    }
     try {
       const response = await sdk.MeUser();
       if (response?.meUser) {
@@ -230,6 +308,7 @@ const MainLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
           phone,
           permissions,
           role,
+          completedWalkthroughs,
         } = response.meUser;
         useUserStore.getState().setMeUser({
           _id,
@@ -240,30 +319,28 @@ const MainLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
           phone,
           permissions,
           role,
-          walkthroughStates: [],
+          completedWalkthroughs: completedWalkthroughs ?? [],
         });
-        setUserId(_id ?? "");
-        setEmail(email ?? "");
-        setPhone(phone ?? "");
-        setFirstName(firstName ?? "");
-        setLastName(lastName ?? "");
-        setStatus(status ?? "");
-        setShowWalkthrough(!walkthroughDone(_id, "main"));
+        const auth = useAuthStore.getState();
+        auth.setUserId(_id ?? "");
+        auth.setEmail(email ?? "");
+        auth.setPhone(phone ?? "");
+        auth.setFirstName(firstName ?? "");
+        auth.setLastName(lastName ?? "");
+        auth.setStatus(status ?? "");
+        setShowWalkthrough(
+          !isWalkthroughCompleted(completedWalkthroughs, WalkthroughKey.Main)
+        );
       }
     } catch (error) {
       console.error("Failed to fetch user details:", error);
     }
-  }, [
-    setEmail,
-    setFirstName,
-    setLastName,
-    setPhone,
-    setStatus,
-    setToastData,
-    setUserId,
-  ]);
+  }, []);
 
-  const fetchUserRestaurants = useCallback(async () => {
+  const fetchUserRestaurants = useCallback(async (force = false) => {
+    if (!force && useHostsStore.getState().hosts.length > 0) {
+      return;
+    }
     try {
       const response = await sdk.userRestaurants();
       if (response?.userRestaurants) {
@@ -283,6 +360,7 @@ const MainLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
               address,
               email,
               phone,
+              hostType,
             } = res.restaurantDetails;
 
             setSelectedHost(name || "");
@@ -292,23 +370,16 @@ const MainLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
             }
 
             setSelectedHostId(_id || "");
+            setSelectedHostType(hostType ?? null);
 
-            setHostAvailability([]);
             setHostEmail(email || "");
             setHostPhone(phone || "");
             setInstagramLink("");
             setFacebookLink("");
             setGoogleMapsLink("");
             setTimezone("");
-            setDeliveryConfig({
-              deliveryZone: [],
-              provideDelivery:
-                false,
-            });
-            setHasEdgeDevice(false);
             setExistingTaxRateId(null);
             setButtonTitle("Add");
-            setOnlineOrderingActive(false);
           } else {
             try {
               const res = await sdk.setRestaurantIdAsCookie({
@@ -331,42 +402,39 @@ const MainLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     } catch (error) {
       console.error("Failed to fetch business accounts:", error);
     }
-  }, [
-    setOnlineOrderingActive,
-    setHosts,
-    setSelectedHost,
-    setSelectedHostId,
-    setSelectedHostTaxRateId,
-    setTaxRate,
-    setToastData,
-    setValue,
-  ]);
+  }, []);
   // Use Effect
   useEffect(() => {
     setLoading(true);
-    // Check if user data is already loaded from app-level
     if (meUser?._id) {
-      setShowWalkthrough(!walkthroughDone(meUser._id, "main"));
+      setShowWalkthrough(
+        !isWalkthroughCompleted(meUser.completedWalkthroughs, WalkthroughKey.Main)
+      );
       setLoading(false);
     } else {
-      // Fallback: wait a bit for app-level data to load
       const timer = setTimeout(() => setLoading(false), 1000);
       return () => clearTimeout(timer);
     }
   }, [meUser]);
 
   useEffect(() => {
-    const fetchData = async () => {
-      setLoading(true);
-      fetchUserDetails();
-      fetchUserRestaurants();
-      setLoading(false);
-    };
-
-    fetchData();
-  }, [fetchUserDetails, fetchUserRestaurants]);
+    fetchUserDetails();
+    fetchUserRestaurants();
+    setLoading(false);
+    // Mount-only: MainLayout persists across routes (getLayout pattern),
+    // so these fetches should fire exactly once per session.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   useEffect(() => {
+    const masters = useMasterStore.getState();
+    if (
+      masters.statesOptions.length > 0 &&
+      masters.timezonesOptions.length > 0 &&
+      masters.cuisinesOptions.length > 0
+    ) {
+      return;
+    }
     const fetchMasterData = async () => {
       try {
         const resstates = await sdk.getActiveStates();
@@ -414,7 +482,8 @@ const MainLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     };
 
     fetchMasterData();
-  }, [setCuisinesOptions, setMasterStates, setMasterTimezones, setToastData]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   useEffect(() => {
     const fetchFunc = async () => {
@@ -535,78 +604,7 @@ const MainLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   return (
     <SidebarProvider className="min-w-0 overflow-hidden">
       <Joyride
-        steps={[
-          {
-            title: "Welcome to Hoizr",
-            content:
-              "Let's walk through the places you will use most to create events, sell tickets, run campaigns, and manage payouts.",
-            placement: "center",
-            target: "body",
-          },
-          {
-            title: "Sidebar",
-            content:
-              "Use the sidebar to move between operations, marketing, ticket sales, customer data, and payments.",
-            target: "#app-sidebar",
-            placement: "right",
-          },
-          {
-            title: "Dashboard",
-            content:
-              "Start here for event performance, ticket sales, upcoming events, and recent activity.",
-            target: "#sidebar-dashboard",
-            placement: "right",
-          },
-          {
-            title: "Events",
-            content:
-              "Create and manage event drafts, ticketing, collaborators, lineup, and publishing.",
-            target: "#sidebar-events",
-            placement: "right",
-          },
-          {
-            title: "Campaigns",
-            content:
-              "Create campaigns, manage saved campaigns, and track metrics from your marketing activity.",
-            target: "#sidebar-campaigns",
-            placement: "right",
-          },
-          {
-            title: "Rewards and Loyalties",
-            content:
-              "Configure loyalty settings and offers for customers who keep coming back.",
-            target: "#sidebar-rewards",
-            placement: "right",
-          },
-          {
-            title: "Customers",
-            content:
-              "View customer profiles, segments, and purchase behavior for future campaigns.",
-            target: "#sidebar-customers",
-            placement: "right",
-          },
-          {
-            title: "Ticket Sales",
-            content:
-              "Track ticket purchases, guestlist entries, and sales activity for your events.",
-            target: "#sidebar-ticket-sales",
-            placement: "right",
-          },
-          {
-            title: "Payment",
-            content:
-              "Add payout profiles and review settlement details for paid events.",
-            target: "#sidebar-payment",
-            placement: "right",
-          },
-          {
-            title: "Account Settings",
-            content:
-              "Use the account menu for profile, business, and workspace controls.",
-            target: "#nav-account-management",
-            placement: "bottom",
-          },
-        ]}
+        steps={mainWalkthroughSteps}
         run={showWalkthrough && !loading}
         continuous
         disableScrollParentFix
@@ -614,12 +612,21 @@ const MainLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
         disableOverlayClose={true}
         hideCloseButton={true}
         callback={async (data) => {
-          const { status, type } = data;
+          const { status } = data;
           const finishedStatuses: string[] = [STATUS.FINISHED, STATUS.SKIPPED];
 
           if (finishedStatuses.includes(status) && meUser) {
-            markWalkthroughDone(meUser._id, "main");
             setShowWalkthrough(false);
+            useUserStore
+              .getState()
+              .markWalkthroughCompleteLocal(WalkthroughKey.Main);
+            try {
+              await sdk.MarkWalkthroughDone({
+                input: { walkthrough: WalkthroughKey.Main },
+              });
+            } catch (error) {
+              console.error("Failed to persist walkthrough:", error);
+            }
           }
         }}
         tooltipComponent={CustomJoyrideTooltip}

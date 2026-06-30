@@ -16,6 +16,19 @@ query eventOnboardingChecklist {
   }
 }
 
+# Duplicate an existing event under the same host as a fresh Draft —
+# mirrors the duplicateHostEmailCampaign convenience action on the
+# campaign list page. Used by the "Duplicate" quick action on event
+# cards.
+mutation duplicateEvent($id: String!) {
+  duplicateEvent(id: $id) {
+    _id
+    title
+    slug
+    status
+  }
+}
+
 mutation createEvent($input: CreateEventInput!) {
   createEvent(input: $input) {
     _id
@@ -71,6 +84,7 @@ query getMyEventsForSelector {
   getMyEvents {
     _id
     title
+    description
     eventFlyer
     eventType
     startDate
@@ -78,6 +92,14 @@ query getMyEventsForSelector {
     city
     slug
     status
+    tickets {
+      ticketCapacity
+      ticketSold
+      ticketPrice
+      ticketVisible
+      ticketName
+      description
+    }
   }
 }
 

@@ -124,7 +124,7 @@ const HostBasicInformation = () => {
 
       setToastData({
         type: "success",
-        message: "Host details saved.",
+        message: "Organizer details saved.",
       });
       router.push("/onboarding-host/host-address");
     } catch (error) {

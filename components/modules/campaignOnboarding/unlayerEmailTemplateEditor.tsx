@@ -295,17 +295,17 @@ const EmailAutoTemplateEditor: React.FC = ({}) => {
             },
             mergeTags: {
               businessLogo: {
-                name: "Host Logo",
+                name: "Venue Logo",
                 value: "{{businessLogo}}",
                 sample: hostLogo,
               },
               hostName: {
-                name: "Host Name",
+                name: "Venue Name",
                 value: "{{businessName}}",
                 sample: selectedHost,
               },
               businessAddress: {
-                name: "Host Address",
+                name: "Venue Address",
                 value: "{{businessAddress}}",
                 sample: businessAddress,
               },
@@ -501,13 +501,13 @@ const EmailAutoTemplateEditor: React.FC = ({}) => {
                 </code>
               </li>
               <li>
-                <strong>To show your host name:</strong>{" "}
+                <strong>To show your venue name:</strong>{" "}
                 <code className="bg-gray-100 text-gray-800 px-1 rounded">
                   {`{{businessName}}`}
                 </code>
               </li>
               <li>
-                <strong>To show host address:</strong>{" "}
+                <strong>To show venue address:</strong>{" "}
                 <code className="bg-gray-100 text-gray-800 px-1 rounded">
                   {`{{businessAddress}}`}
                 </code>

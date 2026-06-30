@@ -7,7 +7,6 @@ import { usePathname } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { MARKETING_PILLARS } from "./data/nav-products";
-import { useWaitlist } from "./waitlist/WaitlistContext";
 
 type OpenMenu = "products" | "company" | "resources" | null;
 
@@ -64,7 +63,6 @@ export const MarketingNav = () => {
   const lastHoverOpenAt = useRef(0);
   const navRef = useRef<HTMLElement | null>(null);
   const pathname = usePathname();
-  const waitlist = useWaitlist();
 
   const clearCloseTimer = useCallback(() => {
     if (closeTimer.current) {
@@ -240,21 +238,23 @@ export const MarketingNav = () => {
           </div>
         </nav>
 
-        {/* Pre-launch: login is hidden — accounts open once we leave
-            the waitlist phase. The only auth-adjacent CTA on the
-            marketing surface is "Join the waitlist". */}
         <div className="hidden lg:flex items-center gap-2">
-          <button
-            type="button"
-            onClick={() => {
-              closeNow();
-              waitlist.open("nav");
-            }}
+          <Link
+            href="/book-a-demo"
+            onClick={closeNow}
+            onMouseEnter={closeNow}
+            className="rounded-full px-3.5 py-2 text-[14px] font-medium text-[var(--m-ink-2)] transition-colors hover:bg-[var(--m-canvas-2)] hover:text-[var(--m-ink-1)]"
+          >
+            Book a demo
+          </Link>
+          <Link
+            href="/signup"
+            onClick={closeNow}
             onMouseEnter={closeNow}
             className="hm-btn hm-btn-primary text-[14px] py-2.5 px-4"
           >
-            Join the waitlist
-          </button>
+            Get started
+          </Link>
         </div>
 
         <button
@@ -279,8 +279,8 @@ export const MarketingNav = () => {
             className="absolute left-0 right-0 top-full"
           >
             <div className="mx-auto max-w-[1320px] px-6 pb-6">
-              <div className="rounded-[28px] border border-[var(--m-border)] bg-[var(--m-surface-elevated)] shadow-[var(--m-shadow-pop)] p-6">
-                <div className="grid gap-7 lg:grid-cols-[minmax(0,1fr)_320px] xl:grid-cols-[minmax(0,1fr)_340px]">
+              <div className="max-h-[calc(100vh-92px)] overflow-y-auto rounded-[28px] border border-[var(--m-border)] bg-[var(--m-surface-elevated)] shadow-[var(--m-shadow-pop)] p-6">
+                <div className="grid gap-7 lg:grid-cols-[minmax(0,1fr)_300px] xl:grid-cols-[minmax(0,1fr)_320px]">
                   <motion.div
                     initial="hidden"
                     animate="visible"
@@ -288,7 +288,7 @@ export const MarketingNav = () => {
                       hidden: {},
                       visible: { transition: { staggerChildren: 0.04 } },
                     }}
-                    className="grid grid-cols-2 gap-x-9 gap-y-6 xl:grid-cols-4"
+                    className="grid grid-cols-2 gap-x-9 gap-y-6 xl:grid-cols-3"
                   >
                     {MARKETING_PILLARS.map((pillar) => (
                       <motion.div
@@ -298,21 +298,16 @@ export const MarketingNav = () => {
                           visible: { opacity: 1, y: 0, transition: { duration: 0.32, ease: EASE } },
                         }}
                       >
-                        <div className="hm-eyebrow mb-3">{pillar.label}</div>
-                        <ul className="space-y-1.5">
+                        <div className="hm-eyebrow mb-2">{pillar.label}</div>
+                        <ul className="space-y-0.5">
                           {pillar.products.map((p) => (
                             <li key={p.slug}>
                               <Link
                                 href={`/product/${p.slug}`}
                                 onClick={closeNow}
-                                className="block rounded-xl px-3 py-2.5 -mx-3 transition-colors hover:bg-[var(--m-canvas-2)]"
+                                className="block rounded-lg px-3 py-1.5 -mx-3 text-[14px] font-medium text-[var(--m-ink-1)] transition-colors hover:bg-[var(--m-canvas-2)] hover:text-[var(--m-forest-700)]"
                               >
-                                <div className="text-[14px] font-semibold text-[var(--m-ink-1)]">
-                                  {p.label}
-                                </div>
-                                <div className="mt-0.5 text-[12.5px] leading-snug text-[var(--m-ink-3)]">
-                                  {p.blurb}
-                                </div>
+                                {p.label}
                               </Link>
                             </li>
                           ))}
@@ -367,16 +362,13 @@ export const MarketingNav = () => {
                 </div>
                 <div className="mt-5 border-t border-[var(--m-border)] pt-4 flex items-center justify-between text-[13px] text-[var(--m-ink-3)]">
                   <span>Built for India. Engineered for live nights.</span>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      closeNow();
-                      waitlist.open("nav-products-menu");
-                    }}
+                  <Link
+                    href="/signup"
+                    onClick={closeNow}
                     className="font-semibold text-[var(--m-forest-700)] hover:underline"
                   >
-                    Join the waitlist →
-                  </button>
+                    Get started →
+                  </Link>
                 </div>
               </div>
             </div>
@@ -390,9 +382,9 @@ export const MarketingNav = () => {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -8 }}
             transition={{ duration: 0.22, ease: EASE }}
-            className="absolute left-1/2 top-full -translate-x-1/2"
+            className="absolute left-0 right-0 top-full"
           >
-            <div className="mx-auto w-[620px] px-6 pb-6">
+            <div className="mx-auto w-[620px] max-w-[calc(100vw-2rem)] px-6 pb-6">
               <div className="rounded-[24px] border border-[var(--m-border)] bg-[var(--m-surface-elevated)] p-4 shadow-[var(--m-shadow-pop)]">
                 <ul className="grid grid-cols-2 gap-1">
                   {COMPANY_LINKS.map((item, i) => (
@@ -429,9 +421,9 @@ export const MarketingNav = () => {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -8 }}
             transition={{ duration: 0.22, ease: EASE }}
-            className="absolute left-1/2 -translate-x-1/2 top-full"
+            className="absolute left-0 right-0 top-full"
           >
-            <div className="mt-0 mx-auto w-[860px] px-6 pb-6">
+            <div className="mx-auto w-[880px] max-w-[calc(100vw-2rem)] px-6 pb-6">
               <div className="rounded-[24px] border border-[var(--m-border)] bg-[var(--m-surface-elevated)] shadow-[var(--m-shadow-pop)] p-4">
                 <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_300px]">
                   <ul className="space-y-1">
@@ -576,16 +568,22 @@ export const MarketingNav = () => {
                   Blog
                 </Link>
               </div>
-              <button
-                type="button"
-                onClick={() => {
-                  setMobileOpen(false);
-                  waitlist.open("nav-mobile");
-                }}
-                className="hm-btn hm-btn-primary w-full"
-              >
-                Join the waitlist
-              </button>
+              <div className="flex flex-col gap-2">
+                <Link
+                  href="/book-a-demo"
+                  onClick={() => setMobileOpen(false)}
+                  className="hm-btn hm-btn-ghost w-full border border-[var(--m-border-strong)]"
+                >
+                  Book a demo
+                </Link>
+                <Link
+                  href="/signup"
+                  onClick={() => setMobileOpen(false)}
+                  className="hm-btn hm-btn-primary w-full"
+                >
+                  Get started
+                </Link>
+              </div>
             </div>
           </motion.div>
         )}

@@ -1,29 +1,24 @@
 import type { Metadata } from "next";
-import { blogs } from "@/components/marketing/blog/blog-data";
 import { MarketingShell } from "@/components/marketing/MarketingShell";
-import { AiOfferSpotlight } from "@/components/marketing/sections/AiOfferSpotlight";
-import { AiSeoPanel } from "@/components/marketing/sections/AiSeoPanel";
+import { AiSection } from "@/components/marketing/sections/AiSection";
 import { Beliefs } from "@/components/marketing/sections/Beliefs";
-import { DiscoveryBento } from "@/components/marketing/sections/DiscoveryBento";
+// import { ComingSoon } from "@/components/marketing/sections/ComingSoon"; // hidden for now — not shown on the home page yet
+import { EventFormats } from "@/components/marketing/sections/EventFormats";
 import { FAQ } from "@/components/marketing/sections/FAQ";
+import { FeatureBlocks } from "@/components/marketing/sections/FeatureBlocks";
 import { FinalCTA } from "@/components/marketing/sections/FinalCTA";
 import { FounderCard } from "@/components/marketing/sections/FounderCard";
-import { FounderQuoteBanner } from "@/components/marketing/sections/FounderQuoteBanner";
+import { FreeToStart } from "@/components/marketing/sections/FreeToStart";
+import { GetPaidSection } from "@/components/marketing/sections/GetPaidSection";
 import { Hero } from "@/components/marketing/sections/Hero";
-import { OperationsBento } from "@/components/marketing/sections/OperationsBento";
-import { PillarGrid } from "@/components/marketing/sections/PillarGrid";
-import { Playbooks } from "@/components/marketing/sections/Playbooks";
-import { PricingTeaserCards } from "@/components/marketing/sections/PricingTeaserCards";
-import { ProductStoryGallery } from "@/components/marketing/sections/ProductStoryGallery";
-import { RepeatFansBento } from "@/components/marketing/sections/RepeatFansBento";
-// ValueMarquee retired in favour of the founder quote banner.
-// import { ValueMarquee } from "@/components/marketing/sections/ValueMarquee";
+import { ProblemSection } from "@/components/marketing/sections/ProblemSection";
+import { TheShift } from "@/components/marketing/sections/TheShift";
 
 export const metadata: Metadata = {
   title:
-    "Hoizr — Ticketing & marketing for Indian event organizers, venues, and promoters",
+    "Hoizr — Event ticketing, fan CRM & marketing for Indian organizers",
   description:
-    "Hoizr is built for Indian event organizers, venues, and promoters. Direct publishing, owned fan CRM, AI event evaluation, and marketing tools tuned for clubs, festivals, comedy shows, and live music nights.",
+    "Sell event tickets online or in cash, keep every buyer as your own customer, and run the door — even offline. Hoizr is the ticketing, fan CRM, and marketing platform built for Indian event organizers, venues, and promoters. Free to start, no subscription.",
   alternates: {
     canonical: "/",
     languages: { "en-IN": "/", "x-default": "/" },
@@ -33,9 +28,9 @@ export const metadata: Metadata = {
   // be repeated explicitly or the home page ships with no OG image.
   openGraph: {
     title:
-      "Hoizr — Ticketing & marketing for Indian event organizers, venues, and promoters",
+      "Hoizr — Event ticketing, fan CRM & marketing for Indian organizers",
     description:
-      "The operating stack for India's clubs, festivals, comedy promoters, and live music venues. Direct ticketing, owned fan CRM, and AI event evaluation.",
+      "Sell tickets, own every fan, and run the door. The event platform built for India's clubs, festivals, comedy, gigs, and house parties — not the marketplace.",
     url: "/",
     type: "website",
     siteName: "Hoizr",
@@ -46,38 +41,24 @@ export const metadata: Metadata = {
         url: "/opengraph-image.webp",
         width: 1200,
         height: 630,
-        alt: "Hoizr — India's ticketing and marketing platform for event organizers, venues, and promoters",
+        alt: "Hoizr — India's event ticketing, fan CRM, and marketing platform for organizers",
       },
     ],
   },
 };
 
 export default function Home() {
-  const playbookBlogTeasers = blogs.slice(0, 2).map(
-    ({ id, title, excerpt, image, date, category, readTime }) => ({
-      id,
-      title,
-      excerpt,
-      image,
-      date,
-      category,
-      readTime,
-    })
-  );
-
   return (
     <MarketingShell>
       <Hero />
-      <FounderQuoteBanner />
-      <PricingTeaserCards />
-      <PillarGrid />
-      <ProductStoryGallery />
-      <AiSeoPanel />
-      <DiscoveryBento />
-      <RepeatFansBento />
-      <OperationsBento />
-      <AiOfferSpotlight />
-      <Playbooks blogTeasers={playbookBlogTeasers} />
+      <EventFormats />
+      <ProblemSection />
+      <TheShift />
+      <FeatureBlocks />
+      <GetPaidSection />
+      <AiSection />
+      <FreeToStart />
+      {/* <ComingSoon /> */}{/* hidden for now — not shown on the home page yet */}
       <Beliefs />
       <FounderCard />
       <FAQ />

@@ -5,6 +5,7 @@ import { sdk } from "@/utils/graphqlClient";
 import { extractErrorMessage } from "@/utils/utilFUncs";
 import { CheckCircle2, CreditCard, Loader2, Wallet, X } from "lucide-react";
 import { useCallback, useEffect, useMemo, useState } from "react";
+import ReactDOM from "react-dom";
 
 /**
  * App-level top-up modal for marketing credit. Mounted once at the app
@@ -33,7 +34,8 @@ const inrFormat = (value: number) =>
   new Intl.NumberFormat("en-IN", {
     style: "currency",
     currency: "INR",
-    maximumFractionDigits: 0,
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
   }).format(Math.max(0, value));
 
 type RazorpayResponse = {
@@ -90,27 +92,31 @@ const GlobalTopUpModal = () => {
     topUpPresetAmount,
     closeTopUpModal,
     setToastData,
+    bumpMarketingCredit,
   } = useGlobalStore();
 
   const [amount, setAmount] = useState<number>(MIN_TOP_UP_INR);
   const [gstPercent, setGstPercent] = useState<number>(DEFAULT_GST_PERCENT);
-  const [platformFeePercent, setPlatformFeePercent] = useState<number>(0);
   const [balance, setBalance] = useState<number>(0);
   const [status, setStatus] = useState<Status>("idle");
   const [errorMessage, setErrorMessage] = useState<string>("");
 
+  // AUDIT-020: marketing-credit top-up is GST-only — NO platform fee — per
+  // HOIZR_FINANCE_SOURCE_OF_TRUTH §12/D9, which is exactly what the server
+  // charges (marketing-credit.service hardcodes platformFeeAmount=0). The
+  // modal previously also added `platformFeePercent` to the *displayed*
+  // total, so if that config were ever set non-zero the "You pay" line
+  // would overstate the actual Razorpay charge (which derives from the
+  // server's order.payableAmount, not this number). Display GST-only to
+  // keep the shown total equal to what's charged.
   const gstFraction = gstPercent / 100;
   const gstAmount = useMemo(
     () => roundCurrency(Math.max(0, amount) * gstFraction),
     [amount, gstFraction]
   );
-  const platformFeeAmount = useMemo(
-    () => roundCurrency(Math.max(0, amount) * (platformFeePercent / 100)),
-    [amount, platformFeePercent]
-  );
   const payable = useMemo(
-    () => roundCurrency(Math.max(0, amount) + gstAmount + platformFeeAmount),
-    [amount, gstAmount, platformFeeAmount]
+    () => roundCurrency(Math.max(0, amount) + gstAmount),
+    [amount, gstAmount]
   );
   const belowMin = amount < MIN_TOP_UP_INR;
   const submitDisabled = belowMin || status === "paying" || status === "verifying";
@@ -128,12 +134,6 @@ const GlobalTopUpModal = () => {
       if (pricingRes?.getMarketingPricing?.gstPercent !== undefined) {
         const pct = Number(pricingRes.getMarketingPricing.gstPercent);
         if (Number.isFinite(pct) && pct >= 0) setGstPercent(pct);
-      }
-      if (
-        pricingRes?.getMarketingPricing?.platformFeePercent !== undefined
-      ) {
-        const pct = Number(pricingRes.getMarketingPricing.platformFeePercent);
-        if (Number.isFinite(pct) && pct >= 0) setPlatformFeePercent(pct);
       }
       if (ledgerRes?.myMarketingCreditLedger?.balance !== undefined) {
         setBalance(Number(ledgerRes.myMarketingCreditLedger.balance) || 0);
@@ -204,6 +204,11 @@ const GlobalTopUpModal = () => {
               );
               setBalance(newBalance);
               setStatus("success");
+              // Reactively notify every balance/insufficient-credit surface
+              // (email + WhatsApp publish flows, MarketingCredit page,
+              // RunCampaignModal) to refetch so stale "₹X more needed"
+              // messages clear without a manual reload.
+              bumpMarketingCredit();
               resolve();
             } catch (verifyError) {
               reject(verifyError);
@@ -228,8 +233,18 @@ const GlobalTopUpModal = () => {
 
   if (!topUpModalOpen) return null;
 
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/55 px-4 py-6">
+  // Portal to body + z-[1100]. Top-up is a secondary modal that can be
+  // launched from inside other modals (RunCampaignModal, EventJourney
+  // pricing CTAs). Both other surfaces use ReactDOM.createPortal and
+  // sit at z-50 or z-[1000] (ReusableModal's isHighIndex). Rendering
+  // top-up inline at z-50 meant the parent modal's portal stacked on
+  // top, and the user reported it "opens behind" Run a campaign.
+  // Portaling + higher z keeps top-up reliably on top regardless of
+  // who launched it.
+  if (typeof window === "undefined") return null;
+
+  return ReactDOM.createPortal(
+    <div className="fixed inset-0 z-[1100] flex items-center justify-center bg-black/55 px-4 py-6">
       <div className="flex max-h-[92dvh] w-full max-w-md flex-col overflow-hidden rounded-lg bg-[var(--owner-bg)] shadow-2xl">
         <div className="flex shrink-0 items-center justify-between gap-3 border-b border-[var(--owner-border)] px-5 py-4">
           <div>
@@ -335,14 +350,6 @@ const GlobalTopUpModal = () => {
                   <span>GST ({gstPercent}%)</span>
                   <span className="tabular-nums">{inrFormat(gstAmount)}</span>
                 </div>
-                {platformFeePercent > 0 ? (
-                  <div className="mt-1 flex items-center justify-between text-[var(--owner-fg-3)]">
-                    <span>Payment adjustment ({platformFeePercent}%)</span>
-                    <span className="tabular-nums">
-                      {inrFormat(platformFeeAmount)}
-                    </span>
-                  </div>
-                ) : null}
                 <div className="mt-2 flex items-center justify-between border-t border-[var(--owner-border-soft)] pt-2 text-sm font-semibold">
                   <span>You pay</span>
                   <span className="tabular-nums">{inrFormat(payable)}</span>
@@ -396,7 +403,8 @@ const GlobalTopUpModal = () => {
           )}
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 };
 

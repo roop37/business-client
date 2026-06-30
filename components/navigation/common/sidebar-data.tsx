@@ -3,12 +3,16 @@ import {
   CalendarDaysIcon,
   ChartColumn,
   CreditCard,
+  History,
   LayoutDashboard,
   MegaphoneIcon,
+  MessageSquareHeart,
   QrCode,
   SettingsIcon,
   ShoppingBag,
+  TicketPercent,
   UsersRoundIcon,
+  Workflow,
   type LucideIcon,
 } from "lucide-react";
 
@@ -58,9 +62,7 @@ export const getSidebarList = (): TSidebarItem[] => [
     subItems: [
       { title: "Marketing Credit", href: "/campaigns/marketing-credit" },
       { title: "Email", href: "/campaigns/email" },
-      // v1.5 channels — surfaced as "Coming Soon" so hosts can see
-      // what's planned. Click handler is no-op in the sidebar renderer.
-      { title: "WhatsApp", href: "/campaigns/whatsapp", comingSoon: true },
+      { title: "WhatsApp", href: "/campaigns/whatsapp" },
       { title: "Push Notification", href: "/campaigns/push", comingSoon: true },
       { title: "SMS", href: "/campaigns/sms", comingSoon: true },
       { title: "Instagram", href: "/campaigns/instagram", comingSoon: true },
@@ -68,23 +70,25 @@ export const getSidebarList = (): TSidebarItem[] => [
   },
   {
     title: "Rewards & Loyalties",
-    href: "/rewards",
+    href: "/coupons",
     icon: BadgePercent,
     active: true,
     id: "sidebar-rewards",
-    comingSoon: true,
     subItems: [
+      { title: "Promo Code", href: "/coupons" },
       {
         title: "Loyalty Settings",
         href: "/rewards/loyalty-settings",
         comingSoon: true,
       },
-      {
-        title: "Promo Codes",
-        href: "/rewards/promo-codes",
-        comingSoon: true,
-      },
     ],
+  },
+  {
+    title: "Orders",
+    href: "/orders",
+    icon: ShoppingBag,
+    active: true,
+    id: "sidebar-orders",
   },
   {
     title: "Customers",
@@ -94,11 +98,18 @@ export const getSidebarList = (): TSidebarItem[] => [
     id: "sidebar-customers",
   },
   {
-    title: "Tickets",
-    href: "/tickets",
-    icon: ShoppingBag,
+    title: "Feedbacks",
+    href: "/feedbacks",
+    icon: MessageSquareHeart,
     active: true,
-    id: "sidebar-ticket-sales",
+    id: "sidebar-feedbacks",
+  },
+  {
+    title: "Automations",
+    href: "/automations",
+    icon: Workflow,
+    active: true,
+    id: "sidebar-automations",
   },
   {
     title: "Scanners",
@@ -133,6 +144,7 @@ export const getSidebarList = (): TSidebarItem[] => [
     active: true,
     id: "sidebar-team",
   },
+  // Activity Log moved into the Settings modal; no longer a sidebar item.
   {
     title: "Settings",
     href: "/org-settings",

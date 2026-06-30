@@ -1,18 +1,40 @@
 import useCampaignStore from "@/store/customCampaignStore";
 import useGlobalStore from "@/store/global";
 import useHostsStore from "@/store/host";
+import ReusableModal from "@/components/common/modal/modal";
 import { sdk } from "@/utils/graphqlClient";
 import { extractErrorMessage } from "@/utils/utilFUncs";
 import { CircleCheckIcon } from "lucide-react";
+import { useRouter } from "next/router";
 import React, { useEffect, useState } from "react";
 import { defaultTemplates } from "./defaultTemplates/defaultTemplate";
+import {
+  applyTemplateMergeTags,
+  stripHeaderFooterFromHtml,
+  stripHeaderFooterFromJson,
+} from "./templateUtils";
 
 type EventOption = {
   _id: string;
   title?: string | null;
+  description?: string | null;
   eventFlyer?: string | null;
   startDate?: string | null;
   slug?: string | null;
+};
+
+const formatEventDateLabel = (iso?: string | null): string => {
+  if (!iso) return "";
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return "";
+  return new Intl.DateTimeFormat("en-IN", {
+    weekday: "short",
+    day: "2-digit",
+    month: "short",
+    hour: "numeric",
+    minute: "2-digit",
+    hour12: true,
+  }).format(d);
 };
 
 interface ITemplate {
@@ -25,6 +47,18 @@ interface ITemplate {
   };
 }
 
+// ───────────────────────────────────────────────────────────────────
+// Header / footer stripping
+//
+// Every default template ships with its own logo header and
+// unsubscribe / address / social footer baked in. The host-campaigns
+// worker (hoizr-workers) now ALWAYS wraps outbound campaign HTML with
+// the Hoizr brand header + standard footer, so keeping that chrome in
+// the template duplicates it inside the sent email. Strip both layers
+// at apply time — the host's editor opens on body-only content and the
+// worker owns the chrome at send time.
+// ───────────────────────────────────────────────────────────────────
+
 const TemplateCard = ({
   template,
   handleSelect,
@@ -34,24 +68,33 @@ const TemplateCard = ({
   handleSelect: (template: ITemplate) => void;
   selectedTemplateName: string;
 }) => {
+  const selected = selectedTemplateName === template.name;
+  const isBlank = template.name.toLowerCase() === "clean slate";
   return (
     <button
       key={template.name}
+      type="button"
       onClick={() => handleSelect(template)}
-      className={`p-4 border border-gray-300 shadow-sm col-span-1 h-22 rounded-xl text-left transition-all duration-300 hover:bg-black/5 relative ${
-        selectedTemplateName === template.name ? "!bg-black/5 text-black" : ""
+      className={`group flex flex-col items-start gap-2 rounded-xl border bg-white p-4 text-left transition-all duration-150 hover:-translate-y-0.5 hover:border-owner-blue-200 hover:shadow-sm ${
+        selected
+          ? "border-owner-blue-500 ring-2 ring-owner-blue-050 shadow-sm"
+          : "border-owner-border"
       }`}
     >
-      <div
-        className={`absolute top-2 right-3 rounded-full w-5 h-5 transition-all ${
-          selectedTemplateName === template.name ? "opacity-100" : "opacity-0"
-        }`}
-      >
-        <CircleCheckIcon className="text-primary" />
+      <div className="flex w-full items-center justify-between gap-3">
+        <span className="text-[10.5px] font-semibold uppercase tracking-[0.14em] text-owner-fg-3">
+          {isBlank ? "Start blank" : "Template"}
+        </span>
+        {selected ? (
+          <span className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-owner-blue-500 text-white">
+            <CircleCheckIcon size={14} />
+          </span>
+        ) : null}
       </div>
-
-      <h3 className="font-medium mb-2 line-clamp-1">{template.name}</h3>
-      <p className="text-xs text-gray-400 line-clamp-2">
+      <h3 className="text-[15px] font-semibold leading-tight text-owner-fg-1">
+        {template.name}
+      </h3>
+      <p className="text-[12.5px] leading-5 text-owner-fg-3">
         {template.description}
       </p>
     </button>
@@ -70,26 +113,25 @@ const CampaignSetup = () => {
     hostBackgroundColor,
     selectedEventId,
     selectedEventFlyer,
+    selectedEventSlug,
     selectedEventTitle,
+    selectedEventDate,
+    selectedEventAbout,
     setSelectedEvent,
     clearSelectedEvent,
   } = useCampaignStore();
 
-  const { selectedHost, hostLogo, hostAddress } =
-    useHostsStore();
+  const { selectedHost, hostLogo, hostAddress } = useHostsStore();
   const { setToastData } = useGlobalStore();
   const businessAddress = hostAddress?.addressLine1 || "";
 
   const [eventOptions, setEventOptions] = useState<EventOption[]>([]);
   const [eventsLoading, setEventsLoading] = useState(false);
+  const [pendingTemplateSwitch, setPendingTemplateSwitch] =
+    useState<ITemplate | null>(null);
   const templatePreviewFallbackImage =
     "https://images.unsplash.com/photo-1492684223066-81342ee5ff30?auto=format&fit=crop&w=1200&q=80";
 
-  // Auto-pick the Clean Slate template on first arrival so the preview
-  // pane shows a starting point immediately instead of "No template
-  // selected", and so step 2 always opens with a real designJson to
-  // edit. Skip when the host is editing an existing campaign that
-  // already has a template loaded into the store.
   useEffect(() => {
     if (selectedTemplate && selectedTemplate.trim().length > 0) return;
     const cleanSlate = defaultTemplates.find(
@@ -98,26 +140,54 @@ const CampaignSetup = () => {
     if (cleanSlate) {
       handleSelectTemplate(cleanSlate);
     }
-    // We only ever want this to run once per mount of the Setup step —
-    // re-running on prop changes would clobber a user's intentional
-    // template switch.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  const router = useRouter();
 
   useEffect(() => {
     const loadEvents = async () => {
       setEventsLoading(true);
       try {
         const response = await sdk.getMyEventsForSelector();
-        setEventOptions(
-          (response?.getMyEvents ?? []).map((event) => ({
+        const opts: EventOption[] = (response?.getMyEvents ?? []).map(
+          (event) => ({
             _id: event._id,
             title: event.title,
+            description: event.description ?? null,
             eventFlyer: event.eventFlyer,
             startDate: event.startDate ? String(event.startDate) : null,
             slug: event.slug,
-          }))
+          })
         );
+        setEventOptions(opts);
+
+        // Pre-select the event + title when the launcher passes them
+        // in via query params (Run Campaign modal → ?eventId&title).
+        // Skip if the campaign store already has them — editing an
+        // existing draft owns its own state.
+        const qEventId =
+          typeof router.query.eventId === "string"
+            ? router.query.eventId
+            : undefined;
+        const qTitle =
+          typeof router.query.title === "string" ? router.query.title : undefined;
+        if (qEventId && !selectedEventId) {
+          const match = opts.find((option) => option._id === qEventId);
+          if (match) {
+            setSelectedEvent({
+              id: match._id,
+              title: match.title ?? "",
+              flyer: match.eventFlyer ?? "",
+              date: formatEventDateLabel(match.startDate),
+              about: match.description ?? "",
+              slug: match.slug ?? "",
+            });
+          }
+        }
+        if (qTitle && !campaignTitle.trim()) {
+          setCampaignDetails({ title: qTitle });
+        }
       } catch (error) {
         setToastData({
           type: "error",
@@ -128,7 +198,8 @@ const CampaignSetup = () => {
       }
     };
     loadEvents();
-  }, [setToastData]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [router.query.eventId, router.query.title, setToastData]);
 
   const handleEventChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const value = e.target.value;
@@ -145,11 +216,10 @@ const CampaignSetup = () => {
       id: event._id,
       title: event.title ?? "",
       flyer: event.eventFlyer ?? "",
-      date: event.startDate ?? "",
+      date: formatEventDateLabel(event.startDate),
+      about: event.description ?? "",
       slug: event.slug ?? "",
     });
-    // Pre-fill the campaign title with the event title if the user
-    // hasn't typed one yet — saves a step on the most common flow.
     if (!campaignTitle.trim() && event.title) {
       setCampaignDetails({ title: event.title });
     }
@@ -163,35 +233,30 @@ const CampaignSetup = () => {
     setCampaignDetails({ description: e.target.value });
   };
 
-  const handleSelectTemplate = (template: ITemplate) => {
+  const applyTemplate = (template: ITemplate) => {
     const { name, template: templ } = template;
     const { content, designJson, html } = templ;
 
-    // If templateHtml is a string, parse and replace merge tags
-    let processedHtml = html;
-    let processedJson = designJson;
+    // Strip header / footer BEFORE merge-tag replacement so we can
+    // match the raw `{{businessLogo}}` / `{{emailUnsubscribeLink}}`
+    // tags. Worker re-injects Hoizr's standard chrome at send time.
+    const strippedJson = stripHeaderFooterFromJson(designJson);
+    const strippedHtml = stripHeaderFooterFromHtml(html ?? "");
 
-    // Event Promotion templates carry an {{eventFlyer}} / {{eventUrl}} pair
-    // — fall back to the host logo + ordering link when the user hasn't
-    // attached an event so the preview never renders a broken image.
     const eventFlyerUrl =
       selectedEventFlyer || hostLogo || templatePreviewFallbackImage;
-    const eventLinkUrl = selectedEventId
-      ? `${hostOnlineOrderingLink || ""}/events/${selectedEventId}`
+    const eventPathId = selectedEventSlug || selectedEventId;
+    const eventLinkUrl = eventPathId
+      ? `${hostOnlineOrderingLink || "https://hoizr.com"}/events/${eventPathId}`
       : hostOnlineOrderingLink || "";
 
-    // Check if templateHtml is a string and not empty
-    if (html.trim() !== "") {
-      // Replace merge tags with actual values
-      processedHtml = html
-        .replace(
-          /{{hostWebsite}}/g,
-          hostOnlineOrderingLink || ""
-        )
-        .replace(
-          /{{businessWebsite}}/g,
-          hostOnlineOrderingLink || ""
-        )
+    let processedHtml = strippedHtml;
+    let processedJson = JSON.stringify(strippedJson);
+
+    if (strippedHtml.trim() !== "") {
+      processedHtml = strippedHtml
+        .replace(/{{hostWebsite}}/g, hostOnlineOrderingLink || "")
+        .replace(/{{businessWebsite}}/g, hostOnlineOrderingLink || "")
         .replace(/{{hostLogo}}/g, hostLogo || "")
         .replace(/{{businessLogo}}/g, hostLogo || "")
         .replace(/{{restaurantName}}/g, selectedHost || "")
@@ -202,28 +267,48 @@ const CampaignSetup = () => {
         .replace(/{{backgroundColor}}/g, hostBackgroundColor)
         .replace(/{{eventFlyer}}/g, eventFlyerUrl)
         .replace(/{{eventUrl}}/g, eventLinkUrl)
-        .replace(/{{eventTitle}}/g, selectedEventTitle || "");
+        // {{eventName}} is the canonical key, {{eventTitle}} an alias.
+        .replace(/{{eventName}}/g, selectedEventTitle || "")
+        .replace(/{{eventTitle}}/g, selectedEventTitle || "")
+        .replace(/{{eventDate}}/g, selectedEventDate || "")
+        .replace(/{{eventAbout}}/g, selectedEventAbout || "");
 
-      processedJson = JSON.stringify(designJson)
-        .replace(
-          /{{businessWebsite}}/g,
-          hostOnlineOrderingLink || ""
-        )
+      processedJson = processedJson
+        .replace(/{{businessWebsite}}/g, hostOnlineOrderingLink || "")
         .replace(/{{businessLogo}}/g, hostLogo || "")
         .replace(/{{businessAddress}}/g, businessAddress)
         .replace(/{{primaryColor}}/g, hostPrimaryColor)
         .replace(/{{backgroundColor}}/g, hostBackgroundColor)
         .replace(/{{eventFlyer}}/g, eventFlyerUrl)
         .replace(/{{eventUrl}}/g, eventLinkUrl)
-        .replace(/{{eventTitle}}/g, selectedEventTitle || "");
+        .replace(/{{eventName}}/g, selectedEventTitle || "")
+        .replace(/{{eventTitle}}/g, selectedEventTitle || "")
+        .replace(/{{eventDate}}/g, selectedEventDate || "")
+        .replace(/{{eventAbout}}/g, selectedEventAbout || "");
     }
 
-    // Call setTemplate with processed HTML
     setTemplate(name, JSON.parse(processedJson), processedHtml, content);
   };
 
+  const handleSelectTemplate = (template: ITemplate) => {
+    const hasSavedCampaign =
+      typeof window !== "undefined" &&
+      new URLSearchParams(window.location.search).has("editId");
+    if (
+      hasSavedCampaign &&
+      selectedTemplate &&
+      selectedTemplate.trim().length > 0 &&
+      selectedTemplate !== template.name
+    ) {
+      setPendingTemplateSwitch(template);
+      return;
+    }
+
+    applyTemplate(template);
+  };
+
   return (
-    <div className="w-full max-w-4xl mx-auto space-y-6 h-full overflow-y-hidden">
+    <div className="w-full max-w-4xl mx-auto space-y-6 pb-6">
       <div>
         <h1 className="text-2xl font-medium">Set Up Your Campaign</h1>
         <p className="text-gray-600 mb-4 pt-1 text-sm">
@@ -304,15 +389,17 @@ const CampaignSetup = () => {
         </div>
       </div>
 
-      <div className="space-y-6 bg-white">
+      <div className="space-y-3 bg-white">
         <div>
-          <p className="text-gray-600 mb-4 text-sm">
-            {
-              "Select a base template that aligns with your campaign's purpose. You can customize it further in the next step."
-            }
+          <p className="text-gray-600 mb-1 text-sm">
+            Pick a starting template. You can customize it in the next step.
+          </p>
+          <p className="mb-4 text-[12.5px] text-gray-500">
+            Don&apos;t worry about the brand header or unsubscribe footer —
+            Hoizr adds them automatically when the campaign sends.
           </p>
 
-          <div className="grid grid-cols-1 gap-4 sm:max-h-[calc(100vh-28rem)] xl:max-h-[calc(100vh-27rem)] overflow-y-scroll pr-2">
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
             {defaultTemplates.map((template) => (
               <TemplateCard
                 key={template.name}
@@ -324,6 +411,37 @@ const CampaignSetup = () => {
           </div>
         </div>
       </div>
+      <ReusableModal
+        isOpen={Boolean(pendingTemplateSwitch)}
+        onClose={() => setPendingTemplateSwitch(null)}
+        title="Switch template?"
+      >
+        <div className="mt-2 space-y-4">
+          <p className="text-sm text-gray-600">
+            Switching templates will discard edits already made in the email
+            builder.
+          </p>
+          <div className="flex justify-end gap-2">
+            <button
+              type="button"
+              onClick={() => setPendingTemplateSwitch(null)}
+              className="rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-semibold text-gray-700"
+            >
+              Cancel
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                if (pendingTemplateSwitch) applyTemplate(pendingTemplateSwitch);
+                setPendingTemplateSwitch(null);
+              }}
+              className="rounded-lg bg-owner-blue-500 px-4 py-2 text-sm font-semibold text-white"
+            >
+              Switch template
+            </button>
+          </div>
+        </div>
+      </ReusableModal>
     </div>
   );
 };

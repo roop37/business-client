@@ -1,18 +1,32 @@
+"use client";
+
+import { motion } from "framer-motion";
 import Link from "next/link";
 import { ArrowUpRight, Linkedin } from "lucide-react";
 
 const SANBEDAN_HEADSHOT =
   "https://res.cloudinary.com/duhefgqh4/image/upload/v1748974724/IMG_0652_slotkd__1_ehtwxq.jpg";
 
+// Shared house easing — matches the rest of the marketing sections so
+// this card's reveal feels native, not bolted on.
+const EASE = [0.2, 0.6, 0.2, 1] as const;
+
 /**
  * FounderCard — small, clear author box used below Beliefs (and
  * anywhere else we want the founder credit visible). Reuses the same
  * Cloudinary headshot the blog/post pages already use so the brand
- * face is consistent across the site.
+ * face is consistent across the site. A gentle fade-up on scroll +
+ * subtle hover lift bring it in line with the other sections' motion.
  */
 export const FounderCard = () => (
   <section className="hm-section pt-2 md:pt-6">
-    <div className="mx-auto flex max-w-[680px] items-center gap-4 rounded-[var(--m-r-lg)] border border-[var(--m-border)] bg-[var(--m-surface)] p-5 md:gap-5 md:p-6">
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true, margin: "-80px" }}
+      transition={{ duration: 0.6, ease: EASE }}
+      whileHover={{ y: -3 }}
+      className="mx-auto flex max-w-[680px] items-center gap-4 rounded-[var(--m-r-lg)] border border-[var(--m-border)] bg-[var(--m-surface)] p-5 transition-shadow duration-300 hover:shadow-[0_18px_40px_-24px_rgba(15,15,15,0.3)] md:gap-5 md:p-6">
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
         src={SANBEDAN_HEADSHOT}
@@ -49,6 +63,6 @@ export const FounderCard = () => (
           <ArrowUpRight size={13} />
         </Link>
       </div>
-    </div>
+    </motion.div>
   </section>
 );

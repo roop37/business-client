@@ -2,12 +2,12 @@
 
 import Link from "next/link";
 import { MARKETING_PILLARS } from "./data/nav-products";
-import { WaitlistButton } from "./waitlist/WaitlistButton";
 
 const COMPANY_LINKS = [
   { label: "Home", href: "/" },
   { label: "About", href: "/about" },
   { label: "How it works", href: "/how-it-works" },
+  { label: "Book a demo", href: "/book-a-demo" },
 ];
 const RESOURCE_LINKS = [
   { label: "Find Event", href: "https://hoizr.com" },
@@ -27,10 +27,10 @@ const SUPPORT_LINKS = [
 
 const INSTAGRAM_URL = "https://www.instagram.com/hoizr.technologies";
 const LEGAL_LINKS = [
-  { label: "Privacy", href: "/legal/privacy" },
-  { label: "Terms", href: "/legal/terms" },
-  { label: "Cookies", href: "/legal/cookies" },
-  { label: "GST · CIN", href: "/legal/entity" },
+  { label: "Privacy", href: "https://business.hoizr.com/legal/privacy" },
+  { label: "Terms", href: "https://business.hoizr.com/legal/terms" },
+  { label: "Cookies", href: "https://business.hoizr.com/legal/cookies" },
+  { label: "GST · CIN", href: "https://business.hoizr.com/legal/entity" },
 ];
 const isHttpHref = (href: string) => /^https?:\/\//.test(href);
 
@@ -113,12 +113,20 @@ export const MarketingFooter = () => {
             <div className="hm-eyebrow mt-6 mb-3 !text-white/45">Account</div>
             <ul className="space-y-2">
               <li>
-                <WaitlistButton
-                  source="footer-account"
-                  className="text-left text-[13.5px] font-medium text-white/76 transition-colors duration-200 hover:text-[var(--m-acid)] hover:[text-shadow:0_0_14px_rgba(214,255,63,0.55)]"
+                <Link
+                  href="/login"
+                  className="text-[13.5px] font-medium text-white/76 transition-colors duration-200 hover:text-[var(--m-acid)] hover:[text-shadow:0_0_14px_rgba(214,255,63,0.55)]"
                 >
-                  Join the waitlist
-                </WaitlistButton>
+                  Login
+                </Link>
+              </li>
+              <li>
+                <Link
+                  href="/signup"
+                  className="text-[13.5px] font-medium text-white/76 transition-colors duration-200 hover:text-[var(--m-acid)] hover:[text-shadow:0_0_14px_rgba(214,255,63,0.55)]"
+                >
+                  Get started
+                </Link>
               </li>
             </ul>
             <div className="hm-eyebrow mt-6 mb-3 !text-white/45">Follow</div>

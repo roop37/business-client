@@ -21,7 +21,6 @@ import {
   Check,
   ChevronDown,
   ChevronRight,
-  Gift,
   LogOut,
   MapPin,
   Plus,
@@ -102,7 +101,12 @@ const BrandMark = ({
           alt={host.name ?? "Business logo"}
           width={size}
           height={size}
-          className="h-full w-full object-cover"
+          // `object-contain` (not `cover`) — many hosts upload wide
+          // wordmark lockups; `cover` was cropping the sides off so the
+          // brand was unrecognisable in the sidebar. The white wrapper
+          // already gives the logo a clean frame when the aspect ratio
+          // doesn't match the square slot.
+          className="h-full w-full object-contain"
           onError={() => setImageBroken(true)}
           unoptimized
         />
@@ -207,7 +211,7 @@ const WorkspaceSwitcher = ({
       </button>
 
       {open ? (
-        <div className="absolute left-0 right-0 top-[calc(100%+8px)] z-40 overflow-hidden rounded-[14px] border border-owner-border bg-owner-bg shadow-owner-dropdown">
+        <div className="absolute left-0 right-0 top-[calc(100%+8px)] z-[70] overflow-hidden rounded-[14px] border border-owner-border bg-[#FFFFFF] shadow-owner-dropdown">
           <div className="px-3.5 pb-1 pt-3 text-[11px] font-semibold uppercase tracking-[0.08em] text-owner-fg-4">
             Switch business
           </div>
@@ -383,37 +387,14 @@ const NavItem = ({
   );
 };
 
-const ReferralCard = ({ onCopy }: { onCopy: () => void }) => (
-  <div
-    className="rounded-owner-lg border p-3.5"
-    style={{
-      background: "var(--owner-success-bg)",
-      borderColor: "var(--owner-success-border)",
-    }}
-  >
-    <div className="flex items-start gap-2">
-      <Gift size={18} className="mt-0.5 text-owner-success-text" />
-      <div className="min-w-0">
-        <p className="text-[13px] font-semibold text-owner-success-text">
-          Earn ₹25,000 per referral 💰
-        </p>
-        <button
-          type="button"
-          onClick={onCopy}
-          className="mt-1 text-[12.5px] font-medium underline text-owner-success-text"
-        >
-          Tap to share!
-        </button>
-      </div>
-    </div>
-  </div>
-);
-
 const isActiveFor = (pathname: string, item: TSidebarItem) => {
   if (item.title === "Dashboard") return pathname === "/dashboard";
+  // Teams must NOT light up on /teams/activity-log — that's a sibling nav
+  // item, and the generic startsWith fallback would match both. Exact match.
+  if (item.title === "Teams") return pathname === "/teams";
   if (item.title === "Campaigns") return pathname.startsWith("/campaigns");
   if (item.title === "Rewards & Loyalties")
-    return pathname.startsWith("/rewards");
+    return pathname.startsWith("/rewards") || pathname.startsWith("/coupons");
   if (item.title === "Payment") return pathname.startsWith("/payment");
   return item.href !== "" && pathname.startsWith(item.href);
 };
@@ -422,7 +403,8 @@ export default function AppSidebar() {
   const router = useRouter();
   const pathname = usePathname() ?? "";
   const { isMobile, toggleSidebar } = useSidebar();
-  const { setSelectedSideBarMenu, setToastData } = useGlobalStore();
+  const { setSelectedSideBarMenu, setToastData, openSettingsModal } =
+    useGlobalStore();
   const { selectedHostId } = useHostsStore();
 
   const items = useMemo(() => getSidebarList(), []);
@@ -527,25 +509,6 @@ export default function AppSidebar() {
     if (typeof window !== "undefined") window.location.assign("/login");
   }, []);
 
-  const copyReferral = useCallback(async () => {
-    try {
-      if (typeof navigator !== "undefined" && navigator.clipboard) {
-        await navigator.clipboard.writeText(
-          typeof window !== "undefined" ? `${window.location.origin}/signup?ref=hoizr` : ""
-        );
-        setToastData({
-          type: "success",
-          message: "Referral link copied to clipboard",
-        });
-      }
-    } catch {
-      setToastData({
-        type: "warning",
-        message: "Could not copy. Visit Settings → Referrals.",
-      });
-    }
-  }, [setToastData]);
-
   return (
     <Sidebar
       id="app-sidebar"
@@ -572,7 +535,7 @@ export default function AppSidebar() {
           activeHostId={selectedHostId ?? hosts[0]?._id ?? null}
           onSwitch={switchHost}
           onAddHost={handleAddHost}
-          onAccount={() => navigate("/profile")}
+          onAccount={() => openSettingsModal("account")}
           onLogout={handleLogout}
         />
         {hostsLoading ? (
@@ -597,6 +560,11 @@ export default function AppSidebar() {
                     setExpandedId((current) =>
                       current === item.title ? null : item.title
                     );
+                  } else if (item.title === "Settings") {
+                    // Settings has no dedicated page anymore — open the
+                    // unified Settings modal at the Organisation tab.
+                    if (isMobile) toggleSidebar();
+                    openSettingsModal("brand");
                   } else {
                     navigate(item.href, item.title);
                   }
@@ -607,7 +575,6 @@ export default function AppSidebar() {
           })}
         </ul>
 
-        <ReferralCard onCopy={copyReferral} />
       </div>
       {switchingTo ? <HostSwitchOverlay host={switchingTo} /> : null}
     </Sidebar>

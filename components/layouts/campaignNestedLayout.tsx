@@ -49,6 +49,7 @@
 
 // export default CampaignLayout;
 
+import { WalkthroughKey } from "@/generated/graphql";
 import useGlobalStore from "@/store/global";
 import useUserStore from "@/store/user";
 import { sdk } from "@/utils/graphqlClient";
@@ -62,16 +63,6 @@ import { Tabs } from "../ui/tabs";
 
 type Props = {
   children: ReactNode;
-};
-
-const walkthroughDone = (userId?: string, tour = "campaign") => {
-  if (typeof window === "undefined" || !userId) return true;
-  return localStorage.getItem(`hoizr.walkthrough.${userId}.${tour}`) === "done";
-};
-
-const markWalkthroughDone = (userId?: string, tour = "campaign") => {
-  if (typeof window === "undefined" || !userId) return;
-  localStorage.setItem(`hoizr.walkthrough.${userId}.${tour}`, "done");
 };
 
 const CampaignLayout = ({ children }: Props) => {
@@ -90,22 +81,15 @@ const CampaignLayout = ({ children }: Props) => {
   ];
 
   useEffect(() => {
-    const fetchData = async () => {
+    if (!meUser?._id) {
       setLoading(true);
-      try {
-        const response = await sdk.MeUser();
-        if (response?.meUser) {
-          useUserStore.getState().setMeUser(response.meUser);
-          setShowWalkthrough(!walkthroughDone(response.meUser._id, "campaign"));
-        }
-      } catch (error) {
-        setToastData({ message: extractErrorMessage(error), type: "error" });
-      }
-      setLoading(false);
-    };
-
-    fetchData();
-  }, []);
+      return;
+    }
+    setShowWalkthrough(
+      !(meUser.completedWalkthroughs ?? []).includes(WalkthroughKey.Campaign)
+    );
+    setLoading(false);
+  }, [meUser]);
 
   return (
     <Tabs
@@ -155,8 +139,20 @@ const CampaignLayout = ({ children }: Props) => {
           const finishedStatuses: string[] = [STATUS.FINISHED, STATUS.SKIPPED];
 
           if (finishedStatuses.includes(status) && meUser) {
-            markWalkthroughDone(meUser._id, "campaign");
             setShowWalkthrough(false);
+            useUserStore
+              .getState()
+              .markWalkthroughCompleteLocal(WalkthroughKey.Campaign);
+            try {
+              await sdk.MarkWalkthroughDone({
+                input: { walkthrough: WalkthroughKey.Campaign },
+              });
+            } catch (error) {
+              setToastData({
+                message: extractErrorMessage(error),
+                type: "error",
+              });
+            }
           }
         }}
         tooltipComponent={CustomJoyrideTooltip}

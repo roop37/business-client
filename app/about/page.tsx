@@ -36,7 +36,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: "About Hoizr — built for India's live-night industry",
     description:
-      "Hoizr is building the infrastructure for a stronger Indian live-event industry: direct publishing, owned fan CRM, AI event evaluation, peer benchmarks, and event-night operations.",
+      "Hoizr is building the infrastructure for a stronger Indian live-event industry: direct publishing, owned fan CRM, AI event evaluation, marketing, and event-night operations.",
     url: "/about",
     type: "website",
     siteName: "Hoizr",
@@ -73,7 +73,7 @@ const OPERATING_LAYERS = [
   {
     title: "Give operators a real mirror",
     body:
-      "Competitive Analysis turns anonymous market signal into honest benchmarks, so operators can see where they stand and what stronger rooms do differently.",
+      "Hoizr's reporting shows operators exactly how each event performed — sources, sell-through, and settlement. Honest peer benchmarks, so you can see how you stack up against similar rooms, are what we're building toward.",
   },
   {
     title: "Push India higher",
@@ -90,7 +90,7 @@ const aboutPageJsonLd = {
   inLanguage: "en-IN",
   name: "About Hoizr — building India's live-night operating system",
   description:
-    "Hoizr Technologies Pvt. Ltd. is building the operating system for India's live-event industry: direct ticketing, owned fan CRM, AI event evaluation, peer benchmarks, and event-night operations.",
+    "Hoizr Technologies Pvt. Ltd. is building the operating system for India's live-event industry: direct ticketing, owned fan CRM, AI event evaluation, marketing, and event-night operations.",
   isPartOf: { "@type": "WebSite", name: "Hoizr", url: SITE_URL },
   mainEntity: {
     "@type": "Organization",
@@ -110,7 +110,7 @@ const aboutPageJsonLd = {
         url: SITE_URL,
       },
       description:
-        "Founder of Hoizr and a full-stack engineer by training, Sanbedan Paul is building the operating system for India's live-event industry — smart ticketing, AI event evaluation, owned fan CRM, peer benchmarks, and event-night operations for venues, festivals, and clubs.",
+        "Founder of Hoizr and a full-stack engineer by training, Sanbedan Paul is building the operating system for India's live-event industry — smart ticketing, AI event evaluation, owned fan CRM, marketing, and event-night operations for venues, festivals, and clubs.",
     },
     areaServed: { "@type": "Country", name: "India" },
   },
@@ -188,7 +188,7 @@ export default function AboutPage() {
                 Fans get better nights.
               </p>
               <p>
-                The goal is not just software that sells tickets. The goal is a
+                Selling tickets is table stakes. The goal is a
                 stronger, more ambitious Indian live-event industry — one where
                 small rooms can operate with discipline, large festivals can
                 scale with clarity, and India becomes one of the places the
@@ -208,7 +208,7 @@ export default function AboutPage() {
             </h2>
             <p className="mt-5 text-[16px] leading-relaxed text-[var(--m-ink-3)]">
               Every show should make the next show smarter: sharper discovery,
-              cleaner door operations, owned fan data, peer benchmarks, and
+              cleaner door operations, owned fan data, honest reporting, and
               decisions backed by what actually happened.
             </p>
           </div>

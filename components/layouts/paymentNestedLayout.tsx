@@ -1,6 +1,7 @@
 "use client";
 
 import { PageHeader, PillTabs, type PillTab } from "@/components/common/owner";
+import { WalkthroughKey } from "@/generated/graphql";
 import useGlobalStore from "@/store/global";
 import useUserStore from "@/store/user";
 import { sdk } from "@/utils/graphqlClient";
@@ -22,16 +23,6 @@ const TABS: PillTab<PaymentTab>[] = [
   { value: "invoices", label: "Payout invoices" },
 ];
 
-const walkthroughDone = (userId?: string, tour = "payments") => {
-  if (typeof window === "undefined" || !userId) return true;
-  return localStorage.getItem(`hoizr.walkthrough.${userId}.${tour}`) === "done";
-};
-
-const markWalkthroughDone = (userId?: string, tour = "payments") => {
-  if (typeof window === "undefined" || !userId) return;
-  localStorage.setItem(`hoizr.walkthrough.${userId}.${tour}`, "done");
-};
-
 const PaymentLayout = ({ children }: Props) => {
   const router = useRouter();
   const { query } = router;
@@ -48,24 +39,15 @@ const PaymentLayout = ({ children }: Props) => {
   );
 
   useEffect(() => {
-    const fetchData = async () => {
+    if (!meUser?._id) {
       setLoading(true);
-      try {
-        const response = await sdk.MeUser();
-        if (response?.meUser) {
-          useUserStore.getState().setMeUser(response.meUser);
-          setShowWalkthrough(!walkthroughDone(response.meUser._id, "payments"));
-        }
-      } catch (error) {
-        setToastData({ message: extractErrorMessage(error), type: "error" });
-      }
-      setLoading(false);
-    };
-
-    fetchData();
-    // setToastData is stable
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+      return;
+    }
+    setShowWalkthrough(
+      !(meUser.completedWalkthroughs ?? []).includes(WalkthroughKey.Payments)
+    );
+    setLoading(false);
+  }, [meUser]);
 
   const subtitle =
     selected === "payouts"
@@ -75,9 +57,14 @@ const PaymentLayout = ({ children }: Props) => {
       : "Tax invoices issued for payout settlements.";
 
   return (
+    // PaymentLayout intentionally does NOT carry h-full / overflow-hidden
+    // any more — the outer mainBodyLayout already provides the scrollable
+    // content container. Nesting another scroll inside an auto-height
+    // wrapper let the inner scroll collapse to 0 height, which is why the
+    // payout-profile list couldn't scroll past the first card.
     <div
       id="payment"
-      className="flex h-full min-h-0 min-w-0 flex-col gap-6 overflow-hidden font-owner"
+      className="flex min-w-0 flex-col gap-6 font-owner"
     >
       <Joyride
         steps={[
@@ -100,8 +87,20 @@ const PaymentLayout = ({ children }: Props) => {
           const finishedStatuses: string[] = [STATUS.FINISHED, STATUS.SKIPPED];
 
           if (finishedStatuses.includes(status) && meUser) {
-            markWalkthroughDone(meUser._id, "payments");
             setShowWalkthrough(false);
+            useUserStore
+              .getState()
+              .markWalkthroughCompleteLocal(WalkthroughKey.Payments);
+            try {
+              await sdk.MarkWalkthroughDone({
+                input: { walkthrough: WalkthroughKey.Payments },
+              });
+            } catch (error) {
+              setToastData({
+                message: extractErrorMessage(error),
+                type: "error",
+              });
+            }
           }
         }}
         tooltipComponent={CustomJoyrideTooltip}
@@ -120,9 +119,7 @@ const PaymentLayout = ({ children }: Props) => {
         className="!mb-0"
       />
 
-      <div className="min-h-0 min-w-0 flex-1 overflow-y-auto overflow-x-hidden pb-2 pr-1">
-        {children}
-      </div>
+      <div className="min-w-0">{children}</div>
     </div>
   );
 };

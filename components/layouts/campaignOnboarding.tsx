@@ -233,7 +233,23 @@ const OnboardingCampaignLayout = ({ children }: Props) => {
   );
 
   const { userId } = useAuthStore();
-  const { selectedHostId } = useHostsStore();
+  const resolveSelectedHostId = async (): Promise<string> => {
+    const state = useHostsStore.getState();
+    if (state.selectedHostId) return state.selectedHostId;
+    const firstHostId = state.hosts?.[0]?._id;
+    if (firstHostId) {
+      state.setSelectedHostId(firstHostId);
+      return firstHostId;
+    }
+
+    const res = await sdk.restaurantDetails();
+    const hostId = res?.restaurantDetails?._id ?? "";
+    if (hostId) {
+      state.setSelectedHostId(hostId);
+      return hostId;
+    }
+    throw new Error("Organizer context is still loading. Refresh and try again.");
+  };
 
   // Hard ceiling on CSV upload size. Cloudinary's free-tier raw quota
   // and our recipient-list semantics both make >5MB a footgun (it
@@ -246,9 +262,7 @@ const OnboardingCampaignLayout = ({ children }: Props) => {
   const uploadValidCsvToCloudinary = async (
     csvData: string
   ): Promise<string | undefined> => {
-    if (!selectedHostId) {
-      throw new Error("Host context is still loading, retry in a moment.");
-    }
+    const hostId = await resolveSelectedHostId();
 
     const blob = new Blob([csvData], { type: "text/csv" });
     if (blob.size > MAX_CSV_BYTES) {
@@ -262,7 +276,7 @@ const OnboardingCampaignLayout = ({ children }: Props) => {
     // Stamp the blob with a host_user_ts filename so concurrent
     // uploads from the same host never collide on the public_id
     // Cloudinary auto-assigns.
-    const fileName = `${selectedHostId}_${userId}_${Date.now()}.csv`;
+    const fileName = `${hostId}_${userId}_${Date.now()}.csv`;
     const file = new File([blob], fileName, { type: "text/csv" });
 
     // Upload only. Cleanup of the previous CSV is the caller's job
@@ -271,7 +285,7 @@ const OnboardingCampaignLayout = ({ children }: Props) => {
     // skipped. See the call-site in goToNextStep for the full flow.
     const result = await uploadHostAsset({
       kind: "campaign-csv",
-      hostId: selectedHostId,
+      hostId,
       file,
       resourceType: "raw",
     });
@@ -292,9 +306,10 @@ const OnboardingCampaignLayout = ({ children }: Props) => {
       try {
         const res = await sdk.restaurantDetails();
         if (res?.restaurantDetails) {
-          const { name, brandingLogo, address } = res.restaurantDetails;
+          const { _id, name, brandingLogo, address } = res.restaurantDetails;
 
           setSelectedHost(name || "");
+          if (_id) useHostsStore.getState().setSelectedHostId(_id);
           setHostLogo(brandingLogo || "");
           if (address) {
             setHostAddress({ ...address, _id: address._id || "" });
@@ -453,6 +468,14 @@ const OnboardingCampaignLayout = ({ children }: Props) => {
           customFilterConditions: conditionGroup,
           emailStatus:
             campaign.emailStatus ?? EmailCampaignPublicationStatus.Drafted,
+          // Without seeding csvUrl, the save path at the publish step
+          // hits the "CSV rows unchanged" branch and writes
+          // `input.csvDataUrl = currentState.csvUrl` — which is "" by
+          // default — clearing the stored URL on the backend and
+          // failing activation with "CSV URL is required for CSV
+          // target type." Seed it from the loaded campaign so the
+          // duplicate-then-publish flow keeps the original CSV.
+          csvUrl: campaign.csvDataUrl ?? "",
         });
         useOriginalCampaignStore.getState().setOriginalCampaign({
           ...campaign,
@@ -483,17 +506,21 @@ const OnboardingCampaignLayout = ({ children }: Props) => {
         const evt = response?.getEvent;
         if (!evt) return;
         const slugPart = evt.slug || evt._id;
-        // UTM follows the Choose flow: source=hoizr_email,
-        // medium=email, campaign={campaignId or campaignName slug}.
+        // Use the public event URL plus campaign attribution. The server
+        // re-applies these on activation once the saved campaign id is known.
         const utmCampaign =
-          (campaignId ?? campaignTitle ?? "campaign")
+          (campaignTitle || campaignId || "campaign")
             .toLowerCase()
             .replace(/[^a-z0-9]+/g, "-")
             .replace(/^-+|-+$/g, "")
             .slice(0, 60) || "campaign";
-        const url =
-          `https://hoizr.com/events/${slugPart}` +
-          `?utm_source=hoizr_email&utm_medium=email&utm_campaign=${utmCampaign}`;
+        const params = new URLSearchParams({
+          utm_source: "hoizr",
+          utm_medium: "email",
+          utm_campaign: utmCampaign,
+        });
+        if (campaignId) params.set("campaignId", campaignId);
+        const url = `https://hoizr.com/events/${slugPart}?${params.toString()}`;
         if (!cancelled) setCtaLink(url);
       } catch {
         // ignore — host can fill the CTA manually.

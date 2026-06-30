@@ -19,6 +19,9 @@ export default async function DashboardPage() {
     if (journey.hostStatus === "BLOCKED") {
       redirect("/account/blocked");
     }
+    if (!journey.isAdminVerified) {
+      redirect("/blocker/admin-verification-pending");
+    }
 
     return <DashboardClient />;
   } catch (error) {

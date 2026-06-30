@@ -32,7 +32,7 @@ export enum UserOnboardingStatusMessage {
   paymentPending = "Your payment details are pending.",
   internalVerificationPending = "Verification pending.",
   onboardingPending = "Your onboarding details are pending",
-  restaurantOnboardingPending = "Host onboarding pending",
+  restaurantOnboardingPending = "Venue onboarding pending",
 }
 
 export const LoginClient: FC = () => {
@@ -234,26 +234,26 @@ export const LoginClient: FC = () => {
   return (
     <>
       <div className="min-h-screen bg-[var(--owner-bg)] text-[var(--owner-fg-1)] lg:h-screen lg:overflow-hidden">
-        <div className="grid min-h-screen lg:h-screen lg:min-h-0 lg:grid-cols-[66%_34%]">
-          <div className="flex min-h-screen items-center bg-[var(--owner-bg)] px-6 py-8 md:px-10 lg:h-screen lg:min-h-0 lg:overflow-hidden xl:px-16">
-            <div className="mx-auto w-full max-w-[640px]">
+        <div className="grid min-h-screen lg:h-screen lg:min-h-0 lg:grid-cols-[57%_43%]">
+          <div className="flex min-h-screen items-center bg-[var(--owner-bg)] px-6 py-8 md:px-10 lg:h-screen lg:min-h-0 lg:overflow-hidden xl:px-14">
+            <div className="mx-auto w-full max-w-[420px]">
               <div className="lg:hidden">
                 <Link href="/" aria-label="Go to Hoizr landing page">
-                  <AuthLogo width={148} />
+                  <AuthLogo width={132} />
                 </Link>
               </div>
-              <div className="mt-10 lg:mt-0">
-                <h1 className="text-[34px] font-semibold leading-tight tracking-[-0.02em]">
+              <div className="mt-8 lg:mt-0">
+                <h1 className="text-[27px] font-semibold leading-tight tracking-[-0.02em]">
                   Welcome Back
                 </h1>
-                <p className="mt-4 text-[17px] leading-7 text-[var(--owner-fg-3)]">
+                <p className="mt-3 text-[15px] leading-6 text-[var(--owner-fg-3)]">
                   Sign in below to manage events, campaigns, collaborators,
                   payouts, and more.
                 </p>
               </div>
 
-              <div className="mt-11">
-                <form className="space-y-5" onSubmit={handleSubmit(onSubmit)}>
+              <div className="mt-8">
+                <form className="space-y-4" onSubmit={handleSubmit(onSubmit)}>
                   <AuthTextField
                     label="Email or Mobile Number"
                     id="email"
@@ -266,14 +266,14 @@ export const LoginClient: FC = () => {
                     error={errors.email?.message}
                   />
 
-                  <div className="pt-5">
+                  <div className="pt-3">
                     <AuthPrimaryButton type="submit" disabled={btnloading}>
                       {btnloading ? "Sending code..." : "Sign In"}
                     </AuthPrimaryButton>
                   </div>
                 </form>
 
-                <div className="mt-9 border-t border-dashed border-[var(--owner-border)] pt-8">
+                <div className="mt-7 border-t border-dashed border-[var(--owner-border)] pt-6">
                   <p className="text-sm text-[var(--owner-fg-3)]">
                     By using the Hoizr dashboard, you accept our{" "}
                     <Link
@@ -297,7 +297,7 @@ export const LoginClient: FC = () => {
                   </p>
                 </div>
 
-                <p className="mt-8 text-sm text-[var(--owner-fg-3)]">
+                <p className="mt-6 text-sm text-[var(--owner-fg-3)]">
                   {`Don't have an account yet?`}{" "}
                   <Link
                     href="/signup"
@@ -372,7 +372,7 @@ export const LoginClient: FC = () => {
       <ReusableModal
         isOpen={showMultiAccount}
         onClose={() => setShowMultiAccount(false)}
-        title={"Select a host to manage"}
+        title={"Select a venue to manage"}
         width="md"
       >
         {multiAccountLoading ? (

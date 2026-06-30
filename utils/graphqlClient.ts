@@ -2,12 +2,33 @@
 import { getSdk } from "@/generated/graphql";
 import { GraphQLClient } from "graphql-request";
 
-if (!process.env.NEXT_PUBLIC_SERVER_BASE_URL) {
-  throw new Error("Endpoint URL is not defined.");
-}
-
 const TOKEN_REFRESH_QUERY = "mutation TokenRefresh { tokensRefresh }";
-const endpoint = process.env.NEXT_PUBLIC_SERVER_BASE_URL + "/graphql";
+
+// Resolve at module load without throwing. A missing env var (Vercel
+// build before envs are wired, local checkout without .env, etc.)
+// would otherwise crash Next.js's page-data collection and fail the
+// whole build — even for routes marked `dynamic = "force-dynamic"`.
+// Runtime requests will still fail loudly if the env stays unset, but
+// the build proceeds and the misconfiguration is recoverable without
+// a redeploy of code.
+const resolveEndpoint = (): string => {
+  const base = process.env.NEXT_PUBLIC_SERVER_BASE_URL?.replace(/\/+$/, "");
+  if (!base) {
+    if (
+      process.env.NEXT_PUBLIC_HOIZR_ENV === "prod" &&
+      typeof window !== "undefined"
+    ) {
+      // eslint-disable-next-line no-console
+      console.warn(
+        "[hoizr] NEXT_PUBLIC_SERVER_BASE_URL is not set; falling back to http://localhost:4000/graphql"
+      );
+    }
+    return "http://localhost:4000/graphql";
+  }
+  return base.endsWith("/graphql") ? base : `${base}/graphql`;
+};
+
+export const endpoint = resolveEndpoint();
 
 const graphQLClient = new GraphQLClient(endpoint, {
   credentials: "include",
@@ -124,6 +145,21 @@ Object.assign(sdk, {
   deleteIncompleteRestaurant: () => truthy("deleteIncompleteRestaurant"),
   updateWalkthroughStatus: () => truthy("updateWalkthroughStatus"),
   getActiveStates: async () => {
+    // Prefer the server's cached + deduped states query (~37 rows). It
+    // is one Redis read instead of pulling the full 500+ city list just
+    // to derive states. Falls back to client-side derivation if the
+    // server hasn't been deployed with `getActiveStates` yet.
+    try {
+      const data: any = await graphQLClient.request(
+        "query getActiveStates { getActiveStates { _id value } }"
+      );
+      if (Array.isArray(data?.getActiveStates) && data.getActiveStates.length) {
+        return { getActiveStates: data.getActiveStates };
+      }
+    } catch {
+      // Server may predate this query — fall through to city derivation.
+    }
+
     const response = await sdk.getActiveIndianCities();
     const uniqueStates = Array.from(
       new Set(
@@ -186,6 +222,57 @@ Object.assign(sdk, {
   DashboardMenuData: async () => ({ dashboardMenuData: {} }),
   DashboardMarketingData: async () => ({ dashboardMarketingData: {} }),
   getReport: async () => ({ getReport: null }),
+  // Hand-written (codegen-free, matching this file's pattern) — the generic
+  // host reports query. See main-server modules/hostReports.
+  getHostReport: async (variables: { input: any }) =>
+    graphQLClient.request(
+      `
+        query getHostReport($input: HostReportInput!) {
+          getHostReport(input: $input) {
+            type
+            freshnessLabel
+            generatedAt
+            metrics {
+              key
+              label
+              value
+              valueType
+              helpText
+              trendValue
+              trendDirection
+            }
+            tables {
+              title
+              columns { key header align valueType }
+              rows { cells { key value } }
+            }
+            charts {
+              key
+              title
+              type
+              xKey
+              seriesKeys
+              points { x values { key value } }
+            }
+          }
+        }
+      `,
+      variables
+    ),
+  // Drill-down: who used a promo code (rendered in a modal as a ReportTable).
+  getHostPromoUsage: async (variables: { input: any }) =>
+    graphQLClient.request(
+      `
+        query getHostPromoUsage($input: HostPromoUsageInput!) {
+          getHostPromoUsage(input: $input) {
+            title
+            columns { key header align valueType }
+            rows { cells { key value } }
+          }
+        }
+      `,
+      variables
+    ),
   getCsvErrors: async () => ({ getCsvErrors: [] }),
   getSalesTrendReport: async () => ({ getSalesTrendReport: [] }),
   getCampaignReport: async () => ({ getCampaignReport: [] }),
@@ -232,8 +319,45 @@ Object.assign(sdk, {
           ticketsSoldToday
           salesLast30Days
           ticketsSoldLast30Days
+          orderCountLast30Days
+          averageOrderValueLast30Days
           pendingSettlementsCount
           paidOutLifetime
+          marketingSubscribersCount
+          lifetimeCampaignMessagesSent
+          netTicketSales
+          totalCollected
+          salesSeries {
+            date
+            label
+            sales
+            tickets
+          }
+          salesBySource {
+            label
+            amount
+            count
+            percent
+          }
+          ticketMix {
+            label
+            amount
+            count
+            percent
+          }
+          topItems {
+            label
+            amount
+            count
+            percent
+          }
+          upcomingCampaigns {
+            id
+            name
+            status
+            scheduledFor
+            recipientCount
+          }
         }
       }
     `),
@@ -416,11 +540,15 @@ Object.assign(sdk, {
             endDate
             isVisible
             ticketingEnabled
+            guestlistEnabled
+            guestlistAutoAccept
+            guestlistMaxCapacity
             isCollaboratorView
             canSeeMetrics
             canRunCampaigns
             canCreateOffers
             canAccessCustomerList
+            viewerTeamRole
             totals { capacity sold grossRevenue }
             tickets {
               _id
@@ -434,7 +562,206 @@ Object.assign(sdk, {
             selectedCommissionRate
             selectedAiBoostCode
             scannersCount
+            pricingSnapshot {
+              optionId
+              plan
+              label
+              commissionRate
+              customerPlatformFeeRate
+              upfrontFee
+              expectedPaidTickets
+              expectedGrossSales
+              hostPayout
+            }
+            pricingOptions {
+              optionId
+              plan
+              label
+              commissionRate
+              customerPlatformFeeRate
+              upfrontFee
+              expectedPaidTickets
+              expectedGrossSales
+              hostPayout
+            }
+            feeSettlementMode
+            collaborators {
+              name
+              businessLinkId
+              logo
+              collaborationStatus
+              canSeeMetrics
+              canRunCampaigns
+              canCreateOffers
+              requestCustomerListAccess
+              customerListShared
+              hideOnEventPage
+              allowIssuingOfflineTickets
+              sendTransactionalMails
+            }
           }
+        }
+      `,
+      variables
+    ),
+  /**
+   * Switch the fee-settlement mode on a published event. Offer +
+   * commission stay snapshotted on the event; only the reconcile
+   * mechanic flips.
+   */
+  updateEventFeeSettlementMode: async (variables: {
+    id: string;
+    mode: "DeductFromPayout" | "PayAfterEvent";
+  }) =>
+    graphQLClient.request(
+      `
+        mutation updateEventFeeSettlementMode(
+          $id: String!
+          $mode: EventFeeSettlementMode!
+        ) {
+          updateEventFeeSettlementMode(id: $id, mode: $mode)
+        }
+      `,
+      variables
+    ),
+  // Show/hide a single ticket type from the manage table. Ticket _id is a
+  // string subdocument id (passed through as-is).
+  setEventTicketVisibility: async (variables: {
+    id: string;
+    ticketId: string;
+    visible: boolean;
+  }) =>
+    graphQLClient.request(
+      `
+        mutation setEventTicketVisibility(
+          $id: String!
+          $ticketId: String!
+          $visible: Boolean!
+        ) {
+          setEventTicketVisibility(id: $id, ticketId: $ticketId, visible: $visible)
+        }
+      `,
+      variables
+    ),
+  // ── Guestlist management (host + collaborator) ──────────────────────────
+  setEventGuestlistSettings: async (variables: {
+    input: {
+      eventId: string;
+      guestlistEnabled: boolean;
+      guestlistAutoAccept: boolean;
+      guestlistMaxCapacity?: number | null;
+    };
+  }) =>
+    graphQLClient.request(
+      `
+        mutation setEventGuestlistSettings($input: EventGuestlistSettingsInput!) {
+          setEventGuestlistSettings(input: $input)
+        }
+      `,
+      variables
+    ),
+  eventGuestlists: async (variables: { eventId: string }) =>
+    graphQLClient.request(
+      `
+        query eventGuestlists($eventId: String!) {
+          eventGuestlists(eventId: $eventId) {
+            _id
+            eventId
+            contributorType
+            contributorId
+            contributorName
+            cap
+            isPublic
+            code
+            isActive
+            manageEnabled
+            isOpen
+          }
+        }
+      `,
+      variables
+    ),
+  upsertGuestlist: async (variables: {
+    input: {
+      eventId: string;
+      contributorType: string;
+      contributorId: string;
+      contributorName?: string;
+      cap?: number | null;
+      isPublic?: boolean;
+      isActive?: boolean;
+      manageEnabled?: boolean;
+      isOpen?: boolean;
+    };
+  }) =>
+    graphQLClient.request(
+      `
+        mutation upsertGuestlist($input: UpsertGuestlistInput!) {
+          upsertGuestlist(input: $input) {
+            _id
+            contributorType
+            contributorId
+            contributorName
+            cap
+            isPublic
+            code
+            isActive
+            manageEnabled
+            isOpen
+          }
+        }
+      `,
+      variables
+    ),
+  guestlistEntries: async (variables: {
+    eventId: string;
+    guestlistId?: string;
+  }) =>
+    graphQLClient.request(
+      `
+        query guestlistEntries($eventId: String!, $guestlistId: String) {
+          guestlistEntries(eventId: $eventId, guestlistId: $guestlistId) {
+            _id
+            guestlistId
+            guestName
+            guestEmail
+            guestPhone
+            status
+            checkedIn
+            checkedInAt
+            createdAt
+            revokedAt
+          }
+        }
+      `,
+      variables
+    ),
+  guestlistEntriesCsv: async (variables: {
+    eventId: string;
+    guestlistId?: string;
+  }) =>
+    graphQLClient.request(
+      `
+        query guestlistEntriesCsv($eventId: String!, $guestlistId: String) {
+          guestlistEntriesCsv(eventId: $eventId, guestlistId: $guestlistId)
+        }
+      `,
+      variables
+    ),
+  approveGuestlistEntry: async (variables: { entryId: string }) =>
+    graphQLClient.request(
+      `
+        mutation approveGuestlistEntry($entryId: String!) {
+          approveGuestlistEntry(entryId: $entryId)
+        }
+      `,
+      variables
+    ),
+  revokeGuestlistEntry: async (variables: { entryId: string }) =>
+    graphQLClient.request(
+      `
+        mutation revokeGuestlistEntry($entryId: String!) {
+          revokeGuestlistEntry(entryId: $entryId)
         }
       `,
       variables
@@ -461,13 +788,38 @@ Object.assign(sdk, {
             title
             description
             eventFlyer
+            horizontalFlyer
+            videoSneakPeek
+            gallery {
+              url
+              type
+            }
+            verticalVideo
+            horizontalVideo
+            instagramPost
+            instagramStory
+            tableLayoutImage
             eventType
             status
+            firstStepCompleted
             startDate
             endDate
             markSeparateDays
+            multiCity
+            days {
+              dayId
+              title
+              startDate
+              endDate
+              location {
+                addressLine1
+                city
+                state
+                pincode
+              }
+            }
             isComingSoon
-            repeatEveryWeek
+            genreTagIds
             city
             location {
               addressLine1
@@ -497,6 +849,25 @@ Object.assign(sdk, {
             refundPolicy
             cancellationPolicy
             contactForQueriesTables
+            eventGuide {
+              languageIds
+              minimumEntryAge
+              paidEntryAge
+              venueLayout
+              seatingArrangement
+              kidFriendly
+              petFriendly
+              gatesOpenBeforeEvent
+              gatesOpenLeadHours
+              gatesOpenLeadMinutes
+              youtubeLink
+            }
+            faqs {
+              question
+              answer
+            }
+            eventInstructions
+            prohibitedItems
             expectedEventsDoneTillNow
             selectedPricingPlan
             feeSettlementMode
@@ -508,6 +879,7 @@ Object.assign(sdk, {
               _id
               ticketCategory
               ticketName
+              dayId
               ticketType
               ticketCapacity
               ticketSold
@@ -539,6 +911,7 @@ Object.assign(sdk, {
             eventCollaborationBusiness {
               name
               businessLinkId
+              logo
               requestCustomerListAccess
               customerListShared
               hideOnEventPage
@@ -911,6 +1284,7 @@ Object.assign(sdk, {
         eventCollaborationBusiness?: Array<{
           businessLinkId?: string;
           name?: string;
+          logo?: string;
           collaborationStatus?: string;
           canSeeMetrics?: boolean;
           canRunCampaigns?: boolean;
@@ -933,6 +1307,7 @@ Object.assign(sdk, {
             eventCollaborationBusiness {
               businessLinkId
               name
+              logo
               collaborationStatus
               canSeeMetrics
               canRunCampaigns

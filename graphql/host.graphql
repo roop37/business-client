@@ -54,8 +54,8 @@ query getHost {
   }
 }
 
-query getHostDashboardSummary {
-  getHostDashboardSummary {
+query getHostDashboardSummary($input: HostDashboardSummaryInput) {
+  getHostDashboardSummary(input: $input) {
     upcomingEventsCount
     publishedEventsCount
     draftEventsCount
@@ -63,8 +63,44 @@ query getHostDashboardSummary {
     ticketsSoldToday
     salesLast30Days
     ticketsSoldLast30Days
+    orderCountLast30Days
+    averageOrderValueLast30Days
     pendingSettlementsCount
     paidOutLifetime
+    marketingSubscribersCount
+    lifetimeCampaignMessagesSent
+    salesSeries {
+      date
+      label
+      sales
+      tickets
+      orderCount
+    }
+    salesBySource {
+      label
+      amount
+      count
+      percent
+    }
+    ticketMix {
+      label
+      amount
+      count
+      percent
+    }
+    topItems {
+      label
+      amount
+      count
+      percent
+    }
+    upcomingCampaigns {
+      id
+      name
+      status
+      scheduledFor
+      recipientCount
+    }
   }
 }
 

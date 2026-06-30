@@ -30,7 +30,6 @@ import {
 import { MarketingShell } from "@/components/marketing/MarketingShell";
 import { AiOfferSpotlight } from "@/components/marketing/sections/AiOfferSpotlight";
 import { FinalCTA } from "@/components/marketing/sections/FinalCTA";
-import { WaitlistButton } from "@/components/marketing/waitlist/WaitlistButton";
 import {
   BreadcrumbJsonLd,
   FaqJsonLd,
@@ -154,7 +153,7 @@ const OPERATING_FLOW: FlowStep[] = [
       "Use CRM segments to send on-sale drops, reminders, last-call pushes, and post-event flows across owned channels. Buyers move out of sales flows and into arrival or loyalty flows.",
     details: [
       "Segments by purchase history, attendance, city, and interest",
-      "Campaign calendar for email, SMS, WhatsApp, push, and in-app",
+      "Campaign workspace for email and WhatsApp",
       "Suppression logic keeps paid buyers from seeing stale sales nudges",
     ],
   },
@@ -164,7 +163,7 @@ const OPERATING_FLOW: FlowStep[] = [
     eyebrow: "Door ops",
     title: "Run scanners, guestlist, and live arrivals from one view.",
     body:
-      "Door staff scan QR tickets, check guestlist entries, issue wristbands, and see live arrivals. The event organizer can watch capacity, no-shows, and promoter arrivals while the line is moving.",
+      "Door staff scan QR tickets, check guestlist entries, and see live arrivals. The event organizer can watch capacity, no-shows, and promoter arrivals while the line is moving.",
     details: [
       "Multi-scanner setup with simple staff access",
       "Guestlist caps, invite QRs, and promoter arrival counters",
@@ -260,41 +259,41 @@ const AI_CAPABILITIES: { icon: LucideIcon; title: string; body: string; tag: str
   },
   {
     icon: Filter,
-    tag: "Audience filters",
-    title: "Generates the audience filters for you.",
-    body: "Instead of building segments by hand, AI proposes the filters worth sending to — 'fans who came last quarter', 'opened but didn't buy', 'genre + city + price tolerance' — already wired into the campaign builder.",
+    tag: "Description drafting",
+    title: "Writes a first draft of your description.",
+    body: "Hand it the event details and AI drafts your description and SEO copy, so a blank page is never the blocker. Edit it to your voice before you publish.",
   },
   {
     icon: PieChart,
-    tag: "Budget allocation",
-    title: "Splits your marketing budget across channels.",
-    body: "Hoizr reads your customer list and the event, then proposes a split. Example: spend 60% on SMS to repeat buyers because they have shown up before — and shift the rest to push for new-customer acquisition.",
+    tag: "Boost offer",
+    title: "Finds a better rate where you qualify.",
+    body: "The AI's job is to study the event honestly and surface a Boost offer — lower commission where the event qualifies — with the reasoning behind it shown, so you see why.",
   },
   {
     icon: Target,
-    tag: "Channel logic",
-    title: "Tells you why each rupee goes where.",
-    body: "Every recommendation comes with the reasoning — past attendance, response rates, opt-in mix — so you can override with context rather than fight a black box.",
+    tag: "Coming soon",
+    title: "A budget co-pilot that splits spend across channels.",
+    body: "AI will read your CRM and the event, then propose how to spend across email, WhatsApp, and more — with reasoning attached. You approve every send. On the roadmap, not live yet.",
   },
   {
     icon: Brain,
     tag: "Coming soon",
-    title: "Filter-driven campaigns, like email-builder filters on every channel.",
-    body: "The same filter logic that builds email segments will compose multi-channel campaigns end-to-end — pick a hypothesis, AI builds the send, you approve.",
+    title: "Filter-driven campaigns on every channel.",
+    body: "The same filter logic that builds email segments will compose multi-channel campaigns end-to-end — pick a hypothesis, AI builds the send, you approve. On the roadmap.",
   },
 ];
 
 const PLATFORM_MODULES = [
   {
-    href: "/product/event-listing",
+    href: "/product/event-ticketing",
     icon: Ticket,
-    title: "Event Listing",
-    body: "Conversion-ready pages with ticket phases, add-ons, source links, policy notes, and checkout.",
+    title: "Event Ticketing",
+    body: "Conversion-ready pages with ticket tiers, add-ons, source links, policy notes, and a UPI-first checkout.",
   },
   {
-    href: "/product/marketing-campaigns",
+    href: "/product/whatsapp-marketing",
     icon: MessageSquare,
-    title: "Marketing Campaigns",
+    title: "WhatsApp & Email",
     body: "One campaign workspace for owned-channel drops, reminders, last-call nudges, and post-event flows.",
   },
   {
@@ -322,16 +321,16 @@ const PLATFORM_MODULES = [
     body: "AI studies format, city, scale, ticket mix, and listing quality to provide the best possible offer.",
   },
   {
-    href: "/product/ai-marketing-intelligence",
-    icon: Brain,
-    title: "AI Marketing Intelligence",
-    body: "Reads your CRM and the event, then splits your budget across SMS, push, email, and WhatsApp with reasoning attached.",
+    href: "/product/fan-crm",
+    icon: Users,
+    title: "Fan CRM",
+    body: "Every buyer and RSVP becomes a record you own — spend, history, and segments you can market to.",
   },
   {
-    href: "/product/competitive-analysis",
-    icon: BarChart3,
-    title: "Competitive Analysis",
-    body: "See how peer event organizers in your city, format, and price band actually perform — and what the top quartile does differently.",
+    href: "/product/payouts-settlements",
+    icon: Wallet,
+    title: "Payouts & Settlements",
+    body: "An itemised statement per event — gross, deductions, refunds, and your net payout, on a clear timeline.",
   },
 ];
 
@@ -420,10 +419,9 @@ const HowItWorksHero = () => (
           From first setup to the morning-after report.
         </h1>
         <p className="hm-lead mt-7 max-w-[660px]">
-          Hoizr is not just a checkout link. It is the operating system for
-          the event: listing, AI event evaluation, direct sales, fan CRM,
-          campaigns, guestlist, door scanning, reporting, and settlement-ready
-          numbers.
+          A checkout link gets you one sale. Hoizr runs the whole night:
+          listing, AI event evaluation, direct sales, fan CRM, campaigns,
+          guestlist, door scanning, reporting, and settlement-ready numbers.
         </p>
         <div className="mt-8 flex flex-wrap gap-3">
           {["No subscription wall", "Owned fan CRM", "Event-specific AI offer", "Live door ops"].map(
@@ -439,10 +437,10 @@ const HowItWorksHero = () => (
           )}
         </div>
         <div className="mt-9 flex flex-wrap gap-3">
-          <WaitlistButton source="how-it-works-hero" className="hm-btn hm-btn-primary">
-            Join the waitlist
+          <Link href="/signup" className="hm-btn hm-btn-primary">
+            Get started
             <ArrowRight size={16} />
-          </WaitlistButton>
+          </Link>
           <Link
             href="#operating-flow"
             className="hm-btn hm-btn-ghost border border-[var(--m-border)]"
@@ -615,17 +613,17 @@ const AiCoPilot = () => (
             className="mt-5 font-bold leading-[1.04] tracking-[-0.025em]"
             style={{ fontFamily: "var(--m-font-display)", fontSize: "clamp(34px, 4.8vw, 58px)" }}
           >
-            One AI that <span className="text-[var(--m-acid)]">studies your event</span> and helps you spend smarter.
+            One AI that <span className="text-[var(--m-acid)]">studies your event</span> and finds you a better rate.
           </h2>
           <p className="mt-6 max-w-[540px] text-[15.5px] leading-[1.7] text-white/78">
-            Hoizr is quietly AI-native. The same engine that quotes your event-specific commission also reviews your listing, generates the right audience filters, and tells you exactly where to spend your marketing budget — channel by channel, segment by segment, with the reasoning attached.
+            Hoizr is quietly AI-native. Before you publish, the same engine evaluates your listing, drafts your description and SEO, and surfaces a Boost offer with lower commission where your event qualifies — with the reasoning shown. A budget co-pilot that splits spend across channels is on the way.
           </p>
           <div className="mt-7 grid gap-3 sm:grid-cols-2 max-w-[520px]">
             {[
-              "Tied to your event, not generic benchmarks",
+              "Tied to your event, not a generic template",
               "Suggestions, never silent auto-pilot",
               "Reasoning shown for every recommendation",
-              "Improves with every event you run",
+              "A safe fallback when the model is unavailable",
             ].map((line) => (
               <div
                 key={line}
@@ -640,10 +638,10 @@ const AiCoPilot = () => (
               Worked example
             </div>
             <p className="mt-3 text-[14.5px] leading-[1.7] text-white/85">
-              &ldquo;Your list is 4,200 fans. 1,400 of them attended a comedy night in the last 90 days. Spend 60% of this budget on SMS to that group — they convert at ~3×. Send the remaining 40% as push to lookalike new fans in Bandra and Andheri. Save email for the post-event flow, not the on-sale push.&rdquo;
+              &ldquo;Rooftop set, Bandra, 300 cap, four ticket tiers. The listing&apos;s strong, but the pricing ladder&apos;s a little flat — here&apos;s a tighter one. And because the format and your track record check out, here&apos;s a Boost that lowers your commission for this show.&rdquo;
             </p>
             <div className="mt-4 text-[11.5px] uppercase tracking-[0.14em] text-white/45">
-              Hoizr AI · suggested allocation for your next event
+              Hoizr AI · evaluation for your next event
             </div>
           </div>
         </div>
@@ -783,7 +781,7 @@ const PlatformModules = () => (
         </p>
       </div>
       <Link
-        href="/product/event-listing"
+        href="/product"
         className="hm-btn hm-btn-ghost self-start border border-[var(--m-border)] md:self-auto"
       >
         Explore products

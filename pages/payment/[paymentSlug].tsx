@@ -5,6 +5,7 @@ import HostPayouts from "@/components/modules/payment/host-payouts";
 import SettlementHistory from "@/components/modules/payment/settlement-history";
 import InvoicesTable from "@/components/modules/payment/tables/invoices";
 import { PermissionTypeEnum } from "@/generated/graphql";
+import { verificationGateRedirect } from "@/lib/auth/verificationGate";
 import useGlobalStore from "@/store/global";
 import { sdk } from "@/utils/graphqlClient";
 import { hasAccess } from "@/utils/hasAccess";
@@ -91,6 +92,11 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
         },
       };
     }
+
+    // While verification is pending NO management page is reachable — the host
+    // adds payout details via the modal popped over the blocker instead.
+    const _vGate = verificationGateRedirect(journey);
+    if (_vGate) return _vGate;
 
     if (userResponse && userResponse.meUser) {
       const { _id, firstName, status, permissions } = userResponse.meUser;

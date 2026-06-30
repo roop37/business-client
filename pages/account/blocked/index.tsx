@@ -38,10 +38,10 @@ const PaymentPending: NextPageWithLayout = () => {
                 variant={ButtonType.Text}
                 type="button"
                 onClick={() => {
-                  window.location.href = "mailto:support@hoizr.com";
+                  window.location.href = "mailto:contact@hoizr.com";
                 }}
               >
-                support@hoizr.com
+                contact@hoizr.com
               </CButton>
               to verify your credentials and restore access.
             </p>

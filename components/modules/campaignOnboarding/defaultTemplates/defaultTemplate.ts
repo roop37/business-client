@@ -97,8 +97,14 @@ const createEventFlyerRow = () => ({
 });
 
 const withEventFlyer = (template: { html: string; json: any }) => {
+  // Flyer goes at the TOP of the email — before the first row in
+  // both representations. Previously the JSON spliced the flyer at
+  // index 1 (after row 0) while the HTML prepended it before row 0,
+  // so the Unlayer editor (JSON-driven) and the right-pane preview
+  // (HTML-driven) showed different orders and the layout flipped
+  // when the host navigated between steps.
   const json = JSON.parse(JSON.stringify(template.json));
-  json.body.rows.splice(1, 0, createEventFlyerRow());
+  json.body.rows.splice(0, 0, createEventFlyerRow());
   return {
     html: template.html.replace(
       '<div class="u-row-container"',
@@ -139,16 +145,16 @@ const lastCallTicketDrop = createTemplateVariant(withEventFlyer(sendAnOffer), [
 ]);
 const weekendTicketRush = createTemplateVariant(eventPromotion, [
   [
-    "We're hosting <strong>Event Name</strong> at {{businessName}}, and we'd love for you to join us!",
+    "We're hosting <strong>{{eventName}}</strong> at {{businessName}}, and we'd love for you to join us!",
     "<strong>{{eventTitle}}</strong> is built for a packed weekend: high-intent fans, one clear flyer, and a direct path to tickets.",
   ],
   ["Event Details:", "Campaign angle:"],
   [
-    "<strong>When:</strong> Event Date &amp; Time",
+    "<strong>When:</strong> {{eventDate}}",
     "<strong>Hook:</strong> Limited-capacity night with a strong reason to book now",
   ],
   [
-    "<strong>What to Expect:</strong> About event",
+    "<strong>What to Expect:</strong> {{eventAbout}}",
     "<strong>Push:</strong> Spotlight the lineup, offer, door policy, or fastest-selling ticket tier.",
   ],
   [
@@ -160,16 +166,16 @@ const weekendTicketRush = createTemplateVariant(eventPromotion, [
 ]);
 const bollywoodNightDrop = createTemplateVariant(eventInvitationWithFlyer, [
   [
-    "We're hosting <strong>Event Name</strong> at {{businessName}}, and we'd love for you to join us!",
+    "We're hosting <strong>{{eventName}}</strong> at {{businessName}}, and we'd love for you to join us!",
     "<strong>{{eventTitle}}</strong> is the Bollywood night your group chat needs: big hooks, bigger sing-alongs, and one easy ticket link.",
   ],
   ["Event Details:", "Drop details:"],
   [
-    "<strong>When:</strong> Event Date &amp; Time",
+    "<strong>When:</strong> {{eventDate}}",
     "<strong>For:</strong> friends planning the weekend, reels-first crews, and fans who book when the vibe is clear",
   ],
   [
-    "<strong>What to Expect:</strong> About event",
+    "<strong>What to Expect:</strong> {{eventAbout}}",
     "<strong>Expect:</strong> dance-floor energy, photo moments, fast guestlist movement, and a strong last-click CTA.",
   ],
   [
@@ -694,7 +700,7 @@ export const defaultTemplates = [
                         duplicatable: true,
                         deletable: true,
                         hideable: true,
-                        text: '<p style="line-height: 140%;">Need help? Reach out to us by clicking <a style="color: {{primaryColor}};" rel="noopener" href="mailto:support@hoizr.com" target="_blank" data-u-link-value="eyJuYW1lIjoiZW1haWwiLCJhdHRycyI6eyJocmVmIjoibWFpbHRvOnt7ZW1haWx9fT9zdWJqZWN0PXt7c3ViamVjdH19JmJvZHk9e3tib2R5fX0ifSwidmFsdWVzIjp7ImVtYWlsIjoic3VwcG9ydEBjaG9vc2Vwb3MuY29tIiwic3ViamVjdCI6IiIsImJvZHkiOiIifX0=">here</a>.</p>',
+                        text: '<p style="line-height: 140%;">Need help? Reach out to us by clicking <a style="color: {{primaryColor}};" rel="noopener" href="mailto:contact@hoizr.com" target="_blank" data-u-link-value="eyJuYW1lIjoiZW1haWwiLCJhdHRycyI6eyJocmVmIjoibWFpbHRvOnt7ZW1haWx9fT9zdWJqZWN0PXt7c3ViamVjdH19JmJvZHk9e3tib2R5fX0ifSwidmFsdWVzIjp7ImVtYWlsIjoic3VwcG9ydEBjaG9vc2Vwb3MuY29tIiwic3ViamVjdCI6IiIsImJvZHkiOiIifX0=">here</a>.</p>',
                         _languages: {},
                       },
                     },
@@ -1065,7 +1071,7 @@ table, td { color: #000000; } #u_body a { color: #0000ee; text-decoration: none;
       <td style="overflow-wrap:break-word;word-break:break-word;padding:10px;font-family:'Source Sans Pro',sans-serif;" align="left">
         
   <div style="font-size: 12px; color: #aaaaaa; line-height: 140%; text-align: center; word-wrap: break-word;">
-    <p style="line-height: 140%;">Need help? Reach out to us by clicking <a rel="noopener" href="mailto:support@hoizr.com" target="_blank">here</a>.</p>
+    <p style="line-height: 140%;">Need help? Reach out to us by clicking <a rel="noopener" href="mailto:contact@hoizr.com" target="_blank">here</a>.</p>
   </div>
 
       </td>

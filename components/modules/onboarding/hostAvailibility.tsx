@@ -220,6 +220,13 @@ const HostAddress = () => {
                 placeholder="Search location"
                 value={selectedPlace}
                 menuPlacement="auto"
+                menuPosition="fixed"
+                menuPortalTarget={
+                  typeof document !== "undefined" ? document.body : null
+                }
+                styles={{
+                  menuPortal: (base) => ({ ...base, zIndex: 60 }),
+                }}
                 maxMenuHeight={200}
                 noOptionsMessage={() => "Search for your desired location"}
                 onChange={async (option: any) => {
@@ -290,16 +297,30 @@ const HostAddress = () => {
             </div>
 
             <div className="flex justify-between items-center mt-1">
-              <p className="text-gray-500 text-xs text-start">
-                Search first. If the business is not listed, use manual entry below.
-              </p>
-              <button
-                type="button"
-                onClick={() => setManualLocationOpen(true)}
-                className="text-primary hover:underline cursor-pointer text-xs"
-              >
-                Enter manually
-              </button>
+              {/* Once the address fields are populated (either from a
+                  Places result or by manually opening the form once),
+                  the "Search first..." prompt + "Enter manually" toggle
+                  are redundant — the form below already covers both
+                  paths. Hide them so the UI doesn't keep nagging once
+                  the user has clearly committed to an address. */}
+              {!manualLocationOpen ? (
+                <>
+                  <p className="text-gray-500 text-xs text-start">
+                    Search first. If the business is not listed, use manual entry below.
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() => setManualLocationOpen(true)}
+                    className="text-primary hover:underline cursor-pointer text-xs"
+                  >
+                    Enter manually
+                  </button>
+                </>
+              ) : (
+                <span className="text-gray-400 text-xs text-start">
+                  Address details below — adjust any field if the auto-fill is off.
+                </span>
+              )}
               {selectedPlace && (
                 <button
                   type="button"
@@ -403,6 +424,14 @@ const HostAddress = () => {
                         classNamePrefix="react-select"
                         className="text-left text-sm"
                         placeholder="Select state"
+                        menuPosition="fixed"
+                        menuPortalTarget={
+                          typeof document !== "undefined" ? document.body : null
+                        }
+                        menuPlacement="auto"
+                        styles={{
+                          menuPortal: (base) => ({ ...base, zIndex: 60 }),
+                        }}
                       />
                     )}
                   />

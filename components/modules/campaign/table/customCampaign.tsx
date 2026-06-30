@@ -27,6 +27,7 @@ import useCampaignStore from "@/store/customCampaignStore";
 import useGlobalStore from "@/store/global";
 import useOriginalCampaignStore from "@/store/originalCampaignStore";
 import useHostsStore from "@/store/host";
+import { useHostTypeLabel } from "@/hooks/useHostTypeLabel";
 import { sdk } from "@/utils/graphqlClient";
 import { hasAccess } from "@/utils/hasAccess";
 import {
@@ -103,7 +104,40 @@ const CustomCampaigns: NextPageWithLayout = () => {
   const [loading, setLoading] = useState(false);
   const [editLoading, setEditLoading] = useState(false);
   const { setToastData, setSelectedSideBarMenu } = useGlobalStore();
-  const { hostLogo } = useHostsStore();
+  const { hostLogo, setHostLogo } = useHostsStore();
+  const hostLabel = useHostTypeLabel();
+
+  // Guard against the race where MainLayout's async restaurantDetails
+  // fetch hasn't hydrated `hostLogo` yet when the host clicks "Add". A
+  // store read alone gives false negatives ("upload your logo first")
+  // for hosts who already have one. We re-fetch on click and trust the
+  // server result.
+  const ensureHostLogoOrPrompt = async (): Promise<boolean> => {
+    if (hostLogo) return true;
+    try {
+      const res = await sdk.restaurantDetails();
+      const liveLogo = res?.restaurantDetails?.logo ?? "";
+      if (liveLogo) {
+        setHostLogo(liveLogo);
+        return true;
+      }
+    } catch {
+      // Network failure — fall through to the same "please upload"
+      // nudge; the host can retry once connectivity recovers.
+    }
+    setToastData({
+      type: "error",
+      message: `Please upload your ${hostLabel.lower} logo first`,
+    });
+    return false;
+  };
+
+  const handleAddCampaignClick = async () => {
+    const ok = await ensureHostLogoOrPrompt();
+    if (!ok) return;
+    resetBothStores();
+    router.push("/campaigns/onboarding/template-select");
+  };
   const [reload, setReload] = useState<number>(1);
   const [isPreviewModalOpen, setIsPreviewModalOpen] = useState<boolean>(false);
   const [previewCampaign, setPreviewCampaign] =
@@ -687,16 +721,7 @@ const CustomCampaigns: NextPageWithLayout = () => {
                 data={data}
                 loading={loading}
                 addClickHandler={() => {
-                  if (!hostLogo) {
-                    setToastData({
-                      type: "error",
-                      message: "Please upload your host logo first",
-                    });
-                    return;
-                  } else {
-                    resetBothStores();
-                    router.push("/campaigns/onboarding/template-select");
-                  }
+                  void handleAddCampaignClick();
                 }}
                 manualPagination={true}
                 pageSize={getPageSizeNumber(pageSize)}
@@ -741,6 +766,11 @@ const CustomCampaigns: NextPageWithLayout = () => {
                   setSearchFilter(e);
                 }}
               />
+              <div className="rounded-owner-md border border-[var(--owner-border)] bg-[var(--owner-bg)] p-3.5 text-[12px] leading-5 text-[var(--owner-fg-3)]">
+                A paused campaign ran out of marketing credit mid-send. Top up
+                your balance and hit <strong>Resume</strong> — only the customers
+                who haven&apos;t been messaged yet will receive it.
+              </div>
             </div>
           ) : (
             <div className="bg-white text-black rounded-xl p-8 flex flex-col items-center justify-center min-h-[300px] space-y-4 border border-gray-300 shadow-sm">
@@ -749,16 +779,7 @@ const CustomCampaigns: NextPageWithLayout = () => {
               </div>
               <button
                 onClick={() => {
-                  if (!hostLogo) {
-                    setToastData({
-                      type: "error",
-                      message: "Please upload your host logo first",
-                    });
-                    return;
-                  } else {
-                    resetBothStores();
-                    router.push("/campaigns/onboarding/template-select");
-                  }
+                  void handleAddCampaignClick();
                 }}
                 className="px-4 py-2 bg-primary text-white rounded-xl hover:bg-primary/90 transition-colors flex justify-between items-center space-x-2 text-sm"
               >

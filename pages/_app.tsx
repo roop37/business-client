@@ -1,6 +1,9 @@
 import PayoutModals from "@/components/common/payout/PayoutModals";
 import Toast from "@/components/common/toast/toast";
 import GlobalTopUpModal from "@/components/common/topup/GlobalTopUpModal";
+import SettingsModal from "@/components/common/settings/SettingsModal";
+import RunCampaignModal from "@/components/common/campaign/RunCampaignModal";
+import OrderReceiptModal from "@/components/common/orders/OrderReceiptModal";
 import useGlobalStore from "@/store/global";
 import { NextPage } from "next";
 import { DefaultSeo } from "next-seo";
@@ -11,29 +14,29 @@ import {
   Karla,
   Libre_Caslon_Display,
   Manrope,
-  Roboto_Flex,
   Tenor_Sans,
 } from "next/font/google";
+import localFont from "next/font/local";
 import Head from "next/head";
 import NextNProgress from "nextjs-progressbar";
 import { ReactNode, useEffect } from "react";
 import "../styles/globals.css";
 
 const seo = {
-  title: "Hoizr - Event Operations for Hosts and Venues",
+  title: "Hoizr - Event Operations for Organizers and Venues",
   description:
-    "Hoizr helps hosts, venues, and event teams manage onboarding, operations, payments, and growth.",
+    "Hoizr helps organizers, venues, and event teams manage onboarding, operations, payments, and growth.",
   openGraph: {
     type: "website",
     locale: "en_US",
     url: "https://business.hoizr.com",
-    site_name: "Hoizr - Event Operations for Hosts and Venues",
+    site_name: "Hoizr - Event Operations for Organizers and Venues",
     images: [
       {
         url: "https://business.hoizr.com/opengraph-image.webp",
         width: 1200,
         height: 630,
-        alt: "Hoizr - Event Operations for Hosts and Venues",
+        alt: "Hoizr - Event Operations for Organizers and Venues",
       },
     ],
     canonical: "./",
@@ -47,8 +50,17 @@ type NextPageWithLayout = NextPage & {
 type AppPropsWithLayout = AppProps & {
   Component: NextPageWithLayout;
 };
-const font = Roboto_Flex({
-  subsets: ["latin"],
+// Business-client workhorse type — DM Sans (local files in /fonts).
+const font = localFont({
+  src: [
+    { path: "../fonts/DMSans-Regular.ttf", weight: "400", style: "normal" },
+    { path: "../fonts/DMSans-Medium.ttf", weight: "500", style: "normal" },
+    { path: "../fonts/DMSans-SemiBold.ttf", weight: "600", style: "normal" },
+    { path: "../fonts/DMSans-Bold.ttf", weight: "700", style: "normal" },
+    { path: "../fonts/DMSans-ExtraBold.ttf", weight: "800", style: "normal" },
+  ],
+  variable: "--font-dm-sans",
+  display: "swap",
 });
 // Website Builder Fonts
 const karla = Karla({
@@ -114,7 +126,7 @@ function MyApp({ Component, pageProps }: AppPropsWithLayout) {
 
   return (
     <div
-      className={`${font.className} ${karla.variable} ${tenor.variable} ${libre.variable} ${figtree.variable} ${bodoniModa.variable} ${manrope.variable}`}
+      className={`${font.className} ${font.variable} ${karla.variable} ${tenor.variable} ${libre.variable} ${figtree.variable} ${bodoniModa.variable} ${manrope.variable}`}
     >
         <NextNProgress color="#191C24" />
         <Head>
@@ -128,6 +140,9 @@ function MyApp({ Component, pageProps }: AppPropsWithLayout) {
         {getLayout(<Component {...pageProps} />)}
         <PayoutModals />
         <GlobalTopUpModal />
+        <SettingsModal />
+        <RunCampaignModal />
+        <OrderReceiptModal />
         {toastData && (
           <Toast message={toastData.message} type={toastData.type} />
         )}

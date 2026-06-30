@@ -3,8 +3,8 @@
 import { inrFormat, OwnerButton } from "@/components/common/owner";
 import { RowsPerPageEnum } from "@/generated/graphql";
 import { sdk } from "@/utils/graphqlClient";
+import useGlobalStore from "@/store/global";
 import { AlertTriangle, CreditCard } from "lucide-react";
-import { useRouter } from "next/router";
 import { useEffect, useMemo, useState } from "react";
 
 type MarketingCreditWarningProps = {
@@ -18,6 +18,7 @@ const EMAIL_RATE_INR = 1;
 
 const normalizeAmount = (value: number) =>
   Number.isFinite(value) ? Math.max(0, Math.ceil(value)) : 0;
+const formatCredit = (value: number) => inrFormat(value, { decimals: 2 });
 
 export const MarketingCreditWarning = ({
   estimatedCost,
@@ -25,7 +26,7 @@ export const MarketingCreditWarning = ({
   label = "this campaign",
   className = "",
 }: MarketingCreditWarningProps) => {
-  const router = useRouter();
+  const { openTopUpModal, marketingCreditVersion } = useGlobalStore();
   const [balance, setBalance] = useState<number | null>(null);
 
   const normalizedEstimate = normalizeAmount(estimatedCost);
@@ -57,7 +58,10 @@ export const MarketingCreditWarning = ({
     return () => {
       cancelled = true;
     };
-  }, [normalizedEstimate]);
+    // marketingCreditVersion bumps after a verified top-up — refetch the
+    // balance so the shortfall recomputes and this warning unmounts itself
+    // (shortfall <= 0 returns null below) without a page reload.
+  }, [normalizedEstimate, marketingCreditVersion]);
 
   if (normalizedEstimate <= 0 || balance === null || shortfall <= 0) {
     return null;
@@ -65,9 +69,9 @@ export const MarketingCreditWarning = ({
 
   const recipientsCopy =
     audienceCount && audienceCount > 0
-      ? ` for ${audienceCount.toLocaleString("en-IN")} recipients at ${inrFormat(
-          EMAIL_RATE_INR
-        )}/email`
+      ? ` for ${audienceCount.toLocaleString(
+          "en-IN"
+        )} recipients at ${formatCredit(EMAIL_RATE_INR)}/email`
       : "";
 
   return (
@@ -80,11 +84,11 @@ export const MarketingCreditWarning = ({
         </span>
         <div>
           <p className="text-[14px] font-semibold">
-            {inrFormat(shortfall)} more marketing credit needed
+            {formatCredit(shortfall)} more marketing credit needed
           </p>
           <p className="mt-1 text-[13px] text-owner-fg-3">
-            Estimated cost for {label} is {inrFormat(normalizedEstimate)}
-            {recipientsCopy}. Current balance is {inrFormat(balance)}.
+            Estimated cost for {label} is {formatCredit(normalizedEstimate)}
+            {recipientsCopy}. Current balance is {formatCredit(balance)}.
           </p>
         </div>
       </div>
@@ -93,14 +97,7 @@ export const MarketingCreditWarning = ({
         type="button"
         size="sm"
         leadingIcon={<CreditCard size={14} />}
-        onClick={() =>
-          router.push(
-            `/campaigns/marketing-credit?topUp=1&amount=${Math.max(
-              100,
-              shortfall
-            )}`
-          )
-        }
+        onClick={() => openTopUpModal(Math.max(100, shortfall))}
         className="shrink-0"
       >
         Top up

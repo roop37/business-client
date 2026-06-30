@@ -4,9 +4,9 @@ import {
   Badge,
   Card,
   OwnerButton,
-  OwnerTable,
-  StatTile,
 } from "@/components/common/owner";
+import DataTable from "@/components/common/dataTable";
+import DataTableTextCell from "@/components/common/dataTable/common/textCell";
 import {
   Tooltip,
   TooltipContent,
@@ -16,9 +16,11 @@ import {
 import useGlobalStore from "@/store/global";
 import { sdk } from "@/utils/graphqlClient";
 import { extractErrorMessage } from "@/utils/utilFUncs";
+import { ColumnDef, createColumnHelper } from "@tanstack/react-table";
 import {
   Building2,
   CheckCircle2,
+  Info,
   Landmark,
   Plus,
 } from "lucide-react";
@@ -92,20 +94,6 @@ const HostPayouts: React.FC = () => {
     [data]
   );
 
-  const stats = useMemo(() => {
-    const verified = data.filter(
-      (a) => a.verificationStatus === "VERIFIED"
-    ).length;
-    const pending = data.filter(
-      (a) => a.verificationStatus === "PENDING"
-    ).length;
-    return {
-      total: data.length,
-      verified,
-      pending,
-    };
-  }, [data]);
-
   const handleSetPrimary = async (id: string) => {
     try {
       setPrimaryLoadingId(id);
@@ -127,31 +115,119 @@ const HostPayouts: React.FC = () => {
     }
   };
 
+  const columnHelper = createColumnHelper<HostPayoutAccount>();
+  const columns: ColumnDef<HostPayoutAccount, any>[] = useMemo(
+    () => [
+      columnHelper.accessor("bankName", {
+        header: "Bank",
+        enableColumnFilter: true,
+        filterFn: "auto",
+        enableSorting: true,
+        cell: ({ row }) => (
+          <div className="flex flex-col">
+            <DataTableTextCell
+              className="font-semibold"
+              value={row.original.bankName}
+            />
+            {row.original.branchName ? (
+              <span className="text-[12px] text-owner-fg-4">
+                {row.original.branchName}
+              </span>
+            ) : null}
+          </div>
+        ),
+      }),
+      columnHelper.accessor("accountHolderName", {
+        header: "Account holder",
+        enableColumnFilter: true,
+        filterFn: "auto",
+        enableSorting: true,
+        cell: ({ row }) => (
+          <DataTableTextCell value={row.original.accountHolderName} />
+        ),
+      }),
+      columnHelper.accessor("last4", {
+        header: "Account",
+        enableColumnFilter: false,
+        enableSorting: false,
+        cell: ({ row }) => (
+          <span className="font-mono text-sm text-owner-fg-1">
+            •••• {row.original.last4}
+          </span>
+        ),
+      }),
+      columnHelper.accessor("ifscCode", {
+        header: "IFSC",
+        enableColumnFilter: true,
+        filterFn: "auto",
+        enableSorting: false,
+        cell: ({ row }) => (
+          <span className="font-mono text-sm text-owner-fg-1">
+            {row.original.ifscCode}
+          </span>
+        ),
+      }),
+      columnHelper.accessor("verificationStatus", {
+        header: "Status",
+        enableColumnFilter: true,
+        filterFn: "auto",
+        enableSorting: true,
+        cell: ({ row }) => (
+          <div className="flex items-center gap-2">
+            <StatusBadge status={row.original.verificationStatus} />
+            {row.original.isPrimary ? <Badge tone="info">Primary</Badge> : null}
+          </div>
+        ),
+      }),
+      columnHelper.display({
+        id: "actions",
+        header: "Actions",
+        cell: ({ row }) => {
+          const account = row.original;
+          const canSetPrimary =
+            account.verificationStatus === "VERIFIED" && !account.isPrimary;
+          const showRejectionReason =
+            account.verificationStatus === "REJECTED" &&
+            account.rejectionReason;
+          return (
+            <div className="flex items-center justify-center">
+              {canSetPrimary ? (
+                <OwnerButton
+                  variant="secondary"
+                  size="sm"
+                  leadingIcon={<CheckCircle2 size={13} />}
+                  disabled={primaryLoadingId === account._id}
+                  onClick={() => handleSetPrimary(account._id)}
+                >
+                  Set primary
+                </OwnerButton>
+              ) : showRejectionReason ? (
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <span className="cursor-help text-[12.5px] font-medium text-owner-danger-text underline">
+                        Reason
+                      </span>
+                    </TooltipTrigger>
+                    <TooltipContent className="max-w-xs bg-owner-fg-1 text-white">
+                      <p>{account.rejectionReason}</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              ) : (
+                <span className="text-owner-fg-4">—</span>
+              )}
+            </div>
+          );
+        },
+      }),
+    ],
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [columnHelper, primaryLoadingId]
+  );
+
   return (
     <div className="flex flex-col gap-6 font-owner">
-      {/* KPI strip */}
-      <div className="grid gap-4 sm:grid-cols-3">
-        <StatTile
-          label="Active payout profile"
-          value={primaryPayout ? "Verified" : "Not yet"}
-          hint={
-            primaryPayout
-              ? `${primaryPayout.bankName} •••• ${primaryPayout.last4}`
-              : "Add and verify a profile to publish paid events."
-          }
-        />
-        <StatTile
-          label="Verified profiles"
-          value={`${stats.verified}`}
-          hint={`${stats.total} total on file`}
-        />
-        <StatTile
-          label="Pending verification"
-          value={`${stats.pending}`}
-          hint="Hoizr typically verifies within 1 to 4 hours."
-        />
-      </div>
-
       {/* Primary payout summary card */}
       <Card padding={20}>
         {primaryPayout ? (
@@ -221,86 +297,40 @@ const HostPayouts: React.FC = () => {
       </Card>
 
       {/* Accounts table */}
-      <OwnerTable loading={loading} rowCount={data.length} empty="No payout profiles yet.">
-        <OwnerTable.Toolbar>
-          <span className="text-[14px] font-semibold text-owner-fg-1">
-            All payout profiles
-          </span>
-          <OwnerButton
-            variant="secondary"
-            size="sm"
-            leadingIcon={<Plus size={13} />}
-            onClick={() => setAddOpen(true)}
-          >
-            Add account
-          </OwnerButton>
-        </OwnerTable.Toolbar>
-        <OwnerTable.Head>
-          <OwnerTable.HeaderCell>Bank</OwnerTable.HeaderCell>
-          <OwnerTable.HeaderCell>Account holder</OwnerTable.HeaderCell>
-          <OwnerTable.HeaderCell>Account</OwnerTable.HeaderCell>
-          <OwnerTable.HeaderCell>Status</OwnerTable.HeaderCell>
-          <OwnerTable.HeaderCell align="right">Actions</OwnerTable.HeaderCell>
-        </OwnerTable.Head>
-        <OwnerTable.Body>
-          {data.map((row) => {
-            const canSetPrimary =
-              row.verificationStatus === "VERIFIED" && !row.isPrimary;
-            const showRejectionReason =
-              row.verificationStatus === "REJECTED" && row.rejectionReason;
-            return (
-              <OwnerTable.Row key={row._id}>
-                <OwnerTable.Cell>
-                  <div className="flex flex-col">
-                    <span className="font-semibold text-owner-fg-1">
-                      {row.bankName}
-                    </span>
-                    {row.branchName ? (
-                      <span className="text-[12px] text-owner-fg-4">
-                        {row.branchName}
-                      </span>
-                    ) : null}
-                  </div>
-                </OwnerTable.Cell>
-                <OwnerTable.Cell>{row.accountHolderName}</OwnerTable.Cell>
-                <OwnerTable.Cell monospace>•••• {row.last4}</OwnerTable.Cell>
-                <OwnerTable.Cell>
-                  <div className="flex items-center gap-2">
-                    <StatusBadge status={row.verificationStatus} />
-                    {row.isPrimary ? <Badge tone="info">Primary</Badge> : null}
-                  </div>
-                </OwnerTable.Cell>
-                <OwnerTable.Cell align="right">
-                  {canSetPrimary ? (
-                    <OwnerButton
-                      variant="secondary"
-                      size="sm"
-                      leadingIcon={<CheckCircle2 size={13} />}
-                      disabled={primaryLoadingId === row._id}
-                      onClick={() => handleSetPrimary(row._id)}
-                    >
-                      Set primary
-                    </OwnerButton>
-                  ) : showRejectionReason ? (
-                    <TooltipProvider>
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <span className="cursor-help text-[12.5px] font-medium text-owner-danger-text underline">
-                            Reason
-                          </span>
-                        </TooltipTrigger>
-                        <TooltipContent className="max-w-xs bg-owner-fg-1 text-white">
-                          <p>{row.rejectionReason}</p>
-                        </TooltipContent>
-                      </Tooltip>
-                    </TooltipProvider>
-                  ) : null}
-                </OwnerTable.Cell>
-              </OwnerTable.Row>
-            );
-          })}
-        </OwnerTable.Body>
-      </OwnerTable>
+      <DataTable
+        totalRows={data.length}
+        columns={columns}
+        data={data}
+        loading={loading}
+        manualPagination={false}
+        hideDownloadButton
+        pageSize={10}
+        addClickHandler={() => setAddOpen(true)}
+      />
+
+      <Card padding={16}>
+        <div className="flex items-start gap-3">
+          <div className="grid h-9 w-9 shrink-0 place-items-center rounded-owner-md bg-owner-bg-subtle text-owner-fg-2">
+            <Info size={16} />
+          </div>
+          <div className="text-[13px] leading-5 text-owner-fg-3">
+            <span className="font-semibold text-owner-fg-1">
+              Need to remove a payout?
+            </span>{" "}
+            For your security, payout accounts can&apos;t be deleted from this
+            dashboard. Email{" "}
+            <a
+              href="mailto:contact@hoizr.com?subject=Payout%20deletion%20request"
+              className="font-medium text-owner-blue-500 underline"
+            >
+              contact@hoizr.com
+            </a>{" "}
+            from your registered email with the account holder name and last 4
+            digits of the bank account, and our team will verify and remove it
+            for you.
+          </div>
+        </div>
+      </Card>
 
       <AddPayoutModal
         isOpen={addOpen}

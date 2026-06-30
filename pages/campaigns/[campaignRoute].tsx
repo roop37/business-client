@@ -4,8 +4,10 @@ import CampaignLayout from "@/components/layouts/campaignNestedLayout";
 import MainLayout from "@/components/layouts/mainBodyLayout";
 import CustomCampaigns from "@/components/modules/campaign/table/customCampaign";
 import PushCampaigns from "@/components/modules/campaign/push/PushCampaigns";
+import WhatsAppSection from "@/components/modules/whatsappCampaign/WhatsAppSection";
 import useGlobalStore from "@/store/global";
 import { sdk } from "@/utils/graphqlClient";
+import { verificationGateRedirect } from "@/lib/auth/verificationGate";
 
 import { GetServerSideProps } from "next";
 import { useRouter } from "next/router";
@@ -111,6 +113,8 @@ const CampaignPage = ({ repo }: { repo?: UserRepo }) => {
       childComponent = <CustomCampaigns />;
       break;
     case "whatsapp":
+      childComponent = <WhatsAppSection />;
+      break;
     case "sms":
     case "instagram":
       childComponent = <ChannelPlaceholder route={repo.pagePath} />;
@@ -174,6 +178,9 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
         }
       };
     }
+
+    const _vGate = verificationGateRedirect(journey);
+    if (_vGate) return _vGate;
 
     return {
       props: {

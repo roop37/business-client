@@ -15,24 +15,18 @@ type Belief = {
 const BELIEFS: Belief[] = [
   {
     n: "01",
-    title: "Better competition makes everyone sharper.",
-    body:
-      "Hoizr is built to create a stronger event market, not just another ticketing surface. When operators can see clean benchmarks, own their audience, and study what actually worked, the whole ecosystem levels up.",
-  },
-  {
-    n: "02",
     title: "AI should not be a feature only national chains can afford.",
     body:
       "The best technology is invisible. Hoizr puts event-specific AI evaluation behind a simple event workflow, so a one-venue operator in Pune can study the night with the discipline of a national festival circuit.",
   },
   {
-    n: "03",
+    n: "02",
     title: "We win when your room is full.",
     body:
       "Most platforms ask organizers to accept generic terms before they understand the night. Hoizr starts with the event itself — format, city, scale, and ticket mix — then gives you the best possible offer and lowered commission where eligible.",
   },
   {
-    n: "04",
+    n: "03",
     title: "India can become the live-night market everyone watches.",
     body:
       "The ambition is bigger than software. Hoizr should help Indian venues, festivals, comedy rooms, party crews, and promoters operate with the discipline of the best global circuits — while keeping the local chaos, taste, and energy that make Indian nights different.",
@@ -62,9 +56,8 @@ export const Beliefs = () => {
             What we believe.
           </h2>
           <p className="mt-4 text-[15px] leading-relaxed text-[var(--m-ink-3)]">
-            Four positions behind the product. They show up in how Hoizr
-            handles pricing, discovery, fan data, benchmarks, and event-night
-            operations.
+            Three positions behind the product. They show up in how Hoizr
+            handles pricing, discovery, fan data, and event-night operations.
           </p>
         </motion.div>
 

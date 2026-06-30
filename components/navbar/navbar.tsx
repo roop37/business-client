@@ -1,26 +1,21 @@
 "use client";
 
 import useGlobalStore from "@/store/global";
-import {
-  Bell,
-  CalendarDays,
-  ChevronDown,
-  Plus,
-  Search,
-} from "lucide-react";
+import { Bell, Plus, Search, TicketPlus } from "lucide-react";
 import { usePathname, useRouter } from "next/navigation";
+import { useState } from "react";
 import { SidebarTrigger } from "../ui/sidebar";
+import { IssueOfflineTicketModal } from "../modules/offlineTicket/IssueOfflineTicketModal";
 
 /**
  * Top bar (Owner design system).
  *
  * Sits at the top of the canvas, inside the rounded white panel. Hosts:
  *   - Mobile sidebar trigger (lg:hidden)
- *   - Date-range pill (placeholder; non-functional for now)
  *   - Notifications bell
  *   - Primary action button — context-aware:
- *       /campaigns/*  → "Create campaign"
- *       /events,/dashboard → "New event"
+ *       /campaigns/*  → "Add email campaign"
+ *       /events sub-routes,/dashboard → "Add event"
  *       elsewhere → hidden
  *
  * Page titles are NOT rendered here — Owner pattern is to render
@@ -32,15 +27,19 @@ const Navbar = () => {
   const router = useRouter();
   const pathname = usePathname() ?? "";
   const { setToastData } = useGlobalStore();
+  const [offlineOpen, setOfflineOpen] = useState(false);
 
   const onCampaigns =
     pathname.startsWith("/campaigns/") &&
-    !pathname.startsWith("/campaigns/onboarding");
-  const showPrimary = pathname.startsWith("/dashboard") ||
-    pathname.startsWith("/events") ||
+    !pathname.startsWith("/campaigns/onboarding") &&
+    !pathname.startsWith("/campaigns/marketing-credit");
+  const onEventsRoot = pathname === "/events" || pathname === "/events/";
+  const showPrimary =
+    pathname.startsWith("/dashboard") ||
+    (pathname.startsWith("/events") && !onEventsRoot) ||
     onCampaigns;
 
-  const primaryLabel = onCampaigns ? "Create campaign" : "New event";
+  const primaryLabel = onCampaigns ? "Add email campaign" : "Add event";
   const primaryHref = onCampaigns
     ? "/campaigns/onboarding/template-select"
     : "/events?create=1";
@@ -49,20 +48,6 @@ const Navbar = () => {
     <header className="sticky top-0 z-30 flex min-h-[64px] items-center justify-between gap-3 border-b border-owner-border-soft bg-owner-bg/95 px-4 py-3 backdrop-blur lg:px-10">
       <div className="flex items-center gap-3">
         <SidebarTrigger className="lg:hidden" />
-        <button
-          type="button"
-          className="hidden h-9 items-center gap-2 rounded-owner-md border border-owner-border bg-owner-bg px-3 text-[13px] font-medium text-owner-fg-2 shadow-owner-sm transition hover:bg-owner-bg-subtle md:inline-flex"
-          onClick={() => {
-            setToastData({
-              type: "warning",
-              message: "Date range picker coming soon.",
-            });
-          }}
-        >
-          <CalendarDays size={15} className="text-owner-fg-4" />
-          Last 30 days
-          <ChevronDown size={14} className="text-owner-fg-4" />
-        </button>
       </div>
 
       <div className="flex items-center gap-2 sm:gap-3">
@@ -84,6 +69,16 @@ const Navbar = () => {
             }}
           />
         </div>
+
+        <button
+          type="button"
+          onClick={() => setOfflineOpen(true)}
+          title="Issue offline ticket"
+          className="inline-flex h-9 items-center gap-1.5 rounded-owner-md border border-owner-border bg-owner-bg px-2.5 text-[13px] font-medium text-owner-fg-2 shadow-owner-sm transition hover:bg-owner-bg-subtle sm:px-3"
+        >
+          <TicketPlus size={16} />
+          <span className="hidden md:inline">Issue offline ticket</span>
+        </button>
 
         <button
           type="button"
@@ -112,6 +107,11 @@ const Navbar = () => {
           </button>
         ) : null}
       </div>
+
+      <IssueOfflineTicketModal
+        open={offlineOpen}
+        onClose={() => setOfflineOpen(false)}
+      />
     </header>
   );
 };

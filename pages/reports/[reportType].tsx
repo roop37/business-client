@@ -1,417 +1,374 @@
 import {
-  Badge,
-  Card,
-  OwnerButton,
   PageHeader,
-  StatTile,
-  inrFormat,
+  PillTabs,
 } from "@/components/common/owner";
+import {
+  getPresetRange,
+  getPreviousPeriod,
+  RANGE_PRESETS,
+  ReportTable,
+  ReportView,
+  type HostReportData,
+  type ReportRangePreset,
+  type ReportTableData,
+} from "@/components/common/reports";
 import MainLayout from "@/components/layouts/mainBodyLayout";
 import { PermissionTypeEnum } from "@/generated/graphql";
 import useGlobalStore from "@/store/global";
+import useUserStore from "@/store/user";
 import { sdk } from "@/utils/graphqlClient";
+import { verificationGateRedirect } from "@/lib/auth/verificationGate";
 import { hasAccess } from "@/utils/hasAccess";
 import { extractErrorMessage } from "@/utils/utilFUncs";
 import { GetServerSideProps } from "next";
 import Link from "next/link";
 import { useRouter } from "next/router";
-import React, { useEffect, useMemo, useState } from "react";
-import { ChevronLeft, Download, Loader2 } from "lucide-react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
+import { ChevronLeft, Loader2, X } from "lucide-react";
 
-type EventReport = {
-  _id: string;
-  title?: string | null;
-  status?: string | null;
-  city?: string | null;
-  startDate?: string | null;
-  isVisible?: boolean | null;
-  tickets?: {
-    _id?: string | null;
-    ticketName?: string | null;
-    ticketCapacity?: number | null;
-    ticketSold?: number | null;
-    ticketPrice?: number | null;
-    ticketVisible?: boolean | null;
-  }[] | null;
-};
+type ReportConfig = { type: string; title: string; description: string };
 
-type PayoutReport = {
-  _id: string;
-  entityName?: string | null;
-  bankName?: string | null;
-  last4?: string | null;
-  isPrimary?: boolean | null;
-  isActive?: boolean | null;
-  verificationStatus?: string | null;
-};
-
-type ReportColumn = {
-  key: string;
-  label: string;
-  align?: "left" | "right";
-};
-
-type ReportConfig = {
-  title: string;
-  description: string;
-};
-
-const reports: Record<string, ReportConfig> = {
-  "event-performance": {
-    title: "Sales by event",
-    description: "Published, draft, completed, hidden, and upcoming event data.",
+const REPORTS: Record<string, ReportConfig> = {
+  "sales-summary": {
+    type: "SALES_SUMMARY",
+    title: "Sales Summary",
+    description:
+      "Net ticket sales, total collected, tickets and AOV — with daily trend and breakdowns by event, ticket type and source.",
   },
-  "draft-pipeline": {
-    title: "Campaign performance",
-    description: "Draft events that still need setup before publishing.",
+  orders: {
+    type: "ORDERS",
+    title: "Orders",
+    description:
+      "Every paid order with gross, discount, net, ticket GST, fees and total collected.",
   },
-  "city-breakdown": {
-    title: "Customer cohorts",
-    description: "Event distribution by city for the active host.",
+  "ticket-sales-by-type": {
+    type: "TICKET_SALES_BY_TYPE",
+    title: "Ticket Sales by Type",
+    description: "Units sold and gross revenue per ticket type.",
   },
-  "ticket-inventory": {
-    title: "Door & check-in",
-    description: "Capacity, sold count, visibility, and price by ticket.",
+  refunds: {
+    type: "REFUNDS",
+    title: "Refunds & Cancellations",
+    description: "Refunded and cancelled orders with amounts, status and dates.",
   },
-  "sales-estimate": {
-    title: "Sales by source",
-    description: "Estimated gross sales from saved ticket sold counts.",
+  discounts: {
+    type: "DISCOUNTS",
+    title: "Discounts / Promo Codes",
+    description: "Coupon usage, amount discounted and net sales driven.",
   },
-  "payout-readiness": {
-    title: "Tax & GST summary",
-    description: "Primary payout and verification status for paid events.",
+  "add-ons": {
+    type: "ADDONS",
+    title: "Add-ons & Upsells",
+    description: "Add-on quantity, gross revenue and attach rate.",
+  },
+  "payouts-settlement": {
+    type: "PAYOUTS_SETTLEMENT",
+    title: "Payouts & Settlement",
+    description:
+      "Per-event settlements — gross, commission, ticket GST, refunds, net payout and status, with scheduled and paid dates.",
+  },
+  "campaign-performance": {
+    type: "CAMPAIGN_PERFORMANCE",
+    title: "Campaign Performance",
+    description:
+      "Email campaign reach (sent, delivered, opened, clicked) and attributed net ticket sales.",
+  },
+  "customers-fans": {
+    type: "CUSTOMERS_FANS",
+    title: "Customers / Fans",
+    description:
+      "Your buyers — orders, tickets, net spend, new vs returning, and top fans.",
+  },
+  "campaign-roi": {
+    type: "CAMPAIGN_ROI",
+    title: "Campaign ROI",
+    description:
+      "Paid campaigns (WhatsApp / SMS / Push): credits spent vs attributed net sales and net-sales-per-credit. Email is free — see Campaign Performance.",
+  },
+  "automation-performance": {
+    type: "AUTOMATION_PERFORMANCE",
+    title: "Automation Performance",
+    description:
+      "Per automation (abandoned-cart retargeting, selling-fast alerts): whether it's on, messages sent, and attributed orders + net sales.",
+  },
+  "comp-noshow": {
+    type: "COMP_NOSHOW",
+    title: "Comp & No-show",
+    description:
+      "Complimentary tickets you issued for free, and guests who bought a ticket but never checked in — measured across events that have already finished.",
+  },
+  "check-in": {
+    type: "CHECK_IN",
+    title: "Check-in Report",
+    description:
+      "Tickets sold vs checked in, check-in rate and not-checked-in counts, per event.",
+  },
+  "door-offline": {
+    type: "DOOR_OFFLINE",
+    title: "Door & Offline Sales",
+    description:
+      "Online vs offline (issued / payment link) split — orders, tickets and net sales by channel.",
+  },
+  "artist-collaborator": {
+    type: "ARTIST_COLLAB",
+    title: "Artist & Collaborator Performance",
+    description:
+      "Events, tickets and associated net sales for each artist (platform + off-platform) and each collaborator on your events.",
+  },
+  guestlist: {
+    type: "GUESTLIST",
+    title: "Guestlist Report",
+    description:
+      "Guestlist entries, accepted golden tickets, pending approvals, admitted (checked-in) and revoked — per event.",
+  },
+  "website-metrics": {
+    type: "WEBSITE_METRICS",
+    title: "Website Metrics",
+    description:
+      "Traffic sources, devices and engagement (carts created, payment starts) for your event pages.",
+  },
+  "website-funnel": {
+    type: "WEBSITE_FUNNEL",
+    title: "Booking Funnel",
+    description:
+      "Ticket selected → payment started → order placed, with cart-to-order conversion and payment drop-off.",
+  },
+  "event-comparison": {
+    type: "EVENT_COMPARISON",
+    title: "Event Comparison",
+    description:
+      "All your events side by side (all-time): capacity, sold, sell-through, net sales and AOV.",
+  },
+  "predicted-sellout": {
+    type: "PREDICTED_SELLOUT",
+    title: "Predicted Sellout",
+    description:
+      "Upcoming events projected to capacity using the current 7-day sales velocity.",
+  },
+  "ai-insights": {
+    type: "AI_INSIGHTS",
+    title: "Insights",
+    description:
+      "Automatic observations about what's driving your sales in the selected range.",
   },
 };
 
-const formatDate = (value?: string | null) => {
-  if (!value) return "Not set";
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return "Not set";
-  return new Intl.DateTimeFormat("en-IN", {
-    day: "2-digit",
-    month: "short",
-    year: "numeric",
-  }).format(date);
-};
-
-const normalizeStatus = (status?: string | null) =>
-  String(status ?? "Draft").toLowerCase();
-
-const statusLabel = (value?: string | null) =>
-  String(value ?? "Draft")
-    .replace(/_/g, " ")
-    .replace(/\b\w/g, (char) => char.toUpperCase());
-
-const eventTicketStats = (event: EventReport) => {
-  const tickets = event.tickets ?? [];
-  return tickets.reduce(
-    (acc, ticket) => {
-      const sold = Number(ticket.ticketSold ?? 0);
-      const capacity = Number(ticket.ticketCapacity ?? 0);
-      const price = Number(ticket.ticketPrice ?? 0);
-      acc.sold += sold;
-      acc.capacity += capacity;
-      acc.gross += sold * price;
-      return acc;
-    },
-    { sold: 0, capacity: 0, gross: 0 }
-  );
-};
-
-const statusTone = (value?: string | null) => {
-  const normalized = normalizeStatus(value);
-  if (normalized.includes("active") || normalized.includes("verified")) {
-    return "success";
-  }
-  if (normalized.includes("pending") || normalized.includes("draft")) {
-    return "warning";
-  }
-  if (normalized.includes("hidden") || normalized.includes("inactive")) {
-    return "neutral";
-  }
-  return "info";
-};
-
-const ReportTable = ({
-  columns,
-  rows,
-}: {
-  columns: ReportColumn[];
-  rows: Record<string, React.ReactNode>[];
-}) => {
-  if (!rows.length) {
-    return (
-      <Card className="p-8 text-center text-sm text-owner-fg-4">
-        No rows found for this report.
-      </Card>
-    );
-  }
-
-  return (
-    <Card padding={0} className="overflow-hidden">
-      <div className="max-h-[58vh] overflow-auto">
-        <table className="owner-table min-w-[820px]">
-          <caption className="sr-only">Report rows</caption>
-          <thead className="sticky top-0 z-10">
-            <tr>
-              {columns.map((column) => (
-                <th
-                  key={column.key}
-                  scope="col"
-                  className={column.align === "right" ? "num" : ""}
-                >
-                  {column.label}
-                </th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            {rows.map((row, index) => (
-              <tr key={index}>
-                {columns.map((column) => (
-                  <td
-                    key={column.key}
-                    className={column.align === "right" ? "num" : ""}
-                  >
-                    {row[column.key] ?? "N/A"}
-                  </td>
-                ))}
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-    </Card>
-  );
-};
+const BackLink = () => (
+  <Link
+    href="/reports"
+    className="group inline-flex items-center gap-1 text-[13px] text-owner-fg-3 hover:text-owner-blue-500"
+  >
+    <ChevronLeft size={16} className="transition group-hover:-translate-x-0.5" />
+    All reports
+  </Link>
+);
 
 const ReportDetail = () => {
   const router = useRouter();
-  const reportType = router.query.reportType?.toString() ?? "";
-  const config = reports[reportType] ?? reports["event-performance"];
-  const { setSelectedSideBarMenu, setToastData } = useGlobalStore();
-  const [events, setEvents] = useState<EventReport[]>([]);
-  const [payouts, setPayouts] = useState<PayoutReport[]>([]);
+  const slug = String(router.query.reportType ?? "");
+  const config = REPORTS[slug];
+
+  const { setSelectedSideBarMenu, setToastData, openOrderReceipt } =
+    useGlobalStore();
+  const { meUser } = useUserStore();
+
+  const [preset, setPreset] = useState<ReportRangePreset>("last30");
+  const [data, setData] = useState<HostReportData | null>(null);
   const [loading, setLoading] = useState(true);
+  const [promoTable, setPromoTable] = useState<ReportTableData | null>(null);
+  const [eventId, setEventId] = useState<string>("");
+  const [events, setEvents] = useState<
+    { _id: string; title?: string | null; status?: string | null }[]
+  >([]);
+
+  const canDownload = useMemo(
+    () => hasAccess(meUser?.permissions ?? [], PermissionTypeEnum.DownloadReports),
+    [meUser?.permissions]
+  );
+
+  // Row clicks: "order:<id>" opens the order receipt; "promo:<code>" opens a
+  // drill-down modal listing who used that code.
+  const handleRowAction = useCallback(
+    async (action: string) => {
+      if (action.startsWith("order:")) {
+        const id = action.slice("order:".length);
+        if (id) openOrderReceipt(id);
+        return;
+      }
+      if (action.startsWith("promo:")) {
+        const code = action.slice("promo:".length);
+        try {
+          const { startDate, endDate } = getPresetRange(preset);
+          const res: any = await sdk.getHostPromoUsage({
+            input: { code, startDate, endDate, ...(eventId ? { eventId } : {}) },
+          });
+          setPromoTable(res?.getHostPromoUsage ?? null);
+        } catch (error) {
+          setToastData({ type: "error", message: extractErrorMessage(error) });
+        }
+      }
+    },
+    [preset, eventId, openOrderReceipt, setToastData]
+  );
 
   useEffect(() => {
     setSelectedSideBarMenu("Reports");
   }, [setSelectedSideBarMenu]);
 
+  // Seed the event filter from the URL (?eventId=) when arriving via an event's
+  // "See sales/marketing report" link, so the report scopes + attributes to
+  // that event instead of all events. Runs once the router query hydrates;
+  // the picker can still change it afterwards.
   useEffect(() => {
-    const fetchReportData = async () => {
+    if (!router.isReady) return;
+    const qid = router.query.eventId;
+    const id = Array.isArray(qid) ? qid[0] : qid;
+    if (id) setEventId(String(id));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [router.isReady]);
+
+  // Master event filter — load the host's non-draft events for the picker.
+  useEffect(() => {
+    (async () => {
+      try {
+        const res: any = await sdk.getMyEvents();
+        const list = (res?.getMyEvents ?? []).filter((e: any) => {
+          const s = String(e.status ?? "").toUpperCase();
+          return s !== "DRAFT" && s !== "CANCELLED" && s !== "ARCHIVED";
+        });
+        setEvents(list);
+      } catch {
+        /* picker is optional — ignore failures */
+      }
+    })();
+  }, []);
+
+  useEffect(() => {
+    if (!config) {
+      setLoading(false);
+      return;
+    }
+    let active = true;
+    const fetchReport = async () => {
       setLoading(true);
       try {
-        const eventResponse = await sdk.getMyEvents();
-        setEvents(eventResponse?.getMyEvents ?? []);
-
-        if (reportType === "payout-readiness") {
-          const payoutResponse = await sdk.hostPayoutAccounts();
-          setPayouts(payoutResponse?.hostPayoutAccounts ?? []);
-        }
+        const { startDate, endDate } = getPresetRange(preset);
+        const prev = getPreviousPeriod(preset);
+        const res: any = await sdk.getHostReport({
+          input: {
+            type: config.type,
+            startDate,
+            endDate,
+            // Always send the previous period; reports that compute trends
+            // (Sales Summary) light up deltas, others ignore it.
+            compareStartDate: prev.startDate,
+            compareEndDate: prev.endDate,
+            ...(eventId ? { eventId } : {}),
+          },
+        });
+        if (active) setData(res?.getHostReport ?? null);
       } catch (error) {
-        setToastData({ type: "error", message: extractErrorMessage(error) });
+        if (active)
+          setToastData({ type: "error", message: extractErrorMessage(error) });
       } finally {
-        setLoading(false);
+        if (active) setLoading(false);
       }
     };
+    fetchReport();
+    return () => {
+      active = false;
+    };
+  }, [config, preset, eventId, setToastData]);
 
-    if (router.isReady) {
-      fetchReportData();
-    }
-  }, [reportType, router.isReady, setToastData]);
-
-  const summary = useMemo(() => {
-    const ticketTotals = events.reduce(
-      (acc, event) => {
-        const stats = eventTicketStats(event);
-        acc.sold += stats.sold;
-        acc.capacity += stats.capacity;
-        acc.gross += stats.gross;
-        return acc;
-      },
-      { sold: 0, capacity: 0, gross: 0 }
+  if (!config) {
+    return (
+      <div className="min-w-0">
+        <BackLink />
+        <div className="mt-6 rounded-owner-md border border-dashed border-owner-border bg-owner-bg-subtle px-5 py-12 text-center text-[14px] text-owner-fg-4">
+          Unknown report.
+        </div>
+      </div>
     );
-    return [
-      { label: "Events", value: events.length.toString() },
-      {
-        label: "Drafts",
-        value: events
-          .filter((event) => normalizeStatus(event.status).includes("draft"))
-          .length.toString(),
-      },
-      { label: "Tickets sold", value: ticketTotals.sold.toString() },
-      { label: "Estimated gross", value: inrFormat(ticketTotals.gross) },
-    ];
-  }, [events]);
-
-  const reportRows = useMemo(() => {
-    if (reportType === "ticket-inventory" || reportType === "sales-estimate") {
-      return events.flatMap((event) =>
-        (event.tickets ?? []).map((ticket) => ({
-          event: event.title || "Untitled event",
-          ticket: ticket.ticketName || "Untitled ticket",
-          status: (
-            <Badge tone={ticket.ticketVisible === false ? "neutral" : "success"}>
-              {ticket.ticketVisible === false ? "Hidden" : "Visible"}
-            </Badge>
-          ),
-          capacity: Number(ticket.ticketCapacity ?? 0).toLocaleString("en-IN"),
-          sold: Number(ticket.ticketSold ?? 0).toLocaleString("en-IN"),
-          price: inrFormat(Number(ticket.ticketPrice ?? 0)),
-          gross: inrFormat(
-            Number(ticket.ticketSold ?? 0) * Number(ticket.ticketPrice ?? 0)
-          ),
-        }))
-      );
-    }
-
-    if (reportType === "city-breakdown") {
-      const grouped = events.reduce<Record<string, { count: number; sold: number }>>(
-        (acc, event) => {
-          const city = event.city || "City not set";
-          const stats = eventTicketStats(event);
-          acc[city] = acc[city] ?? { count: 0, sold: 0 };
-          acc[city].count += 1;
-          acc[city].sold += stats.sold;
-          return acc;
-        },
-        {}
-      );
-
-      return Object.entries(grouped).map(([city, values]) => ({
-        city,
-        events: values.count.toLocaleString("en-IN"),
-        sold: values.sold.toLocaleString("en-IN"),
-      }));
-    }
-
-    if (reportType === "payout-readiness") {
-      return payouts.map((payout) => ({
-        entity: payout.entityName || "N/A",
-        bank: payout.bankName || "N/A",
-        account: payout.last4 ? `**** ${payout.last4}` : "N/A",
-        primary: (
-          <Badge tone={payout.isPrimary ? "info" : "neutral"}>
-            {payout.isPrimary ? "Primary" : "Secondary"}
-          </Badge>
-        ),
-        active: (
-          <Badge tone={payout.isActive ? "success" : "neutral"}>
-            {payout.isActive ? "Active" : "Inactive"}
-          </Badge>
-        ),
-        status: (
-          <Badge tone={statusTone(payout.verificationStatus)}>
-            {statusLabel(payout.verificationStatus)}
-          </Badge>
-        ),
-      }));
-    }
-
-    const source =
-      reportType === "draft-pipeline"
-        ? events.filter((event) => normalizeStatus(event.status).includes("draft"))
-        : events;
-
-    return source.map((event) => {
-      const stats = eventTicketStats(event);
-      return {
-        event: event.title || "Untitled event",
-        status: (
-          <Badge tone={statusTone(event.status)}>{statusLabel(event.status)}</Badge>
-        ),
-        city: event.city || "Not set",
-        startDate: formatDate(event.startDate),
-        visible: (
-          <Badge tone={event.isVisible === false ? "neutral" : "success"}>
-            {event.isVisible === false ? "Hidden" : "Visible"}
-          </Badge>
-        ),
-        sold: stats.sold.toLocaleString("en-IN"),
-        capacity: stats.capacity.toLocaleString("en-IN"),
-        gross: inrFormat(stats.gross),
-      };
-    });
-  }, [events, payouts, reportType]);
-
-  const columns: ReportColumn[] = useMemo(() => {
-    if (reportType === "ticket-inventory" || reportType === "sales-estimate") {
-      return [
-        { key: "event", label: "Event" },
-        { key: "ticket", label: "Ticket" },
-        { key: "status", label: "Visibility" },
-        { key: "capacity", label: "Capacity", align: "right" },
-        { key: "sold", label: "Sold", align: "right" },
-        { key: "price", label: "Price", align: "right" },
-        { key: "gross", label: "Estimated gross", align: "right" },
-      ];
-    }
-
-    if (reportType === "city-breakdown") {
-      return [
-        { key: "city", label: "City" },
-        { key: "events", label: "Events", align: "right" },
-        { key: "sold", label: "Tickets sold", align: "right" },
-      ];
-    }
-
-    if (reportType === "payout-readiness") {
-      return [
-        { key: "entity", label: "Entity" },
-        { key: "bank", label: "Bank" },
-        { key: "account", label: "Account" },
-        { key: "primary", label: "Primary" },
-        { key: "active", label: "Active" },
-        { key: "status", label: "Verification" },
-      ];
-    }
-
-    return [
-      { key: "event", label: "Event" },
-      { key: "status", label: "Status" },
-      { key: "city", label: "City" },
-      { key: "startDate", label: "Start date" },
-      { key: "visible", label: "Visibility" },
-      { key: "sold", label: "Tickets sold", align: "right" },
-      { key: "capacity", label: "Capacity", align: "right" },
-      { key: "gross", label: "Estimated gross", align: "right" },
-    ];
-  }, [reportType]);
+  }
 
   return (
     <div className="min-w-0">
-      <Link
-        href="/reports"
-        className="mb-6 inline-flex items-center gap-1 text-sm font-medium text-owner-fg-3 hover:text-owner-blue-500"
-      >
-        <ChevronLeft size={16} />
-        Reports
-      </Link>
-
+      <BackLink />
       <PageHeader
         title={config.title}
         subtitle={config.description}
         actions={
-          <OwnerButton variant="secondary" leadingIcon={<Download size={16} />}>
-            Download CSV
-          </OwnerButton>
+          <div className="flex flex-wrap items-center gap-3">
+            {events.length ? (
+              <select
+                value={eventId}
+                onChange={(e) => setEventId(e.target.value)}
+                aria-label="Filter by event"
+                className="h-9 max-w-[220px] rounded-owner-md border border-owner-border bg-owner-bg px-3 text-[13px] font-medium text-owner-fg-1 focus:outline-none focus:ring-2 focus:ring-owner-blue-200"
+              >
+                <option value="">All events</option>
+                {events.map((ev) => (
+                  <option key={ev._id} value={ev._id}>
+                    {ev.title || "Untitled event"}
+                  </option>
+                ))}
+              </select>
+            ) : null}
+            <PillTabs tabs={RANGE_PRESETS} value={preset} onChange={setPreset} />
+          </div>
         }
       />
 
-      <div className="mb-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        {summary.map((metric) => (
-          <StatTile key={metric.label} label={metric.label} value={metric.value} />
-        ))}
+      <div className="mt-6">
+        {loading ? (
+          <div className="flex h-[320px] items-center justify-center">
+            <Loader2 className="animate-spin text-owner-blue-500" size={34} />
+          </div>
+        ) : data ? (
+          <ReportView
+            data={data}
+            fileNamePrefix={config.title.replace(/\s+/g, "_")}
+            canDownload={canDownload}
+            onRowAction={handleRowAction}
+          />
+        ) : (
+          <div className="rounded-owner-md border border-dashed border-owner-border bg-owner-bg-subtle px-5 py-12 text-center text-[14px] text-owner-fg-4">
+            No data for this report in the selected range.
+          </div>
+        )}
       </div>
 
-      {loading ? (
-        <Card className="flex h-56 items-center justify-center">
-          <Loader2 className="animate-spin text-owner-blue-500" size={28} />
-        </Card>
-      ) : (
-        <ReportTable columns={columns} rows={reportRows} />
-      )}
+      {promoTable ? (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4"
+          onClick={() => setPromoTable(null)}
+        >
+          <div
+            className="max-h-[80vh] w-full max-w-3xl overflow-auto rounded-owner-lg bg-owner-bg p-4 shadow-owner-dropdown"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="mb-3 flex items-center justify-between">
+              <h3 className="text-[15px] font-semibold text-owner-fg-1">
+                {promoTable.title}
+              </h3>
+              <button
+                type="button"
+                onClick={() => setPromoTable(null)}
+                className="rounded-owner-sm p-1 text-owner-fg-3 hover:bg-owner-bg-subtle"
+                aria-label="Close"
+              >
+                <X size={18} />
+              </button>
+            </div>
+            <ReportTable
+              table={promoTable}
+              fileName="promo_usage"
+              canDownload={canDownload}
+              onRowAction={handleRowAction}
+            />
+          </div>
+        </div>
+      ) : null}
     </div>
   );
 };
@@ -424,33 +381,14 @@ export default ReportDetail;
 
 export const getServerSideProps: GetServerSideProps = async (context) => {
   const cookieHeader = context.req.headers.cookie ?? "";
-  const tokenExists = cookieHeader.includes("accessToken=");
-
-  if (!tokenExists) {
-    return {
-      redirect: {
-        destination: "/login",
-        permanent: false,
-      },
-    };
+  if (!cookieHeader.includes("accessToken=")) {
+    return { redirect: { destination: "/login", permanent: false } };
   }
-
   try {
     const [userResponse, journeyResponse] = await Promise.all([
-      sdk.MeCheckUser(
-        {},
-        {
-          cookie: context.req.headers.cookie?.toString() ?? "",
-        }
-      ),
-      sdk.MeUserJourney(
-        {},
-        {
-          cookie: context.req.headers.cookie?.toString() ?? "",
-        }
-      ),
+      sdk.MeCheckUser({}, { cookie: cookieHeader }),
+      sdk.MeUserJourney({}, { cookie: cookieHeader }),
     ]);
-
     const journey = journeyResponse.meUserJourney;
     if (!journey.hostOnboardingCompleted || !journey.hostId) {
       return {
@@ -461,12 +399,12 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
       };
     }
 
+    const _vGate = verificationGateRedirect(journey);
+    if (_vGate) return _vGate;
     if (userResponse?.meUser) {
-      const canAccessMenu = hasAccess(
-        userResponse.meUser.permissions,
-        PermissionTypeEnum.Reports
-      );
-      if (!canAccessMenu) {
+      if (
+        !hasAccess(userResponse.meUser.permissions, PermissionTypeEnum.Reports)
+      ) {
         return {
           redirect: {
             destination: `/account/access-blocked?target=${PermissionTypeEnum.Reports}`,
@@ -474,25 +412,10 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
           },
         };
       }
-      return {
-        props: {
-          pagePath: context.query["reportType"]?.toString() ?? "",
-        },
-      };
+      return { props: {} };
     }
-
-    return {
-      redirect: {
-        destination: "/login",
-        permanent: false,
-      },
-    };
+    return { redirect: { destination: "/login", permanent: false } };
   } catch {
-    return {
-      redirect: {
-        destination: "/login",
-        permanent: false,
-      },
-    };
+    return { redirect: { destination: "/login", permanent: false } };
   }
 };

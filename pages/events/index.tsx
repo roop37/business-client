@@ -1,16 +1,19 @@
 import ConfirmModal from "@/components/common/confirm-modal";
+import EventCard from "@/components/common/event/EventCard";
 import { HoizrStatusPill } from "@/components/common/hoizr/HoizrSurface";
 import MainLayout from "@/components/layouts/mainBodyLayout";
+import { useHostTypeLabel } from "@/hooks/useHostTypeLabel";
 import useGlobalStore from "@/store/global";
 import useHostsStore from "@/store/host";
 import { sdk } from "@/utils/graphqlClient";
-import { extractErrorMessage } from "@/utils/utilFUncs";
+import { verificationGateRedirect } from "@/lib/auth/verificationGate";
+import { eventDisplayStatus, extractErrorMessage } from "@/utils/utilFUncs";
 import {
-  BadgeIndianRupeeIcon,
   CalendarDaysIcon,
   CheckCircle2Icon,
   ChevronDownIcon,
   CircleDashedIcon,
+  CopyIcon,
   DownloadIcon,
   type LucideIcon,
   MegaphoneIcon,
@@ -21,7 +24,6 @@ import {
   SlidersHorizontalIcon,
   SparklesIcon,
   SearchIcon,
-  TicketIcon,
   Trash2Icon,
   UsersRoundIcon,
 } from "lucide-react";
@@ -45,6 +47,8 @@ type EventCardData = {
     ticketSold?: number;
     ticketPrice?: number;
     ticketName?: string;
+    ticketCategory?: string;
+    ticketVisible?: boolean;
   }[];
   // Set when the row came from getMyCollaboratedEvents — the host is a
   // confirmed collaborator on this event but does NOT own it. UI uses
@@ -89,12 +93,15 @@ const formatDate = (value?: string) => {
   if (!value) return "Date pending";
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return "Date pending";
+  // event.startDate is a stored UTC instant — render it in IST so the card date
+  // matches the editor and the customer site on every browser timezone.
   return new Intl.DateTimeFormat("en-IN", {
     day: "2-digit",
     month: "short",
     year: "numeric",
     hour: "2-digit",
     minute: "2-digit",
+    timeZone: "Asia/Kolkata",
   }).format(date);
 };
 
@@ -227,12 +234,17 @@ const formatRangeLabel = (from: Date | null, to: Date | null) => {
 const EventsPage = () => {
   const router = useRouter();
   const { setToastData, setSelectedSideBarMenu } = useGlobalStore();
+  const hostLabel = useHostTypeLabel();
   const [events, setEvents] = useState<EventCardData[]>([]);
   const [checklist, setChecklist] = useState<Checklist | null>(null);
   const [loading, setLoading] = useState(true);
   const [creating, setCreating] = useState(false);
   const [readinessOpen, setReadinessOpen] = useState(false);
-  const [visibleCount, setVisibleCount] = useState(8);
+  // Render a generous first page (most hosts have <24 events total) so
+  // the IntersectionObserver only matters for power users. Earlier
+  // initial of 8 meant the sentinel was offscreen on small lists and
+  // pagination never grew when users scrolled the list.
+  const [visibleCount, setVisibleCount] = useState(24);
   const [statusFilter, setStatusFilter] = useState("all");
   const [searchQuery, setSearchQuery] = useState("");
   const [showFilterPanel, setShowFilterPanel] = useState(false);
@@ -300,7 +312,7 @@ const EventsPage = () => {
       setReadinessOpen(true);
       setToastData({
         type: "error",
-        message: "Upload a host logo before creating an event.",
+        message: `Upload a ${hostLabel.lower} logo before creating an event.`,
       });
       return;
     }
@@ -320,7 +332,7 @@ const EventsPage = () => {
     } finally {
       setCreating(false);
     }
-  }, [checklist, router, setToastData]);
+  }, [checklist, router, setToastData, hostLabel.lower]);
 
   useEffect(() => {
     if (
@@ -341,7 +353,7 @@ const EventsPage = () => {
     if (!node) return;
     const observer = new IntersectionObserver((entries) => {
       if (entries[0]?.isIntersecting) {
-        setVisibleCount((count) => Math.min(count + 6, events.length));
+        setVisibleCount((count) => Math.min(count + 12, events.length));
       }
     });
     observer.observe(node);
@@ -349,7 +361,7 @@ const EventsPage = () => {
   }, [customFromDate, customToDate, events.length, rangePreset, searchQuery, statusFilter]);
 
   useEffect(() => {
-    setVisibleCount(8);
+    setVisibleCount(24);
   }, [customFromDate, customToDate, rangePreset, searchQuery, statusFilter]);
 
   const metrics = useMemo(() => {
@@ -379,15 +391,24 @@ const EventsPage = () => {
     (checklist?.event ?? 0) +
     (checklist?.Scanner ?? 0);
   const showReadiness = Boolean(checklist?.nextSteps?.length);
-  const activeRange = useMemo(() => {
+  const activeRange = useMemo<{ from: Date | null; to: Date | null }>(() => {
+    // Date range is only meaningful for the "Past" tab. Live/Drafts/All
+    // contain future-dated events that a retrospective range would
+    // incorrectly hide.
+    if (statusFilter !== "past") {
+      return { from: null, to: null };
+    }
+    if (rangePreset === "custom" && (customFromDate || customToDate)) {
+      return {
+        from: dateFromInput(customFromDate),
+        to: dateFromInput(customToDate || customFromDate, true),
+      };
+    }
     if (rangePreset !== "custom") {
       return rangeForPreset(rangePreset);
     }
-    return {
-      from: dateFromInput(customFromDate),
-      to: dateFromInput(customToDate || customFromDate, true),
-    };
-  }, [customFromDate, customToDate, rangePreset]);
+    return { from: null, to: null };
+  }, [customFromDate, customToDate, rangePreset, statusFilter]);
   const dateRangeLabel = formatRangeLabel(activeRange.from, activeRange.to);
   const filteredEvents = useMemo(() => {
     const query = searchQuery.trim().toLowerCase();
@@ -428,6 +449,31 @@ const EventsPage = () => {
       await sdk.deleteEvent({ id });
       setToastData({ type: "success", message: "Event deleted" });
       fetchData();
+    } catch (error) {
+      setToastData({ type: "error", message: extractErrorMessage(error) });
+    }
+  };
+
+  /**
+   * Clone the event into a fresh draft under the same host. Mirrors
+   * the email-campaign duplicate flow — fastest path to launching a
+   * recurring night without re-uploading flyer + lineup + tickets.
+   * Lands in the events list (with a refresh) where the new draft
+   * sits at the top of the list ready to edit.
+   */
+  const duplicateEvent = async (event: EventCardData) => {
+    try {
+      const response = await sdk.duplicateEvent({ id: event._id });
+      const newId = response?.duplicateEvent?._id;
+      setToastData({
+        type: "success",
+        message: "Event duplicated as a draft.",
+      });
+      if (newId) {
+        router.push(`/events/${newId}/create`);
+      } else {
+        fetchData();
+      }
     } catch (error) {
       setToastData({ type: "error", message: extractErrorMessage(error) });
     }
@@ -492,7 +538,7 @@ const EventsPage = () => {
           className="owner-btn owner-btn--primary"
         >
           <PlusIcon size={16} strokeWidth={2.4} />
-          {creating ? "Creating…" : "New event"}
+          {creating ? "Adding…" : "Add event"}
         </button>
       </header>
 
@@ -559,7 +605,12 @@ const EventsPage = () => {
       ) : null}
 
       <div className="space-y-4">
-        <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+        {/* Tabs + filter controls stay pinned to the top of the scroll
+            area so the list below can scroll without the host losing
+            context of which segment they're viewing. Negative margins +
+            matching padding extend the translucent backdrop edge-to-
+            edge inside the rounded-canvas frame. */}
+        <div className="sticky top-0 z-20 -mx-4 flex flex-col gap-4 border-b border-owner-border-soft bg-owner-bg/95 px-4 py-3 backdrop-blur lg:-mx-10 lg:flex-row lg:items-center lg:justify-between lg:px-10 sm:-mx-6 sm:px-6">
           <div className="inline-flex w-full max-w-max rounded-owner-lg border border-owner-border bg-owner-bg p-2">
             {statusOptions.map((option) => (
               <button
@@ -579,14 +630,16 @@ const EventsPage = () => {
           </div>
 
           <div className="flex flex-wrap gap-3">
-            <button
-              type="button"
-              onClick={() => setShowFilterPanel((open) => !open)}
-              className="owner-btn owner-btn--secondary"
-            >
-              <SlidersHorizontalIcon size={16} />
-              Filter
-            </button>
+            {statusFilter === "past" ? (
+              <button
+                type="button"
+                onClick={() => setShowFilterPanel((open) => !open)}
+                className="owner-btn owner-btn--secondary"
+              >
+                <SlidersHorizontalIcon size={16} />
+                Filter
+              </button>
+            ) : null}
             <button type="button" className="owner-btn owner-btn--secondary">
               <DownloadIcon size={16} />
               Export
@@ -594,7 +647,7 @@ const EventsPage = () => {
           </div>
         </div>
 
-        {showFilterPanel ? (
+        {statusFilter === "past" && showFilterPanel ? (
           <div className="rounded-owner-lg border border-owner-border bg-owner-bg p-4">
             <div className="grid gap-3 md:grid-cols-[220px_minmax(260px,1fr)]">
               <label className="text-[12px] font-semibold uppercase tracking-[0.04em] text-owner-fg-3">
@@ -682,11 +735,12 @@ const EventsPage = () => {
         <section>
           <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
             {visibleEvents.map((event) => (
-              <EventCard
+              <EventListCard
                 key={event._id}
                 event={event}
                 onDelete={() => requestDeleteEvent(event)}
                 onLeaveCollab={() => requestLeaveCollab(event)}
+                onDuplicate={() => duplicateEvent(event)}
               />
             ))}
             <div ref={sentinelRef} className="h-4" />
@@ -711,7 +765,7 @@ const EventsPage = () => {
               className="owner-btn owner-btn--primary"
             >
               <PlusIcon size={15} strokeWidth={2.4} />
-              New event
+              Add event
             </button>
           </div>
         </div>
@@ -731,193 +785,177 @@ const EventsPage = () => {
   );
 };
 
-const EventCard = ({
+const getEventPriceLabel = (event: EventCardData) => {
+  const paidPrices = (event.tickets ?? [])
+    .filter(
+      (ticket) =>
+        ticket.ticketCategory !== "GUESTLIST" &&
+        Number(ticket.ticketPrice ?? 0) > 0 &&
+        (ticket.ticketVisible ?? true),
+    )
+    .map((ticket) => Number(ticket.ticketPrice ?? 0));
+
+  if (!paidPrices.length) return "Guestlist";
+  return `${rupee(Math.min(...paidPrices))} onwards`;
+};
+
+const EventListCard = ({
   event,
   onDelete,
   onLeaveCollab,
+  onDuplicate,
 }: {
   event: EventCardData;
   onDelete: () => void;
   onLeaveCollab: () => void;
+  onDuplicate: () => void;
 }) => {
   const router = useRouter();
-  const firstTicket = event.tickets?.[0];
+  const openRunCampaignModal = useGlobalStore((s) => s.openRunCampaignModal);
   const status = normalizeStatus(event.status);
   const isDraftLike = status.includes("draft") || status.includes("pending");
   const isCompleted = status.includes("completed");
   const isCollab = !!event.isCollaboratorView;
   const collabPerms = event.collaboratorEntry;
   const openEvent = () => {
-    // Collab view: read-only Manage. Collabs never get the draft wizard.
-    if (isCollab) {
-      router.push(`/events/${event._id}/manage`);
-      return;
-    }
-    // Drafts: resume the wizard so the host can finish creating.
-    if (isDraftLike) {
+    // Drafts: resume the wizard so the host can finish creating. Collabs never
+    // get the draft wizard.
+    if (isDraftLike && !isCollab) {
       router.push(`/events/${event._id}/create`);
       return;
     }
-    // Published / completed / paused: always land on Manage Event.
+    // Everything else (published / completed / paused / collaborator): land
+    // directly on Manage Event — the single page that now holds config,
+    // guest lists, and activity (orders/offline/customers). The old hub is gone.
     router.push(`/events/${event._id}/manage`);
   };
 
   return (
-    <div
-      className={`group cursor-pointer overflow-hidden rounded-owner-lg border bg-owner-bg transition ${
-        isCollab
-          ? "border-[#7E2BD6]/40 hover:border-[#7E2BD6]/70"
-          : "border-owner-border hover:border-owner-blue-200"
-      }`}
-      onClick={openEvent}
-    >
-      <div
-        className="relative mx-3 mt-3 flex aspect-[4/5] items-center justify-center rounded-owner-md bg-owner-bg-subtle bg-cover bg-center"
-        style={
-          event.eventFlyer
-            ? { backgroundImage: `url(${event.eventFlyer})` }
-            : undefined
-        }
-      >
-        {!event.eventFlyer ? (
-          <SparklesIcon size={28} className="text-owner-fg-4" />
-        ) : null}
-        {isCollab ? (
-          <span
-            className="absolute left-2 top-2 inline-flex items-center gap-1.5 rounded-full bg-[#1B0B3D]/85 px-2.5 py-1 text-[10.5px] font-semibold uppercase tracking-[0.12em] text-white backdrop-blur"
-            title="You were added to this event as a collaborator. The host who added you controls what you can do here."
-          >
+    <EventCard
+      variant={isCollab ? "collaborator" : "default"}
+      flyer={event.eventFlyer || undefined}
+      dateLabel={formatDate(event.startDate)}
+      title={event.title || "Untitled Event"}
+      city={event.city || "City pending"}
+      priceLabel={getEventPriceLabel(event)}
+      placeholderIcon={<SparklesIcon size={28} className="text-owner-fg-4" />}
+      topLeftBadge={
+        isCollab ? (
+          <>
             <UsersRoundIcon size={11} />
             Collaborator
-          </span>
-        ) : null}
-      </div>
-      <div className="space-y-3 px-5 pb-5 pt-4">
-        <div className="flex items-start justify-between gap-3">
-          <div className="min-w-0">
-            <p className="mb-1 text-[12px] font-semibold uppercase tracking-[0.04em] text-owner-blue-500">
-              {formatDate(event.startDate)}
-            </p>
-            <h3 className="line-clamp-2 text-[18px] font-semibold leading-tight text-owner-fg-1">
-              {event.title || "Untitled Event"}
-            </h3>
-            <p className="mt-1 line-clamp-1 text-[13.5px] font-medium text-owner-fg-3">
-              {event.city || "City pending"}
-            </p>
-            {isCollab ? (
-              <p className="mt-1 text-[12px] text-[#7E2BD6]">
-                Read-only · added by the event host
-              </p>
-            ) : null}
-          </div>
-          <HoizrStatusPill status={event.status || "Draft"} />
+          </>
+        ) : null
+      }
+      topRightBadge={
+        <HoizrStatusPill
+          status={eventDisplayStatus(
+            event.status,
+            event.startDate,
+            event.endDate
+          )}
+        />
+      }
+      note={
+        isCollab ? (
+          <p className="text-[12px] text-[#7E2BD6]">
+            Read-only - added by the event organizer
+          </p>
+        ) : null
+      }
+      actions={
+        <div className="grid gap-2 text-sm sm:grid-cols-2">
+          {isCollab ? (
+            <>
+              <ActionButton
+                label="View event"
+                Icon={SettingsIcon}
+                onClick={() => router.push(`/events/${event._id}/manage`)}
+              />
+              <ActionButton
+                label="Metrics"
+                Icon={QrCodeIcon}
+                onClick={() => router.push(`/events/${event._id}/manage`)}
+                disabled={!collabPerms?.canSeeMetrics}
+              />
+              <ActionButton
+                label="Run a Campaign"
+                Icon={MegaphoneIcon}
+                onClick={() =>
+                  openRunCampaignModal({
+                    eventId: event._id,
+                    title: event.title || "Untitled Event",
+                  })
+                }
+                disabled={!collabPerms?.canRunCampaigns}
+              />
+              <ActionButton
+                label="Leave collaboration"
+                Icon={Trash2Icon}
+                onClick={onLeaveCollab}
+              />
+            </>
+          ) : isDraftLike ? (
+            <>
+              <ActionButton
+                label="Continue"
+                Icon={SettingsIcon}
+                onClick={() => router.push(`/events/${event._id}/create`)}
+              />
+              <ActionButton
+                label="Duplicate"
+                Icon={CopyIcon}
+                onClick={onDuplicate}
+              />
+              <ActionButton
+                label="Delete"
+                Icon={Trash2Icon}
+                onClick={onDelete}
+              />
+            </>
+          ) : (
+            <>
+              <ActionButton
+                label="Manage"
+                Icon={SettingsIcon}
+                onClick={() =>
+                  router.push(
+                    isCompleted
+                      ? `/events/${event._id}/manage`
+                      : `/events/${event._id}/update`,
+                  )
+                }
+              />
+              <ActionButton
+                label="Scanner"
+                Icon={QrCodeIcon}
+                onClick={() => router.push(`/events/${event._id}/scanners`)}
+              />
+              <ActionButton
+                label="Run a Campaign"
+                Icon={MegaphoneIcon}
+                onClick={() =>
+                  openRunCampaignModal({
+                    eventId: event._id,
+                    title: event.title || "Untitled Event",
+                  })
+                }
+              />
+              <ActionButton
+                label="Duplicate"
+                Icon={CopyIcon}
+                onClick={onDuplicate}
+              />
+              <ActionButton label="Find Promoters" Icon={UsersRoundIcon} disabled />
+              <ActionButton label="Find Artists" Icon={MoreHorizontalIcon} disabled />
+            </>
+          )}
         </div>
-
-        <p className="text-[14px] font-semibold tabular-nums text-owner-fg-1">
-          {firstTicket?.ticketPrice
-            ? `${rupee(Number(firstTicket.ticketPrice))} onwards`
-            : "Guestlist"}
-        </p>
-
-        <div className="max-h-0 overflow-hidden transition-all duration-200 group-hover:max-h-56 group-focus-within:max-h-56">
-          <div className="grid gap-2 border-t border-dashed border-owner-border-soft pt-3 text-sm sm:grid-cols-2">
-            {isCollab ? (
-              <>
-                <ActionButton
-                  label="View event"
-                  Icon={SettingsIcon}
-                  onClick={() => router.push(`/events/${event._id}/manage`)}
-                />
-                <ActionButton
-                  label="Metrics"
-                  Icon={QrCodeIcon}
-                  onClick={() => router.push(`/events/${event._id}/manage`)}
-                  disabled={!collabPerms?.canSeeMetrics}
-                />
-                <ActionButton
-                  label="Run a Campaign"
-                  Icon={MegaphoneIcon}
-                  onClick={() =>
-                    router.push(
-                      `/campaigns/onboarding/template-select?eventId=${event._id}`
-                    )
-                  }
-                  disabled={!collabPerms?.canRunCampaigns}
-                />
-                <ActionButton
-                  label="Leave collaboration"
-                  Icon={Trash2Icon}
-                  onClick={onLeaveCollab}
-                />
-              </>
-            ) : isDraftLike ? (
-              <>
-                <ActionButton
-                  label="Continue"
-                  Icon={SettingsIcon}
-                  onClick={() => router.push(`/events/${event._id}/create`)}
-                />
-                <ActionButton
-                  label="Delete"
-                  Icon={Trash2Icon}
-                  onClick={onDelete}
-                />
-              </>
-            ) : (
-              <>
-                <ActionButton
-                  label="Manage"
-                  Icon={SettingsIcon}
-                  onClick={() =>
-                    router.push(
-                      isCompleted
-                        ? `/events/${event._id}/manage`
-                        : `/events/${event._id}/update`
-                    )
-                  }
-                />
-                <ActionButton
-                  label="Scanner"
-                  Icon={QrCodeIcon}
-                  onClick={() => router.push(`/events/${event._id}/scanners`)}
-                />
-                <ActionButton
-                  label="Run a Campaign"
-                  Icon={MegaphoneIcon}
-                  onClick={() =>
-                    router.push(
-                      `/campaigns/onboarding/template-select?eventId=${event._id}`
-                    )
-                  }
-                />
-                <ActionButton
-                  label="Delete"
-                  Icon={Trash2Icon}
-                  onClick={onDelete}
-                />
-                <ActionButton label="Find Promoters" Icon={UsersRoundIcon} disabled />
-                <ActionButton label="Find Artists" Icon={MoreHorizontalIcon} disabled />
-              </>
-            )}
-          </div>
-        </div>
-      </div>
-    </div>
+      }
+      onClick={openEvent}
+    />
   );
 };
-
-const InfoPill = ({
-  Icon,
-  label,
-}: {
-  Icon: LucideIcon;
-  label: string;
-}) => (
-  <div className="flex min-w-0 items-center gap-2 rounded-lg bg-[var(--owner-bg)] px-3 py-2">
-    <Icon size={16} className="shrink-0 text-[var(--owner-blue-500)]" />
-    <span className="truncate">{label}</span>
-  </div>
-);
 
 const ActionButton = ({
   label,
@@ -978,6 +1016,9 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
         },
       };
     }
+
+    const _vGate = verificationGateRedirect(journey);
+    if (_vGate) return _vGate;
     return { props: {} };
   } catch (error) {
     return {

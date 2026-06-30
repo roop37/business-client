@@ -116,6 +116,10 @@ mutation duplicateHostEmailCampaign($campaignId: String!) {
   duplicateHostEmailCampaign(campaignId: $campaignId)
 }
 
+mutation resumeHostEmailCampaign($campaignId: String!) {
+  resumeHostEmailCampaign(campaignId: $campaignId)
+}
+
 mutation createMarketingCreditTopUpOrder($input: MarketingCreditTopUpOrderInput!) {
   createMarketingCreditTopUpOrder(input: $input) {
     razorpayOrderId

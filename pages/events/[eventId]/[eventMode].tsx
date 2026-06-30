@@ -1,8 +1,11 @@
 import EventJourney from "@/components/modules/events/EventJourney";
 import { EventScanners } from "@/components/modules/events/EventScanners";
+import { EventActivityPanel } from "@/components/modules/events/EventActivityPanel";
+import GuestlistManagerModal from "@/components/modules/events/GuestlistManagerModal";
 import useGlobalStore from "@/store/global";
 import { sdk } from "@/utils/graphqlClient";
-import { extractErrorMessage } from "@/utils/utilFUncs";
+import { verificationGateRedirect } from "@/lib/auth/verificationGate";
+import { eventDisplayStatus, extractErrorMessage } from "@/utils/utilFUncs";
 import {
   CalendarDaysIcon,
   DoorOpenIcon,
@@ -12,11 +15,15 @@ import {
   MegaphoneIcon,
   PencilIcon,
   QrCodeIcon,
+  ScanLineIcon,
   SettingsIcon,
+  SparklesIcon,
   TicketIcon,
   UsersRoundIcon,
+  XIcon,
 } from "lucide-react";
 import { GetServerSideProps } from "next";
+import Link from "next/link";
 import { useRouter } from "next/router";
 import type { ReactNode } from "react";
 import { useEffect, useState } from "react";
@@ -70,9 +77,11 @@ const EventOperations = ({
   mode: "manage" | "scanners";
 }) => {
   const router = useRouter();
-  const { setToastData } = useGlobalStore();
+  const { setToastData, openRunCampaignModal } = useGlobalStore();
   const [overview, setOverview] = useState<any>(null);
   const [busy, setBusy] = useState(false);
+  const [collaboratorsOpen, setCollaboratorsOpen] = useState(false);
+  const [guestlistOpen, setGuestlistOpen] = useState(false);
 
   const loadOverview = async () => {
     try {
@@ -107,9 +116,50 @@ const EventOperations = ({
       ? Math.min(100, Math.round((overview.totals.sold / overview.totals.capacity) * 100))
       : 0;
   const isCollaboratorView = Boolean(overview?.isCollaboratorView);
+  // Door scanning window — mirrors the server scanner gates: opens 2h before
+  // the event starts, closes 24h after it ends. Surfaced so the host knows
+  // exactly when staff can scan.
+  const scanWindowLabel = (() => {
+    if (!overview?.startDate) return "";
+    const fmt = (d: Date) =>
+      // Door-scan window derives from the event's stored UTC instants — render
+      // in IST so the times match the editor on every browser timezone.
+      new Intl.DateTimeFormat("en-IN", {
+        day: "2-digit",
+        month: "short",
+        hour: "numeric",
+        minute: "2-digit",
+        hour12: true,
+        timeZone: "Asia/Kolkata",
+      }).format(d);
+    const opens = new Date(new Date(overview.startDate).getTime() - 2 * 60 * 60 * 1000);
+    const end = overview.endDate ? new Date(overview.endDate) : null;
+    const closes = end ? new Date(end.getTime() + 24 * 60 * 60 * 1000) : null;
+    return closes
+      ? `Scanning ${fmt(opens)} – ${fmt(closes)}`
+      : `Scanning opens ${fmt(opens)}`;
+  })();
   const canSeeMetrics = !isCollaboratorView || overview?.canSeeMetrics === true;
   const canRunCampaigns =
     !isCollaboratorView || overview?.canRunCampaigns === true;
+  // Commercial-terms data (offer + reconcile mode) only flows to Owner
+  // / Manager seats. Marketing and Staff team members on the same host
+  // should never see the commission breakdown or the payout-reconcile
+  // switch — those are business-decision surfaces, not operational
+  // ones. Collaborators (cross-host) are gated separately via
+  // isCollaboratorView.
+  const viewerTeamRole = overview?.viewerTeamRole ?? null;
+  const canSeeOfferSettlement =
+    !isCollaboratorView &&
+    (viewerTeamRole === "Owner" || viewerTeamRole === "Manager");
+  // Collaborating hosts / promoters configured during event edit.
+  // Server only populates this for the owner view (it returns [] to a
+  // collaborator viewer), so the card stays hidden whenever the viewer
+  // is themselves a collaborator.
+  const collaborators: any[] = Array.isArray(overview?.collaborators)
+    ? overview.collaborators
+    : [];
+  const showCollaboratorsCard = !isCollaboratorView && collaborators.length > 0;
 
   return (
     <EventShell title={title} status={overview?.status}>
@@ -132,7 +182,12 @@ const EventOperations = ({
                   {overview?.title || "Untitled Event"}
                 </h2>
                 <p className="mt-1 text-xs text-[var(--owner-fg-3)]">
-                  {overview?.status} · {overview?.scannersCount ?? 0} scanner
+                  {eventDisplayStatus(
+                    overview?.status,
+                    overview?.startDate,
+                    overview?.endDate
+                  )}{" "}
+                  · {overview?.scannersCount ?? 0} scanner
                   {(overview?.scannersCount ?? 0) === 1 ? "" : "s"}
                   {overview?.selectedPricingPlan
                     ? ` · ${overview.selectedPricingPlan} plan` +
@@ -141,22 +196,30 @@ const EventOperations = ({
                         : "")
                     : ""}
                 </p>
+                {scanWindowLabel ? (
+                  <p className="mt-1 inline-flex items-center gap-1.5 text-[11px] text-[var(--owner-fg-4)]">
+                    <ScanLineIcon size={12} />
+                    {scanWindowLabel}
+                  </p>
+                ) : null}
               </div>
             </div>
-            {mode !== "scanners" && !isCollaboratorView ? (
-              <button
-                type="button"
-                onClick={() => router.push(`/events/${eventId}/update`)}
-                className="inline-flex items-center justify-center gap-2 rounded-lg bg-[var(--owner-blue-500)] px-4 py-2 text-sm font-semibold text-[var(--owner-bg)]"
-              >
-                <PencilIcon size={16} />
-                Edit Event
-              </button>
-            ) : isCollaboratorView ? (
-              <span className="rounded-full bg-[#1B0B3D]/10 px-3 py-1.5 text-xs font-semibold uppercase tracking-[0.12em] text-[#7E2BD6]">
-                Collaborator · read-only
-              </span>
-            ) : null}
+            <div className="flex items-center gap-2">
+              {mode !== "scanners" && !isCollaboratorView ? (
+                <button
+                  type="button"
+                  onClick={() => router.push(`/events/${eventId}/update`)}
+                  className="inline-flex items-center justify-center gap-2 rounded-lg bg-[var(--owner-blue-500)] px-4 py-2 text-sm font-semibold text-[var(--owner-bg)]"
+                >
+                  <PencilIcon size={16} />
+                  Edit Event
+                </button>
+              ) : isCollaboratorView ? (
+                <span className="rounded-full bg-[#1B0B3D]/10 px-3 py-1.5 text-xs font-semibold uppercase tracking-[0.12em] text-[#7E2BD6]">
+                  Collaborator · read-only
+                </span>
+              ) : null}
+            </div>
           </div>
         </div>
 
@@ -215,6 +278,44 @@ const EventOperations = ({
               />
             </div>
 
+            {/* Offer plan + reconcile mode. Offers are read-only once
+                published (commission + customer price snapshot is
+                immutable) but the reconcile mechanic can still flip.
+                Visible to Owner / Manager only — Marketing and Staff
+                seats see the rest of Manage Event without the
+                commercial-terms block. */}
+            {canSeeOfferSettlement &&
+            (overview?.pricingOptions?.length ||
+              overview?.pricingSnapshot) ? (
+              <ManagePricingPanel
+                pricingOptions={overview?.pricingOptions ?? []}
+                pricingSnapshot={overview?.pricingSnapshot ?? null}
+                feeSettlementMode={overview?.feeSettlementMode ?? null}
+                disabled={busy || isCollaboratorView}
+                onChangeMode={async (mode) => {
+                  setBusy(true);
+                  try {
+                    await sdk.updateEventFeeSettlementMode({
+                      id: eventId,
+                      mode,
+                    });
+                    setToastData({
+                      type: "success",
+                      message: "Settlement mode updated",
+                    });
+                    await loadOverview();
+                  } catch (error) {
+                    setToastData({
+                      type: "error",
+                      message: extractErrorMessage(error),
+                    });
+                  } finally {
+                    setBusy(false);
+                  }
+                }}
+              />
+            ) : null}
+
             {/* Per-ticket table */}
             <div className="rounded-lg border border-[var(--owner-border)] bg-[var(--owner-bg)]">
               <div className="border-b border-[var(--owner-border)] px-5 py-3 text-sm font-semibold">
@@ -242,8 +343,54 @@ const EventOperations = ({
                         <td className="px-5 py-3 text-right tabular-nums">
                           {rupee(Number(t.ticketPrice) * Number(t.ticketSold))}
                         </td>
-                        <td className="px-5 py-3 text-xs">
-                          {t.ticketVisible ? "Yes" : "Hidden"}
+                        <td className="px-5 py-3">
+                          <button
+                            type="button"
+                            disabled={busy || (!!t.ticketVisible && Number(t.ticketSold) > 0)}
+                            role="switch"
+                            aria-checked={!!t.ticketVisible}
+                            title={
+                              !!t.ticketVisible && Number(t.ticketSold) > 0
+                                ? "Can't hide — this ticket already has sales"
+                                : t.ticketVisible
+                                ? "Visible — click to hide"
+                                : "Hidden — click to show"
+                            }
+                            onClick={async () => {
+                              const next = !t.ticketVisible;
+                              setBusy(true);
+                              try {
+                                await sdk.setEventTicketVisibility({
+                                  id: eventId,
+                                  ticketId: t._id,
+                                  visible: next,
+                                });
+                                setToastData({
+                                  type: "success",
+                                  message: next ? "Ticket is now visible" : "Ticket hidden",
+                                });
+                                await loadOverview();
+                              } catch (error) {
+                                setToastData({
+                                  type: "error",
+                                  message: extractErrorMessage(error),
+                                });
+                              } finally {
+                                setBusy(false);
+                              }
+                            }}
+                            className={`relative inline-flex h-5 w-9 items-center rounded-full transition disabled:opacity-50 ${
+                              t.ticketVisible
+                                ? "bg-[var(--owner-blue-500)]"
+                                : "bg-[var(--owner-border)]"
+                            }`}
+                          >
+                            <span
+                              className={`inline-block h-4 w-4 transform rounded-full bg-white transition ${
+                                t.ticketVisible ? "translate-x-4" : "translate-x-0.5"
+                              }`}
+                            />
+                          </button>
                         </td>
                       </tr>
                     ))}
@@ -258,6 +405,130 @@ const EventOperations = ({
                 </table>
               </div>
             </div>
+
+            {/* Report navigation. Customers + orders + guestlist now live on
+                the event hub (/events/[id]); Manage is config + settings. */}
+            <div className="flex flex-wrap gap-2">
+              <Link
+                href={`/reports/sales-summary?eventId=${eventId}`}
+                className="rounded-lg border border-[var(--owner-border)] bg-[var(--owner-bg)] px-4 py-2 text-sm font-medium hover:border-[#c89d75]"
+              >
+                See sales report
+              </Link>
+              <Link
+                href={`/reports/campaign-performance?eventId=${eventId}`}
+                className="rounded-lg border border-[var(--owner-border)] bg-[var(--owner-bg)] px-4 py-2 text-sm font-medium hover:border-[#c89d75]"
+              >
+                See marketing report
+              </Link>
+            </div>
+
+            {/* Guest lists — managed inline from Manage. Owner sees it always
+                (incl. the off→on prompt); a collaborator sees it only when the
+                guestlist is enabled, to manage THEIR own list. */}
+            {!isCollaboratorView || overview?.guestlistEnabled ? (
+              <button
+                type="button"
+                onClick={() => setGuestlistOpen(true)}
+                className="w-full rounded-lg border border-[var(--owner-border)] bg-[var(--owner-bg)] p-5 text-left transition hover:border-[#c89d75]"
+              >
+                <div className="flex items-center justify-between gap-4">
+                  <div className="flex min-w-0 items-start gap-3">
+                    <span className="grid h-10 w-10 shrink-0 place-items-center rounded-lg bg-[var(--owner-bg-subtle)] text-[var(--owner-blue-500)]">
+                      <SparklesIcon size={18} />
+                    </span>
+                    <div className="min-w-0">
+                      <p className="font-semibold">Guest lists</p>
+                      <p className="text-xs text-[var(--owner-fg-3)]">
+                        {isCollaboratorView
+                          ? "Manage your guest list, invite link and guests."
+                          : overview?.guestlistEnabled
+                          ? "Manage lists, invite links and guests. Golden tickets scan at the door."
+                          : "Off — turn on free guest invites with golden tickets."}
+                      </p>
+                    </div>
+                  </div>
+                  <span
+                    className={`shrink-0 rounded-full px-2.5 py-1 text-[11px] font-semibold ${
+                      overview?.guestlistEnabled
+                        ? "bg-[var(--owner-blue-500)]/[0.10] text-[var(--owner-blue-500)]"
+                        : "bg-[var(--owner-bg-subtle)] text-[var(--owner-fg-3)]"
+                    }`}
+                  >
+                    {overview?.guestlistEnabled ? "On" : "Off"}
+                  </span>
+                </div>
+              </button>
+            ) : null}
+
+            {/* Activity — Orders · Offline Tickets · Customers, moved here from
+                the old Event Hub so an event lives on one page. */}
+            {canSeeMetrics ? (
+              <div>
+                <h3 className="mb-3 text-sm font-semibold text-[var(--owner-fg-2)]">
+                  Activity
+                </h3>
+                <EventActivityPanel
+                  eventId={eventId}
+                  tickets={(overview?.tickets ?? []).map((t: any) => ({
+                    _id: String(t._id),
+                    ticketName: t.ticketName,
+                  }))}
+                  canSeeCustomers={
+                    (overview?.totals?.sold ?? 0) > 0 &&
+                    overview?.canAccessCustomerList !== false
+                  }
+                />
+              </div>
+            ) : null}
+
+            {/* Collaborators & promoters */}
+            {showCollaboratorsCard ? (
+              <button
+                type="button"
+                onClick={() => setCollaboratorsOpen(true)}
+                className="w-full rounded-lg border border-[var(--owner-border)] bg-[var(--owner-bg)] p-5 text-left transition hover:border-[#c89d75]"
+              >
+                <div className="flex items-center justify-between gap-4">
+                  <div className="flex min-w-0 items-start gap-3">
+                    <span className="grid h-10 w-10 shrink-0 place-items-center rounded-lg bg-[var(--owner-bg-subtle)] text-[var(--owner-blue-500)]">
+                      <UsersRoundIcon size={18} />
+                    </span>
+                    <div className="min-w-0">
+                      <p className="font-semibold">Collaborators &amp; promoters</p>
+                      <p className="text-xs text-[var(--owner-fg-3)]">
+                        {collaborators.length}{" "}
+                        {collaborators.length === 1
+                          ? "organizer"
+                          : "organizers"}{" "}
+                        on this event. Tap to view their settings.
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex shrink-0 -space-x-2">
+                    {collaborators.slice(0, 5).map((c: any, index: number) => (
+                      <span
+                        key={c.businessLinkId ?? `${c.name}-${index}`}
+                        title={c.name}
+                        className="grid h-9 w-9 place-items-center rounded-full border-2 border-[var(--owner-bg)] bg-[var(--owner-bg-subtle)] bg-cover bg-center text-xs font-semibold uppercase text-[var(--owner-fg-3)]"
+                        style={
+                          c.logo
+                            ? { backgroundImage: `url(${c.logo})` }
+                            : undefined
+                        }
+                      >
+                        {!c.logo ? (c.name ?? "?").slice(0, 1) : null}
+                      </span>
+                    ))}
+                    {collaborators.length > 5 ? (
+                      <span className="grid h-9 w-9 place-items-center rounded-full border-2 border-[var(--owner-bg)] bg-[var(--owner-bg-subtle)] text-xs font-semibold text-[var(--owner-fg-3)]">
+                        +{collaborators.length - 5}
+                      </span>
+                    ) : null}
+                  </div>
+                </div>
+              </button>
+            ) : null}
 
             {/* Action cards */}
             <div className="grid gap-4 md:grid-cols-3">
@@ -281,7 +552,10 @@ const EventOperations = ({
                 description="Start a campaign that is attached to this event."
                 Icon={MegaphoneIcon}
                 onClick={() =>
-                  router.push(`/campaigns/onboarding/template-select?eventId=${eventId}`)
+                  openRunCampaignModal({
+                    eventId,
+                    title: overview?.title || "Untitled Event",
+                  })
                 }
                 disabled={!canRunCampaigns}
               />
@@ -289,7 +563,392 @@ const EventOperations = ({
           </>
         )}
       </div>
+
+      <CollaboratorsModal
+        open={collaboratorsOpen}
+        collaborators={collaborators}
+        onClose={() => setCollaboratorsOpen(false)}
+        onManage={() => {
+          setCollaboratorsOpen(false);
+          router.push(`/events/${eventId}/update`);
+        }}
+      />
+
+      <GuestlistManagerModal
+        open={guestlistOpen}
+        onClose={() => setGuestlistOpen(false)}
+        eventId={eventId}
+        guestlistEnabled={!!overview?.guestlistEnabled}
+        guestlistAutoAccept={overview?.guestlistAutoAccept !== false}
+        guestlistMaxCapacity={overview?.guestlistMaxCapacity ?? null}
+        isCollaboratorView={isCollaboratorView}
+        onSettingsChanged={loadOverview}
+      />
     </EventShell>
+  );
+};
+
+const COLLAB_STATUS_BADGE: Record<
+  string,
+  { label: string; className: string }
+> = {
+  CONFIRMED: {
+    label: "Confirmed",
+    className:
+      "bg-[var(--owner-blue-500)]/[0.10] text-[var(--owner-blue-500)]",
+  },
+  INVITED: {
+    label: "Invited",
+    className: "bg-amber-500/10 text-amber-600",
+  },
+  DECLINED: {
+    label: "Declined",
+    className: "bg-red-500/10 text-red-600",
+  },
+};
+
+/**
+ * Read-only review of the collaborating hosts / promoters configured
+ * for an event and their per-collaboration access settings. Mirrors
+ * the grouping + labels of the EventJourney collaborator modal ("What
+ * this collaborator can do" + "Display & operations") but renders every
+ * flag as a static On/Off row — editing happens in the event edit flow.
+ */
+const CollaboratorsModal = ({
+  open,
+  collaborators,
+  onClose,
+  onManage,
+}: {
+  open: boolean;
+  collaborators: any[];
+  onClose: () => void;
+  onManage: () => void;
+}) => {
+  if (!open) return null;
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/55 px-4 py-6">
+      <div className="flex max-h-[92dvh] w-full max-w-2xl flex-col overflow-hidden rounded-lg bg-[var(--owner-bg)] shadow-2xl">
+        <div className="flex shrink-0 items-center justify-between gap-3 border-b border-[var(--owner-border)] px-5 py-4">
+          <div>
+            <div className="text-sm font-semibold">
+              Collaborators &amp; promoters
+            </div>
+            <p className="mt-1 text-xs text-[var(--owner-fg-3)]">
+              Read-only view of the collaborating organizers and what each
+              can do on this event. Edit these in the event settings.
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={onClose}
+            className="inline-flex h-9 w-9 items-center justify-center rounded-md border border-[var(--owner-border)]"
+          >
+            <XIcon size={16} />
+          </button>
+        </div>
+        <div className="min-h-0 flex-1 space-y-4 overflow-y-auto p-5">
+          {collaborators.map((c: any, index: number) => {
+            const badge =
+              COLLAB_STATUS_BADGE[String(c.collaborationStatus ?? "")] ?? null;
+            return (
+              <div
+                key={c.businessLinkId ?? `${c.name}-${index}`}
+                className="rounded-lg border border-[var(--owner-border)] bg-[var(--owner-bg)] p-4"
+              >
+                <div className="flex items-center gap-3">
+                  <span
+                    className="grid h-10 w-10 shrink-0 place-items-center rounded-md bg-[var(--owner-bg-subtle)] bg-cover bg-center text-sm font-semibold uppercase text-[var(--owner-fg-3)]"
+                    style={
+                      c.logo ? { backgroundImage: `url(${c.logo})` } : undefined
+                    }
+                  >
+                    {!c.logo ? (c.name ?? "?").slice(0, 1) : null}
+                  </span>
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate font-semibold">
+                      {c.name ?? "Unnamed organizer"}
+                    </p>
+                    <p className="truncate text-xs text-[var(--owner-fg-3)]">
+                      Collaborating organizer
+                    </p>
+                  </div>
+                  {badge ? (
+                    <span
+                      className={`shrink-0 rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.12em] ${badge.className}`}
+                    >
+                      {badge.label}
+                    </span>
+                  ) : null}
+                </div>
+
+                <div className="mt-4">
+                  <div className="text-xs font-semibold uppercase tracking-[0.08em] text-[var(--owner-fg-3)]">
+                    What this collaborator can do
+                  </div>
+                  <div className="mt-3 grid gap-3 md:grid-cols-2">
+                    <ReadOnlySettingRow
+                      title="See event metrics"
+                      subtitle="Sales, attendance, conversion."
+                      enabled={c.canSeeMetrics !== false}
+                    />
+                    <ReadOnlySettingRow
+                      title="Run campaigns for this event"
+                      subtitle="Email blasts targeting attendees."
+                      enabled={c.canRunCampaigns !== false}
+                    />
+                    <ReadOnlySettingRow
+                      title="Create offers / discount codes"
+                      subtitle="Promo codes that apply at checkout."
+                      enabled={c.canCreateOffers !== false}
+                    />
+                    <ReadOnlySettingRow
+                      title="Access customer list"
+                      subtitle="Download buyer contact details."
+                      enabled={c.requestCustomerListAccess !== false}
+                    />
+                  </div>
+                </div>
+
+                <div className="mt-4">
+                  <div className="text-xs font-semibold uppercase tracking-[0.08em] text-[var(--owner-fg-3)]">
+                    Display &amp; operations
+                  </div>
+                  <div className="mt-3 grid gap-3 md:grid-cols-2">
+                    <ReadOnlySettingRow
+                      title="Hide on Event Page"
+                      subtitle="Don't show as a co-organizer publicly."
+                      enabled={Boolean(c.hideOnEventPage)}
+                    />
+                    <ReadOnlySettingRow
+                      title="Allow Offline Tickets"
+                      subtitle="Can issue tickets at the door."
+                      enabled={Boolean(c.allowIssuingOfflineTickets)}
+                    />
+                    <ReadOnlySettingRow
+                      title="Send Transactional Emails"
+                      subtitle="Cc'd on ticket purchase emails."
+                      enabled={Boolean(c.sendTransactionalMails)}
+                    />
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+        <div className="flex shrink-0 items-center justify-end gap-2 border-t border-[var(--owner-border)] px-5 py-3">
+          <button
+            type="button"
+            onClick={onClose}
+            className="rounded-lg border border-[var(--owner-border-strong)] bg-white px-3 py-2 text-sm font-semibold"
+          >
+            Close
+          </button>
+          <button
+            type="button"
+            onClick={onManage}
+            className="rounded-lg bg-[var(--owner-blue-500)] px-3 py-2 text-sm font-semibold text-[var(--owner-bg)]"
+          >
+            Manage collaborators
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+/**
+ * Static (non-interactive) twin of EventJourney's `ToggleSettingRow` —
+ * same card shell + labels, but the right-hand control is a fixed
+ * On/Off pill instead of a toggle, signalling that this surface is
+ * read-only.
+ */
+const ReadOnlySettingRow = ({
+  title,
+  subtitle,
+  enabled,
+}: {
+  title: string;
+  subtitle?: string;
+  enabled: boolean;
+}) => (
+  <div className="flex min-h-[64px] items-center justify-between gap-4 rounded-lg border border-[var(--owner-border)] bg-white px-4 py-3 text-left">
+    <span className="min-w-0">
+      <span className="block text-sm font-semibold text-[var(--owner-fg-1)]">
+        {title}
+      </span>
+      {subtitle ? (
+        <span className="mt-1 block text-xs leading-5 text-[var(--owner-fg-3)]">
+          {subtitle}
+        </span>
+      ) : null}
+    </span>
+    {/* Actual switch visual (disabled — this is a read-only review of the
+        collaborator's granted capabilities; editing happens in "Manage
+        collaborators"). Mirrors ToggleCard's switch so the UI is consistent. */}
+    <span
+      role="switch"
+      aria-checked={enabled}
+      aria-readonly="true"
+      className={`relative inline-flex h-6 w-11 shrink-0 cursor-default items-center rounded-full opacity-70 transition ${
+        enabled ? "bg-[var(--owner-blue-500)]" : "bg-[var(--owner-border)]"
+      }`}
+    >
+      <span
+        className={`inline-block h-5 w-5 transform rounded-full bg-white transition ${
+          enabled ? "translate-x-5" : "translate-x-0.5"
+        }`}
+      />
+    </span>
+  </div>
+);
+
+/**
+ * Read-only review of the offer set the host was shown at publish +
+ * which one they accepted, plus an editor for the fee-settlement
+ * mode (the only post-publish-mutable piece of the pricing config).
+ */
+const ManagePricingPanel = ({
+  pricingOptions,
+  pricingSnapshot,
+  feeSettlementMode,
+  disabled,
+  onChangeMode,
+}: {
+  pricingOptions: Array<{
+    optionId: string;
+    label: string;
+    plan?: string;
+    commissionRate?: number;
+    customerPlatformFeeRate?: number;
+    upfrontFee?: number;
+  }>;
+  pricingSnapshot: {
+    optionId: string;
+    label: string;
+    commissionRate?: number;
+    customerPlatformFeeRate?: number;
+    upfrontFee?: number;
+  } | null;
+  feeSettlementMode: "DeductFromPayout" | "PayAfterEvent" | null;
+  disabled: boolean;
+  onChangeMode: (mode: "DeductFromPayout" | "PayAfterEvent") => void;
+}) => {
+  const selectedId = pricingSnapshot?.optionId ?? null;
+  return (
+    <div className="rounded-lg border border-[var(--owner-border)] bg-[var(--owner-bg)]">
+      <div className="border-b border-[var(--owner-border)] px-5 py-3 text-sm font-semibold">
+        Offer & settlement
+      </div>
+      <div className="grid gap-5 p-5 md:grid-cols-2">
+        <section>
+          <p className="mb-3 text-xs font-semibold uppercase tracking-[0.12em] text-[var(--owner-fg-3)]">
+            Offers shown at publish
+          </p>
+          {pricingOptions.length ? (
+            <ul className="space-y-2">
+              {pricingOptions.map((option) => {
+                const isSelected = option.optionId === selectedId;
+                return (
+                  <li
+                    key={option.optionId}
+                    className={`rounded-md border px-3 py-2.5 text-sm ${
+                      isSelected
+                        ? "border-[var(--owner-blue-500)] bg-[var(--owner-blue-500)]/[0.06]"
+                        : "border-[var(--owner-border)]"
+                    }`}
+                  >
+                    <div className="flex items-baseline justify-between gap-2">
+                      <span className="font-semibold">{option.label}</span>
+                      {isSelected ? (
+                        <span className="rounded-full bg-[var(--owner-blue-500)] px-2 py-0.5 text-[10px] font-bold uppercase tracking-[0.12em] text-[var(--owner-bg)]">
+                          Selected
+                        </span>
+                      ) : null}
+                    </div>
+                    <div className="mt-1 text-xs text-[var(--owner-fg-3)]">
+                      {option.commissionRate != null
+                        ? `${option.commissionRate}% commission`
+                        : "—"}
+                      {option.customerPlatformFeeRate != null
+                        ? ` · ${option.customerPlatformFeeRate}% customer fee`
+                        : ""}
+                      {option.upfrontFee
+                        ? ` · ₹${option.upfrontFee.toLocaleString("en-IN")} upfront`
+                        : ""}
+                    </div>
+                  </li>
+                );
+              })}
+            </ul>
+          ) : pricingSnapshot ? (
+            <p className="text-sm text-[var(--owner-fg-3)]">
+              <span className="font-semibold text-[var(--owner-fg-1)]">
+                {pricingSnapshot.label}
+              </span>{" "}
+              · {pricingSnapshot.commissionRate ?? 0}% commission
+            </p>
+          ) : (
+            <p className="text-sm text-[var(--owner-fg-3)]">
+              No offer set was recorded for this event.
+            </p>
+          )}
+          <p className="mt-3 text-[11px] text-[var(--owner-fg-3)]">
+            Once published, the offer is locked. Contact support to change
+            commission or customer fee.
+          </p>
+        </section>
+
+        <section>
+          <p className="mb-3 text-xs font-semibold uppercase tracking-[0.12em] text-[var(--owner-fg-3)]">
+            Reconcile platform fee
+          </p>
+          <div className="space-y-2">
+            {(
+              [
+                {
+                  value: "DeductFromPayout" as const,
+                  label: "Direct from payout",
+                  hint: "Hoizr nets the platform fee out of each settlement automatically.",
+                },
+                {
+                  value: "PayAfterEvent" as const,
+                  label: "Pay via payment link",
+                  hint: "Host receives the full payout; Hoizr sends a separate invoice + payment link.",
+                },
+              ]
+            ).map((option) => {
+              const checked = feeSettlementMode === option.value;
+              return (
+                <label
+                  key={option.value}
+                  className={`flex cursor-pointer items-start gap-3 rounded-md border px-3 py-2.5 text-sm ${
+                    checked
+                      ? "border-[var(--owner-blue-500)] bg-[var(--owner-blue-500)]/[0.06]"
+                      : "border-[var(--owner-border)]"
+                  } ${disabled ? "pointer-events-none opacity-60" : ""}`}
+                >
+                  <input
+                    type="radio"
+                    name="fee-settlement-mode"
+                    className="mt-1"
+                    checked={checked}
+                    disabled={disabled}
+                    onChange={() => onChangeMode(option.value)}
+                  />
+                  <span>
+                    <span className="font-semibold">{option.label}</span>
+                    <span className="mt-0.5 block text-xs text-[var(--owner-fg-3)]">
+                      {option.hint}
+                    </span>
+                  </span>
+                </label>
+              );
+            })}
+          </div>
+        </section>
+      </div>
+    </div>
   );
 };
 
@@ -449,6 +1108,9 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
         },
       };
     }
+
+    const _vGate = verificationGateRedirect(journey);
+    if (_vGate) return _vGate;
     return { props: {} };
   } catch (error) {
     return {

@@ -211,7 +211,7 @@ const CampaignSchedule = () => {
             timezone.split(" ")[0] !==
               Intl.DateTimeFormat().resolvedOptions().timeZone ? (
               <p className="my-2 text-sm font-normal text-left text-black/70 flex flex-col">
-                <span>{`Date & time according to your host timezone`}</span>
+                <span>{`Date & time according to your venue timezone`}</span>
                 <span>
                   {DateTime.fromISO(selectedDateTime.toISOString(), {
                     zone: timezone.split(" ")[0],
