@@ -277,7 +277,7 @@ export const LoginClient: FC = () => {
                   <p className="text-sm text-[var(--owner-fg-3)]">
                     By using the Hoizr dashboard, you accept our{" "}
                     <Link
-                      href="https://hoizr.in/terms"
+                      href="https://business.hoizr.com/legal/terms"
                       target="_blank"
                       rel="noopener noreferrer"
                       className="text-[var(--owner-blue-500)] focus:outline-none focus:underline hover:underline"
@@ -286,7 +286,7 @@ export const LoginClient: FC = () => {
                     </Link>{" "}
                     and{" "}
                     <Link
-                      href="https://hoizr.in/privacy"
+                      href="https://business.hoizr.com/legal/privacy"
                       target="_blank"
                       rel="noopener noreferrer"
                       className="text-[var(--owner-blue-500)] focus:outline-none focus:underline hover:underline"

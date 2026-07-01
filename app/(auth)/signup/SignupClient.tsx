@@ -350,7 +350,7 @@ export const SignupClient: FC = () => {
                     <p className="text-xs leading-[1.35] text-[var(--owner-fg-3)]">
                       {`By signing up, you agree to Hoizr's`}{" "}
                       <Link
-                        href="https://hoizr.in/terms"
+                        href="https://business.hoizr.com/legal/terms"
                         target="_blank"
                         rel="noopener noreferrer"
                         className="text-[var(--owner-blue-500)] focus:outline-none focus:underline hover:underline"
@@ -359,7 +359,7 @@ export const SignupClient: FC = () => {
                       </Link>{" "}
                       and{" "}
                       <Link
-                        href="https://hoizr.in/privacy"
+                        href="https://business.hoizr.com/legal/privacy"
                         target="_blank"
                         rel="noopener noreferrer"
                         className="text-[var(--owner-blue-500)] focus:outline-none focus:underline hover:underline"
