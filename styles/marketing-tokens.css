@@ -561,7 +561,7 @@
 }
 
 /* ---------- Blog post body (prose styling for HTML content) ---------- */
-.hoizr-marketing .blog-body h3 {
+.hoizr-marketing .blog-body h2 {
   font-family: var(--m-font-display);
   font-size: 26px;
   line-height: 1.18;
@@ -601,5 +601,5 @@
 }
 .hoizr-marketing .blog-body a:hover { color: var(--m-forest-800); }
 @media (max-width: 768px) {
-  .hoizr-marketing .blog-body h3 { font-size: 22px; margin-top: 28px; }
+  .hoizr-marketing .blog-body h2 { font-size: 22px; margin-top: 28px; }
 }

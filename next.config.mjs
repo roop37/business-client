@@ -50,6 +50,17 @@ const nextConfig = {
       ...productSlugRedirects,
     ];
   },
+  async headers() {
+    // Baseline hardening headers. HSTS is already applied at the Vercel
+    // edge; these add MIME-sniffing protection, a privacy-preserving
+    // referrer policy, and clickjacking protection.
+    const securityHeaders = [
+      { key: "X-Content-Type-Options", value: "nosniff" },
+      { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
+      { key: "X-Frame-Options", value: "SAMEORIGIN" },
+    ];
+    return [{ source: "/:path*", headers: securityHeaders }];
+  },
   images: {
     remotePatterns: [
       {

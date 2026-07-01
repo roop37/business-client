@@ -42,10 +42,15 @@ export const OrganizationJsonLd = () =>
       url: "https://hoizr.com",
     },
     subOrganization: HOIZR_FAMILY,
+    // Entity-graph links. Official Hoizr profiles across platforms —
+    // the strongest cheap signal for AI-search/entity resolution.
     sameAs: [
       "https://hoizr.com",
       "https://artist.hoizr.com",
+      "https://www.linkedin.com/company/hoizr",
       "https://www.instagram.com/hoizr.technologies",
+      "https://www.youtube.com/channel/UC0aBJY8SYaE3EQDar81Ju2g",
+      "https://www.reddit.com/user/Hoizr_Technologies",
     ],
     contactPoint: [
       {

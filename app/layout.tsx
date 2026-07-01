@@ -68,7 +68,7 @@ export const metadata: Metadata = {
     template: "%s · Hoizr",
   },
   description:
-    "Hoizr is the ticketing, marketing, and ops platform built for Indian event organizers, venues, and promoters. Publish directly, keep your fan CRM, use AI event evaluation, and compete with better market signal.",
+    "The ticketing, marketing, and ops platform for Indian event organizers and venues. Publish directly, keep your fan CRM, and use AI event evaluation.",
   applicationName: "Hoizr",
   keywords: [
     // Audience-targeted
@@ -173,14 +173,15 @@ export const metadata: Metadata = {
 export const viewport = {
   width: "device-width",
   initialScale: 1,
-  userScalable: false,
+  // Allow pinch-zoom for accessibility (WCAG 1.4.4). Do not disable
+  // user scaling.
 };
 
 export default function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="en">
+    <html lang="en-IN">
       <head>
         <link
           rel="alternate"

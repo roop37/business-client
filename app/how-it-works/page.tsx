@@ -39,10 +39,13 @@ import {
 const SITE_URL = "https://business.hoizr.com";
 
 export const metadata: Metadata = {
-  title:
-    "How Hoizr works for Indian event organizers, venues & promoters",
+  // Brand-led title; opt out of the "%s · Hoizr" template so the
+  // brand is not repeated.
+  title: {
+    absolute: "How Hoizr works for Indian event organizers, venues & promoters",
+  },
   description:
-    "A detailed walkthrough of how Hoizr takes Indian event organizers from workspace setup to direct event publishing, AI event evaluation, ticket sales, campaigns, door scanning, reporting, and settlement-ready operations.",
+    "How Hoizr takes Indian event organizers from setup to publishing, ticket sales, AI event evaluation, campaigns, door scanning, reporting, and settlement.",
   keywords: [
     "how Hoizr works",
     "event ticketing workflow India",

@@ -6,6 +6,7 @@ import {
   ALL_LEGAL_SLUGS,
   getLegalContent,
 } from "@/components/marketing/legal/content";
+import { clampDescription } from "@/components/marketing/seo/meta";
 
 type Params = { params: { slug: string } };
 
@@ -20,8 +21,10 @@ export function generateMetadata({ params }: Params): Metadata {
   if (!content) return { title: "Not found" };
   const canonical = `/legal/${params.slug}`;
   return {
-    title: `${content.title} — Hoizr`,
-    description: content.intro,
+    // Brand suffix is appended by the root layout title template
+    // ("%s · Hoizr"); do not repeat it here or it doubles.
+    title: content.title,
+    description: clampDescription(content.intro),
     alternates: {
       canonical,
       languages: { "en-IN": canonical, "x-default": canonical },
