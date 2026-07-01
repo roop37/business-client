@@ -16,9 +16,13 @@ const FOUNDER_IMAGE =
   "https://res.cloudinary.com/duhefgqh4/image/upload/v1748974724/IMG_0652_slotkd__1_ehtwxq.jpg";
 
 export const metadata: Metadata = {
-  title: "About Hoizr — building India's live-night operating system",
+  // Brand-led title; opt out of the "%s · Hoizr" template so the
+  // brand is not repeated.
+  title: {
+    absolute: "About Hoizr — building India's live-night operating system",
+  },
   description:
-    "Hoizr Technologies Pvt. Ltd. is building the operating system for India's live-event industry — powering clubs, venues, festivals, comedy promoters, and live music nights with ticketing, marketing, and operations in one stack.",
+    "Hoizr is building the operating system for India's live-event industry — ticketing, marketing, and operations for clubs, venues, festivals, and comedy.",
   keywords: [
     "About Hoizr",
     "Hoizr Technologies",
@@ -101,6 +105,7 @@ const aboutPageJsonLd = {
     founder: {
       "@type": "Person",
       "@id": `${SITE_URL}/about#sanbedan-paul`,
+      sameAs: ["https://in.linkedin.com/in/roop37"],
       name: "Sanbedan Paul",
       jobTitle: "Founder & CEO",
       image: FOUNDER_IMAGE,

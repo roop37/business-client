@@ -35,7 +35,7 @@ const sanitize = (html: string): string =>
 
 /**
  * Parse the post's HTML body and return:
- *   - the same HTML but with `id` attributes injected on every <h3>
+ *   - the same HTML but with `id` attributes injected on every <h2>
  *     (so the Table of Contents can anchor-scroll to them)
  *   - a flat list of {id, text} for rendering the TOC
  */
@@ -45,7 +45,7 @@ const buildToc = (
   const toc: TocItem[] = [];
   const used = new Map<string, number>();
   const html = htmlIn.replace(
-    /<h3([^>]*)>([\s\S]*?)<\/h3>/g,
+    /<h2([^>]*)>([\s\S]*?)<\/h2>/g,
     (_match, attrs: string, inner: string) => {
       const text = inner.replace(/<[^>]+>/g, "").trim();
       const base = text
@@ -57,7 +57,7 @@ const buildToc = (
       const id = count === 0 ? base : `${base}-${count + 1}`;
       used.set(base, count + 1);
       toc.push({ id, text });
-      return `<h3 id="${id}"${attrs}>${inner}</h3>`;
+      return `<h2 id="${id}"${attrs}>${inner}</h2>`;
     }
   );
   return { html, toc };

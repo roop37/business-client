@@ -8,9 +8,9 @@ import {
 } from "@/components/marketing/seo/SchemaJsonLd";
 
 export const metadata: Metadata = {
-  title: "Blog — for Indian event organizers, venues & promoters · Hoizr",
+  title: "Blog for Indian event organizers, venues & promoters",
   description:
-    "Insights and playbooks for Indian event organizers, venues, comedy promoters, nightlife organizers, and party crews. Migration guides, AI event strategy, fan-CRM tactics, and door-ops field notes.",
+    "Insights and playbooks for Indian event organizers and venues: migration guides, AI event strategy, fan-CRM tactics, and door-ops field notes.",
   keywords: [
     "event organizer blog India",
     "venue marketing tips India",

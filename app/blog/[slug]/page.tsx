@@ -11,6 +11,7 @@ import {
   BreadcrumbJsonLd,
   JsonLdScript,
 } from "@/components/marketing/seo/SchemaJsonLd";
+import { clampDescription } from "@/components/marketing/seo/meta";
 
 type PageParams = { params: { slug: string } };
 
@@ -89,8 +90,10 @@ export function generateMetadata({ params }: PageParams): Metadata {
   ];
 
   return {
-    title: `${blog.title} · Hoizr`,
-    description: blog.excerpt,
+    // Brand suffix is appended by the root layout title template
+    // ("%s · Hoizr"); do not repeat it here or it doubles.
+    title: blog.title,
+    description: clampDescription(blog.excerpt),
     keywords,
     authors: [{ name: blog.author.name }],
     alternates: {
@@ -171,6 +174,7 @@ export default function BlogPostPage({ params }: PageParams) {
     author: {
       "@type": "Person",
       "@id": `${SITE_URL}/about#sanbedan-paul`,
+      sameAs: ["https://in.linkedin.com/in/roop37"],
       name: blog.author.name,
       jobTitle: blog.author.role,
       image: blog.author.image,

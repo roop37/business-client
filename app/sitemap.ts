@@ -25,7 +25,12 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { url: `${siteUrl}/help`, lastModified, changeFrequency: "monthly", priority: 0.4 },
   ];
 
-  const productRoutes: MetadataRoute.Sitemap = ALL_PRODUCTS.map((p) => ({
+  // artist-vertical 307-redirects to artist.hoizr.com (see next.config
+  // redirects), so it is excluded here — a sitemap should only list
+  // canonical 200 URLs, not redirects.
+  const productRoutes: MetadataRoute.Sitemap = ALL_PRODUCTS.filter(
+    (p) => p.slug !== "artist-vertical"
+  ).map((p) => ({
     url: `${siteUrl}/product/${p.slug}`,
     lastModified,
     changeFrequency: "monthly",

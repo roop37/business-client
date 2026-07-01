@@ -9,9 +9,9 @@ import {
 } from "@/components/marketing/seo/SchemaJsonLd";
 
 export const metadata: Metadata = {
-  title: "Help & support for Indian event organizers — Hoizr",
+  title: "Help & support for Indian event organizers",
   description:
-    "Reach Hoizr for setup, payout, scanner, AI event evaluation, and platform support. Same-day reply for event organizers, venues, and promoters running shows in India.",
+    "Reach Hoizr for setup, payout, scanner, and platform support. Same-day reply for event organizers, venues, and promoters running shows in India.",
   keywords: [
     "Hoizr help",
     "Hoizr support",

@@ -30,6 +30,13 @@ export type ProductContent = {
     q: string;
     a: string;
   }[];
+  /** Optional "Hoizr vs marketplace" comparison table
+   *  (ProductComparison). Rendered server-side as a real <table>;
+   *  shown only when a product defines it. */
+  comparison?: {
+    heading?: string;
+    rows: { label: string; hoizr: string; marketplace: string }[];
+  };
 };
 
 /**
@@ -50,6 +57,10 @@ type Override = Partial<{
   howItWorks: { title: string; body: string }[];
   narrative: { pullQuote: string; paragraphs: string[] };
   faq: { q: string; a: string }[];
+  comparison: {
+    heading?: string;
+    rows: { label: string; hoizr: string; marketplace: string }[];
+  };
 }>;
 
 const OVERRIDES: Record<string, Override> = {
@@ -57,6 +68,15 @@ const OVERRIDES: Record<string, Override> = {
   // PILLAR — SELL TICKETS
   // ============================================================
   "event-ticketing": {
+    comparison: {
+      rows: [
+        { label: "Who owns the buyer's contact details", hoizr: "You do", marketplace: "The marketplace does" },
+        { label: "Re-marketing to past buyers", hoizr: "Yes, from your own fan CRM", marketplace: "Rented back to you, if at all" },
+        { label: "Cash or offline sales at the door", hoizr: "Yes, in the same event", marketplace: "Rarely supported" },
+        { label: "When you get paid", hoizr: "Fast, transparent settlements", marketplace: "Held on opaque timelines" },
+        { label: "Who your listing competes with", hoizr: "Nobody — it is your own page", marketplace: "Every other event on the platform" },
+      ],
+    },
     heroHeadline: "Tickets that sell themselves. Money that's actually yours.",
     heroBody:
       "A fast, UPI-first checkout on a page built to convert, with a cart lock that holds stock while fans pay. And every buyer lands in your CRM — not a marketplace's.",
@@ -110,6 +130,15 @@ const OVERRIDES: Record<string, Override> = {
     ],
   },
   "offline-ticketing": {
+    comparison: {
+      heading: "Why take offline payments on Hoizr, not a marketplace.",
+      rows: [
+        { label: "Take cash or offline payments", hoizr: "Yes — issue a real ticket on the spot", marketplace: "Online cards / UPI only" },
+        { label: "Same guest record as online buyers", hoizr: "Yes, one unified CRM", marketplace: "Split across systems, or lost" },
+        { label: "Works when the internet drops at the door", hoizr: "Yes", marketplace: "Depends on a live connection" },
+        { label: "Reconcile cash against online sales", hoizr: "In one place, per event", marketplace: "Manual, after the fact" },
+      ],
+    },
     heroHeadline: "Cash at the door is still a real ticket.",
     heroBody:
       "Take cash or UPI on the ground and issue a proper QR ticket on the spot — or send a prefilled payment link when they haven't paid yet. Online and offline sales finally reconcile themselves.",
@@ -234,6 +263,15 @@ const OVERRIDES: Record<string, Override> = {
   // PILLAR — OWN YOUR AUDIENCE
   // ============================================================
   "fan-crm": {
+    comparison: {
+      heading: "Why your fan data belongs on Hoizr, not a marketplace.",
+      rows: [
+        { label: "Who holds your buyers' contact details", hoizr: "You do, from event one", marketplace: "The marketplace does" },
+        { label: "Message past guests for the next show", hoizr: "Yes — your own list", marketplace: "No, or rented back to you" },
+        { label: "See a guest's full history across events", hoizr: "Yes, one profile", marketplace: "Fragmented or unavailable" },
+        { label: "Your audience data if you ever leave", hoizr: "Stays yours, exportable", marketplace: "Locked to the platform" },
+      ],
+    },
     heroHeadline: "Your fans. Your list. Your business.",
     heroBody:
       "Every buyer, RSVP, and follower becomes a record you own — contact, spend, and history. Not locked inside a marketplace that rents them back to you one event at a time.",
@@ -317,6 +355,15 @@ const OVERRIDES: Record<string, Override> = {
     ],
   },
   "event-discovery": {
+    comparison: {
+      heading: "Why your event page should live on Hoizr, not a marketplace.",
+      rows: [
+        { label: "Your event page after the night ends", hoizr: "Lives on and keeps ranking", marketplace: "Expires and gets delisted" },
+        { label: "A permanent home for your venue brand", hoizr: "Yes — your own page", marketplace: "A temporary listing slot" },
+        { label: "Who your listing sits next to", hoizr: "Nobody — it is your own page", marketplace: "Every other event on the platform" },
+        { label: "Where SEO value builds up over time", hoizr: "To your own page", marketplace: "To the marketplace's domain" },
+      ],
+    },
     heroHeadline: "AI does the SEO. You do the show.",
     heroBody:
       "Every event ships search-ready — structured data, clean city and venue pages, share cards — and gets listed across Hoizr's discovery surfaces. Edit the event and the signals refresh themselves.",
@@ -920,6 +967,7 @@ export const getProductContent = (slug: string): ProductContent | null => {
     howItWorks: ovr.howItWorks ?? base.howItWorks,
     narrative: ovr.narrative ?? base.narrative,
     faq: ovr.faq ?? base.faq,
+    comparison: ovr.comparison,
   };
 };
 
