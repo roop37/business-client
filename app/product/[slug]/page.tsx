@@ -7,6 +7,7 @@ import {
   getRelatedProducts,
 } from "@/components/marketing/data/product-content";
 import { ProductBenefits } from "@/components/marketing/product/ProductBenefits";
+import { ProductComparison } from "@/components/marketing/product/ProductComparison";
 import { ProductFAQ } from "@/components/marketing/product/ProductFAQ";
 import { ProductGallery } from "@/components/marketing/product/ProductGallery";
 import { ProductHero } from "@/components/marketing/product/ProductHero";
@@ -19,6 +20,7 @@ import {
   FaqJsonLd,
   ProductJsonLd,
 } from "@/components/marketing/seo/SchemaJsonLd";
+import { clampDescription } from "@/components/marketing/seo/meta";
 import { FinalCTA } from "@/components/marketing/sections/FinalCTA";
 
 type PageParams = { params: { slug: string } };
@@ -36,8 +38,10 @@ export function generateMetadata({ params }: PageParams): Metadata {
   }
   const canonical = `/product/${content.slug}`;
   return {
-    title: `${content.label} — Hoizr`,
-    description: content.hero.body,
+    // Brand suffix is appended by the root layout title template
+    // ("%s · Hoizr"); do not repeat it here or it doubles.
+    title: content.label,
+    description: clampDescription(content.hero.body),
     alternates: { canonical },
     openGraph: {
       title: `${content.label} — Hoizr`,
@@ -75,6 +79,7 @@ export default function ProductPage({ params }: PageParams) {
       {content.faq?.length ? <FaqJsonLd items={content.faq} /> : null}
       <ProductHero content={content} />
       <ProductBenefits content={content} />
+      {content.comparison ? <ProductComparison content={content} /> : null}
       <ProductNarrative content={content} />
       <ProductGallery content={content} related={related} />
       <ProductHowItWorks content={content} />

@@ -12,9 +12,13 @@ import {
 const SITE_URL = "https://business.hoizr.com";
 
 export const metadata: Metadata = {
-  title: "Contact Hoizr — for Indian event organizers, venues & promoters",
+  // Brand-led title; opt out of the "%s · Hoizr" template so the
+  // brand is not repeated.
+  title: {
+    absolute: "Contact Hoizr — for Indian event organizers, venues & promoters",
+  },
   description:
-    "Talk to Hoizr about your next event. Publish directly, keep your fan CRM, and run the night from one operating stack. Same-day reply for organizers, venues, and promoters across India.",
+    "Talk to Hoizr about your next event. Publish directly, keep your fan CRM, and run the night from one stack. Same-day reply for organizers across India.",
   keywords: [
     "Contact Hoizr",
     "Hoizr support India",

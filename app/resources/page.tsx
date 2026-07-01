@@ -15,10 +15,9 @@ import {
 const SITE_URL = "https://business.hoizr.com";
 
 export const metadata: Metadata = {
-  title:
-    "Resources — Playbooks & blogs for Indian event organizers · Hoizr",
+  title: "Resources — Playbooks & blogs for Indian event organizers",
   description:
-    "Operator playbooks, migration guides, and field notes for Indian event organizers, venues, and promoters. Short, opinionated, written for India's live nights.",
+    "Operator playbooks, migration guides, and field notes for Indian event organizers and venues. Short, opinionated, written for India's live nights.",
   keywords: [
     "event organizer playbooks India",
     "ticketing platform migration guide India",

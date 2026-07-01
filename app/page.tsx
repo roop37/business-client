@@ -18,7 +18,7 @@ export const metadata: Metadata = {
   title:
     "Hoizr — Event ticketing, fan CRM & marketing for Indian organizers",
   description:
-    "Sell event tickets online or in cash, keep every buyer as your own customer, and run the door — even offline. Hoizr is the ticketing, fan CRM, and marketing platform built for Indian event organizers, venues, and promoters. Free to start, no subscription.",
+    "Sell tickets online or in cash, keep every buyer in your own CRM, and run the door — even offline. Built for Indian event organizers. Free to start.",
   alternates: {
     canonical: "/",
     languages: { "en-IN": "/", "x-default": "/" },
