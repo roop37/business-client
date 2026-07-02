@@ -17,6 +17,14 @@ html {
   width: 100%;
   max-width: 100vw;
   overflow-x: hidden;
+  scroll-behavior: smooth;
+}
+
+/* Respect users who prefer reduced motion (WCAG 2.3.3). */
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
 }
 
 body {

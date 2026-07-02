@@ -7,9 +7,9 @@ import { GetServerSideProps } from "next";
 import { useRouter } from "next/router";
 import React from "react";
 
-const AdminVerificationPending: React.FC & {
+const AdminVerificationPending: React.FC<{ hasMultipleHosts: boolean }> & {
   getLayout?: (page: React.ReactNode) => React.ReactNode;
-} = () => {
+} = ({ hasMultipleHosts }) => {
   const router = useRouter();
   // No dashboard/payout PAGE is reachable while verification is pending — payout
   // details are added via the global modal popped OVER this blocker instead.
@@ -34,13 +34,25 @@ const AdminVerificationPending: React.FC & {
           >
             Add payout details
           </CButton>
-          <CButton
-            variant={ButtonType.Secondary}
-            className="w-full"
-            onClick={() => router.push("/select-host")}
-          >
-            Switch organization
-          </CButton>
+          {hasMultipleHosts ? (
+            <CButton
+              variant={ButtonType.Secondary}
+              className="w-full"
+              onClick={() => router.push("/select-host")}
+            >
+              Switch organization
+            </CButton>
+          ) : (
+            <CButton
+              variant={ButtonType.Secondary}
+              className="w-full"
+              onClick={() =>
+                router.push("/onboarding-host/host-type?create=1")
+              }
+            >
+              Add a new venue
+            </CButton>
+          )}
         </div>
       </div>
     </div>
@@ -96,8 +108,22 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
       };
     }
 
-    // Onboarded but awaiting verification → render the blocker.
-    return { props: {} };
+    // Onboarded but awaiting verification → render the blocker. Check how
+    // many organizations this user has: with only one, "Switch organization"
+    // is a dead end (select-host auto-selects the sole org and bounces right
+    // back here), so we offer "Add a new venue" instead.
+    let hasMultipleHosts = false;
+    try {
+      const hostsRes = await sdk.getHostsByBusiness(
+        {},
+        { cookie: context.req.headers.cookie?.toString() ?? "" }
+      );
+      hasMultipleHosts = (hostsRes.getHostsByBusiness ?? []).length > 1;
+    } catch {
+      // Non-fatal — default to the single-org experience.
+    }
+
+    return { props: { hasMultipleHosts } };
   } catch (error) {
     return {
       redirect: {
