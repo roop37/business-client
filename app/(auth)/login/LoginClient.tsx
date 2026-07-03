@@ -1,6 +1,7 @@
 "use client";
 
 import AuthLogo from "@/components/common/auth/AuthLogo";
+import AuthReveal from "@/components/common/auth/AuthReveal";
 import AuthBrandPanel from "@/components/common/auth/AuthBrandPanel";
 import AuthPrimaryButton from "@/components/common/auth/AuthPrimaryButton";
 import { AuthTextField } from "@/components/common/auth/AuthTextField";
@@ -236,7 +237,7 @@ export const LoginClient: FC = () => {
       <div className="min-h-screen bg-[var(--owner-bg)] text-[var(--owner-fg-1)] lg:h-screen lg:overflow-hidden">
         <div className="grid min-h-screen lg:h-screen lg:min-h-0 lg:grid-cols-[57%_43%]">
           <div className="flex min-h-screen items-center bg-[var(--owner-bg)] px-6 py-8 md:px-10 lg:h-screen lg:min-h-0 lg:overflow-hidden xl:px-14">
-            <div className="mx-auto w-full max-w-[420px]">
+            <AuthReveal className="mx-auto w-full max-w-[420px]">
               <div className="lg:hidden">
                 <Link href="/" aria-label="Go to Hoizr landing page">
                   <AuthLogo width={132} />
@@ -307,7 +308,7 @@ export const LoginClient: FC = () => {
                   </Link>
                 </p>
               </div>
-            </div>
+            </AuthReveal>
           </div>
           <AuthBrandPanel />
         </div>
