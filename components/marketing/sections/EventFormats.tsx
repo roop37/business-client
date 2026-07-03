@@ -2,6 +2,7 @@
 
 import { motion } from "framer-motion";
 import { EVENT_FORMATS } from "../data/site-copy";
+import { CurvedLoop } from "../visuals/CurvedLoop";
 
 const EASE = [0.2, 0.6, 0.2, 1] as const;
 
@@ -23,14 +24,13 @@ export const EventFormats = () => {
         <div className="text-[12px] font-semibold uppercase tracking-[0.14em] text-[var(--m-ink-4)]">
           Built for every kind of night
         </div>
-        <div className="flex flex-wrap items-center justify-center gap-2.5">
-          {EVENT_FORMATS.map((format) => (
-            <span key={format} className="hm-chip text-[13.5px]">
-              <span className="hm-chip-dot" />
-              {format}
-            </span>
-          ))}
-        </div>
+        <CurvedLoop
+          marqueeText={`${EVENT_FORMATS.join(" ✦ ")} ✦`}
+          speed={1.5}
+          curveAmount={140}
+          interactive={true}
+          className="fill-[var(--m-ink-1)] [font-size:120px] [font-weight:800] uppercase tracking-tight md:[font-size:56px]"
+        />
       </motion.div>
     </section>
   );

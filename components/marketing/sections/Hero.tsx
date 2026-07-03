@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { BlurImage } from "../visuals/BlurImage";
+import { ShinyText } from "../visuals/ShinyText";
 const EASE = [0.2, 0.6, 0.2, 1] as const;
 const HERO_VERTICALS = [
   "club nights",
@@ -91,7 +92,7 @@ export const Hero = () => {
             }}
             className="block"
           >
-            Sell out the night.
+            <ShinyText text="Sell out the night." />
           </motion.span>
           <motion.span
             variants={{
@@ -102,9 +103,9 @@ export const Hero = () => {
                 transition: { duration: 0.7, ease: EASE },
               },
             }}
-            className="block text-[var(--m-forest-600)]"
+            className="block"
           >
-            Own every fan.
+            <ShinyText text="Own every fan." />
           </motion.span>
         </motion.h1>
 
@@ -270,10 +271,11 @@ const HeroStage = () => {
       initial={{ opacity: 0, y: 28 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.9, ease: EASE, delay: 0.55 }}
-      // Negative top margin pulls the laptop card up so the upper
-      // edge visibly overlaps the hero CTA strip — the lid "breaks
-      // out" of the hero copy instead of sitting cleanly below it.
-      className="relative mx-auto -mt-6 w-full max-w-[1200px] md:-mt-12"
+      // Desktop: negative top margin pulls the laptop card up so the
+      // upper edge overlaps the hero CTA strip — the lid "breaks out"
+      // of the hero copy. Mobile: a positive gap instead so the laptop
+      // doesn't collide with the CTA buttons.
+      className="relative mx-auto mt-4 w-full max-w-[1200px] md:-mt-12"
     >
       {/* Dark metallic stage card — restored per spec. It sits behind
           the MacBook and starts below the lid, so the laptop stays the
@@ -282,21 +284,44 @@ const HeroStage = () => {
         className="absolute inset-x-0 z-0 overflow-hidden rounded-[20px] shadow-[0_30px_70px_rgba(5,5,5,0.28)] md:rounded-[24px]"
         style={{ top: "32%", bottom: "6%" }}
       >
-        {/* Looping hero video replaces the metallic-bg still. Muted +
-            autoPlay + playsInline so it loops everywhere; pointer-events-none
-            makes it non-interactive. Slowed to 0.5x via ref on mount. */}
+        {/* Desktop (md+): looping stage video. Muted + autoPlay +
+            playsInline so it loops everywhere; pointer-events-none makes
+            it non-interactive. Slowed to 0.75x via ref on mount.
+            preload="none" so the hidden element doesn't fetch on mobile. */}
         <video
           ref={(el) => {
-            if (el) el.playbackRate = 0.5;
+            if (el) el.playbackRate = 0.7;
           }}
           src="/images/hero/herovid.webm"
           autoPlay
           loop
           muted
           playsInline
+          preload="none"
           aria-hidden
-          className="pointer-events-none absolute inset-0 h-full w-full object-cover"
+          className="pointer-events-none absolute inset-0 hidden h-full w-full object-cover md:block"
         />
+
+        {/* Mobile (<md): original metallic-bg still + line SVG overlay. */}
+        <div className="absolute inset-0 md:hidden">
+          <BlurImage
+            src="/marketing/hero/metallic-bg.png"
+            alt=""
+            aria-hidden
+            fill
+            sizes="100vw"
+            className="absolute inset-0 h-full w-full object-cover"
+            draggable={false}
+          />
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src="/marketing/hero/hero-lines-star.svg"
+            alt=""
+            aria-hidden
+            className="pointer-events-none absolute inset-0 h-full w-full object-cover opacity-85"
+            draggable={false}
+          />
+        </div>
       </div>
 
       <div className="relative z-10 mx-auto aspect-[1920/1080] w-full">
