@@ -8,7 +8,7 @@ import {
 import { UseFormRegisterReturn } from "react-hook-form";
 
 export const authFieldClasses =
-  "h-12 w-full rounded-xl border border-[var(--owner-border-strong)] bg-[var(--owner-bg)] text-[15px] text-[var(--owner-fg-1)] outline-none transition placeholder:text-[var(--owner-fg-4)] focus:border-[var(--owner-blue-500)] focus:shadow-[0_0_0_3px_var(--owner-blue-050)]";
+  "h-12 w-full rounded-2xl border border-[var(--owner-border-strong)] bg-[var(--owner-bg-subtle)] text-[15px] text-[var(--owner-fg-1)] outline-none transition-colors placeholder:text-[var(--owner-fg-4)] focus:border-[var(--owner-blue-500)] focus:bg-[var(--owner-bg)] focus:shadow-[0_0_0_3px_var(--owner-blue-050)]";
 
 export const authLabelClasses =
   "mb-2 block text-sm font-medium text-[var(--owner-fg-1)]";
@@ -98,7 +98,7 @@ export const AuthTextArea = ({
         {...registration}
         {...props}
         onChange={handleChange}
-        className={`min-h-[88px] w-full rounded-xl border border-[var(--owner-border-strong)] bg-[var(--owner-bg)] px-4 py-3 text-[15px] text-[var(--owner-fg-1)] outline-none transition placeholder:text-[var(--owner-fg-4)] focus:border-[var(--owner-blue-500)] focus:shadow-[0_0_0_3px_var(--owner-blue-050)] ${className}`}
+        className={`min-h-[88px] w-full rounded-2xl border border-[var(--owner-border-strong)] bg-[var(--owner-bg-subtle)] px-4 py-3 text-[15px] text-[var(--owner-fg-1)] outline-none transition-colors placeholder:text-[var(--owner-fg-4)] focus:border-[var(--owner-blue-500)] focus:bg-[var(--owner-bg)] focus:shadow-[0_0_0_3px_var(--owner-blue-050)] ${className}`}
       />
       {error ? <p className={authErrorClasses}>{error}</p> : null}
     </div>

@@ -4,6 +4,7 @@ import CButton from "@/components/common/button/button";
 import { ButtonType } from "@/components/common/button/interface";
 import ReusableModal from "@/components/common/modal/modal";
 import AuthConsentBox from "@/components/common/auth/AuthConsentBox";
+import AuthReveal from "@/components/common/auth/AuthReveal";
 import AuthBrandPanel from "@/components/common/auth/AuthBrandPanel";
 import AuthLogo from "@/components/common/auth/AuthLogo";
 import AuthPrimaryButton from "@/components/common/auth/AuthPrimaryButton";
@@ -206,6 +207,7 @@ export const SignupClient: FC = () => {
             </div>
 
             <div className="my-auto py-0">
+              <AuthReveal>
               <h1 className="max-w-[520px] text-[26px] font-semibold leading-tight tracking-[-0.02em]">
                 Create your Hoizr account
               </h1>
@@ -386,6 +388,7 @@ export const SignupClient: FC = () => {
                   </Link>
                 </p>
               </div>
+              </AuthReveal>
             </div>
           </div>
         </div>
