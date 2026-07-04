@@ -11,6 +11,7 @@ import {
   SettingsIcon,
   ShoppingBag,
   TicketPercent,
+  Trophy,
   UsersRoundIcon,
   Workflow,
   type LucideIcon,
@@ -79,7 +80,6 @@ export const getSidebarList = (): TSidebarItem[] => [
       {
         title: "Loyalty Settings",
         href: "/rewards/loyalty-settings",
-        comingSoon: true,
       },
     ],
   },
@@ -96,6 +96,13 @@ export const getSidebarList = (): TSidebarItem[] => [
     icon: UsersRoundIcon,
     active: true,
     id: "sidebar-customers",
+  },
+  {
+    title: "Community",
+    href: "/community",
+    icon: Trophy,
+    active: true,
+    id: "sidebar-community",
   },
   {
     title: "Feedbacks",

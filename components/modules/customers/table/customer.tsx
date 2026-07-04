@@ -2,6 +2,7 @@
 
 import {
   Badge,
+  BadgeTone,
   OwnerButton,
   PageHeader,
   inrFormat,
@@ -26,7 +27,15 @@ type HostCustomerRow = {
   showsAttended: number;
   totalSpent: number;
   aov: number;
+  lifetimePoints: number;
   customerSince?: string | null;
+};
+
+/** Global loyalty tier ladder (host-tunable bands come later). */
+const tierFor = (points: number): { label: string; tone: BadgeTone } => {
+  if (points >= 2000) return { label: "Legend", tone: "success" };
+  if (points >= 500) return { label: "Insider", tone: "info" };
+  return { label: "Regular", tone: "neutral" };
 };
 
 const resolveEndpoint = (): string => {
@@ -61,7 +70,7 @@ const HOST_CUSTOMERS_QUERY = `
     hostCustomers(page: $page, pageSize: $pageSize) {
       total
       items {
-        customerId name email phone orderCount showsAttended totalSpent aov customerSince
+        customerId name email phone orderCount showsAttended totalSpent aov lifetimePoints customerSince
       }
     }
   }
@@ -165,6 +174,22 @@ const CustomerRecord: React.FC = () => {
             {inrFormat(row.original.aov)}
           </span>
         ),
+      }),
+      columnHelper.accessor("lifetimePoints", {
+        header: "Loyalty",
+        enableSorting: false,
+        cell: ({ row }) => {
+          const pts = row.original.lifetimePoints ?? 0;
+          const tier = tierFor(pts);
+          return (
+            <div className="flex items-center gap-2">
+              <span className="text-sm font-medium text-owner-fg-1 tabular-nums">
+                {pts.toLocaleString("en-IN")}
+              </span>
+              <Badge tone={tier.tone}>{tier.label}</Badge>
+            </div>
+          );
+        },
       }),
       columnHelper.accessor("customerSince", {
         header: "Customer since",
