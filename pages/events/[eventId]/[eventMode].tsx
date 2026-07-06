@@ -2,6 +2,7 @@ import EventJourney from "@/components/modules/events/EventJourney";
 import { EventScanners } from "@/components/modules/events/EventScanners";
 import { EventActivityPanel } from "@/components/modules/events/EventActivityPanel";
 import GuestlistManagerModal from "@/components/modules/events/GuestlistManagerModal";
+import WaitlistManagerModal from "@/components/modules/events/WaitlistManagerModal";
 import useGlobalStore from "@/store/global";
 import { sdk } from "@/utils/graphqlClient";
 import { verificationGateRedirect } from "@/lib/auth/verificationGate";
@@ -82,6 +83,7 @@ const EventOperations = ({
   const [busy, setBusy] = useState(false);
   const [collaboratorsOpen, setCollaboratorsOpen] = useState(false);
   const [guestlistOpen, setGuestlistOpen] = useState(false);
+  const [waitlistOpen, setWaitlistOpen] = useState(false);
 
   const loadOverview = async () => {
     try {
@@ -461,6 +463,29 @@ const EventOperations = ({
               </button>
             ) : null}
 
+            {/* Waitlist — owner sends payment links to applicants + reads demand.
+                Shown to owners; the modal itself surfaces whether it's in use. */}
+            {!isCollaboratorView ? (
+              <button
+                type="button"
+                onClick={() => setWaitlistOpen(true)}
+                className="w-full rounded-lg border border-[var(--owner-border)] bg-[var(--owner-bg)] p-5 text-left transition hover:border-[#c89d75]"
+              >
+                <div className="flex items-center gap-3">
+                  <span className="grid h-10 w-10 shrink-0 place-items-center rounded-lg bg-[var(--owner-bg-subtle)] text-[var(--owner-blue-500)]">
+                    <SparklesIcon size={18} />
+                  </span>
+                  <div className="min-w-0">
+                    <p className="font-semibold">Waitlist</p>
+                    <p className="text-xs text-[var(--owner-fg-3)]">
+                      Review applicants, gauge demand, and send payment links to
+                      the people you want in.
+                    </p>
+                  </div>
+                </div>
+              </button>
+            ) : null}
+
             {/* Activity — Orders · Offline Tickets · Customers, moved here from
                 the old Event Hub so an event lives on one page. */}
             {canSeeMetrics ? (
@@ -583,6 +608,17 @@ const EventOperations = ({
         guestlistMaxCapacity={overview?.guestlistMaxCapacity ?? null}
         isCollaboratorView={isCollaboratorView}
         onSettingsChanged={loadOverview}
+      />
+
+      <WaitlistManagerModal
+        open={waitlistOpen}
+        onClose={() => setWaitlistOpen(false)}
+        eventId={eventId}
+        tickets={(overview?.tickets ?? []).map((t: any) => ({
+          _id: String(t._id),
+          ticketName: t.ticketName,
+          ticketPrice: t.ticketPrice,
+        }))}
       />
     </EventShell>
   );

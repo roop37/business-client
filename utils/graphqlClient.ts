@@ -58,6 +58,39 @@ const emptyList = async (key: string) => ({ [key]: [] });
 
 export const sdk: any = generatedSdk;
 
+// Waitlist host ops — hand-written raw requests (not yet in the generated SDK).
+// See docs/WAITLIST_SPEC.md. Run `yarn codegen` later to fold these into the
+// typed SDK; until then they go straight through graphQLClient.
+Object.assign(sdk, {
+  eventWaitlist: async (variables: { filter: any }) =>
+    graphQLClient.request(
+      `query eventWaitlist($filter: EventWaitlistFilterInput!) {
+        eventWaitlist(filter: $filter) {
+          _id customerId name phone email city partySize note
+          instagramHandle facebookHandle xHandle
+          status invitedOfflineOrderId invitedAt createdAt
+        }
+      }`,
+      variables
+    ),
+  sendWaitlistPaymentLink: async (variables: { input: any }) =>
+    graphQLClient.request(
+      `mutation sendWaitlistPaymentLink($input: SendWaitlistPaymentLinkInput!) {
+        sendWaitlistPaymentLink(input: $input) {
+          offlineOrderId shortUrl whatsappQueued emailQueued
+        }
+      }`,
+      variables
+    ),
+  declineWaitlistEntry: async (variables: { entryId: string }) =>
+    graphQLClient.request(
+      `mutation declineWaitlistEntry($entryId: String!) {
+        declineWaitlistEntry(entryId: $entryId)
+      }`,
+      variables
+    ),
+});
+
 Object.assign(sdk, {
   getAllRestauranteEmailCampaigns: async (...args: any[]) => {
     const response = await sdk.getAllHostEmailCampaigns(...args);
@@ -839,6 +872,10 @@ Object.assign(sdk, {
             eventLocationDecided
             isVisible
             ticketingEnabled
+            waitlistEnabled
+            waitlistOnly
+            waitlistCollectSocials
+            waitlistExpiry
             allowWalkIns
             ticketSalesStartDate
             ticketSalesEndDate

@@ -824,6 +824,12 @@ const EventJourney = ({
   const [searchLoading, setSearchLoading] = useState(false);
   const [manualLocationOpen, setManualLocationOpen] = useState(false);
   const [ticketingEnabled, setTicketingEnabled] = useState(true);
+  // Waitlist config (see docs/WAITLIST_SPEC.md). waitlistExpiry is an IST
+  // datetime-local string; saved via fromZonedTime like the sales dates.
+  const [waitlistEnabled, setWaitlistEnabled] = useState(false);
+  const [waitlistOnly, setWaitlistOnly] = useState(false);
+  const [waitlistCollectSocials, setWaitlistCollectSocials] = useState(false);
+  const [waitlistExpiry, setWaitlistExpiry] = useState("");
   const [ticketTab, setTicketTab] = useState<"tickets" | "advanced">("tickets");
   const [ticketModalOpen, setTicketModalOpen] = useState(false);
   const [ticketEditIndex, setTicketEditIndex] = useState<number | null>(null);
@@ -2458,6 +2464,10 @@ const EventJourney = ({
             : null,
         );
         setTicketingEnabled(event.ticketingEnabled !== false);
+        setWaitlistEnabled(Boolean(event.waitlistEnabled));
+        setWaitlistOnly(Boolean(event.waitlistOnly));
+        setWaitlistCollectSocials(Boolean(event.waitlistCollectSocials));
+        setWaitlistExpiry(toDateTimeInput(event.waitlistExpiry));
         setAllowWalkIns(Boolean(event.allowWalkIns));
         setRequiresIDVerification(Boolean(event.requiresIDVerification));
         setTicketSalesStartDate(toDateTimeInput(event.ticketSalesStartDate));
@@ -2738,6 +2748,15 @@ const EventJourney = ({
           }
         : undefined,
       ticketingEnabled,
+      waitlistEnabled,
+      waitlistOnly: waitlistEnabled ? waitlistOnly : false,
+      waitlistCollectSocials: waitlistEnabled ? waitlistCollectSocials : false,
+      // Pre-sale window only when waitlist is on and NOT waitlist-only; null
+      // (not undefined) so turning it off clears any stale value server-side.
+      waitlistExpiry:
+        waitlistEnabled && !waitlistOnly && waitlistExpiry
+          ? fromZonedTime(waitlistExpiry, IST_TZ)
+          : null,
       allowWalkIns,
       requiresIDVerification,
       ticketSalesStartDate: ticketSalesStartDate
@@ -4089,6 +4108,37 @@ const EventJourney = ({
                       checked={ticketingEnabled}
                       onCheckedChange={requestTicketingChange}
                     />
+                    <ToggleSettingRow
+                      title="Enable Waitlist"
+                      subtitle="Let people apply to a waitlist — curate entry, capture demand, or handle sell-outs. You send chosen applicants a payment link."
+                      checked={waitlistEnabled}
+                      onCheckedChange={setWaitlistEnabled}
+                    />
+                    {waitlistEnabled ? (
+                      <div className="space-y-4 rounded-lg border border-[var(--owner-border)] bg-[var(--owner-bg)] p-4">
+                        <ToggleSettingRow
+                          title="Waitlist-only event"
+                          subtitle="Close normal ticket sales — only people you send a payment link can buy. Best for curated / invite-only nights."
+                          checked={waitlistOnly}
+                          onCheckedChange={setWaitlistOnly}
+                        />
+                        <ToggleSettingRow
+                          title="Collect social handles"
+                          subtitle="Require an Instagram handle (Facebook & X optional) when someone joins, so you can vet who's applying."
+                          checked={waitlistCollectSocials}
+                          onCheckedChange={setWaitlistCollectSocials}
+                        />
+                        {!waitlistOnly ? (
+                          <DateTimeInput
+                            label="Tickets open — waitlist closes (optional)"
+                            value={waitlistExpiry}
+                            onChange={setWaitlistExpiry}
+                            minDate={new Date()}
+                            maxDate={endDate ? new Date(endDate) : undefined}
+                          />
+                        ) : null}
+                      </div>
+                    ) : null}
                     <div
                       className={`space-y-5 ${
                         ticketingEnabled ? "" : "pointer-events-none opacity-45"
