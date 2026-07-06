@@ -872,6 +872,10 @@ Object.assign(sdk, {
             eventLocationDecided
             isVisible
             ticketingEnabled
+            waitlistEnabled
+            waitlistOnly
+            waitlistCollectSocials
+            waitlistExpiry
             allowWalkIns
             ticketSalesStartDate
             ticketSalesEndDate
