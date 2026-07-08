@@ -2,7 +2,6 @@ import { NextResponse } from "next/server";
 import { Resend } from "resend";
 import {
   FORM_SCHEMAS,
-  getField,
   validateAnswers,
   type FormAnswers,
   type FormType,
@@ -79,8 +78,13 @@ export async function POST(req: Request) {
   const email = asString(answers.email).toLowerCase();
   const resend = new Resend(apiKey);
 
+  const FAILED_RESPONSE = NextResponse.json(
+    { ok: false, error: "We couldn't send that right now. Try emailing contact@hoizr.com directly." },
+    { status: 502 },
+  );
+
   try {
-    await Promise.all([
+    const [userResult, internalResult] = await Promise.all([
       resend.emails.send({
         from: FROM_ADDRESS,
         to: email,
@@ -96,12 +100,17 @@ export async function POST(req: Request) {
         html: renderInternalEmail(formType, answers, meta),
       }),
     ]);
+
+    if (internalResult.error) {
+      console.error("[forms] resend internal-notify failed", internalResult.error);
+      return FAILED_RESPONSE;
+    }
+    if (userResult.error) {
+      console.error("[forms] resend user-confirmation failed", userResult.error);
+    }
   } catch (err) {
     console.error("[forms] resend send failed", err);
-    return NextResponse.json(
-      { ok: false, error: "We couldn't send that right now. Try emailing contact@hoizr.com directly." },
-      { status: 502 },
-    );
+    return FAILED_RESPONSE;
   }
 
   return NextResponse.json({ ok: true });
