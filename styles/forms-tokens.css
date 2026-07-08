@@ -50,7 +50,8 @@
   flex: 1;
   display: flex;
   flex-direction: column;
-  justify-content: center;
+  justify-content: safe center;
+  overflow-y: auto;
   width: 100%;
   max-width: 680px;
   margin: 0 auto;
@@ -154,6 +155,11 @@
   transition: transform 140ms ease, background 160ms ease, opacity 160ms ease;
 }
 .pcf-btn:active { transform: translateY(1px); }
+.pcf-choice:focus-visible,
+.pcf-btn:focus-visible {
+  outline: 2px solid var(--pcf-accent);
+  outline-offset: 2px;
+}
 .pcf-btn--primary { background: var(--pcf-accent); color: #0a0a06; box-shadow: 0 12px 32px rgba(214, 255, 63, 0.28); }
 .pcf-btn--primary:disabled { opacity: 0.45; cursor: not-allowed; box-shadow: none; }
 .pcf-btn--ghost { background: transparent; color: var(--pcf-text-2); }
