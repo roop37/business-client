@@ -49,6 +49,7 @@ export const PremiumInput = ({
   error,
   autoFocus,
   glass,
+  placeholder,
   onChange,
   onEnter,
 }: {
@@ -57,6 +58,7 @@ export const PremiumInput = ({
   error?: string;
   autoFocus?: boolean;
   glass?: boolean;
+  placeholder?: string;
   onChange: (v: string) => void;
   onEnter?: () => void;
 }) => {
@@ -68,10 +70,12 @@ export const PremiumInput = ({
       {meta.type === "textarea" ? (
         <textarea
           id={id}
-          className="pcf-input pcf-input--glass"
+          className={glass ? "pcf-input pcf-input--glass" : "pcf-input"}
           rows={3}
           value={value}
           autoFocus={autoFocus}
+          placeholder={placeholder}
+          aria-label={glass ? undefined : meta.label}
           aria-invalid={Boolean(error)}
           aria-describedby={error ? `${id}-err` : undefined}
           onChange={(e) => onChange(e.target.value)}
@@ -83,6 +87,8 @@ export const PremiumInput = ({
           className={glass ? "pcf-input pcf-input--glass" : "pcf-input"}
           value={value}
           autoFocus={autoFocus}
+          placeholder={placeholder}
+          aria-label={glass ? undefined : meta.label}
           aria-invalid={Boolean(error)}
           aria-describedby={error ? `${id}-err` : undefined}
           onChange={(e) => onChange(e.target.value)}
@@ -188,6 +194,7 @@ export const StepView = ({
               value={(answers[step.fieldKey!] as string) ?? ""}
               error={errors[step.fieldKey!]}
               autoFocus
+              placeholder={step.placeholder}
               onChange={(v) => onChange(step.fieldKey!, v)}
               onEnter={onContinue}
             />
