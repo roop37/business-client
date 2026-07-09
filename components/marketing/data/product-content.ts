@@ -533,6 +533,36 @@ const OVERRIDES: Record<string, Override> = {
       },
     ],
   },
+  "loyalty-rewards": {
+    heroHeadline: "The crowd that came back is the business.",
+    heroBody:
+      "Every ticket earns points automatically. Fans climb tiers just by showing up, and you turn points into rewards — a percentage off, a flat discount, or a free entry — that pull them back for the next night.",
+    bullets: [
+      "Points earned automatically on ticket purchases",
+      "Automatic fan tiers based on lifetime points",
+      "Point-cost rewards: percentage, flat, or free entry",
+      "Loyalty leaderboard of your most loyal fans",
+    ],
+    benefits: [
+      {
+        title: "Reward the ones who show up.",
+        body: "Points accrue on their own with every order. Your regulars stop being anonymous — they have a score, a tier, and a reason to come back.",
+      },
+      {
+        title: "Turn points into the next ticket.",
+        body: "Create rewards fans redeem with points — a discount or a free entry, organizer-wide or for one event. The reward is the reason they pick your night again.",
+      },
+      {
+        title: "See your real fans, ranked.",
+        body: "A loyalty leaderboard and per-customer lifetime points show exactly who fills your room — the list a marketplace would never hand you.",
+      },
+    ],
+    howItWorks: [
+      { title: "Fans earn automatically", body: "Every completed order adds points to the customer's lifetime balance." },
+      { title: "You set the rewards", body: "Define what points buy — percentage off, flat discount, or free entry." },
+      { title: "They come back", body: "Fans redeem on their next booking, and your repeat rate compounds." },
+    ],
+  },
 
   // ============================================================
   // PILLAR — RUN THE NIGHT
