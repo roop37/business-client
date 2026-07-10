@@ -550,7 +550,7 @@ const OVERRIDES: Record<string, Override> = {
       },
       {
         title: "Turn points into the next ticket.",
-        body: "Create rewards fans redeem with points — a discount or a free entry, organizer-wide or for one event. The reward is the reason they pick your night again.",
+        body: "Create rewards fans redeem with points — a percentage off, a flat discount, or a free entry that works across every night you run. The reward is the reason they pick your night again.",
       },
       {
         title: "See your real fans, ranked.",
