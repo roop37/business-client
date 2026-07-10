@@ -881,6 +881,10 @@ const OVERRIDES: Record<string, Override> = {
   // ============================================================
   // PILLAR — FOR ARTISTS
   // ============================================================
+  // NOTE: /product/artist-vertical 307-redirects to artist.hoizr.com
+  // (next.config.mjs) — this override is unreachable today. Kept current so
+  // the page is correct if the redirect is ever removed; the user-visible
+  // free-forever line lives in nav-products.ts (menu/footer blurb).
   "artist-vertical": {
     heroHeadline: "One link: profile, tickets, guest list, merch.",
     heroBody:
