@@ -26,7 +26,7 @@ const nextConfig = {
       ["email-sms-marketing", "email-marketing"],
       ["conversation-marketing", "whatsapp-marketing"],
       ["push-notifications", "whatsapp-marketing"],
-      ["loyalty-rewards", "coupons"],
+      // "loyalty-rewards" removed 2026-07-10 — it is now a real product page.
       ["ai-marketing-intelligence", "ai-event-assistant"],
       ["competitive-analysis", "reporting-analytics"],
     ].map(([from, to]) => ({
