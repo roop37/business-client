@@ -169,7 +169,7 @@ export const MARKETING_PILLARS: MarketingPillar[] = [
       {
         slug: "artist-vertical",
         label: "Artist Profiles & Merch",
-        blurb: "A public Hoizr page with your shows, guestlist, merch, and riders — fans flow back to you.",
+        blurb: "One link: profile, tickets, guestlist, merch — 100% free for artists, forever.",
       },
     ],
   },

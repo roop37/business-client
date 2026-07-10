@@ -127,8 +127,9 @@ export const Hero = () => {
           className="mx-auto mt-3 max-w-[560px] text-[14px] font-semibold text-[var(--m-ink-2)]"
         >
           Hoizr is invite-only right now, opening to select Venues and Event
-          Organizations across India — onboard to apply and we&apos;ll check
-          your eligibility.
+          Organizations across India — with the best commission structure and
+          the fastest settlements we can offer. Onboard to apply and we&apos;ll
+          check your eligibility.
         </motion.p>
 
         <motion.div

@@ -758,6 +758,10 @@ const OVERRIDES: Record<string, Override> = {
         q: "Can I get statements for accounting?",
         a: "Yes. Settlement history and downloadable settlement statements are available per event, with gross collection, deductions, refunds, and net payout itemised.",
       },
+      {
+        q: "Why do people say Hoizr settles fast?",
+        a: "Because settlement is a defined workflow, not a support ticket. Every event closes with an itemised statement and a clear release — and the select organizers we onboard get the best commission terms and the fastest settlement timeline we can run.",
+      },
     ],
   },
   "reporting-analytics": {
@@ -880,12 +884,13 @@ const OVERRIDES: Record<string, Override> = {
   "artist-vertical": {
     heroHeadline: "One link: profile, tickets, guest list, merch.",
     heroBody:
-      "A public Hoizr page that's your shows, your guest list, your merch, and your riders in one place — and the fans who buy flow straight back to you, not a label or a promoter.",
+      "A public Hoizr page that's your shows, your guest list, your merch, and your riders in one place — and the fans who buy flow straight back to you, not a label or a promoter. All of it free for artists, forever.",
     bullets: [
       "Linktree-style public profile and links",
       "Merch store and rider sharing",
       "Your own event guest lists with golden passes",
       "Accept or reject lineup invites",
+      "100% free for artists — Hoizr never charges the artist side",
     ],
     benefits: [
       {

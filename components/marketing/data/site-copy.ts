@@ -39,6 +39,7 @@ export const SHIFT_ROWS = [
   { marketplace: "Marketing runs to their audience", hoizr: "Personalized campaigns to your own audience" },
   { marketplace: "Guest list lives in a chat", hoizr: "Caps, golden-pass QR, live arrivals" },
   { marketplace: "You list and hope to get found", hoizr: "You sell direct from channels you own" },
+  { marketplace: "Same cut for everyone, forever", hoizr: "The best commission terms and fastest settlements, for the organizers we onboard" },
 ] as const;
 
 /**
