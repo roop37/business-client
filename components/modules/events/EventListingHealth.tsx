@@ -2,7 +2,7 @@ import {
   EventEvalResultClient,
   autoGenerateEventDescription,
   runEventEval,
-} from "@/utils/eventOfferOps";
+} from "@/utils/eventEvalOps";
 import {
   AlertTriangleIcon,
   CheckCircle2Icon,

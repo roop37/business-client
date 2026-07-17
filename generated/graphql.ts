@@ -675,75 +675,6 @@ export type AdminTopHostKpi = {
   ticketsSold: Scalars['Int']['output'];
 };
 
-export type AiBoost = {
-  __typename?: 'AiBoost';
-  commissionPct: Scalars['Float']['output'];
-  computed?: Maybe<AiBoostComputed>;
-  confidenceScore: Scalars['Float']['output'];
-  customerViewingMessage?: Maybe<Scalars['String']['output']>;
-  description?: Maybe<Scalars['String']['output']>;
-  extraAmount: Scalars['Float']['output'];
-  hoizrAdminSummary?: Maybe<Scalars['String']['output']>;
-  howMuchDifferentFromBasicOffer?: Maybe<AiBoostDelta>;
-  howMuchDifferentFromCompetitors?: Maybe<AiBoostDelta>;
-  label: Scalars['String']['output'];
-  marketingCreditAmount?: Maybe<Scalars['Float']['output']>;
-  marketingCreditDiscountPct?: Maybe<Scalars['Float']['output']>;
-  offerCode: Scalars['String']['output'];
-  shortReason?: Maybe<Scalars['String']['output']>;
-  totalSavingsForHosts?: Maybe<AiBoostSavings>;
-};
-
-export type AiBoostAdminFeedback = {
-  __typename?: 'AiBoostAdminFeedback';
-  at?: Maybe<Scalars['DateTimeISO']['output']>;
-  by?: Maybe<Scalars['String']['output']>;
-  isNegative: Scalars['Boolean']['output'];
-  reason?: Maybe<Scalars['String']['output']>;
-};
-
-export type AiBoostComputed = {
-  __typename?: 'AiBoostComputed';
-  expectedGrossSales: Scalars['Float']['output'];
-  hoizrCommission: Scalars['Float']['output'];
-  hoizrEstimatedLoss: Scalars['Float']['output'];
-  hoizrNetContribution: Scalars['Float']['output'];
-  hostPayout: Scalars['Float']['output'];
-};
-
-export type AiBoostDelta = {
-  __typename?: 'AiBoostDelta';
-  deltaPct: Scalars['Float']['output'];
-};
-
-export type AiBoostPaymentInfo = {
-  __typename?: 'AiBoostPaymentInfo';
-  alreadyPaid: Scalars['Boolean']['output'];
-  currency: Scalars['String']['output'];
-  eventId: Scalars['String']['output'];
-  eventTitle: Scalars['String']['output'];
-  hostName: Scalars['String']['output'];
-  offerFeeAmount: Scalars['Float']['output'];
-  offerFeeGstAmount: Scalars['Float']['output'];
-  payableAmount: Scalars['Float']['output'];
-};
-
-export type AiBoostRazorpayOrderResponse = {
-  __typename?: 'AiBoostRazorpayOrderResponse';
-  currency: Scalars['String']['output'];
-  offerFeeAmount: Scalars['Float']['output'];
-  offerFeeGstAmount: Scalars['Float']['output'];
-  payableAmount: Scalars['Float']['output'];
-  razorpayKeyId: Scalars['String']['output'];
-  razorpayOrderId: Scalars['String']['output'];
-  receipt: Scalars['String']['output'];
-};
-
-export type AiBoostSavings = {
-  __typename?: 'AiBoostSavings';
-  value: Scalars['Float']['output'];
-};
-
 export type Artist = {
   __typename?: 'Artist';
   _id: Scalars['ID']['output'];
@@ -1096,24 +1027,18 @@ export type Config = {
   valueType: ConfigValueEnum;
 };
 
-/** Master config keys that admins can change at runtime without a deploy. Grouped by domain in declaration order — marketing channel costs → event commission → AI Boost band → upfront-fee gate → platform fees → marketing-credit pricing → Hoizr-side GST → operational → company identity → SAC codes → admin alerts → host marketing tiers. See docs/HOIZR_FINANCE_SOURCE_OF_TRUTH.md §31 for the locked V1 values. */
+/** Master config keys that admins can change at runtime without a deploy. Grouped by domain in declaration order — marketing channel costs → event commission → platform fees → marketing-credit pricing → Hoizr-side GST → operational → company identity → SAC codes → admin alerts → host marketing tiers. See docs/HOIZR_FINANCE_SOURCE_OF_TRUTH.md §31 for the locked V1 values. */
 export enum ConfigTypeEnum {
   /** Comma-separated email addresses that receive internal payout, reconciliation and shortfall alerts. Use a distribution list when more than two admins need notifying. */
   AdminAlertEmails = 'adminAlertEmails',
-  /** Sell-through % of paid-ticket capacity required before an AI-Boost upfront fee is actually charged on EXCLUSIVE events. Below this, the upfront is waived at settlement (or refunded if pre-paid) and only the offer commission applies. Locked: 60. */
-  AiBoostUpfrontTriggerSellThroughPctExcl = 'aiBoostUpfrontTriggerSellThroughPctExcl',
-  /** Same gate as above, for NON-EXCLUSIVE events. The bar is lower because the host can't drive sales on rival platforms — they should only owe the upfront when Hoizr-side sales clear this threshold. Locked: 40. */
-  AiBoostUpfrontTriggerSellThroughPctNonExcl = 'aiBoostUpfrontTriggerSellThroughPctNonExcl',
   /** Credits debited per outbound email. 1 credit = ₹1, so this is also the rupee cost per email. Locked: 1. */
   EmailMarketingCost = 'emailMarketingCost',
-  /** Hoizr commission percent on exclusive paid events (sold ONLY on Hoizr). Also acts as the ceiling for the AI Boost corridor — the AI can never propose a rate above this. Locked: 4.49. */
+  /** Hoizr commission percent on exclusive paid events (sold ONLY on Hoizr). Stamped onto Event.commissionRate at publish; internal admin may override per event until the event starts. Locked: 4.49. */
   FixedBasicComissionForExclEvent = 'fixedBasicComissionForExclEvent',
   /** Hoizr commission percent on free / guestlist events (no paid tickets). Locked: 0 — no money flow, no commission. */
   FixedBasicComissionForFreeEvent = 'fixedBasicComissionForFreeEvent',
-  /** Hoizr commission percent on non-exclusive paid events (sold on Hoizr AND rival platforms). Also acts as the ceiling for the AI Boost corridor. Locked: 8.49. */
+  /** Hoizr commission percent on non-exclusive paid events (sold on Hoizr AND rival platforms). Stamped onto Event.commissionRate at publish; internal admin may override per event until the event starts. Locked: 8.49. */
   FixedBasicComissionForNonExclEvent = 'fixedBasicComissionForNonExclEvent',
-  /** GST percent on the AI Boost upfront fee invoiced to the host. Locked: 18. */
-  GstOnAiBoost = 'gstOnAiBoost',
   /** GST percent collected on Hoizr's commission revenue at payout settlement. Locked: 18. */
   GstOnComission = 'gstOnComission',
   /** GST percent on marketing credit purchase, applied to the credit value. Locked: 18. */
@@ -1150,16 +1075,6 @@ export enum ConfigTypeEnum {
   MarketingCreditMinimumPerPurchase = 'marketingCreditMinimumPerPurchase',
   /** Paise per marketing credit. 1 credit = ₹1 = 100 paise. Locked: 100 — do not change without a finance review. */
   MarketingCreditValuePaise = 'marketingCreditValuePaise',
-  /** FLOOR on the AI-offer commission rate for exclusive paid events — the most aggressive cut the AI may propose. (Despite the historical 'max' name, this is the lower bound.) Locked: 1.89. */
-  MaxAiBoostComissionForExclEvent = 'maxAiBoostComissionForExclEvent',
-  /** (Legacy name — actually the floor.) Lowest commission the AI may propose for free events. Locked: 0 — irrelevant since free events never see an AI offer. */
-  MaxAiBoostComissionForFreeEvent = 'maxAiBoostComissionForFreeEvent',
-  /** FLOOR on the AI-offer commission rate for non-exclusive paid events. Locked: 3.89. */
-  MaxAiBoostComissionForNonExclEvent = 'maxAiBoostComissionForNonExclEvent',
-  /** Outer ceiling on the AI Boost upfront fee in rupees, applied at the EXCLUSIVE / NON-EXCLUSIVE corridor level. Per-template bands scale to event GTV inside this cap. Locked: 500000 (₹5L max). */
-  MaxOfferChargeAmount = 'maxOfferChargeAmount',
-  /** Floor on the AI Boost upfront fee in rupees. Locked: 0 — the AI may legitimately propose zero upfront for some templates. */
-  MinOfferChargeAmount = 'minOfferChargeAmount',
   /** Customer-facing platform fee percent, charged on top of the ticket taxable value at checkout. Locked: 5. */
   PlatformFeeOnEvent = 'platformFeeOnEvent',
   /** Platform fee percent added to marketing credit top-ups (in addition to GST). Locked: 0 — SortMyScene parity, only GST is added. */
@@ -1168,8 +1083,6 @@ export enum ConfigTypeEnum {
   PushNotificationCost = 'pushNotificationCost',
   /** Number of working days after event end during which customers can still request a refund. Payouts to the host are blocked from releasing until this window closes. Locked: 2. */
   RefundWindowDaysAfterEvent = 'refundWindowDaysAfterEvent',
-  /** SAC code printed on the AI Boost upfront-fee invoice issued to the host. CA confirms before launch. */
-  SacAiBoost = 'sacAiBoost',
   /** SAC code printed on the host commission invoice. Defaults align with platform-service SAC; CA confirms before launch. */
   SacCommissionInvoice = 'sacCommissionInvoice',
   /** SAC code printed on the customer booking-fee invoice. SortMyScene uses 9997 — CA confirms the final code before launch. */
@@ -1210,6 +1123,7 @@ export type Coupon = {
   _id: Scalars['ID']['output'];
   applicableDays?: Maybe<Array<Day>>;
   applicableTickets?: Maybe<Array<Scalars['String']['output']>>;
+  boundCustomerId?: Maybe<Scalars['String']['output']>;
   code: Scalars['String']['output'];
   couponUsageSalesLimit?: Maybe<Scalars['Float']['output']>;
   couponUsageType: CouponUsageType;
@@ -1221,9 +1135,11 @@ export type Coupon = {
   eventId?: Maybe<Scalars['String']['output']>;
   host: Scalars['String']['output'];
   isActive: Scalars['Boolean']['output'];
+  loyaltyRewardId?: Maybe<Scalars['String']['output']>;
   maxUsage?: Maybe<Scalars['Int']['output']>;
   maxUsagePerCustomer?: Maybe<Scalars['Int']['output']>;
   minCartValue?: Maybe<Scalars['Float']['output']>;
+  origin: Scalars['String']['output'];
   promoCodeDiscountType: PromoDiscountType;
   showToCustomers: Scalars['Boolean']['output'];
   startDate: Scalars['DateTimeISO']['output'];
@@ -1347,6 +1263,21 @@ export type CreateHostPushCampaignInput = {
   target?: InputMaybe<HostEmailTargetType>;
 };
 
+export type CreateHostWebhookInput = {
+  enabledEvents: Array<HostWebhookEventType>;
+  label?: InputMaybe<Scalars['String']['input']>;
+  url: Scalars['String']['input'];
+};
+
+export type CreateLoyaltyRewardInput = {
+  couponTemplate: LoyaltyCouponTemplateInput;
+  description?: InputMaybe<Scalars['String']['input']>;
+  perCustomerLimit?: InputMaybe<Scalars['Int']['input']>;
+  pointsCost: Scalars['Int']['input'];
+  title: Scalars['String']['input'];
+  totalStock?: InputMaybe<Scalars['Int']['input']>;
+};
+
 export type CreateMyWhatsAppTemplateInput = {
   bodyText: Scalars['String']['input'];
   buttonLabel?: InputMaybe<Scalars['String']['input']>;
@@ -1391,6 +1322,18 @@ export type CreateWhatsAppTemplateInput = {
   name: Scalars['String']['input'];
   slug: Scalars['String']['input'];
   variables?: InputMaybe<Array<WhatsAppTemplateVariableInput>>;
+};
+
+export type CreatedHostApiKey = {
+  __typename?: 'CreatedHostApiKey';
+  key: HostApiKeyView;
+  raw: Scalars['String']['output'];
+};
+
+export type CreatedHostWebhook = {
+  __typename?: 'CreatedHostWebhook';
+  secret: Scalars['String']['output'];
+  webhook: HostWebhookView;
 };
 
 export type CsvExportInput = {
@@ -1443,18 +1386,9 @@ export type Event = {
   _id: Scalars['ID']['output'];
   adminPaused?: Maybe<Scalars['Boolean']['output']>;
   adminRating?: Maybe<Scalars['Float']['output']>;
-  aiBoostFeePaidAt?: Maybe<Scalars['DateTimeISO']['output']>;
-  aiBoostRazorpayOrderId?: Maybe<Scalars['String']['output']>;
-  aiBoostRazorpayPaymentId?: Maybe<Scalars['String']['output']>;
   aiEvalAdminSummary?: Maybe<Scalars['String']['output']>;
   aiEvalRanAt?: Maybe<Scalars['DateTimeISO']['output']>;
   aiEvalSnapshot?: Maybe<Scalars['String']['output']>;
-  aiPricingOptions?: Maybe<Array<EventPricingSnapshot>>;
-  aiSelectedCommissionPct?: Maybe<Scalars['Float']['output']>;
-  aiSelectedExtraAmount?: Maybe<Scalars['Float']['output']>;
-  aiSelectedMarketingCreditAmount?: Maybe<Scalars['Float']['output']>;
-  aiSelectedMarketingCreditDiscountPct?: Maybe<Scalars['Float']['output']>;
-  aiSelectedUpfrontTriggerSellThroughPct?: Maybe<Scalars['Float']['output']>;
   aiShortSummary?: Maybe<Scalars['String']['output']>;
   allowWalkIns?: Maybe<Scalars['Boolean']['output']>;
   artistRequirements?: Maybe<ArtistRequirements>;
@@ -1466,6 +1400,7 @@ export type Event = {
   city?: Maybe<Scalars['String']['output']>;
   cityId?: Maybe<Scalars['String']['output']>;
   collaboratorToBeAnnounced?: Maybe<Scalars['Boolean']['output']>;
+  commissionRate?: Maybe<Scalars['Float']['output']>;
   contactForQueriesTables?: Maybe<Scalars['String']['output']>;
   createdAt?: Maybe<Scalars['DateTimeISO']['output']>;
   createdBy?: Maybe<Scalars['String']['output']>;
@@ -1482,10 +1417,8 @@ export type Event = {
   eventScore?: Maybe<Scalars['Float']['output']>;
   eventType?: Maybe<Array<EventType>>;
   expectedAudience?: Maybe<Scalars['Float']['output']>;
-  expectedEventsDoneTillNow?: Maybe<Scalars['Float']['output']>;
   extras?: Maybe<Array<HoizrExtra>>;
   faqs?: Maybe<Array<EventFaq>>;
-  feeSettlementMode?: Maybe<EventFeeSettlementMode>;
   firstSaleAt?: Maybe<Scalars['DateTimeISO']['output']>;
   firstStepCompleted: Scalars['Boolean']['output'];
   gallery?: Maybe<Array<EventGalleryItem>>;
@@ -1517,15 +1450,10 @@ export type Event = {
   payoutProfile?: Maybe<Scalars['String']['output']>;
   payoutProfileId?: Maybe<Scalars['String']['output']>;
   popularityRating?: Maybe<Scalars['Float']['output']>;
-  pricingSelectedAt?: Maybe<Scalars['DateTimeISO']['output']>;
-  pricingSnapshot?: Maybe<EventPricingSnapshot>;
   prohibitedItems?: Maybe<Array<Scalars['String']['output']>>;
   publishedAt?: Maybe<Scalars['DateTimeISO']['output']>;
   refundPolicy?: Maybe<Scalars['String']['output']>;
   requiresIDVerification?: Maybe<Scalars['Boolean']['output']>;
-  selectedAiBoostCode?: Maybe<Scalars['String']['output']>;
-  selectedAiBoostGenerationId?: Maybe<Scalars['String']['output']>;
-  selectedPricingPlan?: Maybe<EventPricingPlan>;
   seoSuggestions?: Maybe<Array<EventSeoSuggestion>>;
   showOffer?: Maybe<Scalars['Boolean']['output']>;
   slug?: Maybe<Scalars['String']['output']>;
@@ -1542,6 +1470,11 @@ export type Event = {
   updatedAt?: Maybe<Scalars['DateTimeISO']['output']>;
   verticalVideo?: Maybe<Scalars['String']['output']>;
   videoSneakPeek?: Maybe<Scalars['String']['output']>;
+  waitlistCollectSocials?: Maybe<Scalars['Boolean']['output']>;
+  waitlistEnabled?: Maybe<Scalars['Boolean']['output']>;
+  waitlistExpiry?: Maybe<Scalars['DateTimeISO']['output']>;
+  waitlistOnly?: Maybe<Scalars['Boolean']['output']>;
+  waitlistOpenNotifiedAt?: Maybe<Scalars['DateTimeISO']['output']>;
 };
 
 export type EventArtistSearchResult = {
@@ -1672,11 +1605,6 @@ export type EventFaqInput = {
   question: Scalars['String']['input'];
 };
 
-export enum EventFeeSettlementMode {
-  DeductFromPayout = 'DEDUCT_FROM_PAYOUT',
-  PayAfterEvent = 'PAY_AFTER_EVENT'
-}
-
 export type EventGalleryItem = {
   __typename?: 'EventGalleryItem';
   type: EventGalleryItemType;
@@ -1749,7 +1677,6 @@ export type EventInput = {
   eventInstructions?: InputMaybe<Array<Scalars['String']['input']>>;
   eventLocationDecided?: InputMaybe<Scalars['Boolean']['input']>;
   eventType?: InputMaybe<Array<EventType>>;
-  expectedEventsDoneTillNow?: InputMaybe<Scalars['Float']['input']>;
   extras?: InputMaybe<Array<HoizrExtraInput>>;
   faqs?: InputMaybe<Array<EventFaqInput>>;
   gallery?: InputMaybe<Array<EventGalleryItemInput>>;
@@ -1786,6 +1713,10 @@ export type EventInput = {
   title?: InputMaybe<Scalars['String']['input']>;
   verticalVideo?: InputMaybe<Scalars['String']['input']>;
   videoSneakPeek?: InputMaybe<Scalars['String']['input']>;
+  waitlistCollectSocials?: InputMaybe<Scalars['Boolean']['input']>;
+  waitlistEnabled?: InputMaybe<Scalars['Boolean']['input']>;
+  waitlistExpiry?: InputMaybe<Scalars['DateTimeISO']['input']>;
+  waitlistOnly?: InputMaybe<Scalars['Boolean']['input']>;
 };
 
 export type EventLineupArtist = {
@@ -1842,20 +1773,15 @@ export type EventManageOverview = {
   canSeeMetrics?: Maybe<Scalars['Boolean']['output']>;
   city?: Maybe<Scalars['String']['output']>;
   collaborators?: Maybe<Array<EventManageCollaborator>>;
+  commissionRate?: Maybe<Scalars['Float']['output']>;
   endDate?: Maybe<Scalars['DateTimeISO']['output']>;
   eventFlyer?: Maybe<Scalars['String']['output']>;
-  feeSettlementMode?: Maybe<EventFeeSettlementMode>;
   guestlistAutoAccept: Scalars['Boolean']['output'];
   guestlistEnabled: Scalars['Boolean']['output'];
   guestlistMaxCapacity?: Maybe<Scalars['Float']['output']>;
   isCollaboratorView?: Maybe<Scalars['Boolean']['output']>;
   isVisible: Scalars['Boolean']['output'];
-  pricingOptions?: Maybe<Array<EventManageOverviewPricingOption>>;
-  pricingSnapshot?: Maybe<EventManageOverviewPricingOption>;
   scannersCount: Scalars['Int']['output'];
-  selectedAiBoostCode?: Maybe<Scalars['String']['output']>;
-  selectedCommissionRate?: Maybe<Scalars['Float']['output']>;
-  selectedPricingPlan?: Maybe<Scalars['String']['output']>;
   startDate?: Maybe<Scalars['DateTimeISO']['output']>;
   status: EventStatus;
   ticketingEnabled: Scalars['Boolean']['output'];
@@ -1863,27 +1789,6 @@ export type EventManageOverview = {
   title?: Maybe<Scalars['String']['output']>;
   totals: TicketTotals;
   viewerTeamRole?: Maybe<TeamRole>;
-};
-
-export type EventManageOverviewPricingOption = {
-  __typename?: 'EventManageOverviewPricingOption';
-  badge?: Maybe<Scalars['String']['output']>;
-  commissionRate?: Maybe<Scalars['Float']['output']>;
-  customerPlatformFeeRate?: Maybe<Scalars['Float']['output']>;
-  expectedGrossSales?: Maybe<Scalars['Float']['output']>;
-  expectedPaidTickets?: Maybe<Scalars['Float']['output']>;
-  hoizrGrossRevenue?: Maybe<Scalars['Float']['output']>;
-  hoizrNetContribution?: Maybe<Scalars['Float']['output']>;
-  hostPayout?: Maybe<Scalars['Float']['output']>;
-  label: Scalars['String']['output'];
-  opsBuffer?: Maybe<Scalars['Float']['output']>;
-  optionId: Scalars['String']['output'];
-  paymentGatewayCost?: Maybe<Scalars['Float']['output']>;
-  payoutCycleDaysMax?: Maybe<Scalars['Float']['output']>;
-  payoutCycleDaysMin?: Maybe<Scalars['Float']['output']>;
-  plan?: Maybe<Scalars['String']['output']>;
-  riskTier?: Maybe<EventPricingRiskTier>;
-  upfrontFee?: Maybe<Scalars['Float']['output']>;
 };
 
 export type EventManageTicketRow = {
@@ -1894,33 +1799,6 @@ export type EventManageTicketRow = {
   ticketPrice: Scalars['Float']['output'];
   ticketSold: Scalars['Int']['output'];
   ticketVisible?: Maybe<Scalars['Boolean']['output']>;
-};
-
-export type EventOfferGeneration = {
-  __typename?: 'EventOfferGeneration';
-  _id: Scalars['ID']['output'];
-  adminFeedback?: Maybe<AiBoostAdminFeedback>;
-  completionTokens?: Maybe<Scalars['Int']['output']>;
-  createdAt?: Maybe<Scalars['DateTimeISO']['output']>;
-  event?: Maybe<OfferGenerationEventSummary>;
-  eventId: Scalars['String']['output'];
-  generationContextJson?: Maybe<Scalars['String']['output']>;
-  host?: Maybe<OfferGenerationHostSummary>;
-  hostId: Scalars['String']['output'];
-  isDeleted: Scalars['Boolean']['output'];
-  modelName?: Maybe<Scalars['String']['output']>;
-  offers: Array<AiBoost>;
-  promptTokens?: Maybe<Scalars['Int']['output']>;
-  recommendedOfferCode?: Maybe<Scalars['String']['output']>;
-  selectedAt?: Maybe<Scalars['DateTimeISO']['output']>;
-  selectedOfferCode?: Maybe<Scalars['String']['output']>;
-  updatedAt?: Maybe<Scalars['DateTimeISO']['output']>;
-};
-
-export type EventOfferGenerationPaginatedResponse = {
-  __typename?: 'EventOfferGenerationPaginatedResponse';
-  items: Array<EventOfferGeneration>;
-  total: Scalars['Int']['output'];
 };
 
 export type EventOnboardingChecklist = {
@@ -1965,87 +1843,10 @@ export type EventOrdersResponse = {
   total: Scalars['Int']['output'];
 };
 
-export enum EventOrganizerSegment {
-  New = 'NEW',
-  PowerHost = 'POWER_HOST',
-  Regular = 'REGULAR'
-}
-
 export type EventPaginatedResponse = {
   __typename?: 'EventPaginatedResponse';
   items: Array<Event>;
   total: Scalars['Int']['output'];
-};
-
-export type EventPricingCalculatorInput = {
-  chargebackRate?: InputMaybe<Scalars['Float']['input']>;
-  eventTypes: Array<EventType>;
-  expectedEventsDoneTillNow?: InputMaybe<Scalars['Float']['input']>;
-  expectedPaidTickets?: InputMaybe<Scalars['Float']['input']>;
-  refundRate?: InputMaybe<Scalars['Float']['input']>;
-  tickets?: InputMaybe<Array<EventPricingTicketCalculatorInput>>;
-};
-
-export type EventPricingOptionResponse = {
-  __typename?: 'EventPricingOptionResponse';
-  badge: Scalars['String']['output'];
-  commissionRate: Scalars['Float']['output'];
-  customerPlatformFeeRate: Scalars['Float']['output'];
-  expectedGrossSales: Scalars['Float']['output'];
-  expectedPaidTickets: Scalars['Float']['output'];
-  hoizrGrossRevenue: Scalars['Float']['output'];
-  hoizrNetContribution: Scalars['Float']['output'];
-  hostPayout: Scalars['Float']['output'];
-  label: Scalars['String']['output'];
-  opsBuffer: Scalars['Float']['output'];
-  optionId: Scalars['String']['output'];
-  organizerSegment: EventOrganizerSegment;
-  paymentGatewayCost: Scalars['Float']['output'];
-  payoutCycleDaysMax: Scalars['Float']['output'];
-  payoutCycleDaysMin: Scalars['Float']['output'];
-  plan: EventPricingPlan;
-  riskTier: EventPricingRiskTier;
-  upfrontFee: Scalars['Float']['output'];
-};
-
-export enum EventPricingPlan {
-  HighRoller = 'HIGH_ROLLER',
-  Saver = 'SAVER',
-  ZeroUpfront = 'ZERO_UPFRONT'
-}
-
-export enum EventPricingRiskTier {
-  High = 'HIGH',
-  Low = 'LOW',
-  Medium = 'MEDIUM'
-}
-
-export type EventPricingSnapshot = {
-  __typename?: 'EventPricingSnapshot';
-  badge: Scalars['String']['output'];
-  commissionRate: Scalars['Float']['output'];
-  customerPlatformFeeRate: Scalars['Float']['output'];
-  expectedGrossSales: Scalars['Float']['output'];
-  expectedPaidTickets: Scalars['Float']['output'];
-  hoizrGrossRevenue: Scalars['Float']['output'];
-  hoizrNetContribution: Scalars['Float']['output'];
-  hostPayout: Scalars['Float']['output'];
-  label: Scalars['String']['output'];
-  opsBuffer: Scalars['Float']['output'];
-  optionId: Scalars['String']['output'];
-  organizerSegment: EventOrganizerSegment;
-  paymentGatewayCost: Scalars['Float']['output'];
-  payoutCycleDaysMax: Scalars['Float']['output'];
-  payoutCycleDaysMin: Scalars['Float']['output'];
-  plan: EventPricingPlan;
-  riskTier: EventPricingRiskTier;
-  upfrontFee: Scalars['Float']['output'];
-};
-
-export type EventPricingTicketCalculatorInput = {
-  ticketCapacity: Scalars['Float']['input'];
-  ticketPrice: Scalars['Float']['input'];
-  ticketSold?: InputMaybe<Scalars['Float']['input']>;
 };
 
 export type EventReconciliationLedgerSummary = {
@@ -2072,7 +1873,6 @@ export type EventReconciliationOrderTotals = {
 
 export type EventReconciliationSettlement = {
   __typename?: 'EventReconciliationSettlement';
-  finalDeclaredOfferAmount: Scalars['Float']['output'];
   grossAmount: Scalars['Float']['output'];
   hoizrCommissionGstTotal: Scalars['Float']['output'];
   hoizrCommissionTotal: Scalars['Float']['output'];
@@ -2246,6 +2046,13 @@ export enum EventType {
   NonExclusive = 'NON_EXCLUSIVE'
 }
 
+export type EventWaitlistFilterInput = {
+  city?: InputMaybe<Scalars['String']['input']>;
+  eventId: Scalars['String']['input'];
+  search?: InputMaybe<Scalars['String']['input']>;
+  status?: InputMaybe<WaitlistStatus>;
+};
+
 /** Enum to store the types of operation for data filtering */
 export enum FilterDataEnum {
   Contains = 'Contains',
@@ -2266,10 +2073,6 @@ export type FulfillArtistMerchOrderInput = {
   carrier?: InputMaybe<Scalars['String']['input']>;
   orderId: Scalars['String']['input'];
   trackingNumber?: InputMaybe<Scalars['String']['input']>;
-};
-
-export type GenerateAiBoostsInput = {
-  eventId: Scalars['String']['input'];
 };
 
 export enum Genre {
@@ -2331,7 +2134,6 @@ export type GenreTag = {
 
 export type GstOutputBreakdown = {
   __typename?: 'GstOutputBreakdown';
-  aiBoostGstPaise: Scalars['Float']['output'];
   commissionGstPaise: Scalars['Float']['output'];
   gstInputItcReceivablePaise: Scalars['Float']['output'];
   marketingCreditGstPaise: Scalars['Float']['output'];
@@ -2460,6 +2262,24 @@ export type Host = {
   websiteUrl?: Maybe<Scalars['String']['output']>;
 };
 
+export enum HostApiKeyType {
+  Publishable = 'PUBLISHABLE',
+  Secret = 'SECRET'
+}
+
+export type HostApiKeyView = {
+  __typename?: 'HostApiKeyView';
+  _id: Scalars['ID']['output'];
+  allowedDomains: Array<Scalars['String']['output']>;
+  createdAt?: Maybe<Scalars['DateTimeISO']['output']>;
+  keyType: HostApiKeyType;
+  label?: Maybe<Scalars['String']['output']>;
+  last4: Scalars['String']['output'];
+  lastUsedAt?: Maybe<Scalars['DateTimeISO']['output']>;
+  prefix: Scalars['String']['output'];
+  revoked: Scalars['Boolean']['output'];
+};
+
 /** Multi-select audience filter chip for CustomCustomer target */
 export enum HostCampaignAudienceFilter {
   Active = 'Active',
@@ -2505,6 +2325,7 @@ export type HostCustomerRow = {
   customerId: Scalars['String']['output'];
   customerSince?: Maybe<Scalars['DateTimeISO']['output']>;
   email?: Maybe<Scalars['String']['output']>;
+  lifetimePoints: Scalars['Int']['output'];
   name?: Maybe<Scalars['String']['output']>;
   orderCount: Scalars['Int']['output'];
   phone?: Maybe<Scalars['String']['output']>;
@@ -3074,6 +2895,24 @@ export enum HostType {
   Venue = 'VENUE'
 }
 
+export enum HostWebhookEventType {
+  OrderCancelled = 'ORDER_CANCELLED',
+  OrderPaid = 'ORDER_PAID',
+  OrderRefunded = 'ORDER_REFUNDED'
+}
+
+export type HostWebhookView = {
+  __typename?: 'HostWebhookView';
+  _id: Scalars['ID']['output'];
+  active: Scalars['Boolean']['output'];
+  createdAt?: Maybe<Scalars['DateTimeISO']['output']>;
+  enabledEvents: Array<HostWebhookEventType>;
+  label?: Maybe<Scalars['String']['output']>;
+  lastDeliveryAt?: Maybe<Scalars['DateTimeISO']['output']>;
+  secretLast6: Scalars['String']['output'];
+  url: Scalars['String']['output'];
+};
+
 export type HostWhatsAppCampaign = {
   __typename?: 'HostWhatsAppCampaign';
   _id: Scalars['ID']['output'];
@@ -3222,7 +3061,6 @@ export enum LedgerAccount {
   CustomerReceivable = 'CUSTOMER_RECEIVABLE',
   GstInputItcReceivable = 'GST_INPUT_ITC_RECEIVABLE',
   GstOutputPayable = 'GST_OUTPUT_PAYABLE',
-  HoizrAiBoostIncome = 'HOIZR_AI_BOOST_INCOME',
   HoizrCommissionIncome = 'HOIZR_COMMISSION_INCOME',
   HoizrMarketingRevenue = 'HOIZR_MARKETING_REVENUE',
   HoizrPlatformFeeIncome = 'HOIZR_PLATFORM_FEE_INCOME',
@@ -3230,7 +3068,6 @@ export enum LedgerAccount {
   HostTicketPayable = 'HOST_TICKET_PAYABLE',
   MarketingCreditLiability = 'MARKETING_CREDIT_LIABILITY',
   PaymentGatewayExpense = 'PAYMENT_GATEWAY_EXPENSE',
-  PayoutClearing = 'PAYOUT_CLEARING',
   RazorpayClearing = 'RAZORPAY_CLEARING',
   RefundPayable = 'REFUND_PAYABLE',
   TcsPayable = 'TCS_PAYABLE',
@@ -3246,7 +3083,6 @@ export type LedgerAccountBalance = {
 };
 
 export enum LedgerEntityType {
-  AiOffer = 'AI_OFFER',
   Campaign = 'CAMPAIGN',
   Chargeback = 'CHARGEBACK',
   MarketingCreditPurchase = 'MARKETING_CREDIT_PURCHASE',
@@ -3288,8 +3124,6 @@ export type LedgerTransaction = {
 };
 
 export enum LedgerTransactionKind {
-  AiBoostFeeAdjusted = 'AI_BOOST_FEE_ADJUSTED',
-  AiBoostFeePaid = 'AI_BOOST_FEE_PAID',
   ChargebackReceived = 'CHARGEBACK_RECEIVED',
   MarketingCreditConsumed = 'MARKETING_CREDIT_CONSUMED',
   MarketingCreditPurchase = 'MARKETING_CREDIT_PURCHASE',
@@ -3297,9 +3131,7 @@ export enum LedgerTransactionKind {
   OrderFreeIssued = 'ORDER_FREE_ISSUED',
   OrderPaid = 'ORDER_PAID',
   OrderRefund = 'ORDER_REFUND',
-  PayoutConfirmed = 'PAYOUT_CONFIRMED',
   PayoutReleased = 'PAYOUT_RELEASED',
-  PayoutReversed = 'PAYOUT_REVERSED',
   RazorpaySettlementReceived = 'RAZORPAY_SETTLEMENT_RECEIVED',
   SettlementCommission = 'SETTLEMENT_COMMISSION'
 }
@@ -3326,14 +3158,6 @@ export type ListHostPayoutSettlementsInput = {
   status?: InputMaybe<PayoutSettlementStatus>;
 };
 
-export type ListOfferGenerationsInput = {
-  eventId?: InputMaybe<Scalars['String']['input']>;
-  hostId?: InputMaybe<Scalars['String']['input']>;
-  includeNegative?: InputMaybe<Scalars['Boolean']['input']>;
-  page?: InputMaybe<Scalars['Int']['input']>;
-  pageSize?: InputMaybe<Scalars['Int']['input']>;
-};
-
 export type ListPayoutSettlementsInput = {
   eventId?: InputMaybe<Scalars['String']['input']>;
   hostId?: InputMaybe<Scalars['String']['input']>;
@@ -3342,9 +3166,61 @@ export type ListPayoutSettlementsInput = {
   status?: InputMaybe<PayoutSettlementStatus>;
 };
 
-export type MarkOfferGenerationNegativeInput = {
-  generationId: Scalars['String']['input'];
-  reason: Scalars['String']['input'];
+export type LoyaltyCouponTemplate = {
+  __typename?: 'LoyaltyCouponTemplate';
+  discountType: PromoDiscountType;
+  discountValue?: Maybe<Scalars['Float']['output']>;
+  eventId?: Maybe<Scalars['String']['output']>;
+  minCartValue?: Maybe<Scalars['Float']['output']>;
+  uptoAmount?: Maybe<Scalars['Float']['output']>;
+  validityDays?: Maybe<Scalars['Float']['output']>;
+};
+
+export type LoyaltyCouponTemplateInput = {
+  discountType: PromoDiscountType;
+  discountValue?: InputMaybe<Scalars['Float']['input']>;
+  eventId?: InputMaybe<Scalars['String']['input']>;
+  minCartValue?: InputMaybe<Scalars['Float']['input']>;
+  uptoAmount?: InputMaybe<Scalars['Float']['input']>;
+  validityDays?: InputMaybe<Scalars['Int']['input']>;
+};
+
+export type LoyaltyLeaderboardResponse = {
+  __typename?: 'LoyaltyLeaderboardResponse';
+  items: Array<LoyaltyLeaderboardRow>;
+  total: Scalars['Int']['output'];
+};
+
+export type LoyaltyLeaderboardRow = {
+  __typename?: 'LoyaltyLeaderboardRow';
+  balance: Scalars['Int']['output'];
+  customerId: Scalars['String']['output'];
+  lastEarnedAt?: Maybe<Scalars['DateTimeISO']['output']>;
+  lifetimePoints: Scalars['Int']['output'];
+  name?: Maybe<Scalars['String']['output']>;
+  rank: Scalars['Int']['output'];
+};
+
+export type LoyaltyReward = {
+  __typename?: 'LoyaltyReward';
+  _id: Scalars['ID']['output'];
+  active: Scalars['Boolean']['output'];
+  couponTemplate: LoyaltyCouponTemplate;
+  createdAt?: Maybe<Scalars['DateTimeISO']['output']>;
+  description?: Maybe<Scalars['String']['output']>;
+  hostId: Scalars['String']['output'];
+  perCustomerLimit?: Maybe<Scalars['Float']['output']>;
+  pointsCost: Scalars['Float']['output'];
+  redeemedCount: Scalars['Float']['output'];
+  title: Scalars['String']['output'];
+  totalStock?: Maybe<Scalars['Float']['output']>;
+  updatedAt?: Maybe<Scalars['DateTimeISO']['output']>;
+};
+
+export type LoyaltyRewardsPaginatedResponse = {
+  __typename?: 'LoyaltyRewardsPaginatedResponse';
+  items: Array<LoyaltyReward>;
+  total: Scalars['Int']['output'];
 };
 
 export type MarkWalkthroughDoneInput = {
@@ -3451,13 +3327,9 @@ export type Mutation = {
   addWaitListUser: Scalars['Boolean']['output'];
   adminApproveWhatsAppTemplateReview: WhatsAppMessageTemplate;
   adminClearAutomationTemplate: Array<AdminAutomationTemplateView>;
-  adminClearOfferGenerationNegative: EventOfferGeneration;
   adminCreateWhatsAppTemplate: WhatsAppMessageTemplate;
   adminDeleteWhatsAppTemplate: Scalars['Boolean']['output'];
-  adminForceReleasePayout: PayoutSettlement;
-  adminGenerateAiBoostPaymentLink: Scalars['String']['output'];
-  adminInstantPayout: PayoutSettlement;
-  adminMarkOfferGenerationNegative: EventOfferGeneration;
+  adminMarkSettlementPaid: PayoutSettlement;
   adminOverrideHostMarketingReputation: HostMarketingLimitObject;
   adminPauseHostCampaign: Scalars['Boolean']['output'];
   adminPausePayoutSettlement: PayoutSettlement;
@@ -3470,9 +3342,11 @@ export type Mutation = {
   adminSetAutomationTemplate: Array<AdminAutomationTemplateView>;
   adminSetPlatformCosts: PlatformCostConfig;
   adminSubmitWhatsAppTemplateToMeta: WhatsAppTemplateSubmissionResult;
+  adminSyncWhatsAppTemplateStatuses: Scalars['Int']['output'];
   adminTriggerRazorpaySettlementReconcile: RazorpayReconcileSummary;
   adminUpdateAutomationSuggestion: AutomationSuggestion;
   adminUpdateEvent: Event;
+  adminUpdateEventCommissionRate: Event;
   adminUpdateHost: Host;
   adminUpdateWhatsAppTemplate: WhatsAppMessageTemplate;
   adminVerifyPayout: Payout;
@@ -3503,24 +3377,30 @@ export type Mutation = {
   changeAdminRole: Scalars['Boolean']['output'];
   completeHostOnboarding: Scalars['Boolean']['output'];
   createAdminEmailCampaign: Scalars['String']['output'];
-  createAiBoostPaymentOrder: AiBoostRazorpayOrderResponse;
   createCoupon: Coupon;
   createEvent: Event;
   createHost: Scalars['Boolean']['output'];
+  createHostApiKey: CreatedHostApiKey;
   createHostEmailCampaign: Scalars['String']['output'];
   createHostPushCampaign: HostPushCampaign;
+  createHostWebhook: CreatedHostWebhook;
   createHostWhatsAppCampaign: Scalars['String']['output'];
+  createLoyaltyReward: LoyaltyReward;
   createMarketingCreditTopUpOrder: MarketingCreditTopUpOrder;
   createMyWhatsAppTemplate: WhatsAppMessageTemplate;
   createOfflinePaymentLink: OfflinePaymentLinkResponse;
   createScanner: ScannerCreateResponse;
+  createWhitelabelRequest: WhitelabelRequestView;
+  declineWaitlistEntry: Scalars['Boolean']['output'];
   deleteAdminEmailCampaign: Scalars['Boolean']['output'];
   deleteCoupon: Scalars['Boolean']['output'];
   deleteEvent: Scalars['Boolean']['output'];
   deleteHostCloudinaryAsset: Scalars['Boolean']['output'];
   deleteHostEmailCampaign: Scalars['Boolean']['output'];
   deleteHostPushCampaign: Scalars['Boolean']['output'];
+  deleteHostWebhook: Scalars['Boolean']['output'];
   deleteHostWhatsAppCampaign: Scalars['Boolean']['output'];
+  deleteLoyaltyReward: Scalars['Boolean']['output'];
   deleteScanner: Scalars['Boolean']['output'];
   duplicateAdminEmailCampaign: Scalars['String']['output'];
   duplicateEvent: Event;
@@ -3532,7 +3412,6 @@ export type Mutation = {
   exportAdminHostsReportCSV: Scalars['String']['output'];
   exportAdminPayoutsReportCSV: Scalars['String']['output'];
   exportAdminTicketsReportCSV: Scalars['String']['output'];
-  generateAiBoostsForEvent: EventOfferGeneration;
   hostRefundOrder: HostRefundResult;
   hostReverseCheckIn: Scalars['Boolean']['output'];
   hostRevokeAllScannersForEvent: Scalars['Int']['output'];
@@ -3546,10 +3425,11 @@ export type Mutation = {
   resumeHostWhatsAppCampaign: Scalars['Boolean']['output'];
   revokeAdminAccess: Scalars['Boolean']['output'];
   revokeGuestlistEntry: Scalars['Boolean']['output'];
+  revokeHostApiKey: Scalars['Boolean']['output'];
+  rotateHostWebhookSecret: CreatedHostWebhook;
   runEventEval: EventEvalResultView;
   saveMyHostContentDefaults: HostContentDefaults;
-  selectAiBoost: EventOfferGeneration;
-  selectEventPricingOption: Event;
+  sendWaitlistPaymentLink: OfflinePaymentLinkResponse;
   setArtistGuestlistHighlighted: Guestlist;
   setArtistGuestlistPublic: Guestlist;
   setAutomationActive: AutomationView;
@@ -3562,7 +3442,9 @@ export type Mutation = {
   submitAutomationSuggestion: Scalars['Boolean']['output'];
   submitHostFeedback: Scalars['Boolean']['output'];
   submitMyWhatsAppTemplateForReview: WhatsAppMessageTemplate;
+  submitWhitelabelRequest: Scalars['Boolean']['output'];
   toggleCouponActive: Coupon;
+  toggleLoyaltyRewardActive: LoyaltyReward;
   tokensRefresh: Scalars['Boolean']['output'];
   unbookmarkWhatsAppTemplate: Scalars['Boolean']['output'];
   updateAdmin: Scalars['Boolean']['output'];
@@ -3571,21 +3453,24 @@ export type Mutation = {
   updateCoupon: Coupon;
   updateEvent: Event;
   updateEventCategoryStatus: Scalars['Boolean']['output'];
-  updateEventFeeSettlementMode: EventFeeSettlementMode;
   updateEventStep: Event;
   updateEventTag: Scalars['Boolean']['output'];
   updateEventTagStatus: Scalars['Boolean']['output'];
   updateGenreTagStatus: Scalars['Boolean']['output'];
   updateHost: Scalars['Boolean']['output'];
+  updateHostApiKeyDomains: HostApiKeyView;
   updateHostEmailCampaign: Scalars['Boolean']['output'];
   updateHostPushCampaign: HostPushCampaign;
+  updateHostWebhook: HostWebhookView;
   updateHostWhatsAppCampaign: Scalars['Boolean']['output'];
   updateIndianCityStatus: Scalars['Boolean']['output'];
+  updateLoyaltyReward: LoyaltyReward;
   updateMyWhatsAppTemplate: WhatsAppMessageTemplate;
   updatePermissionPreselect: Scalars['Boolean']['output'];
   updateScanner: ScannerUser;
   updateSubuserPermissions: Scalars['Boolean']['output'];
   updateSubuserRole: Scalars['Boolean']['output'];
+  updateWhitelabelRequest: WhitelabelRequestView;
   uploadHostLogo: Scalars['Boolean']['output'];
   upsertGuestlist: Guestlist;
   upsertPhantomArtist: PhantomArtist;
@@ -3664,11 +3549,6 @@ export type MutationAdminClearAutomationTemplateArgs = {
 };
 
 
-export type MutationAdminClearOfferGenerationNegativeArgs = {
-  generationId: Scalars['String']['input'];
-};
-
-
 export type MutationAdminCreateWhatsAppTemplateArgs = {
   input: CreateWhatsAppTemplateInput;
 };
@@ -3679,23 +3559,10 @@ export type MutationAdminDeleteWhatsAppTemplateArgs = {
 };
 
 
-export type MutationAdminForceReleasePayoutArgs = {
+export type MutationAdminMarkSettlementPaidArgs = {
+  force?: InputMaybe<Scalars['Boolean']['input']>;
+  note?: InputMaybe<Scalars['String']['input']>;
   settlementId: Scalars['String']['input'];
-};
-
-
-export type MutationAdminGenerateAiBoostPaymentLinkArgs = {
-  eventId: Scalars['String']['input'];
-};
-
-
-export type MutationAdminInstantPayoutArgs = {
-  settlementId: Scalars['String']['input'];
-};
-
-
-export type MutationAdminMarkOfferGenerationNegativeArgs = {
-  input: MarkOfferGenerationNegativeInput;
 };
 
 
@@ -3781,6 +3648,12 @@ export type MutationAdminUpdateAutomationSuggestionArgs = {
 
 export type MutationAdminUpdateEventArgs = {
   input: AdminEventUpdateInput;
+};
+
+
+export type MutationAdminUpdateEventCommissionRateArgs = {
+  commissionRate: Scalars['Float']['input'];
+  eventId: Scalars['String']['input'];
 };
 
 
@@ -3923,11 +3796,6 @@ export type MutationCreateAdminEmailCampaignArgs = {
 };
 
 
-export type MutationCreateAiBoostPaymentOrderArgs = {
-  eventId: Scalars['String']['input'];
-};
-
-
 export type MutationCreateCouponArgs = {
   input: CreateCouponInput;
 };
@@ -3943,6 +3811,13 @@ export type MutationCreateHostArgs = {
 };
 
 
+export type MutationCreateHostApiKeyArgs = {
+  allowedDomains?: InputMaybe<Array<Scalars['String']['input']>>;
+  keyType: HostApiKeyType;
+  label?: InputMaybe<Scalars['String']['input']>;
+};
+
+
 export type MutationCreateHostEmailCampaignArgs = {
   input: AddHostEmailCampaignInput;
 };
@@ -3953,8 +3828,18 @@ export type MutationCreateHostPushCampaignArgs = {
 };
 
 
+export type MutationCreateHostWebhookArgs = {
+  input: CreateHostWebhookInput;
+};
+
+
 export type MutationCreateHostWhatsAppCampaignArgs = {
   input: AddHostWhatsAppCampaignInput;
+};
+
+
+export type MutationCreateLoyaltyRewardArgs = {
+  input: CreateLoyaltyRewardInput;
 };
 
 
@@ -3975,6 +3860,16 @@ export type MutationCreateOfflinePaymentLinkArgs = {
 
 export type MutationCreateScannerArgs = {
   input: CreateScannerInput;
+};
+
+
+export type MutationCreateWhitelabelRequestArgs = {
+  input: WhitelabelRequestInput;
+};
+
+
+export type MutationDeclineWaitlistEntryArgs = {
+  entryId: Scalars['String']['input'];
 };
 
 
@@ -4008,8 +3903,18 @@ export type MutationDeleteHostPushCampaignArgs = {
 };
 
 
+export type MutationDeleteHostWebhookArgs = {
+  id: Scalars['String']['input'];
+};
+
+
 export type MutationDeleteHostWhatsAppCampaignArgs = {
   campaignId: Scalars['String']['input'];
+};
+
+
+export type MutationDeleteLoyaltyRewardArgs = {
+  rewardId: Scalars['String']['input'];
 };
 
 
@@ -4065,11 +3970,6 @@ export type MutationExportAdminPayoutsReportCsvArgs = {
 
 export type MutationExportAdminTicketsReportCsvArgs = {
   input: AdminReportCsvExportInput;
-};
-
-
-export type MutationGenerateAiBoostsForEventArgs = {
-  input: GenerateAiBoostsInput;
 };
 
 
@@ -4140,6 +4040,16 @@ export type MutationRevokeGuestlistEntryArgs = {
 };
 
 
+export type MutationRevokeHostApiKeyArgs = {
+  id: Scalars['String']['input'];
+};
+
+
+export type MutationRotateHostWebhookSecretArgs = {
+  id: Scalars['String']['input'];
+};
+
+
 export type MutationRunEventEvalArgs = {
   eventId: Scalars['String']['input'];
 };
@@ -4150,13 +4060,8 @@ export type MutationSaveMyHostContentDefaultsArgs = {
 };
 
 
-export type MutationSelectAiBoostArgs = {
-  input: SelectAiBoostInput;
-};
-
-
-export type MutationSelectEventPricingOptionArgs = {
-  input: SelectEventPricingInput;
+export type MutationSendWaitlistPaymentLinkArgs = {
+  input: SendWaitlistPaymentLinkInput;
 };
 
 
@@ -4225,9 +4130,20 @@ export type MutationSubmitMyWhatsAppTemplateForReviewArgs = {
 };
 
 
+export type MutationSubmitWhitelabelRequestArgs = {
+  input: WhitelabelRequestInput;
+};
+
+
 export type MutationToggleCouponActiveArgs = {
   active: Scalars['Boolean']['input'];
   couponId: Scalars['String']['input'];
+};
+
+
+export type MutationToggleLoyaltyRewardActiveArgs = {
+  active: Scalars['Boolean']['input'];
+  rewardId: Scalars['String']['input'];
 };
 
 
@@ -4268,12 +4184,6 @@ export type MutationUpdateEventCategoryStatusArgs = {
 };
 
 
-export type MutationUpdateEventFeeSettlementModeArgs = {
-  id: Scalars['String']['input'];
-  mode: EventFeeSettlementMode;
-};
-
-
 export type MutationUpdateEventStepArgs = {
   id: Scalars['String']['input'];
   step: Scalars['Int']['input'];
@@ -4302,6 +4212,12 @@ export type MutationUpdateHostArgs = {
 };
 
 
+export type MutationUpdateHostApiKeyDomainsArgs = {
+  allowedDomains: Array<Scalars['String']['input']>;
+  id: Scalars['String']['input'];
+};
+
+
 export type MutationUpdateHostEmailCampaignArgs = {
   input: UpdateHostEmailCampaignInput;
 };
@@ -4312,6 +4228,11 @@ export type MutationUpdateHostPushCampaignArgs = {
 };
 
 
+export type MutationUpdateHostWebhookArgs = {
+  input: UpdateHostWebhookInput;
+};
+
+
 export type MutationUpdateHostWhatsAppCampaignArgs = {
   input: UpdateHostWhatsAppCampaignInput;
 };
@@ -4319,6 +4240,11 @@ export type MutationUpdateHostWhatsAppCampaignArgs = {
 
 export type MutationUpdateIndianCityStatusArgs = {
   id: Scalars['String']['input'];
+};
+
+
+export type MutationUpdateLoyaltyRewardArgs = {
+  input: UpdateLoyaltyRewardInput;
 };
 
 
@@ -4348,6 +4274,11 @@ export type MutationUpdateSubuserRoleArgs = {
 };
 
 
+export type MutationUpdateWhitelabelRequestArgs = {
+  input: UpdateWhitelabelRequestInput;
+};
+
+
 export type MutationUploadHostLogoArgs = {
   logo: Scalars['String']['input'];
 };
@@ -4370,33 +4301,6 @@ export type MutationVerifyMarketingCreditTopUpArgs = {
 
 export type MutationVerifyTeamEmailArgs = {
   token: Scalars['String']['input'];
-};
-
-export type OfferGenerationEventSummary = {
-  __typename?: 'OfferGenerationEventSummary';
-  _id: Scalars['String']['output'];
-  city?: Maybe<Scalars['String']['output']>;
-  endDate?: Maybe<Scalars['DateTimeISO']['output']>;
-  eventType?: Maybe<Scalars['String']['output']>;
-  flyerUrl?: Maybe<Scalars['String']['output']>;
-  maxTicketPrice?: Maybe<Scalars['Float']['output']>;
-  minTicketPrice?: Maybe<Scalars['Float']['output']>;
-  slug?: Maybe<Scalars['String']['output']>;
-  startDate?: Maybe<Scalars['DateTimeISO']['output']>;
-  status?: Maybe<Scalars['String']['output']>;
-  ticketCount?: Maybe<Scalars['Int']['output']>;
-  title?: Maybe<Scalars['String']['output']>;
-  totalTicketCapacity?: Maybe<Scalars['Int']['output']>;
-  venueName?: Maybe<Scalars['String']['output']>;
-};
-
-export type OfferGenerationHostSummary = {
-  __typename?: 'OfferGenerationHostSummary';
-  _id: Scalars['String']['output'];
-  city?: Maybe<Scalars['String']['output']>;
-  email?: Maybe<Scalars['String']['output']>;
-  hostType?: Maybe<Scalars['String']['output']>;
-  name?: Maybe<Scalars['String']['output']>;
 };
 
 export type OfflineOrder = {
@@ -4527,8 +4431,6 @@ export type Payout = {
   isGstRegistered: Scalars['Boolean']['output'];
   isPrimary: Scalars['Boolean']['output'];
   panNumber?: Maybe<Scalars['String']['output']>;
-  razorpayContactId?: Maybe<Scalars['String']['output']>;
-  razorpayFundAccountId?: Maybe<Scalars['String']['output']>;
   registeredAddressLine1?: Maybe<Scalars['String']['output']>;
   registeredAddressLine2?: Maybe<Scalars['String']['output']>;
   registeredBusinessName?: Maybe<Scalars['String']['output']>;
@@ -4579,36 +4481,25 @@ export type PayoutReleaseReadiness = {
 export type PayoutSettlement = {
   __typename?: 'PayoutSettlement';
   _id: Scalars['ID']['output'];
-  actualSellThroughPct?: Maybe<Scalars['Float']['output']>;
-  aiBoostUpfrontOriginalAmount?: Maybe<Scalars['Float']['output']>;
-  aiBoostUpfrontRefundDue?: Maybe<Scalars['Float']['output']>;
-  aiBoostUpfrontTriggerSellThroughPct?: Maybe<Scalars['Float']['output']>;
-  aiBoostUpfrontWaived?: Maybe<Scalars['Boolean']['output']>;
-  aiBoostUpfrontWaivedReason?: Maybe<Scalars['String']['output']>;
   chargebacksTotal?: Maybe<Scalars['Float']['output']>;
   createdAt?: Maybe<Scalars['DateTimeISO']['output']>;
-  errorMessage?: Maybe<Scalars['String']['output']>;
   eventId: Scalars['String']['output'];
-  finalDeclaredOfferAmount: Scalars['Float']['output'];
   grossAmount: Scalars['Float']['output'];
   hoizrCommissionGstTotal: Scalars['Float']['output'];
   hoizrCommissionTotal: Scalars['Float']['output'];
   hostId: Scalars['String']['output'];
-  invoiceId?: Maybe<Scalars['String']['output']>;
-  invoiceUrl?: Maybe<Scalars['String']['output']>;
   netPayoutAmount: Scalars['Float']['output'];
   orderCount: Scalars['Float']['output'];
   paidAt?: Maybe<Scalars['DateTimeISO']['output']>;
   paidByAdmin?: Maybe<Scalars['String']['output']>;
-  paidMethod?: Maybe<PayoutSettlementMethod>;
   pausedAt?: Maybe<Scalars['DateTimeISO']['output']>;
   pausedBy?: Maybe<Scalars['String']['output']>;
   pausedReason?: Maybe<Scalars['String']['output']>;
   payoutAccountId?: Maybe<Scalars['String']['output']>;
   razorpayFeeTotal: Scalars['Float']['output'];
-  razorpayPayoutId?: Maybe<Scalars['String']['output']>;
   refundsTotal?: Maybe<Scalars['Float']['output']>;
   scheduledFor: Scalars['DateTimeISO']['output'];
+  settlementNote?: Maybe<Scalars['String']['output']>;
   status: PayoutSettlementStatus;
   taxWithholdingConfigId?: Maybe<Scalars['String']['output']>;
   taxWithholdingReason?: Maybe<Scalars['String']['output']>;
@@ -4618,11 +4509,6 @@ export type PayoutSettlement = {
   updatedAt?: Maybe<Scalars['DateTimeISO']['output']>;
 };
 
-export enum PayoutSettlementMethod {
-  AdminInstant = 'ADMIN_INSTANT',
-  Auto = 'AUTO'
-}
-
 export type PayoutSettlementPaginatedResponse = {
   __typename?: 'PayoutSettlementPaginatedResponse';
   items: Array<PayoutSettlement>;
@@ -4631,15 +4517,9 @@ export type PayoutSettlementPaginatedResponse = {
 
 export enum PayoutSettlementStatus {
   Cancelled = 'CANCELLED',
-  Failed = 'FAILED',
-  OnHold = 'ON_HOLD',
   Paid = 'PAID',
   Paused = 'PAUSED',
-  Pending = 'PENDING',
-  Processing = 'PROCESSING',
-  Rejected = 'REJECTED',
-  Scheduled = 'SCHEDULED',
-  Verified = 'VERIFIED'
+  Pending = 'PENDING'
 }
 
 export type Permission = {
@@ -4664,7 +4544,7 @@ export enum PermissionTypeEnum {
   Events = 'Events',
   /** Launch marketing campaigns (email, SMS, WhatsApp, push). Requires existing marketing credit balance. Recipient cap is set by the host's reputation tier (see hostMarketingTier* configs). */
   Marketing = 'Marketing',
-  /** Manage AI Boost selections, accept/reject AI-generated offers, and create custom discount codes for events. */
+  /** Create and manage custom discount codes and offers for events. */
   Offers = 'Offers',
   /** View individual ticket orders, issue refunds, mark as checked-in, resend ticket emails. Includes order-level customer detail. */
   Orders = 'Orders',
@@ -4817,7 +4697,6 @@ export type Query = {
   adminEventReconciliation: EventReconciliationView;
   adminEvents: EventPaginatedResponse;
   adminEventsReport: AdminEventsReport;
-  adminGetOfferGeneration: EventOfferGeneration;
   adminGetPayoutReleaseReadiness: PayoutReleaseReadiness;
   adminGetPayoutSettlement: PayoutSettlement;
   /** Admin-set actual unit costs (email/WhatsApp/SMS/push). */
@@ -4832,7 +4711,6 @@ export type Query = {
   adminListEndedUnpaidEvents: Array<EndedUnpaidEvent>;
   adminListFeedback: HostFeedbackAdminListResponse;
   adminListHostCampaigns: HostEmailCampaignsPaginatedResponse;
-  adminListOfferGenerations: EventOfferGenerationPaginatedResponse;
   adminListOrders: AdminOrdersResponse;
   adminListPayoutReleaseReadiness: Array<PayoutReleaseReadiness>;
   adminListPayoutSettlements: PayoutSettlementPaginatedResponse;
@@ -4847,7 +4725,6 @@ export type Query = {
   adminPendingWhatsAppTemplateReviews: WhatsAppTemplatesPaginatedResponse;
   adminTicketsReport: AdminTicketsReport;
   adminWhatsAppTemplateById: WhatsAppMessageTemplate;
-  aiBoostPaymentInfo: AiBoostPaymentInfo;
   allAdmins: AdminPaginatedResponse;
   allHostPayoutAccounts: HostPayoutAccountPaginatedResponse;
   allUsers: UserPaginatedResponse;
@@ -4876,8 +4753,8 @@ export type Query = {
   eventGuestlists: Array<Guestlist>;
   eventOnboardingChecklist: EventOnboardingChecklist;
   eventOrders: EventOrdersResponse;
-  eventPricingOptions: Array<EventPricingOptionResponse>;
   eventTicketOrders: HostCustomerOrdersResponse;
+  eventWaitlist: Array<WaitlistEntry>;
   eventsForOfflineIssuing: Array<Event>;
   fetchAdminCampaignById: AdminEmailCampaignsObject;
   fetchHostCampaignById: HostEmailCampaignsObject;
@@ -4919,7 +4796,6 @@ export type Query = {
   getHostReport: HostReportData;
   getHostWhatsAppAttendeesTargetCount: Scalars['Int']['output'];
   getHostsByBusiness: Array<Host>;
-  getLatestAiBoostGeneration?: Maybe<EventOfferGeneration>;
   getMarketingPricing: MarketingPricing;
   getMyCollaboratedEvents: Array<Event>;
   getMyEvents: Array<Event>;
@@ -4934,17 +4810,20 @@ export type Query = {
   getWaitListUsers: Array<WaitListUser>;
   guestlistEntries: Array<GuestlistEntry>;
   guestlistEntriesCsv: Scalars['String']['output'];
+  hostApiKeys: Array<HostApiKeyView>;
   hostCustomerOrders: HostCustomerOrdersResponse;
   hostCustomers: HostCustomersResponse;
   hostEmailCampaignCsvExport: Scalars['String']['output'];
   hostEventFeedback: HostEventFeedbackResponse;
   hostGetPayoutSettlement: PayoutSettlement;
-  hostGetPayoutStatementUrl: SignedPdfUrl;
   hostListEventScans: HostEventScansPaginatedResponse;
   hostListPayoutSettlements: PayoutSettlementPaginatedResponse;
+  hostLoyaltyLeaderboard: LoyaltyLeaderboardResponse;
   hostOrderDetail: HostOrderDetail;
   hostOrders: HostOrdersResponse;
   hostPayoutAccounts: Array<HostPayoutAccount>;
+  hostWebhookDeliveries: Array<WebhookDeliveryView>;
+  hostWebhooks: Array<HostWebhookView>;
   isMultiAccountUser: Scalars['Boolean']['output'];
   listScannersForEvent: Array<ScannerUser>;
   markWalkthroughDone: Scalars['Boolean']['output'];
@@ -4954,6 +4833,7 @@ export type Query = {
   meUserJourney: UserJourney;
   myAutomations: AutomationsResponse;
   myCoupons: CouponsPaginatedResponse;
+  myLoyaltyRewards: LoyaltyRewardsPaginatedResponse;
   myMarketingCreditLedger: MarketingCreditLedgerResponse;
   myMarketingReputation: HostMarketingLimitObject;
   myOfflineOrders: OfflineOrdersPaginatedResponse;
@@ -4985,7 +4865,9 @@ export type Query = {
   userSignup: Scalars['String']['output'];
   userSignupVerification: Scalars['Boolean']['output'];
   verify2FASetup: Scalars['Boolean']['output'];
+  waitlistSummary: WaitlistSummary;
   whatsAppTemplateById: WhatsAppMessageTemplate;
+  whitelabelRequests: Array<WhitelabelRequestView>;
 };
 
 
@@ -5028,11 +4910,6 @@ export type QueryAdminEventsArgs = {
 
 export type QueryAdminEventsReportArgs = {
   input: AdminReportFilterInput;
-};
-
-
-export type QueryAdminGetOfferGenerationArgs = {
-  id: Scalars['String']['input'];
 };
 
 
@@ -5095,11 +4972,6 @@ export type QueryAdminListHostCampaignsArgs = {
 };
 
 
-export type QueryAdminListOfferGenerationsArgs = {
-  input?: InputMaybe<ListOfferGenerationsInput>;
-};
-
-
 export type QueryAdminListOrdersArgs = {
   pagination?: InputMaybe<PaginationInput>;
   search?: InputMaybe<Scalars['String']['input']>;
@@ -5149,11 +5021,6 @@ export type QueryAdminTicketsReportArgs = {
 
 export type QueryAdminWhatsAppTemplateByIdArgs = {
   templateId: Scalars['String']['input'];
-};
-
-
-export type QueryAiBoostPaymentInfoArgs = {
-  token: Scalars['String']['input'];
 };
 
 
@@ -5259,16 +5126,16 @@ export type QueryEventOrdersArgs = {
 };
 
 
-export type QueryEventPricingOptionsArgs = {
-  input: EventPricingCalculatorInput;
-};
-
-
 export type QueryEventTicketOrdersArgs = {
   eventId: Scalars['String']['input'];
   page?: InputMaybe<Scalars['Int']['input']>;
   pageSize?: InputMaybe<Scalars['Int']['input']>;
   ticketId: Scalars['String']['input'];
+};
+
+
+export type QueryEventWaitlistArgs = {
+  filter: EventWaitlistFilterInput;
 };
 
 
@@ -5411,11 +5278,6 @@ export type QueryGetHostWhatsAppAttendeesTargetCountArgs = {
 };
 
 
-export type QueryGetLatestAiBoostGenerationArgs = {
-  eventId: Scalars['String']['input'];
-};
-
-
 export type QueryGetPayoutsByBusinessArgs = {
   targetHostId: Scalars['String']['input'];
 };
@@ -5478,11 +5340,6 @@ export type QueryHostGetPayoutSettlementArgs = {
 };
 
 
-export type QueryHostGetPayoutStatementUrlArgs = {
-  settlementId: Scalars['String']['input'];
-};
-
-
 export type QueryHostListEventScansArgs = {
   eventId: Scalars['String']['input'];
   page?: InputMaybe<Scalars['Int']['input']>;
@@ -5492,6 +5349,12 @@ export type QueryHostListEventScansArgs = {
 
 export type QueryHostListPayoutSettlementsArgs = {
   input?: InputMaybe<ListHostPayoutSettlementsInput>;
+};
+
+
+export type QueryHostLoyaltyLeaderboardArgs = {
+  page?: InputMaybe<Scalars['Int']['input']>;
+  pageSize?: InputMaybe<Scalars['Int']['input']>;
 };
 
 
@@ -5507,6 +5370,11 @@ export type QueryHostOrdersArgs = {
 };
 
 
+export type QueryHostWebhookDeliveriesArgs = {
+  webhookId: Scalars['String']['input'];
+};
+
+
 export type QueryListScannersForEventArgs = {
   eventId: Scalars['String']['input'];
 };
@@ -5518,6 +5386,11 @@ export type QueryMarkWalkthroughDoneArgs = {
 
 
 export type QueryMyCouponsArgs = {
+  pagination?: InputMaybe<PaginationInput>;
+};
+
+
+export type QueryMyLoyaltyRewardsArgs = {
   pagination?: InputMaybe<PaginationInput>;
 };
 
@@ -5659,8 +5532,18 @@ export type QueryVerify2FaSetupArgs = {
 };
 
 
+export type QueryWaitlistSummaryArgs = {
+  eventId: Scalars['String']['input'];
+};
+
+
 export type QueryWhatsAppTemplateByIdArgs = {
   templateId: Scalars['String']['input'];
+};
+
+
+export type QueryWhitelabelRequestsArgs = {
+  status?: InputMaybe<WhitelabelRequestStatus>;
 };
 
 export type RazorpayReconcileSummary = {
@@ -5829,16 +5712,10 @@ export enum SeatingArrangement {
   Standing = 'STANDING'
 }
 
-export type SelectAiBoostInput = {
-  feeSettlementMode?: InputMaybe<EventFeeSettlementMode>;
-  generationId: Scalars['String']['input'];
-  offerCode: Scalars['String']['input'];
-};
-
-export type SelectEventPricingInput = {
-  eventId: Scalars['String']['input'];
-  feeSettlementMode: EventFeeSettlementMode;
-  optionId: Scalars['String']['input'];
+export type SendWaitlistPaymentLinkInput = {
+  entryId: Scalars['String']['input'];
+  lines: Array<OfflineTicketLineInput>;
+  notes?: InputMaybe<Scalars['String']['input']>;
 };
 
 export type SetPlatformCostsInput = {
@@ -5847,12 +5724,6 @@ export type SetPlatformCostsInput = {
   actualSmsCost?: InputMaybe<Scalars['Float']['input']>;
   actualWhatsappMarketingCost?: InputMaybe<Scalars['Float']['input']>;
   notes?: InputMaybe<Scalars['String']['input']>;
-};
-
-export type SignedPdfUrl = {
-  __typename?: 'SignedPdfUrl';
-  expiresAt: Scalars['DateTimeISO']['output'];
-  signedUrl: Scalars['String']['output'];
 };
 
 /** Types of SoftWare Enum */
@@ -6091,6 +5962,14 @@ export type UpdateHostPushCampaignInput = {
   target?: InputMaybe<HostEmailTargetType>;
 };
 
+export type UpdateHostWebhookInput = {
+  active?: InputMaybe<Scalars['Boolean']['input']>;
+  enabledEvents?: InputMaybe<Array<HostWebhookEventType>>;
+  id: Scalars['String']['input'];
+  label?: InputMaybe<Scalars['String']['input']>;
+  url?: InputMaybe<Scalars['String']['input']>;
+};
+
 export type UpdateHostWhatsAppCampaignInput = {
   campaignId: Scalars['ID']['input'];
   campaignName?: InputMaybe<Scalars['String']['input']>;
@@ -6107,6 +5986,17 @@ export type UpdateHostWhatsAppCampaignInput = {
   targetCount?: InputMaybe<Scalars['Int']['input']>;
   templateId?: InputMaybe<Scalars['String']['input']>;
   templateVariables?: InputMaybe<Array<HostWhatsAppCampaignVariableInput>>;
+};
+
+export type UpdateLoyaltyRewardInput = {
+  active?: InputMaybe<Scalars['Boolean']['input']>;
+  couponTemplate?: InputMaybe<LoyaltyCouponTemplateInput>;
+  description?: InputMaybe<Scalars['String']['input']>;
+  perCustomerLimit?: InputMaybe<Scalars['Int']['input']>;
+  pointsCost?: InputMaybe<Scalars['Int']['input']>;
+  rewardId: Scalars['String']['input'];
+  title?: InputMaybe<Scalars['String']['input']>;
+  totalStock?: InputMaybe<Scalars['Int']['input']>;
 };
 
 export type UpdateMyWhatsAppTemplateInput = {
@@ -6165,6 +6055,12 @@ export type UpdateWhatsAppTemplateInput = {
   name?: InputMaybe<Scalars['String']['input']>;
   templateId: Scalars['ID']['input'];
   variables?: InputMaybe<Array<WhatsAppTemplateVariableInput>>;
+};
+
+export type UpdateWhitelabelRequestInput = {
+  id: Scalars['String']['input'];
+  internalNotes?: InputMaybe<Scalars['String']['input']>;
+  status?: InputMaybe<WhitelabelRequestStatus>;
 };
 
 export type UpsertGuestlistInput = {
@@ -6309,12 +6205,75 @@ export type WaitListUser = {
   website: Scalars['String']['output'];
 };
 
+export type WaitlistCityCount = {
+  __typename?: 'WaitlistCityCount';
+  city: Scalars['String']['output'];
+  count: Scalars['Int']['output'];
+};
+
+export type WaitlistEntry = {
+  __typename?: 'WaitlistEntry';
+  _id: Scalars['ID']['output'];
+  city?: Maybe<Scalars['String']['output']>;
+  createdAt?: Maybe<Scalars['DateTimeISO']['output']>;
+  customerId: Scalars['String']['output'];
+  email?: Maybe<Scalars['String']['output']>;
+  eventId: Scalars['String']['output'];
+  facebookHandle?: Maybe<Scalars['String']['output']>;
+  instagramHandle?: Maybe<Scalars['String']['output']>;
+  invitedAt?: Maybe<Scalars['DateTimeISO']['output']>;
+  invitedOfflineOrderId?: Maybe<Scalars['String']['output']>;
+  name?: Maybe<Scalars['String']['output']>;
+  note?: Maybe<Scalars['String']['output']>;
+  partySize?: Maybe<Scalars['Int']['output']>;
+  phone?: Maybe<Scalars['String']['output']>;
+  status: WaitlistStatus;
+  updatedAt?: Maybe<Scalars['DateTimeISO']['output']>;
+  xHandle?: Maybe<Scalars['String']['output']>;
+};
+
+export enum WaitlistStatus {
+  Converted = 'CONVERTED',
+  Declined = 'DECLINED',
+  Invited = 'INVITED',
+  Waiting = 'WAITING'
+}
+
+export type WaitlistSummary = {
+  __typename?: 'WaitlistSummary';
+  byCity: Array<WaitlistCityCount>;
+  converted: Scalars['Int']['output'];
+  declined: Scalars['Int']['output'];
+  invited: Scalars['Int']['output'];
+  total: Scalars['Int']['output'];
+  waiting: Scalars['Int']['output'];
+  waitingHeads: Scalars['Int']['output'];
+};
+
 export enum WalkthroughKey {
   Campaign = 'CAMPAIGN',
   Main = 'MAIN',
   Payments = 'PAYMENTS',
   Teams = 'TEAMS'
 }
+
+export enum WebhookDeliveryStatus {
+  Failed = 'FAILED',
+  Pending = 'PENDING',
+  Succeeded = 'SUCCEEDED'
+}
+
+export type WebhookDeliveryView = {
+  __typename?: 'WebhookDeliveryView';
+  _id: Scalars['ID']['output'];
+  attempts: Scalars['Int']['output'];
+  createdAt?: Maybe<Scalars['DateTimeISO']['output']>;
+  deliveredAt?: Maybe<Scalars['DateTimeISO']['output']>;
+  eventType: HostWebhookEventType;
+  lastError?: Maybe<Scalars['String']['output']>;
+  lastResponseCode?: Maybe<Scalars['Int']['output']>;
+  status: WebhookDeliveryStatus;
+};
 
 export type WhatsAppMessageTemplate = {
   __typename?: 'WhatsAppMessageTemplate';
@@ -6422,6 +6381,42 @@ export type WhatsAppTemplatesPaginatedResponse = {
   __typename?: 'WhatsAppTemplatesPaginatedResponse';
   items: Array<WhatsAppMessageTemplate>;
   total: Scalars['Int']['output'];
+};
+
+export type WhitelabelRequestInput = {
+  contactName: Scalars['String']['input'];
+  email: Scalars['String']['input'];
+  message?: InputMaybe<Scalars['String']['input']>;
+  orgName: Scalars['String']['input'];
+  phone?: InputMaybe<Scalars['String']['input']>;
+};
+
+export enum WhitelabelRequestSource {
+  Dashboard = 'DASHBOARD',
+  Landing = 'LANDING'
+}
+
+export enum WhitelabelRequestStatus {
+  Closed = 'CLOSED',
+  Contacted = 'CONTACTED',
+  InProgress = 'IN_PROGRESS',
+  New = 'NEW',
+  Won = 'WON'
+}
+
+export type WhitelabelRequestView = {
+  __typename?: 'WhitelabelRequestView';
+  _id: Scalars['ID']['output'];
+  contactName: Scalars['String']['output'];
+  createdAt?: Maybe<Scalars['DateTimeISO']['output']>;
+  email: Scalars['String']['output'];
+  hostId?: Maybe<Scalars['String']['output']>;
+  internalNotes?: Maybe<Scalars['String']['output']>;
+  message?: Maybe<Scalars['String']['output']>;
+  orgName: Scalars['String']['output'];
+  phone?: Maybe<Scalars['String']['output']>;
+  source: WhitelabelRequestSource;
+  status: WhitelabelRequestStatus;
 };
 
 export type UserLogoutQueryVariables = Exact<{ [key: string]: never; }>;
@@ -6585,45 +6580,6 @@ export type MyMarketingCreditLedgerQueryVariables = Exact<{
 
 export type MyMarketingCreditLedgerQuery = { __typename?: 'Query', myMarketingCreditLedger: { __typename?: 'MarketingCreditLedgerResponse', balance: number, total: number, items: Array<{ __typename?: 'MarketingCreditLedgerEntry', _id: string, businessId: string, hostId?: string | null, type: string, amount: number, balance: number, activity: string, recipients?: number | null, channel?: string | null, campaignId?: string | null, paymentReference?: string | null, createdAt?: any | null, updatedAt?: any | null }> } };
 
-export type AiBoostFieldsFragment = { __typename?: 'AiBoost', offerCode: string, label: string, description?: string | null, shortReason?: string | null, confidenceScore: number, commissionPct: number, extraAmount: number, customerViewingMessage?: string | null, hoizrAdminSummary?: string | null, totalSavingsForHosts?: { __typename?: 'AiBoostSavings', value: number } | null, howMuchDifferentFromBasicOffer?: { __typename?: 'AiBoostDelta', deltaPct: number } | null, howMuchDifferentFromCompetitors?: { __typename?: 'AiBoostDelta', deltaPct: number } | null, computed?: { __typename?: 'AiBoostComputed', expectedGrossSales: number, hoizrCommission: number, hostPayout: number, hoizrNetContribution: number, hoizrEstimatedLoss: number } | null };
-
-export type EventOfferGenerationFieldsFragment = { __typename?: 'EventOfferGeneration', _id: string, eventId: string, hostId: string, modelName?: string | null, recommendedOfferCode?: string | null, selectedOfferCode?: string | null, selectedAt?: any | null, offers: Array<{ __typename?: 'AiBoost', offerCode: string, label: string, description?: string | null, shortReason?: string | null, confidenceScore: number, commissionPct: number, extraAmount: number, customerViewingMessage?: string | null, hoizrAdminSummary?: string | null, totalSavingsForHosts?: { __typename?: 'AiBoostSavings', value: number } | null, howMuchDifferentFromBasicOffer?: { __typename?: 'AiBoostDelta', deltaPct: number } | null, howMuchDifferentFromCompetitors?: { __typename?: 'AiBoostDelta', deltaPct: number } | null, computed?: { __typename?: 'AiBoostComputed', expectedGrossSales: number, hoizrCommission: number, hostPayout: number, hoizrNetContribution: number, hoizrEstimatedLoss: number } | null }> };
-
-export type GenerateAiBoostsForEventMutationVariables = Exact<{
-  input: GenerateAiBoostsInput;
-}>;
-
-
-export type GenerateAiBoostsForEventMutation = { __typename?: 'Mutation', generateAiBoostsForEvent: { __typename?: 'EventOfferGeneration', _id: string, eventId: string, hostId: string, modelName?: string | null, recommendedOfferCode?: string | null, selectedOfferCode?: string | null, selectedAt?: any | null, offers: Array<{ __typename?: 'AiBoost', offerCode: string, label: string, description?: string | null, shortReason?: string | null, confidenceScore: number, commissionPct: number, extraAmount: number, customerViewingMessage?: string | null, hoizrAdminSummary?: string | null, totalSavingsForHosts?: { __typename?: 'AiBoostSavings', value: number } | null, howMuchDifferentFromBasicOffer?: { __typename?: 'AiBoostDelta', deltaPct: number } | null, howMuchDifferentFromCompetitors?: { __typename?: 'AiBoostDelta', deltaPct: number } | null, computed?: { __typename?: 'AiBoostComputed', expectedGrossSales: number, hoizrCommission: number, hostPayout: number, hoizrNetContribution: number, hoizrEstimatedLoss: number } | null }> } };
-
-export type SelectAiBoostMutationVariables = Exact<{
-  input: SelectAiBoostInput;
-}>;
-
-
-export type SelectAiBoostMutation = { __typename?: 'Mutation', selectAiBoost: { __typename?: 'EventOfferGeneration', _id: string, eventId: string, hostId: string, modelName?: string | null, recommendedOfferCode?: string | null, selectedOfferCode?: string | null, selectedAt?: any | null, offers: Array<{ __typename?: 'AiBoost', offerCode: string, label: string, description?: string | null, shortReason?: string | null, confidenceScore: number, commissionPct: number, extraAmount: number, customerViewingMessage?: string | null, hoizrAdminSummary?: string | null, totalSavingsForHosts?: { __typename?: 'AiBoostSavings', value: number } | null, howMuchDifferentFromBasicOffer?: { __typename?: 'AiBoostDelta', deltaPct: number } | null, howMuchDifferentFromCompetitors?: { __typename?: 'AiBoostDelta', deltaPct: number } | null, computed?: { __typename?: 'AiBoostComputed', expectedGrossSales: number, hoizrCommission: number, hostPayout: number, hoizrNetContribution: number, hoizrEstimatedLoss: number } | null }> } };
-
-export type GetLatestAiBoostGenerationQueryVariables = Exact<{
-  eventId: Scalars['String']['input'];
-}>;
-
-
-export type GetLatestAiBoostGenerationQuery = { __typename?: 'Query', getLatestAiBoostGeneration?: { __typename?: 'EventOfferGeneration', _id: string, eventId: string, hostId: string, modelName?: string | null, recommendedOfferCode?: string | null, selectedOfferCode?: string | null, selectedAt?: any | null, offers: Array<{ __typename?: 'AiBoost', offerCode: string, label: string, description?: string | null, shortReason?: string | null, confidenceScore: number, commissionPct: number, extraAmount: number, customerViewingMessage?: string | null, hoizrAdminSummary?: string | null, totalSavingsForHosts?: { __typename?: 'AiBoostSavings', value: number } | null, howMuchDifferentFromBasicOffer?: { __typename?: 'AiBoostDelta', deltaPct: number } | null, howMuchDifferentFromCompetitors?: { __typename?: 'AiBoostDelta', deltaPct: number } | null, computed?: { __typename?: 'AiBoostComputed', expectedGrossSales: number, hoizrCommission: number, hostPayout: number, hoizrNetContribution: number, hoizrEstimatedLoss: number } | null }> } | null };
-
-export type RunEventEvalMutationVariables = Exact<{
-  eventId: Scalars['String']['input'];
-}>;
-
-
-export type RunEventEvalMutation = { __typename?: 'Mutation', runEventEval: { __typename?: 'EventEvalResultView', ranThroughAi: boolean, eventScore: number, aiShortSummary: string, expectedAudience?: number | null, assignedTagIds: Array<string>, aiEvalAdminSummary: string, spellingMistakes: Array<{ __typename?: 'EventSpellingMistake', field: string, word: string, suggestion?: string | null, context?: string | null }>, seoSuggestions: Array<{ __typename?: 'EventSeoSuggestion', field: string, suggestion: string, severity: EventSeoSuggestionSeverity }> } };
-
-export type AutoGenerateEventDescriptionMutationVariables = Exact<{
-  eventId: Scalars['String']['input'];
-}>;
-
-
-export type AutoGenerateEventDescriptionMutation = { __typename?: 'Mutation', autoGenerateEventDescription: { __typename?: 'EventEvalResultView', suggestedDescription?: string | null, aiShortSummary: string } };
-
 export type EventOnboardingChecklistQueryVariables = Exact<{ [key: string]: never; }>;
 
 
@@ -6651,20 +6607,6 @@ export type UpdateEventStepMutationVariables = Exact<{
 
 
 export type UpdateEventStepMutation = { __typename?: 'Mutation', updateEventStep: { __typename?: 'Event', _id: string, title?: string | null, status: EventStatus, eventType?: Array<EventType> | null, city?: string | null, isVisible?: boolean | null } };
-
-export type EventPricingOptionsQueryVariables = Exact<{
-  input: EventPricingCalculatorInput;
-}>;
-
-
-export type EventPricingOptionsQuery = { __typename?: 'Query', eventPricingOptions: Array<{ __typename?: 'EventPricingOptionResponse', optionId: string, plan: EventPricingPlan, label: string, commissionRate: number, customerPlatformFeeRate: number, upfrontFee: number, expectedPaidTickets: number, expectedGrossSales: number, hostPayout: number, hoizrNetContribution: number, payoutCycleDaysMin: number, payoutCycleDaysMax: number, badge: string }> };
-
-export type SelectEventPricingOptionMutationVariables = Exact<{
-  input: SelectEventPricingInput;
-}>;
-
-
-export type SelectEventPricingOptionMutation = { __typename?: 'Mutation', selectEventPricingOption: { __typename?: 'Event', _id: string, selectedPricingPlan?: EventPricingPlan | null, feeSettlementMode?: EventFeeSettlementMode | null } };
 
 export type GetMyEventsForSelectorQueryVariables = Exact<{ [key: string]: never; }>;
 
@@ -6794,6 +6736,75 @@ export type UploadHostLogoMutationVariables = Exact<{
 
 export type UploadHostLogoMutation = { __typename?: 'Mutation', uploadHostLogo: boolean };
 
+export type HostApiKeysQueryVariables = Exact<{ [key: string]: never; }>;
+
+
+export type HostApiKeysQuery = { __typename?: 'Query', hostApiKeys: Array<{ __typename?: 'HostApiKeyView', _id: string, keyType: HostApiKeyType, prefix: string, last4: string, allowedDomains: Array<string>, label?: string | null, lastUsedAt?: any | null, revoked: boolean, createdAt?: any | null }> };
+
+export type CreateHostApiKeyMutationVariables = Exact<{
+  keyType: HostApiKeyType;
+  label?: InputMaybe<Scalars['String']['input']>;
+  allowedDomains?: InputMaybe<Array<Scalars['String']['input']> | Scalars['String']['input']>;
+}>;
+
+
+export type CreateHostApiKeyMutation = { __typename?: 'Mutation', createHostApiKey: { __typename?: 'CreatedHostApiKey', raw: string, key: { __typename?: 'HostApiKeyView', _id: string, keyType: HostApiKeyType, prefix: string, last4: string, allowedDomains: Array<string>, label?: string | null, revoked: boolean, createdAt?: any | null } } };
+
+export type RevokeHostApiKeyMutationVariables = Exact<{
+  id: Scalars['String']['input'];
+}>;
+
+
+export type RevokeHostApiKeyMutation = { __typename?: 'Mutation', revokeHostApiKey: boolean };
+
+export type UpdateHostApiKeyDomainsMutationVariables = Exact<{
+  id: Scalars['String']['input'];
+  allowedDomains: Array<Scalars['String']['input']> | Scalars['String']['input'];
+}>;
+
+
+export type UpdateHostApiKeyDomainsMutation = { __typename?: 'Mutation', updateHostApiKeyDomains: { __typename?: 'HostApiKeyView', _id: string, allowedDomains: Array<string> } };
+
+export type HostWebhooksQueryVariables = Exact<{ [key: string]: never; }>;
+
+
+export type HostWebhooksQuery = { __typename?: 'Query', hostWebhooks: Array<{ __typename?: 'HostWebhookView', _id: string, url: string, secretLast6: string, enabledEvents: Array<HostWebhookEventType>, active: boolean, label?: string | null, lastDeliveryAt?: any | null, createdAt?: any | null }> };
+
+export type HostWebhookDeliveriesQueryVariables = Exact<{
+  webhookId: Scalars['String']['input'];
+}>;
+
+
+export type HostWebhookDeliveriesQuery = { __typename?: 'Query', hostWebhookDeliveries: Array<{ __typename?: 'WebhookDeliveryView', _id: string, eventType: HostWebhookEventType, status: WebhookDeliveryStatus, attempts: number, lastResponseCode?: number | null, lastError?: string | null, deliveredAt?: any | null, createdAt?: any | null }> };
+
+export type CreateHostWebhookMutationVariables = Exact<{
+  input: CreateHostWebhookInput;
+}>;
+
+
+export type CreateHostWebhookMutation = { __typename?: 'Mutation', createHostWebhook: { __typename?: 'CreatedHostWebhook', secret: string, webhook: { __typename?: 'HostWebhookView', _id: string, url: string, secretLast6: string, enabledEvents: Array<HostWebhookEventType>, active: boolean, label?: string | null, createdAt?: any | null } } };
+
+export type UpdateHostWebhookMutationVariables = Exact<{
+  input: UpdateHostWebhookInput;
+}>;
+
+
+export type UpdateHostWebhookMutation = { __typename?: 'Mutation', updateHostWebhook: { __typename?: 'HostWebhookView', _id: string, url: string, enabledEvents: Array<HostWebhookEventType>, active: boolean, label?: string | null } };
+
+export type RotateHostWebhookSecretMutationVariables = Exact<{
+  id: Scalars['String']['input'];
+}>;
+
+
+export type RotateHostWebhookSecretMutation = { __typename?: 'Mutation', rotateHostWebhookSecret: { __typename?: 'CreatedHostWebhook', secret: string, webhook: { __typename?: 'HostWebhookView', _id: string, secretLast6: string } } };
+
+export type DeleteHostWebhookMutationVariables = Exact<{
+  id: Scalars['String']['input'];
+}>;
+
+
+export type DeleteHostWebhookMutation = { __typename?: 'Mutation', deleteHostWebhook: boolean };
+
 export type GetActiveIndianCitiesQueryVariables = Exact<{ [key: string]: never; }>;
 
 
@@ -6901,14 +6912,7 @@ export type HostListPayoutSettlementsQueryVariables = Exact<{
 }>;
 
 
-export type HostListPayoutSettlementsQuery = { __typename?: 'Query', hostListPayoutSettlements: { __typename?: 'PayoutSettlementPaginatedResponse', total: number, items: Array<{ __typename?: 'PayoutSettlement', _id: string, eventId: string, grossAmount: number, hoizrCommissionTotal: number, hoizrCommissionGstTotal: number, ticketGstFlowThroughTotal: number, finalDeclaredOfferAmount: number, razorpayFeeTotal: number, netPayoutAmount: number, refundsTotal?: number | null, chargebacksTotal?: number | null, orderCount: number, status: PayoutSettlementStatus, scheduledFor: any, paidAt?: any | null, paidMethod?: PayoutSettlementMethod | null, razorpayPayoutId?: string | null, invoiceId?: string | null, invoiceUrl?: string | null, errorMessage?: string | null, createdAt?: any | null, updatedAt?: any | null }> } };
-
-export type HostGetPayoutStatementUrlQueryVariables = Exact<{
-  settlementId: Scalars['String']['input'];
-}>;
-
-
-export type HostGetPayoutStatementUrlQuery = { __typename?: 'Query', hostGetPayoutStatementUrl: { __typename?: 'SignedPdfUrl', signedUrl: string, expiresAt: any } };
+export type HostListPayoutSettlementsQuery = { __typename?: 'Query', hostListPayoutSettlements: { __typename?: 'PayoutSettlementPaginatedResponse', total: number, items: Array<{ __typename?: 'PayoutSettlement', _id: string, eventId: string, grossAmount: number, hoizrCommissionTotal: number, hoizrCommissionGstTotal: number, ticketGstFlowThroughTotal: number, razorpayFeeTotal: number, netPayoutAmount: number, refundsTotal?: number | null, chargebacksTotal?: number | null, orderCount: number, status: PayoutSettlementStatus, scheduledFor: any, paidAt?: any | null, settlementNote?: string | null, createdAt?: any | null, updatedAt?: any | null }> } };
 
 export type AddPayoutMutationVariables = Exact<{
   input: AddPayoutInput;
@@ -7099,49 +7103,20 @@ export type ApprovedWhatsAppTemplatesQueryVariables = Exact<{ [key: string]: nev
 
 export type ApprovedWhatsAppTemplatesQuery = { __typename?: 'Query', approvedWhatsAppTemplates: { __typename?: 'WhatsAppTemplatesPaginatedResponse', total: number, items: Array<{ __typename?: 'WhatsAppMessageTemplate', _id: string, slug: string, name: string, category: WhatsAppTemplateCategory, language: string, headerType: WhatsAppTemplateHeaderType, bodyText: string, buttonType: WhatsAppTemplateButtonType, metaStatus: WhatsAppTemplateStatus, isActive: boolean, variables: Array<{ __typename?: 'WhatsAppTemplateVariable', position: number, example?: string | null }> }> } };
 
-export const AiBoostFieldsFragmentDoc = gql`
-    fragment AiBoostFields on AiBoost {
-  offerCode
-  label
-  description
-  shortReason
-  confidenceScore
-  commissionPct
-  extraAmount
-  customerViewingMessage
-  hoizrAdminSummary
-  totalSavingsForHosts {
-    value
-  }
-  howMuchDifferentFromBasicOffer {
-    deltaPct
-  }
-  howMuchDifferentFromCompetitors {
-    deltaPct
-  }
-  computed {
-    expectedGrossSales
-    hoizrCommission
-    hostPayout
-    hoizrNetContribution
-    hoizrEstimatedLoss
-  }
-}
-    `;
-export const EventOfferGenerationFieldsFragmentDoc = gql`
-    fragment EventOfferGenerationFields on EventOfferGeneration {
-  _id
-  eventId
-  hostId
-  modelName
-  recommendedOfferCode
-  selectedOfferCode
-  selectedAt
-  offers {
-    ...AiBoostFields
-  }
-}
-    ${AiBoostFieldsFragmentDoc}`;
+export type CreateWhitelabelRequestMutationVariables = Exact<{
+  input: WhitelabelRequestInput;
+}>;
+
+
+export type CreateWhitelabelRequestMutation = { __typename?: 'Mutation', createWhitelabelRequest: { __typename?: 'WhitelabelRequestView', _id: string, status: WhitelabelRequestStatus } };
+
+export type SubmitWhitelabelRequestMutationVariables = Exact<{
+  input: WhitelabelRequestInput;
+}>;
+
+
+export type SubmitWhitelabelRequestMutation = { __typename?: 'Mutation', submitWhitelabelRequest: boolean };
+
 export const AddressInfoFragmentDoc = gql`
     fragment addressInfo on AddressInfo {
   addressLine1
@@ -7442,58 +7417,6 @@ export const MyMarketingCreditLedgerDocument = gql`
   }
 }
     `;
-export const GenerateAiBoostsForEventDocument = gql`
-    mutation GenerateAiBoostsForEvent($input: GenerateAiBoostsInput!) {
-  generateAiBoostsForEvent(input: $input) {
-    ...EventOfferGenerationFields
-  }
-}
-    ${EventOfferGenerationFieldsFragmentDoc}`;
-export const SelectAiBoostDocument = gql`
-    mutation SelectAiBoost($input: SelectAiBoostInput!) {
-  selectAiBoost(input: $input) {
-    ...EventOfferGenerationFields
-  }
-}
-    ${EventOfferGenerationFieldsFragmentDoc}`;
-export const GetLatestAiBoostGenerationDocument = gql`
-    query GetLatestAiBoostGeneration($eventId: String!) {
-  getLatestAiBoostGeneration(eventId: $eventId) {
-    ...EventOfferGenerationFields
-  }
-}
-    ${EventOfferGenerationFieldsFragmentDoc}`;
-export const RunEventEvalDocument = gql`
-    mutation RunEventEval($eventId: String!) {
-  runEventEval(eventId: $eventId) {
-    ranThroughAi
-    eventScore
-    aiShortSummary
-    expectedAudience
-    assignedTagIds
-    spellingMistakes {
-      field
-      word
-      suggestion
-      context
-    }
-    seoSuggestions {
-      field
-      suggestion
-      severity
-    }
-    aiEvalAdminSummary
-  }
-}
-    `;
-export const AutoGenerateEventDescriptionDocument = gql`
-    mutation AutoGenerateEventDescription($eventId: String!) {
-  autoGenerateEventDescription(eventId: $eventId) {
-    suggestedDescription
-    aiShortSummary
-  }
-}
-    `;
 export const EventOnboardingChecklistDocument = gql`
     query eventOnboardingChecklist {
   eventOnboardingChecklist {
@@ -7543,34 +7466,6 @@ export const UpdateEventStepDocument = gql`
     eventType
     city
     isVisible
-  }
-}
-    `;
-export const EventPricingOptionsDocument = gql`
-    query eventPricingOptions($input: EventPricingCalculatorInput!) {
-  eventPricingOptions(input: $input) {
-    optionId
-    plan
-    label
-    commissionRate
-    customerPlatformFeeRate
-    upfrontFee
-    expectedPaidTickets
-    expectedGrossSales
-    hostPayout
-    hoizrNetContribution
-    payoutCycleDaysMin
-    payoutCycleDaysMax
-    badge
-  }
-}
-    `;
-export const SelectEventPricingOptionDocument = gql`
-    mutation selectEventPricingOption($input: SelectEventPricingInput!) {
-  selectEventPricingOption(input: $input) {
-    _id
-    selectedPricingPlan
-    feeSettlementMode
   }
 }
     `;
@@ -7909,6 +7804,126 @@ export const UploadHostLogoDocument = gql`
   uploadHostLogo(logo: $logo)
 }
     `;
+export const HostApiKeysDocument = gql`
+    query HostApiKeys {
+  hostApiKeys {
+    _id
+    keyType
+    prefix
+    last4
+    allowedDomains
+    label
+    lastUsedAt
+    revoked
+    createdAt
+  }
+}
+    `;
+export const CreateHostApiKeyDocument = gql`
+    mutation CreateHostApiKey($keyType: HostApiKeyType!, $label: String, $allowedDomains: [String!]) {
+  createHostApiKey(
+    keyType: $keyType
+    label: $label
+    allowedDomains: $allowedDomains
+  ) {
+    raw
+    key {
+      _id
+      keyType
+      prefix
+      last4
+      allowedDomains
+      label
+      revoked
+      createdAt
+    }
+  }
+}
+    `;
+export const RevokeHostApiKeyDocument = gql`
+    mutation RevokeHostApiKey($id: String!) {
+  revokeHostApiKey(id: $id)
+}
+    `;
+export const UpdateHostApiKeyDomainsDocument = gql`
+    mutation UpdateHostApiKeyDomains($id: String!, $allowedDomains: [String!]!) {
+  updateHostApiKeyDomains(id: $id, allowedDomains: $allowedDomains) {
+    _id
+    allowedDomains
+  }
+}
+    `;
+export const HostWebhooksDocument = gql`
+    query HostWebhooks {
+  hostWebhooks {
+    _id
+    url
+    secretLast6
+    enabledEvents
+    active
+    label
+    lastDeliveryAt
+    createdAt
+  }
+}
+    `;
+export const HostWebhookDeliveriesDocument = gql`
+    query HostWebhookDeliveries($webhookId: String!) {
+  hostWebhookDeliveries(webhookId: $webhookId) {
+    _id
+    eventType
+    status
+    attempts
+    lastResponseCode
+    lastError
+    deliveredAt
+    createdAt
+  }
+}
+    `;
+export const CreateHostWebhookDocument = gql`
+    mutation CreateHostWebhook($input: CreateHostWebhookInput!) {
+  createHostWebhook(input: $input) {
+    secret
+    webhook {
+      _id
+      url
+      secretLast6
+      enabledEvents
+      active
+      label
+      createdAt
+    }
+  }
+}
+    `;
+export const UpdateHostWebhookDocument = gql`
+    mutation UpdateHostWebhook($input: UpdateHostWebhookInput!) {
+  updateHostWebhook(input: $input) {
+    _id
+    url
+    enabledEvents
+    active
+    label
+  }
+}
+    `;
+export const RotateHostWebhookSecretDocument = gql`
+    mutation RotateHostWebhookSecret($id: String!) {
+  rotateHostWebhookSecret(id: $id) {
+    secret
+    webhook {
+      _id
+      secretLast6
+    }
+  }
+}
+    `;
+export const DeleteHostWebhookDocument = gql`
+    mutation DeleteHostWebhook($id: String!) {
+  deleteHostWebhook(id: $id)
+}
+    `;
 export const GetActiveIndianCitiesDocument = gql`
     query getActiveIndianCities {
   getActiveIndianCities {
@@ -8119,7 +8134,6 @@ export const HostListPayoutSettlementsDocument = gql`
       hoizrCommissionTotal
       hoizrCommissionGstTotal
       ticketGstFlowThroughTotal
-      finalDeclaredOfferAmount
       razorpayFeeTotal
       netPayoutAmount
       refundsTotal
@@ -8128,23 +8142,11 @@ export const HostListPayoutSettlementsDocument = gql`
       status
       scheduledFor
       paidAt
-      paidMethod
-      razorpayPayoutId
-      invoiceId
-      invoiceUrl
-      errorMessage
+      settlementNote
       createdAt
       updatedAt
     }
     total
-  }
-}
-    `;
-export const HostGetPayoutStatementUrlDocument = gql`
-    query hostGetPayoutStatementUrl($settlementId: String!) {
-  hostGetPayoutStatementUrl(settlementId: $settlementId) {
-    signedUrl
-    expiresAt
   }
 }
     `;
@@ -8438,6 +8440,19 @@ export const ApprovedWhatsAppTemplatesDocument = gql`
   }
 }
     `;
+export const CreateWhitelabelRequestDocument = gql`
+    mutation CreateWhitelabelRequest($input: WhitelabelRequestInput!) {
+  createWhitelabelRequest(input: $input) {
+    _id
+    status
+  }
+}
+    `;
+export const SubmitWhitelabelRequestDocument = gql`
+    mutation SubmitWhitelabelRequest($input: WhitelabelRequestInput!) {
+  submitWhitelabelRequest(input: $input)
+}
+    `;
 
 export type SdkFunctionWrapper = <T>(action: (requestHeaders?:Record<string, string>) => Promise<T>, operationName: string, operationType?: string, variables?: any) => Promise<T>;
 
@@ -8518,21 +8533,6 @@ export function getSdk(client: GraphQLClient, withWrapper: SdkFunctionWrapper = 
     myMarketingCreditLedger(variables?: MyMarketingCreditLedgerQueryVariables, requestHeaders?: GraphQLClientRequestHeaders): Promise<MyMarketingCreditLedgerQuery> {
       return withWrapper((wrappedRequestHeaders) => client.request<MyMarketingCreditLedgerQuery>(MyMarketingCreditLedgerDocument, variables, {...requestHeaders, ...wrappedRequestHeaders}), 'myMarketingCreditLedger', 'query', variables);
     },
-    GenerateAiBoostsForEvent(variables: GenerateAiBoostsForEventMutationVariables, requestHeaders?: GraphQLClientRequestHeaders): Promise<GenerateAiBoostsForEventMutation> {
-      return withWrapper((wrappedRequestHeaders) => client.request<GenerateAiBoostsForEventMutation>(GenerateAiBoostsForEventDocument, variables, {...requestHeaders, ...wrappedRequestHeaders}), 'GenerateAiBoostsForEvent', 'mutation', variables);
-    },
-    SelectAiBoost(variables: SelectAiBoostMutationVariables, requestHeaders?: GraphQLClientRequestHeaders): Promise<SelectAiBoostMutation> {
-      return withWrapper((wrappedRequestHeaders) => client.request<SelectAiBoostMutation>(SelectAiBoostDocument, variables, {...requestHeaders, ...wrappedRequestHeaders}), 'SelectAiBoost', 'mutation', variables);
-    },
-    GetLatestAiBoostGeneration(variables: GetLatestAiBoostGenerationQueryVariables, requestHeaders?: GraphQLClientRequestHeaders): Promise<GetLatestAiBoostGenerationQuery> {
-      return withWrapper((wrappedRequestHeaders) => client.request<GetLatestAiBoostGenerationQuery>(GetLatestAiBoostGenerationDocument, variables, {...requestHeaders, ...wrappedRequestHeaders}), 'GetLatestAiBoostGeneration', 'query', variables);
-    },
-    RunEventEval(variables: RunEventEvalMutationVariables, requestHeaders?: GraphQLClientRequestHeaders): Promise<RunEventEvalMutation> {
-      return withWrapper((wrappedRequestHeaders) => client.request<RunEventEvalMutation>(RunEventEvalDocument, variables, {...requestHeaders, ...wrappedRequestHeaders}), 'RunEventEval', 'mutation', variables);
-    },
-    AutoGenerateEventDescription(variables: AutoGenerateEventDescriptionMutationVariables, requestHeaders?: GraphQLClientRequestHeaders): Promise<AutoGenerateEventDescriptionMutation> {
-      return withWrapper((wrappedRequestHeaders) => client.request<AutoGenerateEventDescriptionMutation>(AutoGenerateEventDescriptionDocument, variables, {...requestHeaders, ...wrappedRequestHeaders}), 'AutoGenerateEventDescription', 'mutation', variables);
-    },
     eventOnboardingChecklist(variables?: EventOnboardingChecklistQueryVariables, requestHeaders?: GraphQLClientRequestHeaders): Promise<EventOnboardingChecklistQuery> {
       return withWrapper((wrappedRequestHeaders) => client.request<EventOnboardingChecklistQuery>(EventOnboardingChecklistDocument, variables, {...requestHeaders, ...wrappedRequestHeaders}), 'eventOnboardingChecklist', 'query', variables);
     },
@@ -8544,12 +8544,6 @@ export function getSdk(client: GraphQLClient, withWrapper: SdkFunctionWrapper = 
     },
     updateEventStep(variables: UpdateEventStepMutationVariables, requestHeaders?: GraphQLClientRequestHeaders): Promise<UpdateEventStepMutation> {
       return withWrapper((wrappedRequestHeaders) => client.request<UpdateEventStepMutation>(UpdateEventStepDocument, variables, {...requestHeaders, ...wrappedRequestHeaders}), 'updateEventStep', 'mutation', variables);
-    },
-    eventPricingOptions(variables: EventPricingOptionsQueryVariables, requestHeaders?: GraphQLClientRequestHeaders): Promise<EventPricingOptionsQuery> {
-      return withWrapper((wrappedRequestHeaders) => client.request<EventPricingOptionsQuery>(EventPricingOptionsDocument, variables, {...requestHeaders, ...wrappedRequestHeaders}), 'eventPricingOptions', 'query', variables);
-    },
-    selectEventPricingOption(variables: SelectEventPricingOptionMutationVariables, requestHeaders?: GraphQLClientRequestHeaders): Promise<SelectEventPricingOptionMutation> {
-      return withWrapper((wrappedRequestHeaders) => client.request<SelectEventPricingOptionMutation>(SelectEventPricingOptionDocument, variables, {...requestHeaders, ...wrappedRequestHeaders}), 'selectEventPricingOption', 'mutation', variables);
     },
     getMyEventsForSelector(variables?: GetMyEventsForSelectorQueryVariables, requestHeaders?: GraphQLClientRequestHeaders): Promise<GetMyEventsForSelectorQuery> {
       return withWrapper((wrappedRequestHeaders) => client.request<GetMyEventsForSelectorQuery>(GetMyEventsForSelectorDocument, variables, {...requestHeaders, ...wrappedRequestHeaders}), 'getMyEventsForSelector', 'query', variables);
@@ -8608,6 +8602,36 @@ export function getSdk(client: GraphQLClient, withWrapper: SdkFunctionWrapper = 
     uploadHostLogo(variables: UploadHostLogoMutationVariables, requestHeaders?: GraphQLClientRequestHeaders): Promise<UploadHostLogoMutation> {
       return withWrapper((wrappedRequestHeaders) => client.request<UploadHostLogoMutation>(UploadHostLogoDocument, variables, {...requestHeaders, ...wrappedRequestHeaders}), 'uploadHostLogo', 'mutation', variables);
     },
+    HostApiKeys(variables?: HostApiKeysQueryVariables, requestHeaders?: GraphQLClientRequestHeaders): Promise<HostApiKeysQuery> {
+      return withWrapper((wrappedRequestHeaders) => client.request<HostApiKeysQuery>(HostApiKeysDocument, variables, {...requestHeaders, ...wrappedRequestHeaders}), 'HostApiKeys', 'query', variables);
+    },
+    CreateHostApiKey(variables: CreateHostApiKeyMutationVariables, requestHeaders?: GraphQLClientRequestHeaders): Promise<CreateHostApiKeyMutation> {
+      return withWrapper((wrappedRequestHeaders) => client.request<CreateHostApiKeyMutation>(CreateHostApiKeyDocument, variables, {...requestHeaders, ...wrappedRequestHeaders}), 'CreateHostApiKey', 'mutation', variables);
+    },
+    RevokeHostApiKey(variables: RevokeHostApiKeyMutationVariables, requestHeaders?: GraphQLClientRequestHeaders): Promise<RevokeHostApiKeyMutation> {
+      return withWrapper((wrappedRequestHeaders) => client.request<RevokeHostApiKeyMutation>(RevokeHostApiKeyDocument, variables, {...requestHeaders, ...wrappedRequestHeaders}), 'RevokeHostApiKey', 'mutation', variables);
+    },
+    UpdateHostApiKeyDomains(variables: UpdateHostApiKeyDomainsMutationVariables, requestHeaders?: GraphQLClientRequestHeaders): Promise<UpdateHostApiKeyDomainsMutation> {
+      return withWrapper((wrappedRequestHeaders) => client.request<UpdateHostApiKeyDomainsMutation>(UpdateHostApiKeyDomainsDocument, variables, {...requestHeaders, ...wrappedRequestHeaders}), 'UpdateHostApiKeyDomains', 'mutation', variables);
+    },
+    HostWebhooks(variables?: HostWebhooksQueryVariables, requestHeaders?: GraphQLClientRequestHeaders): Promise<HostWebhooksQuery> {
+      return withWrapper((wrappedRequestHeaders) => client.request<HostWebhooksQuery>(HostWebhooksDocument, variables, {...requestHeaders, ...wrappedRequestHeaders}), 'HostWebhooks', 'query', variables);
+    },
+    HostWebhookDeliveries(variables: HostWebhookDeliveriesQueryVariables, requestHeaders?: GraphQLClientRequestHeaders): Promise<HostWebhookDeliveriesQuery> {
+      return withWrapper((wrappedRequestHeaders) => client.request<HostWebhookDeliveriesQuery>(HostWebhookDeliveriesDocument, variables, {...requestHeaders, ...wrappedRequestHeaders}), 'HostWebhookDeliveries', 'query', variables);
+    },
+    CreateHostWebhook(variables: CreateHostWebhookMutationVariables, requestHeaders?: GraphQLClientRequestHeaders): Promise<CreateHostWebhookMutation> {
+      return withWrapper((wrappedRequestHeaders) => client.request<CreateHostWebhookMutation>(CreateHostWebhookDocument, variables, {...requestHeaders, ...wrappedRequestHeaders}), 'CreateHostWebhook', 'mutation', variables);
+    },
+    UpdateHostWebhook(variables: UpdateHostWebhookMutationVariables, requestHeaders?: GraphQLClientRequestHeaders): Promise<UpdateHostWebhookMutation> {
+      return withWrapper((wrappedRequestHeaders) => client.request<UpdateHostWebhookMutation>(UpdateHostWebhookDocument, variables, {...requestHeaders, ...wrappedRequestHeaders}), 'UpdateHostWebhook', 'mutation', variables);
+    },
+    RotateHostWebhookSecret(variables: RotateHostWebhookSecretMutationVariables, requestHeaders?: GraphQLClientRequestHeaders): Promise<RotateHostWebhookSecretMutation> {
+      return withWrapper((wrappedRequestHeaders) => client.request<RotateHostWebhookSecretMutation>(RotateHostWebhookSecretDocument, variables, {...requestHeaders, ...wrappedRequestHeaders}), 'RotateHostWebhookSecret', 'mutation', variables);
+    },
+    DeleteHostWebhook(variables: DeleteHostWebhookMutationVariables, requestHeaders?: GraphQLClientRequestHeaders): Promise<DeleteHostWebhookMutation> {
+      return withWrapper((wrappedRequestHeaders) => client.request<DeleteHostWebhookMutation>(DeleteHostWebhookDocument, variables, {...requestHeaders, ...wrappedRequestHeaders}), 'DeleteHostWebhook', 'mutation', variables);
+    },
     getActiveIndianCities(variables?: GetActiveIndianCitiesQueryVariables, requestHeaders?: GraphQLClientRequestHeaders): Promise<GetActiveIndianCitiesQuery> {
       return withWrapper((wrappedRequestHeaders) => client.request<GetActiveIndianCitiesQuery>(GetActiveIndianCitiesDocument, variables, {...requestHeaders, ...wrappedRequestHeaders}), 'getActiveIndianCities', 'query', variables);
     },
@@ -8664,9 +8688,6 @@ export function getSdk(client: GraphQLClient, withWrapper: SdkFunctionWrapper = 
     },
     hostListPayoutSettlements(variables?: HostListPayoutSettlementsQueryVariables, requestHeaders?: GraphQLClientRequestHeaders): Promise<HostListPayoutSettlementsQuery> {
       return withWrapper((wrappedRequestHeaders) => client.request<HostListPayoutSettlementsQuery>(HostListPayoutSettlementsDocument, variables, {...requestHeaders, ...wrappedRequestHeaders}), 'hostListPayoutSettlements', 'query', variables);
-    },
-    hostGetPayoutStatementUrl(variables: HostGetPayoutStatementUrlQueryVariables, requestHeaders?: GraphQLClientRequestHeaders): Promise<HostGetPayoutStatementUrlQuery> {
-      return withWrapper((wrappedRequestHeaders) => client.request<HostGetPayoutStatementUrlQuery>(HostGetPayoutStatementUrlDocument, variables, {...requestHeaders, ...wrappedRequestHeaders}), 'hostGetPayoutStatementUrl', 'query', variables);
     },
     addPayout(variables: AddPayoutMutationVariables, requestHeaders?: GraphQLClientRequestHeaders): Promise<AddPayoutMutation> {
       return withWrapper((wrappedRequestHeaders) => client.request<AddPayoutMutation>(AddPayoutDocument, variables, {...requestHeaders, ...wrappedRequestHeaders}), 'addPayout', 'mutation', variables);
@@ -8751,6 +8772,12 @@ export function getSdk(client: GraphQLClient, withWrapper: SdkFunctionWrapper = 
     },
     approvedWhatsAppTemplates(variables?: ApprovedWhatsAppTemplatesQueryVariables, requestHeaders?: GraphQLClientRequestHeaders): Promise<ApprovedWhatsAppTemplatesQuery> {
       return withWrapper((wrappedRequestHeaders) => client.request<ApprovedWhatsAppTemplatesQuery>(ApprovedWhatsAppTemplatesDocument, variables, {...requestHeaders, ...wrappedRequestHeaders}), 'approvedWhatsAppTemplates', 'query', variables);
+    },
+    CreateWhitelabelRequest(variables: CreateWhitelabelRequestMutationVariables, requestHeaders?: GraphQLClientRequestHeaders): Promise<CreateWhitelabelRequestMutation> {
+      return withWrapper((wrappedRequestHeaders) => client.request<CreateWhitelabelRequestMutation>(CreateWhitelabelRequestDocument, variables, {...requestHeaders, ...wrappedRequestHeaders}), 'CreateWhitelabelRequest', 'mutation', variables);
+    },
+    SubmitWhitelabelRequest(variables: SubmitWhitelabelRequestMutationVariables, requestHeaders?: GraphQLClientRequestHeaders): Promise<SubmitWhitelabelRequestMutation> {
+      return withWrapper((wrappedRequestHeaders) => client.request<SubmitWhitelabelRequestMutation>(SubmitWhitelabelRequestDocument, variables, {...requestHeaders, ...wrappedRequestHeaders}), 'SubmitWhitelabelRequest', 'mutation', variables);
     }
   };
 }

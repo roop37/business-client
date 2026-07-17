@@ -2,6 +2,7 @@ import {
   BadgePercent,
   CalendarDaysIcon,
   ChartColumn,
+  Code2,
   CreditCard,
   History,
   LayoutDashboard,
@@ -152,6 +153,18 @@ export const getSidebarList = (): TSidebarItem[] => [
     id: "sidebar-team",
   },
   // Activity Log moved into the Settings modal; no longer a sidebar item.
+  {
+    title: "Developers",
+    href: "/org-settings/developers",
+    icon: Code2,
+    active: true,
+    id: "sidebar-developers",
+    subItems: [
+      { title: "API keys", href: "/org-settings/developers" },
+      { title: "Webhooks", href: "/org-settings/developers/webhooks" },
+      { title: "Whitelabel", href: "/org-settings/developers/whitelabel" },
+    ],
+  },
   {
     title: "Settings",
     href: "/org-settings",

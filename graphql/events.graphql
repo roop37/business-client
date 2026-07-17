@@ -50,32 +50,6 @@ mutation updateEventStep($id: String!, $step: Int!, $stepInput: EventInput!) {
   }
 }
 
-query eventPricingOptions($input: EventPricingCalculatorInput!) {
-  eventPricingOptions(input: $input) {
-    optionId
-    plan
-    label
-    commissionRate
-    customerPlatformFeeRate
-    upfrontFee
-    expectedPaidTickets
-    expectedGrossSales
-    hostPayout
-    hoizrNetContribution
-    payoutCycleDaysMin
-    payoutCycleDaysMax
-    badge
-  }
-}
-
-mutation selectEventPricingOption($input: SelectEventPricingInput!) {
-  selectEventPricingOption(input: $input) {
-    _id
-    selectedPricingPlan
-    feeSettlementMode
-  }
-}
-
 # Lightweight events list for selectors that only need title/flyer/date.
 # Used by the campaign setup wizard to attach a campaign to an existing
 # event without re-keying details (and to populate the Event Promotion

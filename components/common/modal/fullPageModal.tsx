@@ -10,9 +10,10 @@ interface FullPageModalProps {
   onClose: () => void;
   children: React.ReactNode;
   title: string;
+  subtitle?: string;
   comments?: string;
-  actionButtonLabel: string;
-  onActionButtonClick: () => void;
+  actionButtonLabel?: string;
+  onActionButtonClick?: () => void;
   hasTopQuickActions?: boolean;
   isSave?: boolean;
   onEscClose?: boolean;
@@ -24,12 +25,11 @@ const FullPageModal: React.FC<FullPageModalProps> = ({
   onClose,
   children,
   title,
+  subtitle,
   comments,
   hasTopQuickActions = false,
   isSave = false,
   buttonTitle = "Save",
-  actionButtonLabel,
-  onActionButtonClick,
   onEscClose = false,
 }) => {
   useEffect(() => {
@@ -80,7 +80,12 @@ const FullPageModal: React.FC<FullPageModalProps> = ({
           >
             <div className="flex h-full flex-col">
               <div className="z-20 flex items-center justify-between border-b border-[var(--owner-border)] bg-[var(--owner-bg)]/95 px-6 py-4 shadow-sm">
-                <h2 className="text-xl font-semibold text-[var(--owner-fg-1)]">{title}</h2>
+                <div className="min-w-0">
+                  <h2 className="truncate text-xl font-semibold text-[var(--owner-fg-1)]">{title}</h2>
+                  {subtitle ? (
+                    <p className="mt-0.5 truncate text-xs text-[var(--owner-fg-3)]">{subtitle}</p>
+                  ) : null}
+                </div>
                 {isSave ? (
                   <CButton
                     className="w-fit"
@@ -116,7 +121,7 @@ const FullPageModal: React.FC<FullPageModalProps> = ({
               </div>
 
               <div
-                className={`flex-grow overflow-auto px-4 md:px-6 ${
+                className={`flex-grow overflow-auto overscroll-contain px-4 md:px-6 ${
                   hasTopQuickActions ? "pb-4" : "py-5"
                 }`}
               >

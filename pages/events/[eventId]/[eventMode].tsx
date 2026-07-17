@@ -1,6 +1,11 @@
+import FullPageModal from "@/components/common/modal/fullPageModal";
 import EventJourney from "@/components/modules/events/EventJourney";
 import { EventScanners } from "@/components/modules/events/EventScanners";
-import { EventActivityPanel } from "@/components/modules/events/EventActivityPanel";
+import {
+  CustomersTab,
+  OfflineTab,
+  OrdersTab,
+} from "@/components/modules/events/EventActivityPanel";
 import GuestlistManagerModal from "@/components/modules/events/GuestlistManagerModal";
 import useGlobalStore from "@/store/global";
 import { sdk } from "@/utils/graphqlClient";
@@ -8,25 +13,27 @@ import { verificationGateRedirect } from "@/lib/auth/verificationGate";
 import { eventDisplayStatus, extractErrorMessage } from "@/utils/utilFUncs";
 import {
   CalendarDaysIcon,
+  ChevronRightIcon,
   DoorOpenIcon,
   EyeIcon,
   EyeOffIcon,
+  HandshakeIcon,
   type LucideIcon,
   MegaphoneIcon,
   PencilIcon,
   QrCodeIcon,
+  ReceiptTextIcon,
   ScanLineIcon,
   SettingsIcon,
   SparklesIcon,
   TicketIcon,
   UsersRoundIcon,
-  XIcon,
 } from "lucide-react";
 import { GetServerSideProps } from "next";
 import Link from "next/link";
 import { useRouter } from "next/router";
 import type { ReactNode } from "react";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 const journeyModes = ["create", "update"];
 const opsModes = ["manage", "scanners"];
@@ -69,6 +76,19 @@ const rupee = (n?: number) =>
     maximumFractionDigits: 0,
   }).format(Math.max(0, Number(n ?? 0)));
 
+/**
+ * Manage-domain panels. Each is a compact card on the right rail that opens
+ * a full-page takeover, driven by ?panel=<key> (shallow routing) so browser
+ * back closes the panel and a refresh/deep-link restores it.
+ */
+const PANEL_KEYS = [
+  "guestlists",
+  "customers",
+  "offline",
+  "collaborators",
+] as const;
+type PanelKey = (typeof PANEL_KEYS)[number];
+
 const EventOperations = ({
   eventId,
   mode,
@@ -80,8 +100,39 @@ const EventOperations = ({
   const { setToastData, openRunCampaignModal } = useGlobalStore();
   const [overview, setOverview] = useState<any>(null);
   const [busy, setBusy] = useState(false);
-  const [collaboratorsOpen, setCollaboratorsOpen] = useState(false);
-  const [guestlistOpen, setGuestlistOpen] = useState(false);
+  // The collaborators panel renders from `overview` (it doesn't self-fetch), so
+  // gate it on its own loading flag while its on-open refetch is in flight —
+  // otherwise it would flash the previous snapshot for a round-trip.
+  const [collabLoading, setCollabLoading] = useState(false);
+  // True when the open panel got onto the history stack via our own push —
+  // then closing = router.back(). False on a direct ?panel= load, where
+  // back() would leave the page instead of just closing the panel.
+  const panelPushedRef = useRef(false);
+  // Skips the collaborators on-open refetch on the very first mount — the
+  // [eventId] effect already loads the overview there, so a deep-link to
+  // ?panel=collaborators would otherwise fire two identical requests.
+  const collabDidMountRef = useRef(false);
+
+  const openPanel = (panel: PanelKey) => {
+    panelPushedRef.current = true;
+    router.push(
+      { pathname: router.pathname, query: { ...router.query, panel } },
+      undefined,
+      { shallow: true }
+    );
+  };
+
+  const closePanel = () => {
+    if (panelPushedRef.current) {
+      panelPushedRef.current = false;
+      router.back();
+      return;
+    }
+    const { panel: _panel, ...rest } = router.query;
+    router.replace({ pathname: router.pathname, query: rest }, undefined, {
+      shallow: true,
+    });
+  };
 
   const loadOverview = async () => {
     try {
@@ -96,6 +147,23 @@ const EventOperations = ({
     loadOverview();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [eventId]);
+
+  // The Customers / Offline / Guest-list panels self-fetch on mount (each
+  // unmounts when its FullPageModal closes, so opening always refetches). The
+  // Collaborators panel renders from the overview payload instead, so pull a
+  // fresh overview whenever it opens (with a loading gate so no stale rows
+  // flash). The first mount is skipped — the [eventId] effect already loaded.
+  useEffect(() => {
+    if (!collabDidMountRef.current) {
+      collabDidMountRef.current = true;
+      return;
+    }
+    if (router.query.panel === "collaborators") {
+      setCollabLoading(true);
+      loadOverview().finally(() => setCollabLoading(false));
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [router.query.panel]);
 
   const togglePatch = async (input: Record<string, any>) => {
     setBusy(true);
@@ -161,6 +229,28 @@ const EventOperations = ({
     : [];
   const showCollaboratorsCard = !isCollaboratorView && collaborators.length > 0;
 
+  const canSeeCustomers =
+    canSeeMetrics &&
+    (overview?.totals?.sold ?? 0) > 0 &&
+    overview?.canAccessCustomerList !== false;
+  const showGuestlistCard = !isCollaboratorView || overview?.guestlistEnabled;
+
+  // A ?panel= value only takes effect once the overview is loaded AND the
+  // viewer passes that panel's gate — same gates as the rail cards.
+  const panelGates: Record<PanelKey, boolean> = {
+    guestlists: Boolean(showGuestlistCard),
+    customers: canSeeCustomers,
+    offline: canSeeMetrics,
+    collaborators: showCollaboratorsCard,
+  };
+  const panelParam =
+    typeof router.query.panel === "string" ? router.query.panel : "";
+  const activePanel: PanelKey | null =
+    overview && (PANEL_KEYS as readonly string[]).includes(panelParam) &&
+    panelGates[panelParam as PanelKey]
+      ? (panelParam as PanelKey)
+      : null;
+
   return (
     <EventShell title={title} status={overview?.status}>
       <div className="mx-auto max-w-6xl space-y-5">
@@ -189,11 +279,8 @@ const EventOperations = ({
                   )}{" "}
                   · {overview?.scannersCount ?? 0} scanner
                   {(overview?.scannersCount ?? 0) === 1 ? "" : "s"}
-                  {overview?.selectedPricingPlan
-                    ? ` · ${overview.selectedPricingPlan} plan` +
-                      (overview.selectedCommissionRate != null
-                        ? ` · ${overview.selectedCommissionRate}% commission`
-                        : "")
+                  {overview?.commissionRate != null
+                    ? ` · ${overview.commissionRate}% commission`
                     : ""}
                 </p>
                 {scanWindowLabel ? (
@@ -226,7 +313,8 @@ const EventOperations = ({
         {mode === "scanners" ? (
           <EventScanners eventId={eventId} />
         ) : (
-          <>
+          <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_300px] lg:items-start">
+          <div className="min-w-0 space-y-5">
             {/* KPI tiles */}
             {canSeeMetrics ? (
               <div className="grid gap-3 md:grid-cols-4">
@@ -278,42 +366,33 @@ const EventOperations = ({
               />
             </div>
 
-            {/* Offer plan + reconcile mode. Offers are read-only once
-                published (commission + customer price snapshot is
-                immutable) but the reconcile mechanic can still flip.
-                Visible to Owner / Manager only — Marketing and Staff
-                seats see the rest of Manage Event without the
+            {/* Commission terms. One fixed rate stamped at publish —
+                read-only for hosts; Hoizr can adjust it until the event
+                starts. Visible to Owner / Manager only — Marketing and
+                Staff seats see the rest of Manage Event without the
                 commercial-terms block. */}
-            {canSeeOfferSettlement &&
-            (overview?.pricingOptions?.length ||
-              overview?.pricingSnapshot) ? (
-              <ManagePricingPanel
-                pricingOptions={overview?.pricingOptions ?? []}
-                pricingSnapshot={overview?.pricingSnapshot ?? null}
-                feeSettlementMode={overview?.feeSettlementMode ?? null}
-                disabled={busy || isCollaboratorView}
-                onChangeMode={async (mode) => {
-                  setBusy(true);
-                  try {
-                    await sdk.updateEventFeeSettlementMode({
-                      id: eventId,
-                      mode,
-                    });
-                    setToastData({
-                      type: "success",
-                      message: "Settlement mode updated",
-                    });
-                    await loadOverview();
-                  } catch (error) {
-                    setToastData({
-                      type: "error",
-                      message: extractErrorMessage(error),
-                    });
-                  } finally {
-                    setBusy(false);
-                  }
-                }}
-              />
+            {canSeeOfferSettlement && overview?.commissionRate != null ? (
+              <div className="rounded-lg border border-[var(--owner-border)] bg-[var(--owner-bg)]">
+                <div className="border-b border-[var(--owner-border)] px-5 py-3 text-sm font-semibold">
+                  Commission
+                </div>
+                <div className="p-5">
+                  <p className="text-sm">
+                    <span className="text-2xl font-semibold">
+                      {overview.commissionRate}%
+                    </span>{" "}
+                    <span className="text-[var(--owner-fg-3)]">
+                      of ticket value (+ GST on commission), deducted at
+                      settlement.
+                    </span>
+                  </p>
+                  <p className="mt-2 text-[11px] text-[var(--owner-fg-3)]">
+                    This is Hoizr&apos;s fixed commission for this event.
+                    Contact support if you believe it needs adjusting —
+                    changes are only possible before the event starts.
+                  </p>
+                </div>
+              </div>
             ) : null}
 
             {/* Per-ticket table */}
@@ -406,8 +485,26 @@ const EventOperations = ({
               </div>
             </div>
 
-            {/* Report navigation. Customers + orders + guestlist now live on
-                the event hub (/events/[id]); Manage is config + settings. */}
+            {/* Orders — inline; the rest of the activity surfaces (Customers,
+                Offline Tickets) open as full-page panels from the rail. */}
+            {canSeeMetrics ? (
+              <div className="rounded-lg border border-[var(--owner-border)] bg-[var(--owner-bg)]">
+                <div className="border-b border-[var(--owner-border)] px-5 py-3 text-sm font-semibold">
+                  Orders
+                </div>
+                <div className="p-4 sm:p-5">
+                  <OrdersTab
+                    eventId={eventId}
+                    tickets={(overview?.tickets ?? []).map((t: any) => ({
+                      _id: String(t._id),
+                      ticketName: t.ticketName,
+                    }))}
+                  />
+                </div>
+              </div>
+            ) : null}
+
+            {/* Report navigation */}
             <div className="flex flex-wrap gap-2">
               <Link
                 href={`/reports/sales-summary?eventId=${eventId}`}
@@ -422,113 +519,6 @@ const EventOperations = ({
                 See marketing report
               </Link>
             </div>
-
-            {/* Guest lists — managed inline from Manage. Owner sees it always
-                (incl. the off→on prompt); a collaborator sees it only when the
-                guestlist is enabled, to manage THEIR own list. */}
-            {!isCollaboratorView || overview?.guestlistEnabled ? (
-              <button
-                type="button"
-                onClick={() => setGuestlistOpen(true)}
-                className="w-full rounded-lg border border-[var(--owner-border)] bg-[var(--owner-bg)] p-5 text-left transition hover:border-[#c89d75]"
-              >
-                <div className="flex items-center justify-between gap-4">
-                  <div className="flex min-w-0 items-start gap-3">
-                    <span className="grid h-10 w-10 shrink-0 place-items-center rounded-lg bg-[var(--owner-bg-subtle)] text-[var(--owner-blue-500)]">
-                      <SparklesIcon size={18} />
-                    </span>
-                    <div className="min-w-0">
-                      <p className="font-semibold">Guest lists</p>
-                      <p className="text-xs text-[var(--owner-fg-3)]">
-                        {isCollaboratorView
-                          ? "Manage your guest list, invite link and guests."
-                          : overview?.guestlistEnabled
-                          ? "Manage lists, invite links and guests. Golden tickets scan at the door."
-                          : "Off — turn on free guest invites with golden tickets."}
-                      </p>
-                    </div>
-                  </div>
-                  <span
-                    className={`shrink-0 rounded-full px-2.5 py-1 text-[11px] font-semibold ${
-                      overview?.guestlistEnabled
-                        ? "bg-[var(--owner-blue-500)]/[0.10] text-[var(--owner-blue-500)]"
-                        : "bg-[var(--owner-bg-subtle)] text-[var(--owner-fg-3)]"
-                    }`}
-                  >
-                    {overview?.guestlistEnabled ? "On" : "Off"}
-                  </span>
-                </div>
-              </button>
-            ) : null}
-
-            {/* Activity — Orders · Offline Tickets · Customers, moved here from
-                the old Event Hub so an event lives on one page. */}
-            {canSeeMetrics ? (
-              <div>
-                <h3 className="mb-3 text-sm font-semibold text-[var(--owner-fg-2)]">
-                  Activity
-                </h3>
-                <EventActivityPanel
-                  eventId={eventId}
-                  tickets={(overview?.tickets ?? []).map((t: any) => ({
-                    _id: String(t._id),
-                    ticketName: t.ticketName,
-                  }))}
-                  canSeeCustomers={
-                    (overview?.totals?.sold ?? 0) > 0 &&
-                    overview?.canAccessCustomerList !== false
-                  }
-                />
-              </div>
-            ) : null}
-
-            {/* Collaborators & promoters */}
-            {showCollaboratorsCard ? (
-              <button
-                type="button"
-                onClick={() => setCollaboratorsOpen(true)}
-                className="w-full rounded-lg border border-[var(--owner-border)] bg-[var(--owner-bg)] p-5 text-left transition hover:border-[#c89d75]"
-              >
-                <div className="flex items-center justify-between gap-4">
-                  <div className="flex min-w-0 items-start gap-3">
-                    <span className="grid h-10 w-10 shrink-0 place-items-center rounded-lg bg-[var(--owner-bg-subtle)] text-[var(--owner-blue-500)]">
-                      <UsersRoundIcon size={18} />
-                    </span>
-                    <div className="min-w-0">
-                      <p className="font-semibold">Collaborators &amp; promoters</p>
-                      <p className="text-xs text-[var(--owner-fg-3)]">
-                        {collaborators.length}{" "}
-                        {collaborators.length === 1
-                          ? "organizer"
-                          : "organizers"}{" "}
-                        on this event. Tap to view their settings.
-                      </p>
-                    </div>
-                  </div>
-                  <div className="flex shrink-0 -space-x-2">
-                    {collaborators.slice(0, 5).map((c: any, index: number) => (
-                      <span
-                        key={c.businessLinkId ?? `${c.name}-${index}`}
-                        title={c.name}
-                        className="grid h-9 w-9 place-items-center rounded-full border-2 border-[var(--owner-bg)] bg-[var(--owner-bg-subtle)] bg-cover bg-center text-xs font-semibold uppercase text-[var(--owner-fg-3)]"
-                        style={
-                          c.logo
-                            ? { backgroundImage: `url(${c.logo})` }
-                            : undefined
-                        }
-                      >
-                        {!c.logo ? (c.name ?? "?").slice(0, 1) : null}
-                      </span>
-                    ))}
-                    {collaborators.length > 5 ? (
-                      <span className="grid h-9 w-9 place-items-center rounded-full border-2 border-[var(--owner-bg)] bg-[var(--owner-bg-subtle)] text-xs font-semibold text-[var(--owner-fg-3)]">
-                        +{collaborators.length - 5}
-                      </span>
-                    ) : null}
-                  </div>
-                </div>
-              </button>
-            ) : null}
 
             {/* Action cards */}
             <div className="grid gap-4 md:grid-cols-3">
@@ -560,30 +550,123 @@ const EventOperations = ({
                 disabled={!canRunCampaigns}
               />
             </div>
-          </>
+          </div>
+
+          {/* Right rail — compact cards; each opens a full-page panel. */}
+          <aside className="space-y-3">
+            {showGuestlistCard ? (
+              <RailCard
+                title="Guest lists"
+                meta={
+                  isCollaboratorView
+                    ? "Your list, invite link and guests"
+                    : overview?.guestlistEnabled
+                    ? "Lists, invite links and guests"
+                    : "Off — turn on free guest invites"
+                }
+                Icon={SparklesIcon}
+                onClick={() => openPanel("guestlists")}
+                badge={
+                  <span
+                    className={`shrink-0 rounded-full px-2 py-0.5 text-[10px] font-semibold ${
+                      overview?.guestlistEnabled
+                        ? "bg-[var(--owner-blue-500)]/[0.10] text-[var(--owner-blue-500)]"
+                        : "bg-[var(--owner-bg-subtle)] text-[var(--owner-fg-3)]"
+                    }`}
+                  >
+                    {overview?.guestlistEnabled ? "On" : "Off"}
+                  </span>
+                }
+              />
+            ) : null}
+            {canSeeCustomers ? (
+              <RailCard
+                title="Customers"
+                meta="Buyers, contacts and check-ins"
+                Icon={UsersRoundIcon}
+                onClick={() => openPanel("customers")}
+              />
+            ) : null}
+            {canSeeMetrics ? (
+              <RailCard
+                title="Offline tickets"
+                meta="Door sales and payment links"
+                Icon={ReceiptTextIcon}
+                onClick={() => openPanel("offline")}
+              />
+            ) : null}
+            {showCollaboratorsCard ? (
+              <RailCard
+                title="Collaborators & promoters"
+                meta={`${collaborators.length} ${
+                  collaborators.length === 1 ? "organizer" : "organizers"
+                } on this event`}
+                Icon={HandshakeIcon}
+                onClick={() => openPanel("collaborators")}
+              />
+            ) : null}
+          </aside>
+          </div>
         )}
       </div>
 
-      <CollaboratorsModal
-        open={collaboratorsOpen}
-        collaborators={collaborators}
-        onClose={() => setCollaboratorsOpen(false)}
-        onManage={() => {
-          setCollaboratorsOpen(false);
-          router.push(`/events/${eventId}/update`);
-        }}
-      />
+      <FullPageModal
+        isOpen={activePanel === "guestlists"}
+        onClose={closePanel}
+        onEscClose
+        title="Guest lists"
+        subtitle="Invite guests for free — golden tickets scan at the door."
+      >
+        <div className="mx-auto w-full max-w-6xl py-2">
+          <GuestlistManagerModal
+            inline
+            eventId={eventId}
+            guestlistEnabled={!!overview?.guestlistEnabled}
+            guestlistAutoAccept={overview?.guestlistAutoAccept !== false}
+            guestlistMaxCapacity={overview?.guestlistMaxCapacity ?? null}
+            isCollaboratorView={isCollaboratorView}
+            onSettingsChanged={loadOverview}
+          />
+        </div>
+      </FullPageModal>
 
-      <GuestlistManagerModal
-        open={guestlistOpen}
-        onClose={() => setGuestlistOpen(false)}
-        eventId={eventId}
-        guestlistEnabled={!!overview?.guestlistEnabled}
-        guestlistAutoAccept={overview?.guestlistAutoAccept !== false}
-        guestlistMaxCapacity={overview?.guestlistMaxCapacity ?? null}
-        isCollaboratorView={isCollaboratorView}
-        onSettingsChanged={loadOverview}
-      />
+      <FullPageModal
+        isOpen={activePanel === "customers"}
+        onClose={closePanel}
+        onEscClose
+        title="Customers"
+        subtitle={`Everyone who bought tickets to ${overview?.title || "this event"}.`}
+      >
+        <div className="mx-auto w-full max-w-5xl py-2">
+          <CustomersTab eventId={eventId} />
+        </div>
+      </FullPageModal>
+
+      <FullPageModal
+        isOpen={activePanel === "offline"}
+        onClose={closePanel}
+        onEscClose
+        title="Offline tickets"
+        subtitle="Tickets issued at the door and payment links."
+      >
+        <div className="mx-auto w-full max-w-5xl py-2">
+          <OfflineTab eventId={eventId} />
+        </div>
+      </FullPageModal>
+
+      <FullPageModal
+        isOpen={activePanel === "collaborators"}
+        onClose={closePanel}
+        onEscClose
+        title="Collaborators & promoters"
+        subtitle="Read-only view of each organizer's access on this event."
+      >
+        <CollaboratorsPanel
+          collaborators={collaborators}
+          loading={collabLoading}
+          onManage={() => router.push(`/events/${eventId}/update`)}
+        />
+      </FullPageModal>
     </EventShell>
   );
 };
@@ -613,41 +696,34 @@ const COLLAB_STATUS_BADGE: Record<
  * the grouping + labels of the EventJourney collaborator modal ("What
  * this collaborator can do" + "Display & operations") but renders every
  * flag as a static On/Off row — editing happens in the event edit flow.
+ * Rendered inside a FullPageModal, so no overlay/header of its own.
  */
-const CollaboratorsModal = ({
-  open,
+const CollaboratorsPanel = ({
   collaborators,
-  onClose,
+  loading = false,
   onManage,
 }: {
-  open: boolean;
   collaborators: any[];
-  onClose: () => void;
+  loading?: boolean;
   onManage: () => void;
 }) => {
-  if (!open) return null;
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/55 px-4 py-6">
-      <div className="flex max-h-[92dvh] w-full max-w-2xl flex-col overflow-hidden rounded-lg bg-[var(--owner-bg)] shadow-2xl">
-        <div className="flex shrink-0 items-center justify-between gap-3 border-b border-[var(--owner-border)] px-5 py-4">
-          <div>
-            <div className="text-sm font-semibold">
-              Collaborators &amp; promoters
-            </div>
-            <p className="mt-1 text-xs text-[var(--owner-fg-3)]">
-              Read-only view of the collaborating organizers and what each
-              can do on this event. Edit these in the event settings.
-            </p>
-          </div>
+    <div className="mx-auto w-full max-w-4xl py-2">
+        <div className="mb-4 flex justify-end">
           <button
             type="button"
-            onClick={onClose}
-            className="inline-flex h-9 w-9 items-center justify-center rounded-md border border-[var(--owner-border)]"
+            onClick={onManage}
+            className="rounded-lg bg-[var(--owner-blue-500)] px-3 py-2 text-sm font-semibold text-[var(--owner-bg)]"
           >
-            <XIcon size={16} />
+            Manage collaborators
           </button>
         </div>
-        <div className="min-h-0 flex-1 space-y-4 overflow-y-auto p-5">
+        {loading ? (
+          <div className="py-16 text-center text-sm text-[var(--owner-fg-3)]">
+            Loading…
+          </div>
+        ) : (
+        <div className="space-y-4">
           {collaborators.map((c: any, index: number) => {
             const badge =
               COLLAB_STATUS_BADGE[String(c.collaborationStatus ?? "")] ?? null;
@@ -736,26 +812,53 @@ const CollaboratorsModal = ({
             );
           })}
         </div>
-        <div className="flex shrink-0 items-center justify-end gap-2 border-t border-[var(--owner-border)] px-5 py-3">
-          <button
-            type="button"
-            onClick={onClose}
-            className="rounded-lg border border-[var(--owner-border-strong)] bg-white px-3 py-2 text-sm font-semibold"
-          >
-            Close
-          </button>
-          <button
-            type="button"
-            onClick={onManage}
-            className="rounded-lg bg-[var(--owner-blue-500)] px-3 py-2 text-sm font-semibold text-[var(--owner-bg)]"
-          >
-            Manage collaborators
-          </button>
-        </div>
-      </div>
+        )}
     </div>
   );
 };
+
+/**
+ * Compact right-rail card on Manage Event — icon, title, one-line meta,
+ * optional status badge. Clicking opens the matching full-page panel.
+ */
+const RailCard = ({
+  title,
+  meta,
+  Icon,
+  onClick,
+  badge,
+}: {
+  title: string;
+  meta: string;
+  Icon: LucideIcon;
+  onClick: () => void;
+  badge?: ReactNode;
+}) => (
+  <button
+    type="button"
+    onClick={onClick}
+    className="w-full rounded-lg border border-[var(--owner-border)] bg-[var(--owner-bg)] p-4 text-left transition hover:border-[#c89d75]"
+  >
+    <div className="flex items-center gap-3">
+      <span className="grid h-9 w-9 shrink-0 place-items-center rounded-lg bg-[var(--owner-bg-subtle)] text-[var(--owner-blue-500)]">
+        <Icon size={16} />
+      </span>
+      <span className="min-w-0 flex-1">
+        <span className="flex items-center gap-2">
+          <span className="truncate text-sm font-semibold">{title}</span>
+          {badge}
+        </span>
+        <span className="mt-0.5 block truncate text-xs text-[var(--owner-fg-3)]">
+          {meta}
+        </span>
+      </span>
+      <ChevronRightIcon
+        size={16}
+        className="shrink-0 text-[var(--owner-fg-4)]"
+      />
+    </div>
+  </button>
+);
 
 /**
  * Static (non-interactive) twin of EventJourney's `ToggleSettingRow` —
@@ -802,155 +905,6 @@ const ReadOnlySettingRow = ({
     </span>
   </div>
 );
-
-/**
- * Read-only review of the offer set the host was shown at publish +
- * which one they accepted, plus an editor for the fee-settlement
- * mode (the only post-publish-mutable piece of the pricing config).
- */
-const ManagePricingPanel = ({
-  pricingOptions,
-  pricingSnapshot,
-  feeSettlementMode,
-  disabled,
-  onChangeMode,
-}: {
-  pricingOptions: Array<{
-    optionId: string;
-    label: string;
-    plan?: string;
-    commissionRate?: number;
-    customerPlatformFeeRate?: number;
-    upfrontFee?: number;
-  }>;
-  pricingSnapshot: {
-    optionId: string;
-    label: string;
-    commissionRate?: number;
-    customerPlatformFeeRate?: number;
-    upfrontFee?: number;
-  } | null;
-  feeSettlementMode: "DeductFromPayout" | "PayAfterEvent" | null;
-  disabled: boolean;
-  onChangeMode: (mode: "DeductFromPayout" | "PayAfterEvent") => void;
-}) => {
-  const selectedId = pricingSnapshot?.optionId ?? null;
-  return (
-    <div className="rounded-lg border border-[var(--owner-border)] bg-[var(--owner-bg)]">
-      <div className="border-b border-[var(--owner-border)] px-5 py-3 text-sm font-semibold">
-        Offer & settlement
-      </div>
-      <div className="grid gap-5 p-5 md:grid-cols-2">
-        <section>
-          <p className="mb-3 text-xs font-semibold uppercase tracking-[0.12em] text-[var(--owner-fg-3)]">
-            Offers shown at publish
-          </p>
-          {pricingOptions.length ? (
-            <ul className="space-y-2">
-              {pricingOptions.map((option) => {
-                const isSelected = option.optionId === selectedId;
-                return (
-                  <li
-                    key={option.optionId}
-                    className={`rounded-md border px-3 py-2.5 text-sm ${
-                      isSelected
-                        ? "border-[var(--owner-blue-500)] bg-[var(--owner-blue-500)]/[0.06]"
-                        : "border-[var(--owner-border)]"
-                    }`}
-                  >
-                    <div className="flex items-baseline justify-between gap-2">
-                      <span className="font-semibold">{option.label}</span>
-                      {isSelected ? (
-                        <span className="rounded-full bg-[var(--owner-blue-500)] px-2 py-0.5 text-[10px] font-bold uppercase tracking-[0.12em] text-[var(--owner-bg)]">
-                          Selected
-                        </span>
-                      ) : null}
-                    </div>
-                    <div className="mt-1 text-xs text-[var(--owner-fg-3)]">
-                      {option.commissionRate != null
-                        ? `${option.commissionRate}% commission`
-                        : "—"}
-                      {option.customerPlatformFeeRate != null
-                        ? ` · ${option.customerPlatformFeeRate}% customer fee`
-                        : ""}
-                      {option.upfrontFee
-                        ? ` · ₹${option.upfrontFee.toLocaleString("en-IN")} upfront`
-                        : ""}
-                    </div>
-                  </li>
-                );
-              })}
-            </ul>
-          ) : pricingSnapshot ? (
-            <p className="text-sm text-[var(--owner-fg-3)]">
-              <span className="font-semibold text-[var(--owner-fg-1)]">
-                {pricingSnapshot.label}
-              </span>{" "}
-              · {pricingSnapshot.commissionRate ?? 0}% commission
-            </p>
-          ) : (
-            <p className="text-sm text-[var(--owner-fg-3)]">
-              No offer set was recorded for this event.
-            </p>
-          )}
-          <p className="mt-3 text-[11px] text-[var(--owner-fg-3)]">
-            Once published, the offer is locked. Contact support to change
-            commission or customer fee.
-          </p>
-        </section>
-
-        <section>
-          <p className="mb-3 text-xs font-semibold uppercase tracking-[0.12em] text-[var(--owner-fg-3)]">
-            Reconcile platform fee
-          </p>
-          <div className="space-y-2">
-            {(
-              [
-                {
-                  value: "DeductFromPayout" as const,
-                  label: "Direct from payout",
-                  hint: "Hoizr nets the platform fee out of each settlement automatically.",
-                },
-                {
-                  value: "PayAfterEvent" as const,
-                  label: "Pay via payment link",
-                  hint: "Host receives the full payout; Hoizr sends a separate invoice + payment link.",
-                },
-              ]
-            ).map((option) => {
-              const checked = feeSettlementMode === option.value;
-              return (
-                <label
-                  key={option.value}
-                  className={`flex cursor-pointer items-start gap-3 rounded-md border px-3 py-2.5 text-sm ${
-                    checked
-                      ? "border-[var(--owner-blue-500)] bg-[var(--owner-blue-500)]/[0.06]"
-                      : "border-[var(--owner-border)]"
-                  } ${disabled ? "pointer-events-none opacity-60" : ""}`}
-                >
-                  <input
-                    type="radio"
-                    name="fee-settlement-mode"
-                    className="mt-1"
-                    checked={checked}
-                    disabled={disabled}
-                    onChange={() => onChangeMode(option.value)}
-                  />
-                  <span>
-                    <span className="font-semibold">{option.label}</span>
-                    <span className="mt-0.5 block text-xs text-[var(--owner-fg-3)]">
-                      {option.hint}
-                    </span>
-                  </span>
-                </label>
-              );
-            })}
-          </div>
-        </section>
-      </div>
-    </div>
-  );
-};
 
 const MetricTile = ({
   label,
@@ -1023,7 +977,7 @@ const EventShell = ({
 }) => {
   const router = useRouter();
   return (
-    <div className="flex h-[100dvh] min-h-0 flex-col overflow-hidden bg-[var(--owner-bg-sidebar)] text-[var(--owner-fg-1)]">
+    <div className="flex h-[100dvh] min-h-0 flex-col overflow-hidden overscroll-none bg-[var(--owner-bg-sidebar)] text-[var(--owner-fg-1)]">
       <header className="flex min-h-[64px] shrink-0 items-center justify-between border-b border-[var(--owner-border)] px-4 md:px-6">
         <div className="flex min-w-0 items-center gap-3">
           <CalendarDaysIcon size={22} className="text-[var(--owner-blue-500)]" />
@@ -1045,7 +999,7 @@ const EventShell = ({
           Exit
         </button>
       </header>
-      <main className="min-h-0 flex-1 overflow-y-auto overflow-x-hidden p-4 md:p-6">
+      <main className="min-h-0 flex-1 overflow-y-auto overflow-x-hidden overscroll-contain p-4 md:p-6">
         {children}
       </main>
     </div>

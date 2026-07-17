@@ -15,6 +15,7 @@ const RESOURCE_LINKS = [
   { label: "Flyer stickers", href: "/resources#stickers" },
   { label: "Playbooks", href: "/resources#playbooks" },
   { label: "Blog", href: "/blog" },
+  { label: "Developers", href: "/developers" },
   { label: "Help center", href: "/help" },
 ];
 const SUPPORT_LINKS = [

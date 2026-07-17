@@ -22,6 +22,7 @@ export default function robots(): MetadataRoute.Robots {
           "/blog",
           "/product",
           "/product/",
+          "/developers",
           "/legal/",
           "/rss.xml",
           "/feed.xml",

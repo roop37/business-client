@@ -25,6 +25,7 @@ Operated by Hoizr Technologies Pvt. Ltd.
 - [About](https://business.hoizr.com/about): Company belief, market thesis, and founder note.
 - [How it works](https://business.hoizr.com/how-it-works): End-to-end organizer journey from onboarding to settlement.
 - [Products](https://business.hoizr.com/product): Ticketing, fan CRM, scanner, marketing tools, AI offers, payouts, and competitive analysis.
+- [Developers](https://business.hoizr.com/developers): Sell Hoizr event tickets from your own website via the ticketing API and embed, receive real-time signed order webhooks (order.paid/refunded/cancelled), or run a fully whitelabel checkout under your own brand. Purchases are OTP-verified; payments run on Razorpay.
 - [Resources](https://business.hoizr.com/resources): Guides, playbooks, and operating references.
 - [Blog](https://business.hoizr.com/blog): Stories on live entertainment, ticketing, and India's nightlife economy.
 - [Help](https://business.hoizr.com/help): Setup, payout, scanner, and platform support paths.

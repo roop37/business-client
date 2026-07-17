@@ -1,0 +1,48 @@
+query HostApiKeys {
+  hostApiKeys {
+    _id
+    keyType
+    prefix
+    last4
+    allowedDomains
+    label
+    lastUsedAt
+    revoked
+    createdAt
+  }
+}
+
+mutation CreateHostApiKey(
+  $keyType: HostApiKeyType!
+  $label: String
+  $allowedDomains: [String!]
+) {
+  createHostApiKey(
+    keyType: $keyType
+    label: $label
+    allowedDomains: $allowedDomains
+  ) {
+    raw
+    key {
+      _id
+      keyType
+      prefix
+      last4
+      allowedDomains
+      label
+      revoked
+      createdAt
+    }
+  }
+}
+
+mutation RevokeHostApiKey($id: String!) {
+  revokeHostApiKey(id: $id)
+}
+
+mutation UpdateHostApiKeyDomains($id: String!, $allowedDomains: [String!]!) {
+  updateHostApiKeyDomains(id: $id, allowedDomains: $allowedDomains) {
+    _id
+    allowedDomains
+  }
+}

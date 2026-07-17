@@ -38,7 +38,6 @@ query hostListPayoutSettlements($input: ListHostPayoutSettlementsInput) {
       hoizrCommissionTotal
       hoizrCommissionGstTotal
       ticketGstFlowThroughTotal
-      finalDeclaredOfferAmount
       razorpayFeeTotal
       netPayoutAmount
       refundsTotal
@@ -47,11 +46,7 @@ query hostListPayoutSettlements($input: ListHostPayoutSettlementsInput) {
       status
       scheduledFor
       paidAt
-      paidMethod
-      razorpayPayoutId
-      invoiceId
-      invoiceUrl
-      errorMessage
+      settlementNote
       createdAt
       updatedAt
     }
@@ -59,12 +54,6 @@ query hostListPayoutSettlements($input: ListHostPayoutSettlementsInput) {
   }
 }
 
-query hostGetPayoutStatementUrl($settlementId: String!) {
-  hostGetPayoutStatementUrl(settlementId: $settlementId) {
-    signedUrl
-    expiresAt
-  }
-}
 
 mutation addPayout($input: AddPayoutInput!) {
   addPayout(input: $input) {
