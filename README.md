@@ -16,8 +16,8 @@ Next.js dashboard where venues and event organizers run ticketed events on Hoizr
 
 <img src="docs/assets/business-marketing-hero.jpg" alt="Screenshot of the business.hoizr.com home page: the headline 'Sell out the night. Own every fan.' above a laptop mockup of the organizer dashboard" width="100%">
 
-<!-- SCREENSHOT: business-dashboard | Signed-in /dashboard: net sales, tickets sold and average order value tiles, sales by source, launch-readiness checklist, upcoming events -->
-<!-- SCREENSHOT: business-manage-event | /events/{id}/manage for a published paid event, with the right-rail cards and the ?panel=guestlists full-page takeover open -->
+<img src="docs/assets/business-dashboard.jpg" alt="Screenshot of the organizer dashboard with demo data: net sales for the last 7 days, total orders, sales by source and the setup checklist" width="100%">
+<img src="docs/assets/business-manage-event.jpg" alt="Screenshot of the Manage Event page for a demo event: tickets sold, sell-through, gross revenue, ticket types, activity and side panels" width="100%">
 
 ## About
 
@@ -68,6 +68,9 @@ The app has no database of its own. Every piece of product data comes from the [
 - Event types: free RSVP, exclusive and non-exclusive. Ticket categories: RSVP, normal, table and group. Multi-day events with per-day dates.
 - Publish checks that the organization is verified and, for paid events, that a verified primary payout account exists.
 - Manage view with full-page panels for guestlists, customers, offline tickets and collaborators, plus per-ticket visibility toggles.
+
+<img src="docs/assets/business-offline-ticket.jpg" alt="Screenshot of the Issue offline ticket dialog: ticket quantities, buyer details and the option to send a payment link" width="100%">
+
 - Collaborators: add other organizations to an event from the wizard. A collaborator sees the event read-only in its own `/events` list and can leave the collaboration.
 
 <!-- SCREENSHOT: business-event-create | /events/{id}/create on the Tickets step of the six-step wizard -->
@@ -95,7 +98,7 @@ The app has no database of its own. Every piece of product data comes from the [
 - Prepaid marketing credit: balance, ledger, a reputation tier and Razorpay top-up.
 - A push campaign builder exists, but the sidebar shows Push, SMS and Instagram with a "Soon" badge and disables them; SMS and Instagram are placeholder screens.
 
-<!-- SCREENSHOT: business-campaigns | /campaigns/onboarding/template-edit with the drag-and-drop email editor open -->
+<img src="docs/assets/business-campaigns.jpg" alt="Screenshot of the email campaign editor: a drag-and-drop event email with content blocks, step 2 of 4" width="100%">
 
 ### Money and insights
 
