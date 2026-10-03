@@ -4,7 +4,7 @@
 
 Next.js dashboard where venues and event organizers run ticketed events on Hoizr, plus the business.hoizr.com site.
 
-[Hoizr walkthrough](https://github.com/Hoizr-Technology/hoizr-walkthrough) · [Architecture](https://github.com/Hoizr-Technology/hoizr-walkthrough/blob/main/docs/01-system-architecture.md) · [Local setup](https://github.com/Hoizr-Technology/hoizr-walkthrough/blob/main/docs/09-local-development.md) · [Contributing](https://github.com/Hoizr-Technology/.github/blob/main/CONTRIBUTING.md)
+[Hoizr walkthrough](https://github.com/roop37/hoizr-walkthrough) · [Architecture](https://github.com/roop37/hoizr-walkthrough/blob/main/docs/01-system-architecture.md) · [Local setup](https://github.com/roop37/hoizr-walkthrough/blob/main/docs/09-local-development.md) · [Contributing](https://github.com/roop37/hoizr-dotgithub/blob/main/CONTRIBUTING.md)
 
 ![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)
 ![Next.js 14.2.4](https://img.shields.io/badge/Next.js-14.2.4-000000?logo=nextdotjs&logoColor=white)
@@ -23,7 +23,7 @@ Next.js dashboard where venues and event organizers run ticketed events on Hoizr
 
 This repository is the web app that venues and event organizers use to run their business on [Hoizr](https://hoizr.com), an event ticketing, fan CRM, marketing and door-scanning platform built for India. Organizers and their team members sign in here to create and publish events, sell tickets, manage guestlists and door scanners, follow orders and customers, run email and WhatsApp campaigns, and manage payouts. The same Next.js deployment also serves the public marketing site at `business.hoizr.com`.
 
-The app has no database of its own. Every piece of product data comes from the [main-server](https://github.com/Hoizr-Technology/main-server) GraphQL API through a typed SDK generated with GraphQL Code Generator. In the code, an organization is called a **host** (`hostId`, `getHost`, `/onboarding-host`). For how this app fits next to the storefront, the workers and the scanner app, start with the [Hoizr walkthrough](https://github.com/Hoizr-Technology/hoizr-walkthrough).
+The app has no database of its own. Every piece of product data comes from the [main-server](https://github.com/roop37/main-server) GraphQL API through a typed SDK generated with GraphQL Code Generator. In the code, an organization is called a **host** (`hostId`, `getHost`, `/onboarding-host`). For how this app fits next to the storefront, the workers and the scanner app, start with the [Hoizr walkthrough](https://github.com/roop37/hoizr-walkthrough).
 
 ## Contents
 
@@ -111,7 +111,7 @@ The app has no database of its own. Every piece of product data comes from the [
 ### Developers (early preview)
 
 - API keys (secret, or publishable with an allowed-domains list). The raw key is shown once at creation; the list shows only a prefix and the last four characters.
-- Webhook endpoints for `order.paid`, `order.refunded` and `order.cancelled`, with signing-secret rotation and receiver-side verification instructions. Deliveries are sent by the [hoizr-worker](https://github.com/Hoizr-Technology/hoizr-worker) repo.
+- Webhook endpoints for `order.paid`, `order.refunded` and `order.cancelled`, with signing-secret rotation and receiver-side verification instructions. Deliveries are sent by the [hoizr-worker](https://github.com/roop37/hoizr-worker) repo.
 - A whitelabel request form, in the dashboard and on the public `/developers` page.
 - Keys can be created and revoked today, but no public API consumes them yet.
 
@@ -422,7 +422,7 @@ Redirect-only routes: `/events/create` → `/events?create=1`, `/events/[eventId
 
 `fragments.graphql` holds a shared `addressInfo` fragment, and `customer.graphql` and `metrics.graphql` are comment-only placeholders.
 
-Newer operations (event manage overview, guestlists, scanners, reports, coupons, loyalty, automations, offline tickets, order receipts, WhatsApp templates, activity logs) are hand-written `request` calls in [utils/graphqlClient.ts](utils/graphqlClient.ts) and the `utils/*Client.ts` files. Guards for every operation live in [main-server](https://github.com/Hoizr-Technology/main-server).
+Newer operations (event manage overview, guestlists, scanners, reports, coupons, loyalty, automations, offline tickets, order receipts, WhatsApp templates, activity logs) are hand-written `request` calls in [utils/graphqlClient.ts](utils/graphqlClient.ts) and the `utils/*Client.ts` files. Guards for every operation live in [main-server](https://github.com/roop37/main-server).
 
 </details>
 
@@ -432,7 +432,7 @@ Newer operations (event manage overview, guestlists, scanners, reports, coupons,
 
 - **Node.js 20+.** The repo has no `.nvmrc` or `engines` pin; Next.js 14.2 needs at least 18.17, and the Hoizr server images use Node 23.
 - **Yarn 1.22.22** (Yarn classic), pinned in `package.json`. With Corepack: `corepack enable`.
-- **A running [main-server](https://github.com/Hoizr-Technology/main-server)** on `http://localhost:4000`, which in turn needs MongoDB and Redis. Follow the [local setup guide](https://github.com/Hoizr-Technology/hoizr-walkthrough/blob/main/docs/09-local-development.md).
+- **A running [main-server](https://github.com/roop37/main-server)** on `http://localhost:4000`, which in turn needs MongoDB and Redis. Follow the [local setup guide](https://github.com/roop37/hoizr-walkthrough/blob/main/docs/09-local-development.md).
 - Optional: a [Cloudinary](https://cloudinary.com/documentation) account for uploads, a [Resend](https://resend.com/docs) key for the lead forms, and a [PostHog](https://posthog.com/docs) project for analytics.
 
 > [!NOTE]
@@ -441,7 +441,7 @@ Newer operations (event manage overview, guestlists, scanners, reports, coupons,
 ### Install
 
 ```bash
-git clone https://github.com/Hoizr-Technology/business-client.git
+git clone https://github.com/roop37/business-client.git
 cd business-client
 yarn install
 cp .env.example .env
@@ -525,7 +525,7 @@ The TypeScript config is lenient (`strict: false`, `noImplicitAny: false`) but k
 - **An unmounted feature.** An AI listing health-check panel (score, spelling mistakes, SEO suggestions, generated description from main-server) is built in [components/modules/events/EventListingHealth.tsx](components/modules/events/EventListingHealth.tsx) but no page renders it yet.
 - **Framework age.** The app is pinned to an early Next.js 14.2 patch (14.2.4); upgrading is on the roadmap.
 
-The system-wide list lives in the walkthrough's [known gaps and roadmap](https://github.com/Hoizr-Technology/hoizr-walkthrough/blob/main/docs/12-known-gaps-and-roadmap.md).
+The system-wide list lives in the walkthrough's [known gaps and roadmap](https://github.com/roop37/hoizr-walkthrough/blob/main/docs/12-known-gaps-and-roadmap.md).
 
 ### Good first issues
 
@@ -539,9 +539,9 @@ The system-wide list lives in the walkthrough's [known gaps and roadmap](https:/
 
 Hoizr is open source so it can grow with the people who run events and the engineers who build for them. Bug reports, fixes, tests and documentation are all welcome, and the good first issues above are a fair place to start.
 
-- [Contributing guide](https://github.com/Hoizr-Technology/.github/blob/main/CONTRIBUTING.md)
-- [Code of conduct](https://github.com/Hoizr-Technology/.github/blob/main/CODE_OF_CONDUCT.md)
-- [Security policy](https://github.com/Hoizr-Technology/.github/blob/main/SECURITY.md)
+- [Contributing guide](https://github.com/roop37/hoizr-dotgithub/blob/main/CONTRIBUTING.md)
+- [Code of conduct](https://github.com/roop37/hoizr-dotgithub/blob/main/CODE_OF_CONDUCT.md)
+- [Security policy](https://github.com/roop37/hoizr-dotgithub/blob/main/SECURITY.md)
 
 Please report vulnerabilities privately as described in the security policy, not in public issues.
 
@@ -549,20 +549,20 @@ Please report vulnerabilities privately as described in the security policy, not
 
 | Repository | Role |
 |---|---|
-| [main-server](https://github.com/Hoizr-Technology/main-server) | Business, admin and artist GraphQL API (Fastify, Mercurius, TypeGraphQL); the only backend this app calls |
-| [customer-server](https://github.com/Hoizr-Technology/customer-server) | Customer and scanner GraphQL API, cart, checkout and Razorpay webhooks |
-| [hoizr-worker](https://github.com/Hoizr-Technology/hoizr-worker) | BullMQ workers and cron jobs (Asia/Kolkata) for every async side effect |
-| [tracking-server](https://github.com/Hoizr-Technology/tracking-server) | Write-only analytics ingest into BullMQ |
-| [hoizr-shared](https://github.com/Hoizr-Technology/hoizr-shared) | `@hoizr-technology/shared`: Typegoose and TypeGraphQL domain model, enums, queue names |
-| [hoizr-client](https://github.com/Hoizr-Technology/hoizr-client) | Customer storefront on hoizr.com (Next.js 14 App Router) |
-| [internal-admin-client](https://github.com/Hoizr-Technology/internal-admin-client) | Internal operations console, including organization verification |
-| [hoizr-artist-client](https://github.com/Hoizr-Technology/hoizr-artist-client) | Artist dashboard and editorial landing |
-| [hoizr-scanner-app](https://github.com/Hoizr-Technology/hoizr-scanner-app) | Flutter door check-in app that keeps working offline |
-| [hoizr-walkthrough](https://github.com/Hoizr-Technology/hoizr-walkthrough) | Guided tour of the whole system |
+| [main-server](https://github.com/roop37/main-server) | Business, admin and artist GraphQL API (Fastify, Mercurius, TypeGraphQL); the only backend this app calls |
+| [customer-server](https://github.com/roop37/customer-server) | Customer and scanner GraphQL API, cart, checkout and Razorpay webhooks |
+| [hoizr-worker](https://github.com/roop37/hoizr-worker) | BullMQ workers and cron jobs (Asia/Kolkata) for every async side effect |
+| [tracking-server](https://github.com/roop37/tracking-server) | Write-only analytics ingest into BullMQ |
+| [hoizr-shared](https://github.com/roop37/hoizr-shared) | `@hoizr-technology/shared`: Typegoose and TypeGraphQL domain model, enums, queue names |
+| [hoizr-client](https://github.com/roop37/hoizr-client) | Customer storefront on hoizr.com (Next.js 14 App Router) |
+| [internal-admin-client](https://github.com/roop37/internal-admin-client) | Internal operations console, including organization verification |
+| [hoizr-artist-client](https://github.com/roop37/hoizr-artist-client) | Artist dashboard and editorial landing |
+| [hoizr-scanner-app](https://github.com/roop37/hoizr-scanner-app) | Flutter door check-in app that keeps working offline |
+| [hoizr-walkthrough](https://github.com/roop37/hoizr-walkthrough) | Guided tour of the whole system |
 
 ## Author
 
-Built by [@sanbedan-debox](https://github.com/sanbedan-debox) as part of Hoizr.
+Built by [@roop37](https://github.com/roop37) as part of Hoizr.
 
 ## License
 
