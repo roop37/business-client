@@ -20,9 +20,9 @@ import type { ReactNode } from "react";
 import { useCallback, useEffect, useState } from "react";
 
 /**
- * Event activity (Orders · Offline Tickets · Customers) — moved out of the
- * old Event Hub into a reusable panel rendered inside Manage Event, so an
- * event has a single page. Guest Lists live in their own Manage card.
+ * Event activity panels (Orders · Offline Tickets · Customers). Orders
+ * renders inline on Manage Event; Customers and Offline Tickets open from
+ * the Manage rail as full-page panels. Guest Lists live in their own card.
  */
 
 const PAGE_SIZE = 15;
@@ -68,7 +68,7 @@ const Pager = ({
     </div>
   ) : null;
 
-const OrdersTab = ({
+export const OrdersTab = ({
   eventId,
   tickets,
 }: {
@@ -176,7 +176,7 @@ const OrdersTab = ({
   );
 };
 
-const CustomersTab = ({ eventId }: { eventId: string }) => {
+export const CustomersTab = ({ eventId }: { eventId: string }) => {
   const { openOrderReceipt, setToastData } = useGlobalStore();
   const [rows, setRows] = useState<EventCustomerRow[]>([]);
   const [total, setTotal] = useState(0);
@@ -331,7 +331,7 @@ const OFFLINE_STATUS: Record<string, { label: string; cls: string }> = {
  * always shown: owners see all offline orders for the event, collaborators see
  * the ones they issued (server-scoped in `myOfflineOrders`).
  */
-const OfflineTab = ({ eventId }: { eventId: string }) => {
+export const OfflineTab = ({ eventId }: { eventId: string }) => {
   const { setToastData } = useGlobalStore();
   const [rows, setRows] = useState<OfflineOrderRow[]>([]);
   const [total, setTotal] = useState(0);
@@ -467,50 +467,3 @@ const OfflineTab = ({ eventId }: { eventId: string }) => {
   );
 };
 
-type ActivityTab = "orders" | "offline" | "customers";
-
-export const EventActivityPanel = ({
-  eventId,
-  tickets,
-  canSeeCustomers,
-}: {
-  eventId: string;
-  tickets: Array<{ _id: string; ticketName: string }>;
-  canSeeCustomers: boolean;
-}) => {
-  const [tab, setTab] = useState<ActivityTab>("orders");
-  const tabs: Array<{ key: ActivityTab; label: string }> = [
-    { key: "orders", label: "Orders" },
-    { key: "offline", label: "Offline Tickets" },
-    ...(canSeeCustomers
-      ? [{ key: "customers" as const, label: "Customers" }]
-      : []),
-  ];
-
-  return (
-    <div className="rounded-lg border border-[var(--owner-border)] bg-[var(--owner-bg)] p-4 sm:p-5">
-      <div className="mb-4 flex flex-wrap gap-1.5">
-        {tabs.map((t) => (
-          <button
-            key={t.key}
-            type="button"
-            onClick={() => setTab(t.key)}
-            className={`rounded-full px-3.5 py-1.5 text-sm font-medium transition ${
-              tab === t.key
-                ? "bg-[var(--owner-blue-050)] text-[var(--owner-blue-500)]"
-                : "text-[var(--owner-fg-3)] hover:bg-[var(--owner-bg-subtle)]"
-            }`}
-          >
-            {t.label}
-          </button>
-        ))}
-      </div>
-
-      {tab === "orders" ? <OrdersTab eventId={eventId} tickets={tickets} /> : null}
-      {tab === "offline" ? <OfflineTab eventId={eventId} /> : null}
-      {tab === "customers" && canSeeCustomers ? (
-        <CustomersTab eventId={eventId} />
-      ) : null}
-    </div>
-  );
-};

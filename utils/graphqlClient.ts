@@ -373,7 +373,6 @@ Object.assign(sdk, {
               hoizrCommissionTotal
               hoizrCommissionGstTotal
               ticketGstFlowThroughTotal
-              finalDeclaredOfferAmount
               razorpayFeeTotal
               netPayoutAmount
               refundsTotal
@@ -382,27 +381,11 @@ Object.assign(sdk, {
               status
               scheduledFor
               paidAt
-              paidMethod
-              razorpayPayoutId
-              invoiceId
-              invoiceUrl
-              errorMessage
+              settlementNote
               createdAt
               updatedAt
             }
             total
-          }
-        }
-      `,
-      variables
-    ),
-  hostGetPayoutStatementUrl: async (variables: { settlementId: string }) =>
-    graphQLClient.request(
-      `
-        query hostGetPayoutStatementUrl($settlementId: String!) {
-          hostGetPayoutStatementUrl(settlementId: $settlementId) {
-            signedUrl
-            expiresAt
           }
         }
       `,
@@ -558,33 +541,8 @@ Object.assign(sdk, {
               ticketPrice
               ticketVisible
             }
-            selectedPricingPlan
-            selectedCommissionRate
-            selectedAiBoostCode
+            commissionRate
             scannersCount
-            pricingSnapshot {
-              optionId
-              plan
-              label
-              commissionRate
-              customerPlatformFeeRate
-              upfrontFee
-              expectedPaidTickets
-              expectedGrossSales
-              hostPayout
-            }
-            pricingOptions {
-              optionId
-              plan
-              label
-              commissionRate
-              customerPlatformFeeRate
-              upfrontFee
-              expectedPaidTickets
-              expectedGrossSales
-              hostPayout
-            }
-            feeSettlementMode
             collaborators {
               name
               businessLinkId
@@ -600,26 +558,6 @@ Object.assign(sdk, {
               sendTransactionalMails
             }
           }
-        }
-      `,
-      variables
-    ),
-  /**
-   * Switch the fee-settlement mode on a published event. Offer +
-   * commission stay snapshotted on the event; only the reconcile
-   * mechanic flips.
-   */
-  updateEventFeeSettlementMode: async (variables: {
-    id: string;
-    mode: "DeductFromPayout" | "PayAfterEvent";
-  }) =>
-    graphQLClient.request(
-      `
-        mutation updateEventFeeSettlementMode(
-          $id: String!
-          $mode: EventFeeSettlementMode!
-        ) {
-          updateEventFeeSettlementMode(id: $id, mode: $mode)
         }
       `,
       variables
@@ -868,13 +806,6 @@ Object.assign(sdk, {
             }
             eventInstructions
             prohibitedItems
-            expectedEventsDoneTillNow
-            selectedPricingPlan
-            feeSettlementMode
-            pricingSelectedAt
-            pricingSnapshot {
-              optionId
-            }
             tickets {
               _id
               ticketCategory
@@ -1013,42 +944,6 @@ Object.assign(sdk, {
           publishEvent(id: $id) {
             _id
             status
-          }
-        }
-      `,
-      variables
-    ),
-  eventPricingOptions: async (variables: any) =>
-    graphQLClient.request(
-      `
-        query eventPricingOptions($input: EventPricingCalculatorInput!) {
-          eventPricingOptions(input: $input) {
-            optionId
-            plan
-            label
-            commissionRate
-            customerPlatformFeeRate
-            upfrontFee
-            expectedPaidTickets
-            expectedGrossSales
-            hostPayout
-            hoizrNetContribution
-            payoutCycleDaysMin
-            payoutCycleDaysMax
-            badge
-          }
-        }
-      `,
-      variables
-    ),
-  selectEventPricingOption: async (variables: any) =>
-    graphQLClient.request(
-      `
-        mutation selectEventPricingOption($input: SelectEventPricingInput!) {
-          selectEventPricingOption(input: $input) {
-            _id
-            selectedPricingPlan
-            feeSettlementMode
           }
         }
       `,

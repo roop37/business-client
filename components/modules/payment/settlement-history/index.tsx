@@ -13,20 +13,10 @@ import useGlobalStore from "@/store/global";
 import { sdk } from "@/utils/graphqlClient";
 import { extractErrorMessage } from "@/utils/utilFUncs";
 import { ColumnDef, createColumnHelper } from "@tanstack/react-table";
-import { Download, RefreshCcw, ReceiptText } from "lucide-react";
+import { RefreshCcw, ReceiptText } from "lucide-react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 
-type SettlementStatus =
-  | "SCHEDULED"
-  | "PENDING"
-  | "PAUSED"
-  | "ON_HOLD"
-  | "VERIFIED"
-  | "PROCESSING"
-  | "PAID"
-  | "REJECTED"
-  | "FAILED"
-  | "CANCELLED";
+type SettlementStatus = "PENDING" | "PAUSED" | "PAID" | "CANCELLED";
 
 type SettlementRow = {
   _id: string;
@@ -35,7 +25,6 @@ type SettlementRow = {
   hoizrCommissionTotal: number;
   hoizrCommissionGstTotal: number;
   ticketGstFlowThroughTotal?: number | null;
-  finalDeclaredOfferAmount?: number | null;
   razorpayFeeTotal?: number | null;
   netPayoutAmount: number;
   refundsTotal?: number | null;
@@ -44,26 +33,19 @@ type SettlementRow = {
   status: SettlementStatus;
   scheduledFor?: string | null;
   paidAt?: string | null;
-  razorpayPayoutId?: string | null;
-  invoiceId?: string | null;
-  invoiceUrl?: string | null;
-  errorMessage?: string | null;
+  settlementNote?: string | null;
 };
 
 const STATUS_OPTIONS: Array<{ value: "ALL" | SettlementStatus; label: string }> = [
   { value: "PAID", label: "Paid" },
   { value: "ALL", label: "All" },
-  { value: "SCHEDULED", label: "Scheduled" },
-  { value: "ON_HOLD", label: "On hold" },
-  { value: "PROCESSING", label: "Processing" },
-  { value: "FAILED", label: "Failed" },
+  { value: "PENDING", label: "Pending" },
+  { value: "PAUSED", label: "Paused" },
 ];
 
 const statusTone = (status: SettlementStatus): BadgeTone => {
   if (status === "PAID") return "success";
-  if (status === "FAILED" || status === "REJECTED") return "danger";
-  if (status === "PAUSED" || status === "ON_HOLD") return "warning";
-  if (status === "PROCESSING" || status === "VERIFIED") return "info";
+  if (status === "PAUSED") return "warning";
   return "neutral";
 };
 
@@ -89,7 +71,6 @@ const SettlementHistory = () => {
   const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(1);
   const [status, setStatus] = useState<"ALL" | SettlementStatus>("PAID");
-  const [downloadingId, setDownloadingId] = useState<string | null>(null);
 
   const pageSize = 20;
 
@@ -133,24 +114,6 @@ const SettlementHistory = () => {
 
   const totalPages = Math.max(1, Math.ceil(total / pageSize));
 
-  const downloadStatement = async (settlement: SettlementRow) => {
-    setDownloadingId(settlement._id);
-    try {
-      const response: any = await sdk.hostGetPayoutStatementUrl({
-        settlementId: settlement._id,
-      });
-      const signedUrl = response?.hostGetPayoutStatementUrl?.signedUrl;
-      if (!signedUrl) {
-        throw new Error("Statement URL was not returned");
-      }
-      window.open(signedUrl, "_blank", "noopener,noreferrer");
-    } catch (error) {
-      setToastData({ type: "error", message: extractErrorMessage(error) });
-    } finally {
-      setDownloadingId(null);
-    }
-  };
-
   const columnHelper = createColumnHelper<SettlementRow>();
   const columns: ColumnDef<SettlementRow, any>[] = useMemo(
     () => [
@@ -167,9 +130,9 @@ const SettlementHistory = () => {
               Event {compactId(row.original.eventId)} · {row.original.orderCount}{" "}
               orders
             </span>
-            {row.original.razorpayPayoutId ? (
+            {row.original.settlementNote ? (
               <span className="mt-1 font-mono text-[11px] text-owner-fg-4">
-                {row.original.razorpayPayoutId}
+                Ref: {row.original.settlementNote}
               </span>
             ) : null}
           </div>
@@ -185,11 +148,6 @@ const SettlementHistory = () => {
             <Badge tone={statusTone(row.original.status)}>
               {row.original.status}
             </Badge>
-            {row.original.errorMessage ? (
-              <div className="mt-1 max-w-[220px] text-[11px] text-owner-danger-text">
-                {row.original.errorMessage}
-              </div>
-            ) : null}
           </div>
         ),
       }),
@@ -239,29 +197,9 @@ const SettlementHistory = () => {
           </div>
         ),
       }),
-      columnHelper.display({
-        id: "actions",
-        header: "Statement",
-        cell: ({ row }) => {
-          const canDownload = row.original.status === "PAID";
-          return (
-            <div className="flex items-center justify-center">
-              <OwnerButton
-                variant="secondary"
-                size="sm"
-                leadingIcon={<Download size={13} />}
-                disabled={!canDownload || downloadingId === row.original._id}
-                onClick={() => downloadStatement(row.original)}
-              >
-                PDF
-              </OwnerButton>
-            </div>
-          );
-        },
-      }),
     ],
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [columnHelper, downloadingId]
+    [columnHelper]
   );
 
   return (

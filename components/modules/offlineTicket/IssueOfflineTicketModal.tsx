@@ -436,6 +436,7 @@ export const IssueOfflineTicketModal = ({
       onClose={close}
       title="Issue offline ticket"
       width="ml"
+      isHighIndex
     >
       {content}
     </ReusableModal>

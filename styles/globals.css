@@ -1,5 +1,6 @@
 @import "./owner-tokens.css";
 @import "./marketing-tokens.css";
+@import "./forms-tokens.css";
 
 @tailwind base;
 @tailwind components;

@@ -533,6 +533,36 @@ const OVERRIDES: Record<string, Override> = {
       },
     ],
   },
+  "loyalty-rewards": {
+    heroHeadline: "The crowd that came back is the business.",
+    heroBody:
+      "Every ticket earns points automatically. Fans climb tiers just by showing up, and you turn points into rewards — a percentage off, a flat discount, or a free entry — that pull them back for the next night.",
+    bullets: [
+      "Points earned automatically on ticket purchases",
+      "Automatic fan tiers based on lifetime points",
+      "Point-cost rewards: percentage, flat, or free entry",
+      "Loyalty leaderboard of your most loyal fans",
+    ],
+    benefits: [
+      {
+        title: "Reward the ones who show up.",
+        body: "Points accrue on their own with every order. Your regulars stop being anonymous — they have a score, a tier, and a reason to come back.",
+      },
+      {
+        title: "Turn points into the next ticket.",
+        body: "Create rewards fans redeem with points — a percentage off, a flat discount, or a free entry that works across every night you run. The reward is the reason they pick your night again.",
+      },
+      {
+        title: "See your real fans, ranked.",
+        body: "A loyalty leaderboard and per-customer lifetime points show exactly who fills your room — the list a marketplace would never hand you.",
+      },
+    ],
+    howItWorks: [
+      { title: "Fans earn automatically", body: "Every completed order adds points to the customer's lifetime balance." },
+      { title: "You set the rewards", body: "Define what points buy — percentage off, flat discount, or free entry." },
+      { title: "They come back", body: "Fans redeem on their next booking, and your repeat rate compounds." },
+    ],
+  },
 
   // ============================================================
   // PILLAR — RUN THE NIGHT
@@ -728,6 +758,10 @@ const OVERRIDES: Record<string, Override> = {
         q: "Can I get statements for accounting?",
         a: "Yes. Settlement history and downloadable settlement statements are available per event, with gross collection, deductions, refunds, and net payout itemised.",
       },
+      {
+        q: "Why do people say Hoizr settles fast?",
+        a: "Because settlement is a defined workflow, not a support ticket. Every event closes with an itemised statement and a clear release — and the select organizers we onboard get the best commission terms and the fastest settlement timeline we can run.",
+      },
     ],
   },
   "reporting-analytics": {
@@ -847,15 +881,20 @@ const OVERRIDES: Record<string, Override> = {
   // ============================================================
   // PILLAR — FOR ARTISTS
   // ============================================================
+  // NOTE: /product/artist-vertical 307-redirects to artist.hoizr.com
+  // (next.config.mjs) — this override is unreachable today. Kept current so
+  // the page is correct if the redirect is ever removed; the user-visible
+  // free-forever line lives in nav-products.ts (menu/footer blurb).
   "artist-vertical": {
     heroHeadline: "One link: profile, tickets, guest list, merch.",
     heroBody:
-      "A public Hoizr page that's your shows, your guest list, your merch, and your riders in one place — and the fans who buy flow straight back to you, not a label or a promoter.",
+      "A public Hoizr page that's your shows, your guest list, your merch, and your riders in one place — and the fans who buy flow straight back to you, not a label or a promoter. All of it free for artists, forever.",
     bullets: [
       "Linktree-style public profile and links",
       "Merch store and rider sharing",
       "Your own event guest lists with golden passes",
       "Accept or reject lineup invites",
+      "100% free for artists — Hoizr never charges the artist side",
     ],
     benefits: [
       {

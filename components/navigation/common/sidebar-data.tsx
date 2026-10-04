@@ -2,6 +2,7 @@ import {
   BadgePercent,
   CalendarDaysIcon,
   ChartColumn,
+  Code2,
   CreditCard,
   History,
   LayoutDashboard,
@@ -11,6 +12,7 @@ import {
   SettingsIcon,
   ShoppingBag,
   TicketPercent,
+  Trophy,
   UsersRoundIcon,
   Workflow,
   type LucideIcon,
@@ -79,7 +81,6 @@ export const getSidebarList = (): TSidebarItem[] => [
       {
         title: "Loyalty Settings",
         href: "/rewards/loyalty-settings",
-        comingSoon: true,
       },
     ],
   },
@@ -96,6 +97,13 @@ export const getSidebarList = (): TSidebarItem[] => [
     icon: UsersRoundIcon,
     active: true,
     id: "sidebar-customers",
+  },
+  {
+    title: "Community",
+    href: "/community",
+    icon: Trophy,
+    active: true,
+    id: "sidebar-community",
   },
   {
     title: "Feedbacks",
@@ -145,6 +153,18 @@ export const getSidebarList = (): TSidebarItem[] => [
     id: "sidebar-team",
   },
   // Activity Log moved into the Settings modal; no longer a sidebar item.
+  {
+    title: "Developers",
+    href: "/org-settings/developers",
+    icon: Code2,
+    active: true,
+    id: "sidebar-developers",
+    subItems: [
+      { title: "API keys", href: "/org-settings/developers" },
+      { title: "Webhooks", href: "/org-settings/developers/webhooks" },
+      { title: "Whitelabel", href: "/org-settings/developers/whitelabel" },
+    ],
+  },
   {
     title: "Settings",
     href: "/org-settings",

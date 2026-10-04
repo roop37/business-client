@@ -1,0 +1,64 @@
+query HostWebhooks {
+  hostWebhooks {
+    _id
+    url
+    secretLast6
+    enabledEvents
+    active
+    label
+    lastDeliveryAt
+    createdAt
+  }
+}
+
+query HostWebhookDeliveries($webhookId: String!) {
+  hostWebhookDeliveries(webhookId: $webhookId) {
+    _id
+    eventType
+    status
+    attempts
+    lastResponseCode
+    lastError
+    deliveredAt
+    createdAt
+  }
+}
+
+mutation CreateHostWebhook($input: CreateHostWebhookInput!) {
+  createHostWebhook(input: $input) {
+    secret
+    webhook {
+      _id
+      url
+      secretLast6
+      enabledEvents
+      active
+      label
+      createdAt
+    }
+  }
+}
+
+mutation UpdateHostWebhook($input: UpdateHostWebhookInput!) {
+  updateHostWebhook(input: $input) {
+    _id
+    url
+    enabledEvents
+    active
+    label
+  }
+}
+
+mutation RotateHostWebhookSecret($id: String!) {
+  rotateHostWebhookSecret(id: $id) {
+    secret
+    webhook {
+      _id
+      secretLast6
+    }
+  }
+}
+
+mutation DeleteHostWebhook($id: String!) {
+  deleteHostWebhook(id: $id)
+}

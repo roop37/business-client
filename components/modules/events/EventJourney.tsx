@@ -17,12 +17,6 @@ import { useHostTypeLabel } from "@/hooks/useHostTypeLabel";
 import useGlobalStore from "@/store/global";
 import useHostsStore from "@/store/host";
 import { uploadHostAsset } from "@/utils/cloudinaryUpload";
-import {
-  AiBoostCard,
-  AiBoostGeneration,
-  generateAiBoostsForEvent,
-  selectAiBoost,
-} from "@/utils/eventOfferOps";
 import { sdk } from "@/utils/graphqlClient";
 import { extractErrorMessage } from "@/utils/utilFUncs";
 import {
@@ -30,48 +24,6 @@ import {
   hasVerifiedPrimaryPayout,
   isRejectedOnlyPayout,
 } from "@/utils/payout-eligibility";
-
-const AI_OFFER_PREFIX = "ai:";
-
-const aiBoostToPricingOption = (boost: AiBoostCard): PricingOption => ({
-  optionId: `${AI_OFFER_PREFIX}${boost.offerCode}`,
-  plan: boost.offerCode,
-  label: boost.label,
-  commissionRate: boost.commissionPct,
-  customerPlatformFeeRate: 0,
-  upfrontFee: boost.extraAmount,
-  expectedPaidTickets: 0,
-  expectedGrossSales: boost.computed?.expectedGrossSales ?? 0,
-  hostPayout: boost.computed?.hostPayout ?? 0,
-  hoizrNetContribution: boost.computed?.hoizrNetContribution ?? 0,
-  payoutCycleDaysMin: 0,
-  payoutCycleDaysMax: 0,
-  badge:
-    boost.confidenceScore >= 0.85
-      ? "AI Recommended"
-      : boost.label.toUpperCase(),
-});
-
-const formatIndianRupees = (n: number): string => {
-  if (!Number.isFinite(n) || n <= 0) return "₹0";
-  // Approximate Indian-format grouping (lakhs/crores) using locale.
-  return `₹${Math.round(n).toLocaleString("en-IN")}`;
-};
-
-const aiBoostSavingsValue = (boost: AiBoostCard) =>
-  Math.max(0, Number(boost.totalSavingsForHosts?.value ?? 0));
-
-const aiBoostFallbackBenefitValue = (boost: AiBoostCard) =>
-  Math.max(0, Number(boost.marketingCreditAmount ?? 0)) +
-  Math.max(0, Number(boost.marketingCreditDiscountPct ?? 0)) * 100 +
-  Math.max(0, Number(boost.howMuchDifferentFromBasicOffer?.deltaPct ?? 0)) *
-    1000;
-
-const compareAiBoostBenefit = (a: AiBoostCard, b: AiBoostCard) => {
-  const savingsDelta = aiBoostSavingsValue(b) - aiBoostSavingsValue(a);
-  if (savingsDelta !== 0) return savingsDelta;
-  return aiBoostFallbackBenefitValue(b) - aiBoostFallbackBenefitValue(a);
-};
 
 const isHostVerificationBlockMessage = (message: string) => {
   const normalized = message.toLowerCase();
@@ -150,22 +102,6 @@ const richTextToPlainText = (value: string) =>
 const shouldReplaceRichDefault = (current: string, fallback: string) => {
   const currentText = richTextToPlainText(current);
   return !currentText || currentText === richTextToPlainText(fallback);
-};
-
-type PricingOption = {
-  optionId: string;
-  plan: string;
-  label: string;
-  commissionRate: number;
-  customerPlatformFeeRate: number;
-  upfrontFee: number;
-  expectedPaidTickets: number;
-  expectedGrossSales: number;
-  hostPayout: number;
-  hoizrNetContribution: number;
-  payoutCycleDaysMin: number;
-  payoutCycleDaysMax: number;
-  badge: string;
 };
 
 type PlacesType = {
@@ -962,28 +898,6 @@ const EventJourney = ({
   const [contactForQueriesTables, setContactForQueriesTables] = useState("");
   const [additionalDetails, setAdditionalDetails] =
     useState<AdditionalDetailsState>(emptyAdditionalDetails);
-  // expectedEventsDoneTillNow input was removed per Roop — the server still
-  // accepts the field for backwards compat (pricing calc + AI Boost
-  // generator read it), so we send 0 from the client now and a follow-up
-  // task will switch those consumers to a real-time per-host event count.
-  const [feeSettlementMode, setFeeSettlementMode] = useState<
-    "DEDUCT_FROM_PAYOUT" | "PAY_AFTER_EVENT"
-  >("DEDUCT_FROM_PAYOUT");
-  const [pricingOptions, setPricingOptions] = useState<PricingOption[]>([]);
-  // AI Boost generation is the source of truth for the publish modal's
-  // "smart offers" — see main-server/src/modules/eventOffer. The legacy
-  // eventPricingOptions fallback still feeds the modal when the AI
-  // pipeline is unconfigured or returns nothing usable.
-  const [aiBoostGeneration, setAiBoostGeneration] =
-    useState<AiBoostGeneration | null>(null);
-  const aiBoostOffersByCode = useMemo<Map<string, AiBoostCard>>(() => {
-    const map = new Map<string, AiBoostCard>();
-    for (const o of aiBoostGeneration?.offers ?? []) map.set(o.offerCode, o);
-    return map;
-  }, [aiBoostGeneration]);
-  const [selectedPricingOptionId, setSelectedPricingOptionId] = useState("");
-  const [publishModalOpen, setPublishModalOpen] = useState(false);
-  const [publishing, setPublishing] = useState(false);
   // Public live link shown in the post-publish success modal (null = closed).
   const [publishedLiveUrl, setPublishedLiveUrl] = useState<string | null>(null);
   const [cityOptions, setCityOptions] = useState<CityOption[]>([]);
@@ -2472,15 +2386,6 @@ const EventJourney = ({
             ? (event.refundPolicy ?? DEFAULT_REFUND_POLICY)
             : DEFAULT_REFUND_POLICY,
         );
-        setSelectedPricingOptionId(event.pricingSnapshot?.optionId ?? "");
-        if (event.feeSettlementMode) {
-          setFeeSettlementMode(
-            normalizeEnum<"DEDUCT_FROM_PAYOUT" | "PAY_AFTER_EVENT">(
-              event.feeSettlementMode,
-              "DEDUCT_FROM_PAYOUT",
-            ),
-          );
-        }
         setContactForQueriesTables(event.contactForQueriesTables ?? "");
         setInstagramPost(event.instagramPost ?? "");
         setInstagramStory(event.instagramStory ?? "");
@@ -2764,7 +2669,6 @@ const EventJourney = ({
       verticalVideo: verticalVideo || undefined,
       horizontalVideo: horizontalVideo || undefined,
       contactForQueriesTables: contactForQueriesTables || undefined,
-      expectedEventsDoneTillNow: 0,
       genreTagIds: selectedGenreIds.length ? selectedGenreIds : undefined,
       tickets: ticketingEnabled
         ? ticketInputs().map((ticket) => ({
@@ -2954,10 +2858,10 @@ const EventJourney = ({
     return () => setPayoutModalSaveDraftHandler(null);
   }, [setPayoutModalSaveDraftHandler]);
 
-  // Triggered by the "Publish" button on the final wizard step. For free
-  // events we just save + publish. For paid events we save, fetch the
-  // available offers, and open the publish modal so the host can pick
-  // one (or the "No offer" basic option) before the event goes live.
+  // Triggered by the "Publish" button on the final wizard step. Saves the
+  // last step, runs the host/payout readiness gates, and publishes. The
+  // fixed Hoizr commission is stamped server-side at publish — there is
+  // no pricing plan or offer to pick.
   const openPublishFlow = async () => {
     const error = validateStep(lastStepIndex);
     if (error) {
@@ -3001,60 +2905,34 @@ const EventJourney = ({
       const payoutReady = await ensurePaidPublishPayoutReady();
       if (!payoutReady) return;
 
-      const response = await sdk.eventPricingOptions({
-        input: {
-          eventTypes: [eventType],
-          expectedEventsDoneTillNow: 0,
-          tickets: ticketInputs().map((ticket) => ({
-            ticketPrice:
-              ticket.ticketCategory === "GUESTLIST"
-                ? 0
-                : Number(ticket.ticketPrice),
-            ticketCapacity: Number(ticket.ticketCapacity),
-          })),
-        },
-      });
-      const legacyOptions = response?.eventPricingOptions ?? [];
-
-      // Fetch the AI-generated offer set. The mutation is idempotent
-      // server-side: a fresh generation runs only on the first publish,
-      // subsequent opens of this modal return the same generation. We
-      // prepend AI offers above the legacy pricing plans so smart
-      // offers are the host's first choice while the basic plan stays
-      // visible as a fallback.
-      let aiOptions: PricingOption[] = [];
+      await sdk.publishEvent({ id: eventId });
+      setStatus("PUBLISHED");
       try {
-        const generation = await generateAiBoostsForEvent(eventId);
-        setAiBoostGeneration(generation);
-        aiOptions = generation.offers
-          .filter(
-            (boost) =>
-              (boost.confidenceScore ?? 0) >= 0.78 &&
-              Number(boost.totalSavingsForHosts?.value ?? 0) > 0,
-          )
-          .map(aiBoostToPricingOption);
-      } catch (err) {
-        // AI pipeline down / not configured → silently fall back to the
-        // legacy pricing plans. Log but never block the publish flow.
-        console.warn(
-          "AI offer generation unavailable; falling back to legacy plans",
-          err,
-        );
-        setAiBoostGeneration(null);
+        await sdk.saveMyHostContentDefaults({
+          input: {
+            ticketingTerms: ticketingTerms.trim() || undefined,
+            refundPolicy: refundPolicy.trim() || undefined,
+          },
+        });
+        hostDefaultsRef.current = {
+          ticketingTerms: ticketingTerms.trim(),
+          refundPolicy: refundPolicy.trim(),
+        };
+      } catch {
+        // ignore — host defaults will retry next publish
       }
 
-      const options = [...aiOptions, ...legacyOptions];
-      setPricingOptions(options);
-      if (options.length) {
-        // Always default to the basic (zero-upfront) legacy option so the
-        // host can publish immediately even when AI offers don't return.
-        const basicOption =
-          legacyOptions.find((o) => (o.upfrontFee ?? 0) === 0) ??
-          legacyOptions[0] ??
-          options[0];
-        setSelectedPricingOptionId(basicOption.optionId);
+      // Surface a success MODAL with the public live link. Slug lookup is
+      // best-effort — fall back to the id-based public URL so the modal
+      // always has a working link.
+      let liveUrl = `https://hoizr.com/events/${eventId}`;
+      try {
+        const evt = (await sdk.getEventForManage({ id: eventId }))?.getEvent;
+        if (evt?.slug) liveUrl = `https://hoizr.com/events/${evt.slug}`;
+      } catch {
+        // keep the id-based fallback
       }
-      setPublishModalOpen(true);
+      setPublishedLiveUrl(liveUrl);
     } catch (error) {
       const message = extractErrorMessage(error);
       if (isHostVerificationBlockMessage(message)) {
@@ -3074,11 +2952,6 @@ const EventJourney = ({
       return;
     }
 
-    if (isPaid) {
-      void openPublishFlow();
-      return;
-    }
-
     setConfirmAction({
       title: "Publish event?",
       description:
@@ -3087,195 +2960,6 @@ const EventJourney = ({
       tone: "warning",
       onConfirm: openPublishFlow,
     });
-  };
-
-  // Called from the publish modal once the host has picked an offer
-  // (or accepted the no-offer basic option). Persists the offer choice
-  // then flips the event to PUBLISHED.
-  const publishEvent = async () => {
-    if (isPaid && !selectedPricingOptionId) {
-      setToastData({
-        type: "error",
-        message: "Select an offer to publish, or choose the basic option.",
-      });
-      return;
-    }
-    const hostReady = await ensureHostAccountPublishReady();
-    if (!hostReady) {
-      setPublishModalOpen(false);
-      return;
-    }
-    const payoutReady = await ensurePaidPublishPayoutReady();
-    if (!payoutReady) {
-      setPublishModalOpen(false);
-      return;
-    }
-    setPublishing(true);
-    try {
-      if (isPaid && selectedPricingOptionId) {
-        const isAiOffer = selectedPricingOptionId.startsWith(AI_OFFER_PREFIX);
-        if (isAiOffer && aiBoostGeneration?._id) {
-          const offerCode = selectedPricingOptionId.slice(
-            AI_OFFER_PREFIX.length,
-          );
-          await selectAiBoost({
-            generationId: aiBoostGeneration._id,
-            offerCode,
-            feeSettlementMode,
-          });
-        } else {
-          await sdk.selectEventPricingOption({
-            input: {
-              eventId,
-              optionId: selectedPricingOptionId,
-              feeSettlementMode,
-            },
-          });
-        }
-      }
-      await sdk.publishEvent({ id: eventId });
-      setStatus("PUBLISHED");
-      setPublishModalOpen(false);
-      // Save the latest Terms & Refund Policy as the host's defaults
-      // so the next event prefills with them. Best-effort — a failure
-      // here must not block the publish that just succeeded.
-      try {
-        await sdk.saveMyHostContentDefaults({
-          input: {
-            ticketingTerms: ticketingTerms.trim() || undefined,
-            refundPolicy: refundPolicy.trim() || undefined,
-          },
-        });
-        hostDefaultsRef.current = {
-          ticketingTerms: ticketingTerms.trim(),
-          refundPolicy: refundPolicy.trim(),
-        };
-      } catch {
-        // ignore — host defaults will retry next publish
-      }
-
-      // Surface a success MODAL with the public live link (instead of a bare
-      // toast + silent redirect). Slug lookup is best-effort — fall back to the
-      // id-based public URL so the modal always has a working link.
-      let liveUrl = `https://hoizr.com/events/${eventId}`;
-      try {
-        const evt = (await sdk.getEventForManage({ id: eventId }))?.getEvent;
-        if (evt?.slug) liveUrl = `https://hoizr.com/events/${evt.slug}`;
-      } catch {
-        // keep the id-based fallback
-      }
-      setPublishedLiveUrl(liveUrl);
-    } catch (error) {
-      const message = extractErrorMessage(error);
-      if (isHostVerificationBlockMessage(message)) {
-        showHostUnderReviewModal(true);
-      } else {
-        setToastData({ type: "error", message });
-      }
-    } finally {
-      setPublishing(false);
-    }
-  };
-
-  const requestPublishEvent = () => {
-    if (isPaid && !selectedPricingOptionId) {
-      setToastData({
-        type: "error",
-        message: "Select an offer to publish, or choose the basic option.",
-      });
-      return;
-    }
-    const selectedOption = pricingOptions.find(
-      (option) => option.optionId === selectedPricingOptionId,
-    );
-    setConfirmAction({
-      title: "Publish event?",
-      description: (
-        <>
-          Publish this event with{" "}
-          <strong>{selectedOption?.label ?? "the selected offer"}</strong>.
-          Customers may see and book the event immediately after it goes live.
-        </>
-      ),
-      confirmLabel: "Publish event",
-      tone: "warning",
-      onConfirm: publishEvent,
-    });
-  };
-
-  const requestFeeSettlementModeChange = (
-    mode: "DEDUCT_FROM_PAYOUT" | "PAY_AFTER_EVENT",
-  ) => {
-    if (mode === feeSettlementMode) return;
-    setConfirmAction({
-      title: "Switch upfront collection?",
-      description:
-        mode === "DEDUCT_FROM_PAYOUT"
-          ? "If this offer's upfront condition is met, Hoizr will deduct the upfront amount from the event payout. No separate payment is due before payout release."
-          : "If this offer's upfront condition is met, you will pay the upfront amount separately through Hoizr/Razorpay after the event and before payout release.",
-      confirmLabel: "Switch collection",
-      tone: "warning",
-      onConfirm: () => setFeeSettlementMode(mode),
-    });
-  };
-
-  const getPricingOptionInsight = (option: PricingOption) => {
-    const commission = Number(option.commissionRate) || 0;
-    const upfrontFee = Number(option.upfrontFee) || 0;
-
-    // AI offers carry an absolute ₹ savings number computed server-side
-    // against the host's baseline + projected GTV. Prefer that over the
-    // relative-percent-points hint we use for legacy plans.
-    if (option.optionId.startsWith(AI_OFFER_PREFIX)) {
-      const boost = aiBoostOffersByCode.get(
-        option.optionId.slice(AI_OFFER_PREFIX.length),
-      );
-      const savingsValue = boost?.totalSavingsForHosts?.value;
-      const customerMessage = boost?.customerViewingMessage;
-      return {
-        savings:
-          savingsValue && savingsValue > 0
-            ? `AI found ${formatIndianRupees(savingsValue)} in host-side savings`
-            : "Smart offer — baseline event context",
-        hostRecommendation:
-          customerMessage ??
-          "AI-tuned offer for this event. Confirm before publishing.",
-      };
-    }
-
-    const highestCommission = pricingOptions.reduce(
-      (highest, current) =>
-        Math.max(highest, Number(current.commissionRate) || 0),
-      commission,
-    );
-    const lowestUpfront = pricingOptions.reduce(
-      (lowest, current) => Math.min(lowest, Number(current.upfrontFee) || 0),
-      upfrontFee,
-    );
-    const fastestSettlement = pricingOptions.reduce(
-      (fastest, current) =>
-        Math.min(fastest, Number(current.payoutCycleDaysMax) || fastest),
-      Number(option.payoutCycleDaysMax) || 0,
-    );
-    const commissionSavings = Math.max(0, highestCommission - commission);
-    const isLowestUpfront = upfrontFee <= lowestUpfront;
-    const isFastestSettlement =
-      (Number(option.payoutCycleDaysMax) || 0) <= fastestSettlement;
-
-    return {
-      savings:
-        commissionSavings > 0
-          ? `${formatPercentDelta(commissionSavings)} pts lower commission than the highest offer`
-          : "Best-reach offer for this event",
-      hostRecommendation: upfrontFee
-        ? "AI read: choose this when the offer is strong enough to lift conversion and you are comfortable reconciling it through settlement or after the event."
-        : isLowestUpfront
-          ? "AI read: lowest-friction option for publishing quickly."
-          : `AI read: balanced plan for ${hostLabel.plural.toLowerCase()} that want a stronger offer without overcomplicating settlement.`,
-      customerRecommendation: isFastestSettlement
-        ? "Customer angle: simple ticket decision, clear offer, and fast event momentum."
-        : `Customer angle: clear value message in the ${hostLabel.lower} publish flow.`,
-    };
   };
 
   const artistManualEntryEnabled =
@@ -3295,7 +2979,7 @@ const EventJourney = ({
 
   return (
     <div
-      className="flex h-[100dvh] min-h-screen flex-col overflow-hidden bg-[var(--owner-bg-sidebar)] text-[var(--owner-fg-1)]"
+      className="flex h-[100dvh] min-h-screen flex-col overflow-hidden overscroll-none bg-[var(--owner-bg-sidebar)] text-[var(--owner-fg-1)]"
       style={{ height: "100dvh" }}
     >
       <header className="flex h-16 min-h-16 shrink-0 items-center justify-between border-b border-[var(--owner-border)] px-4 md:px-6">
@@ -3407,7 +3091,7 @@ const EventJourney = ({
         <div className="flex min-h-0 min-w-0 flex-col overflow-hidden">
           <section
             ref={formScrollRef}
-            className="min-h-0 min-w-0 flex-1 overflow-y-auto overflow-x-hidden p-4 pb-3 md:p-6 md:pb-4"
+            className="min-h-0 min-w-0 flex-1 overflow-y-auto overflow-x-hidden overscroll-contain p-4 pb-3 md:p-6 md:pb-4"
           >
             <div className="mx-auto flex min-h-full max-w-5xl flex-col gap-5">
               <div className="flex gap-2 overflow-x-auto pb-1 lg:hidden">
@@ -5101,7 +4785,7 @@ const EventJourney = ({
               prevents the absolute-positioned canvas from being clipped
               past the first viewport. */}
           <PreviewNoise opacity={0.4} patternAlpha={14} />
-          <div className="relative z-10 flex h-full flex-col overflow-y-auto p-5">
+          <div className="relative z-10 flex h-full flex-col overflow-y-auto overscroll-contain p-5">
           <div className="flex items-center gap-2 text-sm font-semibold text-[var(--owner-blue-100)]">
             <SparklesIcon size={16} />
             Live Event Preview
@@ -6120,469 +5804,6 @@ const EventJourney = ({
           </div>
         ) : null}
 
-        {publishModalOpen ? (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-            <div className="flex h-[96dvh] max-h-[96dvh] w-full max-w-7xl flex-col overflow-hidden rounded-2xl bg-white shadow-2xl">
-              <div className="flex items-start justify-between gap-4 px-6 pt-6">
-                <div>
-                  <h2 className="text-xl font-semibold text-[var(--owner-fg-1)]">
-                    Confirm your publish offer
-                  </h2>
-                  <p className="mt-1 text-sm leading-relaxed text-[var(--owner-fg-3)]">
-                    Basic Hoizr commission stays first. Smart offers are shown
-                    after it by highest projected savings and benefit. The
-                    strongest offer is marked recommended, with commission and
-                    upfront amount separated before you publish.
-                  </p>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => setPublishModalOpen(false)}
-                  disabled={publishing}
-                  className="rounded-md p-1 text-[var(--owner-fg-3)] hover:bg-[var(--owner-bg-subtle)]"
-                  aria-label="Close"
-                >
-                  <XIcon size={18} />
-                </button>
-              </div>
-
-              <div className="min-h-0 flex-1 overflow-y-auto px-6 py-4">
-                {(() => {
-                  const selectedOption = pricingOptions.find(
-                    (o) => o.optionId === selectedPricingOptionId,
-                  );
-                  const upfrontFee = Number(selectedOption?.upfrontFee ?? 0);
-                  if (upfrontFee <= 0) return null;
-                  const selectedAmount = formatIndianRupees(upfrontFee);
-                  return (
-                    <div className="mt-5 rounded-xl border border-amber-200 bg-amber-50 p-4">
-                      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                        <div>
-                          <p className="text-[12px] font-semibold uppercase tracking-[0.08em] text-amber-800">
-                            Selected upfront amount
-                          </p>
-                          <p className="mt-1 text-sm leading-6 text-amber-900">
-                            This amount applies only if the offer&apos;s
-                            sell-through condition is met. Choose how it should
-                            be collected before payout release.
-                          </p>
-                        </div>
-                        <div className="rounded-lg bg-white px-4 py-3 text-right shadow-sm">
-                          <p className="text-[11px] font-semibold uppercase tracking-[0.08em] text-amber-700">
-                            Upfront
-                          </p>
-                          <p className="text-2xl font-bold tabular-nums text-amber-950">
-                            {selectedAmount}
-                          </p>
-                        </div>
-                      </div>
-
-                      <div className="mt-4 grid gap-3 md:grid-cols-2">
-                        <button
-                          type="button"
-                          onClick={() =>
-                            requestFeeSettlementModeChange(
-                              "DEDUCT_FROM_PAYOUT",
-                            )
-                          }
-                          className={`rounded-lg border p-3 text-left text-xs transition ${
-                            feeSettlementMode === "DEDUCT_FROM_PAYOUT"
-                              ? "border-[var(--owner-blue-500)] bg-white shadow-sm"
-                              : "border-amber-200 bg-white/65 hover:bg-white"
-                          }`}
-                        >
-                          <div className="font-semibold text-[var(--owner-fg-1)]">
-                            Auto-deduct from payout
-                          </div>
-                          <div className="mt-1 leading-5 text-[var(--owner-fg-3)]">
-                            If triggered, Hoizr withholds {selectedAmount} from
-                            the event settlement. No separate payment link is
-                            needed.
-                          </div>
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() =>
-                            requestFeeSettlementModeChange("PAY_AFTER_EVENT")
-                          }
-                          className={`rounded-lg border p-3 text-left text-xs transition ${
-                            feeSettlementMode === "PAY_AFTER_EVENT"
-                              ? "border-[var(--owner-blue-500)] bg-white shadow-sm"
-                              : "border-amber-200 bg-white/65 hover:bg-white"
-                          }`}
-                        >
-                          <div className="font-semibold text-[var(--owner-fg-1)]">
-                            Organizer-paid payment link
-                          </div>
-                          <div className="mt-1 leading-5 text-[var(--owner-fg-3)]">
-                            If triggered, Hoizr collects {selectedAmount} plus
-                            GST through a Razorpay payment link/order after the
-                            event. Your payout is not reduced by this fee.
-                          </div>
-                        </button>
-                      </div>
-                      <p className="mt-3 text-[11.5px] leading-5 text-amber-900">
-                        If the sell-through condition is not met, the upfront
-                        amount is waived or refunded according to the selected
-                        collection path.
-                      </p>
-                    </div>
-                  );
-                })()}
-
-                {(() => {
-                  const aiOptionIds = new Set(
-                    (aiBoostGeneration?.offers ?? []).map(
-                      (o) => `${AI_OFFER_PREFIX}${o.offerCode}`,
-                    ),
-                  );
-                  const legacyOptions = pricingOptions.filter(
-                    (p) => !aiOptionIds.has(p.optionId),
-                  );
-                  // Basic = the legacy option with no upfront fee (typically
-                  // "Zero Upfront"). Falls back to the first legacy option so
-                  // there is always exactly one "basic" card to anchor the
-                  // selection.
-                  const basicOption =
-                    legacyOptions.find((o) => (o.upfrontFee ?? 0) === 0) ??
-                    legacyOptions[0] ??
-                    null;
-
-                  const aiCards = (aiBoostGeneration?.offers ?? [])
-                    .map((boost) => {
-                      const optionId = `${AI_OFFER_PREFIX}${boost.offerCode}`;
-                      const option = pricingOptions.find(
-                        (o) => o.optionId === optionId,
-                      );
-                      if (!option) return null;
-                      return { boost, option };
-                    })
-                    .filter(
-                      (
-                        entry,
-                      ): entry is {
-                        boost: NonNullable<
-                          typeof aiBoostGeneration
-                        >["offers"][number];
-                        option: PricingOption;
-                      } => entry !== null,
-                    )
-                    // Order: largest absolute savings first, then marketing /
-                    // commission benefit as a tie-breaker. The first smart card
-                    // is also the recommended one.
-                    .sort((a, b) =>
-                      compareAiBoostBenefit(a.boost, b.boost),
-                    );
-                  const recommendedOfferCode =
-                    aiCards[0]?.boost.offerCode ?? "";
-
-                  if (!pricingOptions.length) {
-                    return (
-                      <div className="mt-5 rounded-lg border border-[var(--owner-border)] bg-[var(--owner-bg)] p-4 text-sm text-[var(--owner-fg-3)]">
-                        No offers calculated yet. Close this modal and reopen it
-                        after saving the last step.
-                      </div>
-                    );
-                  }
-
-                  return (
-                    <div className="-mx-6 mt-5 overflow-x-auto px-6 pb-1">
-                      <div className="flex min-w-min items-stretch gap-4">
-                        {basicOption ? (
-                          <button
-                            key={basicOption.optionId}
-                            type="button"
-                            onClick={() =>
-                              setSelectedPricingOptionId(basicOption.optionId)
-                            }
-                            className={`flex min-h-[540px] w-[300px] shrink-0 self-stretch flex-col gap-3 rounded-2xl border p-4 text-left transition ${
-                              selectedPricingOptionId === basicOption.optionId
-                                ? "border-[var(--owner-blue-500)] bg-[var(--owner-blue-050)] shadow-sm"
-                                : "border-[var(--owner-border)] bg-[var(--owner-bg)] hover:border-[var(--owner-blue-400)]"
-                            }`}
-                          >
-                            <div className="flex items-start justify-between gap-2">
-                              <div className="min-w-0">
-                                <h3 className="text-sm font-semibold text-[var(--owner-fg-1)]">
-                                  Basic Hoizr commission
-                                </h3>
-                                <span className="mt-1.5 inline-flex items-center gap-1 rounded-full bg-[var(--owner-bg-subtle)] px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-[var(--owner-fg-2)]">
-                                  Default
-                                </span>
-                              </div>
-                              {selectedPricingOptionId === basicOption.optionId ? (
-                                <CheckCircle2Icon
-                                  size={18}
-                                  className="shrink-0 text-[var(--owner-blue-500)]"
-                                />
-                              ) : null}
-                            </div>
-
-                            <div>
-                              <div className="text-[10px] font-semibold uppercase tracking-[0.1em] text-[var(--owner-fg-4)]">
-                                Commission
-                              </div>
-                              <div className="mt-0.5 flex items-baseline gap-2">
-                                <span className="text-3xl font-bold tabular-nums text-[var(--owner-fg-1)]">
-                                  {`${Number(
-                                    basicOption.commissionRate,
-                                  ).toFixed(2)}%`}
-                                </span>
-                              </div>
-                            </div>
-
-                            <div className="grid grid-cols-2 gap-2 rounded-xl border border-[var(--owner-border-soft)] bg-[var(--owner-bg-subtle)] p-3">
-                              <div>
-                                <div className="text-[10px] font-semibold uppercase tracking-[0.1em] text-[var(--owner-fg-4)]">
-                                  Upfront amount
-                                </div>
-                                <div className="mt-0.5 text-sm font-semibold tabular-nums text-[var(--owner-fg-1)]">
-                                  {(basicOption.upfrontFee ?? 0) > 0
-                                    ? formatIndianRupees(
-                                        basicOption.upfrontFee,
-                                      )
-                                    : "No upfront"}
-                                </div>
-                              </div>
-                              <div>
-                                <div className="text-[10px] font-semibold uppercase tracking-[0.1em] text-[var(--owner-fg-4)]">
-                                  Savings
-                                </div>
-                                <div className="mt-0.5 text-sm font-semibold tabular-nums text-[var(--owner-fg-3)]">
-                                  Standard
-                                </div>
-                              </div>
-                            </div>
-
-                            <p className="text-xs leading-relaxed text-[var(--owner-fg-3)]">
-                              Publish at the standard Hoizr commission. No
-                              performance-based upfront amount is attached.
-                            </p>
-                          </button>
-                        ) : null}
-
-                        {aiCards.map(({ boost, option }) => {
-                          const selected =
-                            selectedPricingOptionId === option.optionId;
-                          const recommended =
-                            recommendedOfferCode === boost.offerCode;
-                          const delta =
-                            boost.howMuchDifferentFromBasicOffer?.deltaPct ?? 0;
-                          const savings =
-                            boost.totalSavingsForHosts?.value ?? 0;
-                          const marketingCredit = Math.max(
-                            0,
-                            Number(boost.marketingCreditAmount ?? 0),
-                          );
-                          const creditDiscount = Math.max(
-                            0,
-                            Number(boost.marketingCreditDiscountPct ?? 0),
-                          );
-                          const message =
-                            boost.customerViewingMessage || boost.shortReason;
-
-                          return (
-                            <button
-                              key={option.optionId}
-                              type="button"
-                              onClick={() =>
-                                setSelectedPricingOptionId(option.optionId)
-                              }
-                              className={`flex min-h-[540px] w-[300px] shrink-0 self-stretch flex-col gap-3 rounded-2xl border p-4 text-left transition ${
-                                selected
-                                  ? "border-[var(--owner-blue-500)] bg-[var(--owner-blue-050)] shadow-sm"
-                                  : "border-[var(--owner-border)] bg-[var(--owner-bg)] hover:border-[var(--owner-blue-400)]"
-                              }`}
-                            >
-                              <div className="flex items-start justify-between gap-2">
-                                <div className="min-w-0">
-                                  <h3 className="text-sm font-semibold text-[var(--owner-fg-1)]">
-                                    {boost.label}
-                                  </h3>
-                                  {recommended ? (
-                                    <span className="mt-1.5 inline-flex items-center gap-1 rounded-full bg-[var(--owner-accent-acid)] px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-[var(--owner-fg-1)]">
-                                      <SparklesIcon size={10} />
-                                      Recommended
-                                    </span>
-                                  ) : null}
-                                </div>
-                                {selected ? (
-                                  <CheckCircle2Icon
-                                    size={18}
-                                    className="shrink-0 text-[var(--owner-blue-500)]"
-                                  />
-                                ) : null}
-                              </div>
-
-                              <div>
-                                <div className="text-[10px] font-semibold uppercase tracking-[0.1em] text-[var(--owner-fg-4)]">
-                                  Commission
-                                </div>
-                                <div className="mt-0.5 flex items-baseline gap-2">
-                                  <span className="text-3xl font-bold tabular-nums text-[var(--owner-blue-500)]">
-                                    {boost.commissionPct.toFixed(2)}%
-                                  </span>
-                                </div>
-                                {delta > 0 ? (
-                                  <div className="mt-1 inline-flex items-center gap-1 rounded-full bg-[var(--owner-blue-050)] px-2 py-0.5 text-[11px] font-semibold text-[var(--owner-blue-500)]">
-                                    {delta.toFixed(2)}% below basic
-                                  </div>
-                                ) : null}
-                              </div>
-
-                              <div className="grid grid-cols-2 gap-2 rounded-xl border border-[var(--owner-border-soft)] bg-[var(--owner-bg-subtle)] p-3">
-                                <div
-                                  className={
-                                    boost.extraAmount > 0
-                                      ? "rounded-lg border border-amber-200 bg-amber-50 px-2 py-1.5"
-                                      : ""
-                                  }
-                                >
-                                  <div className="text-[10px] font-semibold uppercase tracking-[0.1em] text-[var(--owner-fg-4)]">
-                                    Upfront amount
-                                  </div>
-                                  <div className="mt-0.5 text-sm font-semibold tabular-nums text-[var(--owner-fg-1)]">
-                                    {boost.extraAmount > 0
-                                      ? formatIndianRupees(boost.extraAmount)
-                                      : "No upfront"}
-                                  </div>
-                                </div>
-                                <div>
-                                  <div className="text-[10px] font-semibold uppercase tracking-[0.1em] text-[var(--owner-fg-4)]">
-                                    Savings
-                                  </div>
-                                  <div
-                                    className={`mt-0.5 text-sm font-semibold tabular-nums ${
-                                      savings > 0
-                                        ? "text-[var(--owner-success-text)]"
-                                        : savings < 0
-                                          ? "text-[var(--owner-fg-1)]"
-                                          : "text-[var(--owner-fg-3)]"
-                                    }`}
-                                  >
-                                    {savings > 0
-                                      ? `You save ${formatIndianRupees(savings)}`
-                                      : "Standard"}
-                                  </div>
-                                </div>
-                              </div>
-
-                              {boost.extraAmount > 0
-                                ? (() => {
-                                    // Sell-through gate disclosure. INCL_TO_EXCL flips
-                                    // the event to exclusive on selection so it uses
-                                    // the EXCLUSIVE threshold (60%); plain exclusive
-                                    // events are 60% too. Non-exclusive bar is 40%
-                                    // because the host can't drive rival-platform
-                                    // sales. Defaults match the config fallbacks in
-                                    // offer-context.service.ts.
-                                    const flipsToExcl =
-                                      boost.offerCode === "INCL_TO_EXCL_OFFER";
-                                    const effectivelyExclusive =
-                                      flipsToExcl || eventType === "EXCLUSIVE";
-                                    const thresholdPct = effectivelyExclusive
-                                      ? 60
-                                      : 40;
-                                    return (
-                                      <div className="rounded-lg border border-amber-200 bg-amber-50 p-2.5">
-                                        <div className="flex items-start gap-1.5">
-                                          <span
-                                            aria-hidden
-                                            className="mt-0.5 text-amber-700"
-                                          >
-                                            ⓵
-                                          </span>
-                                          <div className="text-[11px] leading-relaxed text-amber-900">
-                                            <span className="font-semibold">
-                                              Upfront charged only if you sell{" "}
-                                              {thresholdPct}%+ of paid-ticket
-                                              capacity.
-                                            </span>{" "}
-                                            Below that, the upfront is waived
-                                            (or refunded if pre-paid) and your
-                                            offer commission (
-                                            {boost.commissionPct.toFixed(2)}%)
-                                            still applies. Choose how you&apos;d
-                                            like to handle it below.
-                                          </div>
-                                        </div>
-                                      </div>
-                                    );
-                                  })()
-                                : null}
-
-                              {marketingCredit > 0 || creditDiscount > 0 ? (
-                                <div className="flex flex-wrap gap-1.5">
-                                  {marketingCredit > 0 ? (
-                                    <span className="rounded-full bg-emerald-50 px-2 py-0.5 text-[11px] font-semibold text-emerald-700">
-                                      Includes{" "}
-                                      {formatIndianRupees(marketingCredit)}{" "}
-                                      marketing credit
-                                    </span>
-                                  ) : null}
-                                  {creditDiscount > 0 ? (
-                                    <span className="rounded-full bg-[var(--owner-blue-050)] px-2 py-0.5 text-[11px] font-semibold text-[var(--owner-blue-600,var(--owner-blue-500))]">
-                                      {creditDiscount.toFixed(0)}%
-                                      marketing-credit discount
-                                    </span>
-                                  ) : null}
-                                </div>
-                              ) : null}
-
-                              {boost.offerCode === "INCL_TO_EXCL_OFFER" ? (
-                                <p className="rounded-lg border border-[var(--owner-border-soft)] bg-[var(--owner-bg-subtle)] p-2 text-[11px] leading-relaxed text-[var(--owner-fg-3)]">
-                                  Selecting this converts the event to exclusive
-                                  on Hoizr.
-                                </p>
-                              ) : null}
-
-                              {message ? (
-                                <p className="text-xs leading-relaxed text-[var(--owner-fg-3)]">
-                                  {message}
-                                </p>
-                              ) : null}
-                            </button>
-                          );
-                        })}
-                      </div>
-                    </div>
-                  );
-                })()}
-              </div>
-
-              {pricingOptions.length > 0 ? (
-                <div className="shrink-0 px-6 pb-3">
-                  <p className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-[12px] leading-relaxed text-amber-900">
-                    <span className="font-semibold">Important:</span> event
-                    listings must be accurate. Misrepresented event details
-                    (lineup, venue, start time, ticket inclusions) can result
-                    in a fine charged on each wrong ticket sold. Double-check
-                    details before publishing.
-                  </p>
-                </div>
-              ) : null}
-
-              <div className="flex shrink-0 flex-col gap-2 border-t border-[var(--owner-border)] bg-white px-6 py-4 sm:flex-row sm:justify-end">
-                <button
-                  type="button"
-                  disabled={publishing}
-                  onClick={() => setPublishModalOpen(false)}
-                  className="rounded-lg border border-[var(--owner-border)] px-4 py-2 text-sm font-semibold disabled:opacity-50"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="button"
-                  disabled={publishing || !selectedPricingOptionId}
-                  onClick={requestPublishEvent}
-                  className="rounded-lg bg-[var(--owner-blue-500)] px-5 py-2 text-sm font-semibold text-[var(--owner-bg)] disabled:opacity-60"
-                >
-                  {publishing ? "Publishing..." : "Publish event"}
-                </button>
-              </div>
-            </div>
-          </div>
-        ) : null}
         <ConfirmModal
           isOpen={Boolean(confirmAction)}
           title={confirmAction?.title ?? ""}

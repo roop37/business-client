@@ -104,6 +104,12 @@ export const MARKETING_PILLARS: MarketingPillar[] = [
         label: "Automations",
         blurb: "Abandoned-cart recovery and sell-out nudges that bring in sales while you sleep.",
       },
+      {
+        slug: "loyalty-rewards",
+        label: "Loyalty & Rewards",
+        blurb:
+          "Points on every ticket, automatic fan tiers, and rewards that bring the same crowd back.",
+      },
     ],
   },
   {
@@ -163,7 +169,7 @@ export const MARKETING_PILLARS: MarketingPillar[] = [
       {
         slug: "artist-vertical",
         label: "Artist Profiles & Merch",
-        blurb: "A public Hoizr page with your shows, guestlist, merch, and riders — fans flow back to you.",
+        blurb: "One link: profile, tickets, guestlist, merch — 100% free for artists, forever.",
       },
     ],
   },
@@ -180,8 +186,8 @@ export const ALL_PRODUCTS: MarketingProduct[] = MARKETING_PILLARS.flatMap(
  */
 export const COMING_SOON_PRODUCTS: ComingSoonProduct[] = [
   {
-    title: "Loyalty & Rewards",
-    body: "Attendance-based tiers, early access, and skip-the-line perks for the fans who keep showing up.",
+    title: "Loyalty tiers & perks",
+    body: "Tunable tier bands, early access, and skip-the-line perks layered on the live points system.",
   },
   {
     title: "SMS Campaigns",

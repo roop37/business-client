@@ -1,0 +1,10 @@
+mutation CreateWhitelabelRequest($input: WhitelabelRequestInput!) {
+  createWhitelabelRequest(input: $input) {
+    _id
+    status
+  }
+}
+
+mutation SubmitWhitelabelRequest($input: WhitelabelRequestInput!) {
+  submitWhitelabelRequest(input: $input)
+}
