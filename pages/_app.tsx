@@ -4,6 +4,8 @@ import GlobalTopUpModal from "@/components/common/topup/GlobalTopUpModal";
 import SettingsModal from "@/components/common/settings/SettingsModal";
 import RunCampaignModal from "@/components/common/campaign/RunCampaignModal";
 import OrderReceiptModal from "@/components/common/orders/OrderReceiptModal";
+import DemoBanner from "@/components/demo/DemoBanner";
+import DemoBootstrap from "@/components/demo/DemoBootstrap";
 import useGlobalStore from "@/store/global";
 import { NextPage } from "next";
 import { DefaultSeo } from "next-seo";
@@ -137,6 +139,8 @@ function MyApp({ Component, pageProps }: AppPropsWithLayout) {
           <meta name="mobile-web-app-capable" content="yes" />
         </Head>
         <DefaultSeo {...seo} />
+        <DemoBootstrap />
+        <DemoBanner />
         {getLayout(<Component {...pageProps} />)}
         <PayoutModals />
         <GlobalTopUpModal />

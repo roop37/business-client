@@ -9,6 +9,8 @@ import {
   Tenor_Sans,
 } from "next/font/google";
 import { AppGlobals } from "./AppGlobals";
+import { DemoBanner } from "@/components/demo/DemoBanner";
+import { DemoBootstrap } from "@/components/demo/DemoBootstrap";
 import "../styles/globals.css";
 
 const font = Roboto_Flex({
@@ -193,7 +195,11 @@ export default function RootLayout({
       <body
         className={`${font.className} ${karla.variable} ${tenor.variable} ${libre.variable} ${figtree.variable} ${bodoniModa.variable} ${manrope.variable}`}
       >
-        <AppGlobals>{children}</AppGlobals>
+        <AppGlobals>
+          <DemoBootstrap />
+          <DemoBanner />
+          {children}
+        </AppGlobals>
       </body>
     </html>
   );

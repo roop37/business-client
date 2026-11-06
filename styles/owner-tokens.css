@@ -7,7 +7,7 @@
    page port is done.
    ============================================================= */
 
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+/* demo: Google Fonts @import removed (no third-party requests); falls back to system UI fonts */
 
 :root {
   /* Brand / primary — deep forest green is the Hoizr primary action

@@ -548,3 +548,16 @@ body,
   letter-spacing: -0.005em;
   font-variant-numeric: tabular-nums;
 }
+
+/* ── Demo mode: slim announcement bar (components/demo/DemoBanner.tsx) ── */
+:root {
+  --demo-banner-h: 32px;
+}
+/* Full-viewport app shells shrink by the banner height so nothing double-scrolls. */
+html:has(.demo-banner) [class~="h-[100dvh]"],
+html:has(.demo-banner) [class~="h-screen"] {
+  height: calc(100dvh - var(--demo-banner-h));
+}
+html:has(.demo-banner) div.fixed.top-0.z-20 {
+  top: var(--demo-banner-h);
+}
