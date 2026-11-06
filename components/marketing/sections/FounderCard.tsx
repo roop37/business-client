@@ -5,7 +5,7 @@ import Link from "next/link";
 import { ArrowUpRight, Linkedin } from "lucide-react";
 
 const SANBEDAN_HEADSHOT =
-  "https://res.cloudinary.com/duhefgqh4/image/upload/v1748974724/IMG_0652_slotkd__1_ehtwxq.jpg";
+  "/demo/img/IMG_0652_slotkd__1_ehtwxq.jpg";
 
 // Shared house easing — matches the rest of the marketing sections so
 // this card's reveal feels native, not bolted on.

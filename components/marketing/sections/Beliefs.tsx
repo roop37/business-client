@@ -96,7 +96,7 @@ export const Beliefs = () => {
                   <div className="mt-6 pl-0 md:pl-[60px] flex items-center gap-3">
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img
-                      src="https://res.cloudinary.com/duhefgqh4/image/upload/v1748974724/IMG_0652_slotkd__1_ehtwxq.jpg"
+                      src="/demo/img/IMG_0652_slotkd__1_ehtwxq.jpg"
                       alt={b.signoff.name}
                       className="h-10 w-10 shrink-0 rounded-full object-cover"
                       draggable={false}

@@ -13,7 +13,7 @@ import {
 
 const SITE_URL = "https://business.hoizr.com";
 const FOUNDER_IMAGE =
-  "https://res.cloudinary.com/duhefgqh4/image/upload/v1748974724/IMG_0652_slotkd__1_ehtwxq.jpg";
+  "/demo/img/IMG_0652_slotkd__1_ehtwxq.jpg";
 
 export const metadata: Metadata = {
   // Brand-led title; opt out of the "%s · Hoizr" template so the
@@ -261,7 +261,7 @@ export default function AboutPage() {
               <div className="mt-7 flex items-center gap-4">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
-                  src="https://res.cloudinary.com/duhefgqh4/image/upload/v1748974724/IMG_0652_slotkd__1_ehtwxq.jpg"
+                  src="/demo/img/IMG_0652_slotkd__1_ehtwxq.jpg"
                   alt="Sanbedan"
                   className="h-14 w-14 shrink-0 rounded-full object-cover"
                   draggable={false}

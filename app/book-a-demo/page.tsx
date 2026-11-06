@@ -2,9 +2,6 @@ import type { Metadata } from "next";
 import { ExternalLink } from "lucide-react";
 import { MarketingShell } from "@/components/marketing/MarketingShell";
 
-const ZCAL_URL = "https://zcal.co/i/2wlfsHdI";
-const ZCAL_EMBED_URL = "https://zcal.co/i/2wlfsHdI?embed=1&embedType=iframe";
-
 export const metadata: Metadata = {
   title: "Book a guided tour of Hoizr",
   description:
@@ -44,29 +41,41 @@ export default function BookADemoPage() {
           </p>
         </div>
 
-        <div className="mx-auto mt-10 w-full max-w-[1096px] overflow-hidden rounded-[var(--m-r-xl)] border border-[var(--m-border)] bg-white shadow-[var(--m-shadow-card)]">
-          <iframe
-            src={ZCAL_EMBED_URL}
-            title="Book a Hoizr guided product tour"
-            loading="lazy"
-            scrolling="yes"
-            id="zcal-invite"
-            className="block h-[779px] min-h-[544px] w-full min-w-[320px] border-0"
-          />
+        <div className="mx-auto mt-10 w-full max-w-[760px] rounded-[var(--m-r-xl)] border border-[var(--m-border)] bg-white p-8 text-center shadow-[var(--m-shadow-card)]">
+          <div className="mx-auto mb-3 inline-block rounded bg-amber-400 px-2 py-1 text-[11px] font-bold uppercase tracking-wider text-[#191C24]">
+            Demo mode
+          </div>
+          <h2 className="text-[22px] font-semibold text-[var(--m-ink-1,#191C24)]">
+            Hoizr is sunset and open-sourced
+          </h2>
+          <p className="mx-auto mt-3 max-w-[520px] text-[15px] leading-relaxed text-[var(--m-ink-3)]">
+            Guided tours are no longer scheduled. Explore the full platform
+            yourself, right now, with sample data — or get in touch if you need
+            help with the open-source code.
+          </p>
+          <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
+            <a
+              href="/dashboard"
+              className="rounded-full bg-[#191C24] px-5 py-2.5 text-[14px] font-semibold text-white"
+            >
+              Open the demo dashboard
+            </a>
+            <a
+              href="mailto:hoizr.tech@gmail.com"
+              className="rounded-full border border-[var(--m-border)] px-5 py-2.5 text-[14px] font-semibold"
+            >
+              hoizr.tech@gmail.com
+            </a>
+            <a
+              href="https://github.com/roop37/business-client"
+              target="_blank"
+              rel="noreferrer"
+              className="inline-flex items-center gap-1 text-[14px] font-semibold text-[var(--m-forest-700)]"
+            >
+              View source <ExternalLink size={13} />
+            </a>
+          </div>
         </div>
-
-        <p className="mt-5 text-center text-[13px] text-[var(--m-ink-3)]">
-          If the scheduler doesn&apos;t load,{" "}
-          <a
-            href={ZCAL_URL}
-            target="_blank"
-            rel="noreferrer"
-            className="inline-flex items-center gap-1 font-semibold text-[var(--m-forest-700)]"
-          >
-            open the booking page <ExternalLink size={13} />
-          </a>
-          .
-        </p>
       </section>
     </MarketingShell>
   );

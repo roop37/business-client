@@ -30,7 +30,7 @@ const sanbedan: Author = {
   id: "sp1",
   name: "Sanbedan Paul",
   image:
-    "https://res.cloudinary.com/duhefgqh4/image/upload/v1748974724/IMG_0652_slotkd__1_ehtwxq.jpg",
+    "/demo/img/IMG_0652_slotkd__1_ehtwxq.jpg",
   role: "Founder & CEO, Hoizr Technologies Pvt. Ltd.",
   description:
     "Founder of Hoizr and a full-stack engineer by training, Sanbedan Paul is redefining how India's live-event industry connects, books, and scales. With a background in building robust tech platforms, he blends engineering precision with deep cultural insight into music and events. At Hoizr, he's leading the charge to digitize live nights — from smart ticketing to AI-powered event tools — empowering venues, festivals, and clubs to operate at their highest potential.",
@@ -309,7 +309,7 @@ export const blogs: Blog[] = [
 
 <p>If you are an organizer, venue, promoter, or event organizer preparing upcoming events in India, Hoizr Business is being built for you.</p>`,
     image:
-      "https://res.cloudinary.com/duhefgqh4/image/upload/v1748802768/pexels-wendywei-1190297_jwisnp.jpg",
+      "/demo/img/pexels-wendywei-1190297_jwisnp.jpg",
     date: "May 23, 2026",
     category: "Migration",
     readTime: "7 min read",
@@ -383,7 +383,7 @@ export const blogs: Blog[] = [
 
 <p>Hoizr Business is being built to give Indian event organizers that foundation from day one.</p>`,
     image:
-      "https://res.cloudinary.com/duhefgqh4/image/upload/v1748802768/pexels-wendywei-1190297_jwisnp.jpg",
+      "/demo/img/pexels-wendywei-1190297_jwisnp.jpg",
     date: "May 23, 2026",
     category: "Venue Technology",
     readTime: "6 min read",
@@ -460,7 +460,7 @@ export const blogs: Blog[] = [
 
 <p>That is the future guestlist experience Hoizr is building for Indian organizers.</p>`,
     image:
-      "https://res.cloudinary.com/duhefgqh4/image/upload/v1748802769/pexels-isabella-mendes-107313-332688_vtgnt0.jpg",
+      "/demo/img/pexels-isabella-mendes-107313-332688_vtgnt0.jpg",
     date: "May 23, 2026",
     category: "Venue Technology",
     readTime: "5 min read",
@@ -538,7 +538,7 @@ export const blogs: Blog[] = [
 
 <p>That is the operating system Hoizr Business is being built to become.</p>`,
     image:
-      "https://res.cloudinary.com/duhefgqh4/image/upload/v1748802768/pexels-wendywei-1190297_jwisnp.jpg",
+      "/demo/img/pexels-wendywei-1190297_jwisnp.jpg",
     date: "May 23, 2026",
     category: "Migration",
     readTime: "7 min read",
@@ -587,7 +587,7 @@ export const blogs: Blog[] = [
 
 <p>Owned CRM, cleaner operations, better guestlist control, smarter marketing, transparent reporting, and AI event evaluation are the pieces that make that happen.</p>`,
     image:
-      "https://res.cloudinary.com/duhefgqh4/image/upload/v1748802769/pexels-isabella-mendes-107313-332688_vtgnt0.jpg",
+      "/demo/img/pexels-isabella-mendes-107313-332688_vtgnt0.jpg",
     date: "May 23, 2026",
     category: "Competitive Intelligence",
     readTime: "6 min read",
@@ -676,7 +676,7 @@ export const blogs: Blog[] = [
 
 <p>If you are preparing upcoming events in India, this is the mindset to bring before going live.</p>`,
     image:
-      "https://res.cloudinary.com/duhefgqh4/image/upload/v1748802768/pexels-wendywei-1190297_jwisnp.jpg",
+      "/demo/img/pexels-wendywei-1190297_jwisnp.jpg",
     date: "May 23, 2026",
     category: "Migration",
     readTime: "6 min read",
@@ -761,7 +761,7 @@ export const blogs: Blog[] = [
 
 <p>The event may end at midnight. The brand should keep working after that.</p>`,
     image:
-      "https://res.cloudinary.com/duhefgqh4/image/upload/v1748802769/pexels-isabella-mendes-107313-332688_vtgnt0.jpg",
+      "/demo/img/pexels-isabella-mendes-107313-332688_vtgnt0.jpg",
     date: "May 23, 2026",
     category: "Venue Technology",
     readTime: "6 min read",
@@ -839,7 +839,7 @@ export const blogs: Blog[] = [
 
 <p>For Indian event organizers, that connection can be the difference between a chaotic gate and a controlled night.</p>`,
     image:
-      "https://res.cloudinary.com/duhefgqh4/image/upload/v1748802768/pexels-wendywei-1190297_jwisnp.jpg",
+      "/demo/img/pexels-wendywei-1190297_jwisnp.jpg",
     date: "May 23, 2026",
     category: "Venue Technology",
     readTime: "5 min read",
@@ -917,7 +917,7 @@ export const blogs: Blog[] = [
 
 <p>For organizers preparing to scale, WhatsApp-first thinking is not optional. It is part of how India actually goes out.</p>`,
     image:
-      "https://res.cloudinary.com/duhefgqh4/image/upload/v1748802769/pexels-isabella-mendes-107313-332688_vtgnt0.jpg",
+      "/demo/img/pexels-isabella-mendes-107313-332688_vtgnt0.jpg",
     date: "May 23, 2026",
     category: "Data Forecasting",
     readTime: "6 min read",
@@ -988,7 +988,7 @@ export const blogs: Blog[] = [
 
 <p>If you are an organizer, venue, promoter, or festival event organizer preparing future events in India, Hoizr Business is being built with your workflow in mind.</p>`,
     image:
-      "https://res.cloudinary.com/duhefgqh4/image/upload/v1748802768/pexels-wendywei-1190297_jwisnp.jpg",
+      "/demo/img/pexels-wendywei-1190297_jwisnp.jpg",
     date: "May 23, 2026",
     category: "Competitive Intelligence",
     readTime: "6 min read",
