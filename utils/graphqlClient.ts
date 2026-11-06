@@ -1,6 +1,6 @@
 
 import { getSdk } from "@/generated/graphql";
-import { GraphQLClient } from "graphql-request";
+import { GraphQLClient } from "@/utils/demo/gqlClient";
 
 const TOKEN_REFRESH_QUERY = "mutation TokenRefresh { tokensRefresh }";
 
@@ -332,6 +332,7 @@ Object.assign(sdk, {
             label
             sales
             tickets
+            orderCount
           }
           salesBySource {
             label

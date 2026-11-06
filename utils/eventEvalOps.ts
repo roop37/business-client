@@ -6,7 +6,7 @@
  * codegen catches up, callers can migrate to `sdk.xxx` and this file
  * can be deleted.
  */
-import { GraphQLClient } from "graphql-request";
+import { GraphQLClient } from "@/utils/demo/gqlClient";
 
 const TOKEN_REFRESH_QUERY = "mutation TokenRefresh { tokensRefresh }";
 

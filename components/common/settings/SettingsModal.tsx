@@ -9,7 +9,7 @@ import useGlobalStore from "@/store/global";
 import useHostsStore from "@/store/host";
 import { uploadHostAsset } from "@/utils/cloudinaryUpload";
 import { endpoint, sdk } from "@/utils/graphqlClient";
-import { GraphQLClient } from "graphql-request";
+import { GraphQLClient } from "@/utils/demo/gqlClient";
 import { extractErrorMessage } from "@/utils/utilFUncs";
 import {
   Building2,

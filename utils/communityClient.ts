@@ -1,4 +1,4 @@
-import { GraphQLClient } from "graphql-request";
+import { GraphQLClient } from "@/utils/demo/gqlClient";
 
 /**
  * Hand-rolled GraphQL client for the Community module (mirrors couponClient /

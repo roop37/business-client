@@ -1,4 +1,4 @@
-import { GraphQLClient } from "graphql-request";
+import { GraphQLClient } from "@/utils/demo/gqlClient";
 
 /** Self-contained client for host-facing feedback (pre-codegen). */
 

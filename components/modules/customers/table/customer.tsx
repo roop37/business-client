@@ -12,7 +12,7 @@ import DataTableTextCell from "@/components/common/dataTable/common/textCell";
 import useGlobalStore from "@/store/global";
 import { extractErrorMessage } from "@/utils/utilFUncs";
 import { ColumnDef, createColumnHelper } from "@tanstack/react-table";
-import { GraphQLClient } from "graphql-request";
+import { GraphQLClient } from "@/utils/demo/gqlClient";
 import { Plus, Upload } from "lucide-react";
 import { format } from "date-fns";
 import CustomerOrdersModal from "../CustomerOrdersModal";

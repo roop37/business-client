@@ -4,7 +4,7 @@ import { inrFormat } from "@/components/common/owner";
 import useGlobalStore from "@/store/global";
 import { extractErrorMessage } from "@/utils/utilFUncs";
 import { format } from "date-fns";
-import { GraphQLClient } from "graphql-request";
+import { GraphQLClient } from "@/utils/demo/gqlClient";
 import { ChevronLeft, ChevronRight, X } from "lucide-react";
 import React, { useCallback, useEffect, useState } from "react";
 import ReactDOM from "react-dom";

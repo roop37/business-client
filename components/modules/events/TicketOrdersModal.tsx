@@ -6,7 +6,7 @@ import useGlobalStore from "@/store/global";
 import { extractErrorMessage } from "@/utils/utilFUncs";
 import { format } from "date-fns";
 import { formatInTimeZone } from "date-fns-tz";
-import { GraphQLClient } from "graphql-request";
+import { GraphQLClient } from "@/utils/demo/gqlClient";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import React, { useCallback, useEffect, useState } from "react";
 
